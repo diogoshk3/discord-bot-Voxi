@@ -4,7 +4,7 @@
 
 Bot de Text-to-Speech para Discord com **voz neural gratuita** (Piper, self-host) e foco em **fiabilidade**. O Voxi lê texto em canais de voz: comando `/tts`, auto-leitura de um canal configurado, e leitura de menções/replies ao bot. Deteta a língua por mensagem e escolhe a voz; cada utilizador pode fixar a sua própria voz. Inclui moderação (blocklist, rate-limit, limite de chars, gating por canal), fila FIFO com `/skip`, auto-reconexão à voz, auto-saída por inatividade e cache de áudio.
 
-> Estado: **v0** (núcleo competitivo). Motor neural pago, streaming, dicionário de pronúncia, monetização e Docker/VPS estão **fora** deste v0.
+> Estado: **v0** (núcleo competitivo). Motor neural pago, streaming e monetização estão **fora** deste v0. O caminho de deploy hosted em VPS via Docker está incluído — ver secção **Deploy em VPS (Docker)** no fim.
 
 ---
 
@@ -187,3 +187,82 @@ Com autoread ligado, escreve cada um e confirma o comportamento ouvido:
 - **`piper` não encontrado / erro a sintetizar**: confirma `PIPER_PATH` aponta para o `.exe` certo e que os `.onnx`/`.onnx.json` estão em `MODELS_DIR`.
 - **Comandos não aparecem**: corre `npm run register` outra vez; comandos globais podem demorar a propagar.
 - **Sem áudio**: confirma que o bot tem permissões `Connect` e `Speak` no canal de voz.
+
+---
+
+## 5. Deploy em VPS (Docker)
+
+Caminho **hosted / invite-and-go**: corres o Voxi numa VPS Linux com `docker compose`, sem instalar Node nem build tools à mão. O bot é um cliente websocket de saída — **não** expõe portas nem precisa de domínio/reverse-proxy.
+
+> Estado: o build da imagem e a síntese real do Piper são **(verificação ao vivo pendente)** — não foram corridos neste ambiente.
+
+### 5.1 Pré-requisitos
+
+- Uma VPS Linux (ex.: Ubuntu/Debian) com **Docker** e o plugin **docker compose v2** instalados (`docker --version`, `docker compose version`).
+- O código do projeto na VPS (ex.: `git clone` do repositório).
+
+### 5.2 Binário do Piper (Linux)
+
+O Piper para Linux **não** é um executável solto: é uma pasta com o binário **mais** bibliotecas partilhadas (`libonnxruntime`, `libespeak-ng`, etc.) e a pasta `espeak-ng-data/`. Tens de montar a **pasta inteira** e apontar `PIPER_PATH` para o binário lá dentro.
+
+1. Vai a https://github.com/rhasspy/piper/releases e descarrega o build **Linux x86_64** (ex.: `piper_linux_x86_64.tar.gz`).
+2. Extrai para `./piper/` na raiz do projeto (ao lado do `docker-compose.yml`). Deve ficar:
+   ```
+   piper/
+     piper                  # o binário (sem extensão em Linux)
+     libpiper_phonemize.so* # + outras .so
+     espeak-ng-data/
+   ```
+   O `docker-compose.yml` monta `./piper` em `/opt/piper` (read-only) e define `PIPER_PATH=/opt/piper/piper`.
+
+### 5.3 Modelos de voz (.onnx)
+
+1. Cria a pasta `./models/` na raiz do projeto.
+2. Coloca lá **pelo menos uma** voz — cada voz são 2 ficheiros (`<voz>.onnx` + `<voz>.onnx.json`), de https://huggingface.co/rhasspy/piper-voices. Sugestão para começar: `en_US-amy-medium`.
+   ```
+   models/
+     en_US-amy-medium.onnx
+     en_US-amy-medium.onnx.json
+   ```
+   O `docker-compose.yml` monta `./models` em `/models` (read-only) e define `MODELS_DIR=/models`.
+3. Garante que `DEFAULT_VOICE` no `.env` corresponde a um modelo presente em `./models/`.
+
+### 5.4 Ficheiro `.env`
+
+```
+cp .env.example .env
+```
+
+Preenche **apenas** os segredos e tunables — **não** definas `DB_PATH`, `MODELS_DIR` nem `PIPER_PATH` no `.env`: esses vêm já fixos do `docker-compose.yml` com os caminhos do container (`/data/tts.db`, `/models`, `/opt/piper/piper`).
+
+| Variável | Obrigatória? | O que pôr |
+|---|---|---|
+| `DISCORD_TOKEN` | **Sim** | Token do bot (Dev Portal → Bot → Reset Token) |
+| `CLIENT_ID` | **Sim** | Application ID (Dev Portal → General Information) |
+| `DEFAULT_VOICE` | Não | Modelo presente em `./models/`, p.ex. `en_US-amy-medium` |
+| `DEFAULT_SPEED` | Não | Velocidade base (default `1.0`) |
+| `INACTIVITY_MS` | Não | Auto-saída por inatividade em ms (default `300000`) |
+| `QUEUE_CAP` | Não | Tamanho máximo da fila (default `20`) |
+| `MAX_CHARS` | Não | Máx. de caracteres por mensagem (default `300`) |
+| `RATE_PER_MIN` | Não | Mensagens por minuto por utilizador (default `5`) |
+| `LOG_LEVEL` | Não | `debug` \| `info` \| `warn` \| `error` (default `info`) |
+| `TTS_ENGINE` | Não | `piper` (default) ou `neural` |
+| `OPENAI_API_KEY` | Só se `TTS_ENGINE=neural` | Chave da API OpenAI |
+
+### 5.5 Arranque
+
+```
+docker compose up -d --build   # constrói a imagem e arranca em background
+docker compose logs -f voxi    # segue os logs (esperado: [client] online como ...)
+docker compose down            # pára e remove o container (os dados persistem no volume)
+```
+
+- Os **slash commands são registados automaticamente** no arranque — **não** precisas de correr `npm run register` no deploy Docker.
+- A base de dados, o WAL/SHM e a cache de áudio vivem no volume nomeado `data` (`/data` no container) e **persistem** entre `up`/`down`. Para apagar também os dados: `docker compose down -v`.
+- Atualizar para uma versão nova: `git pull` e `docker compose up -d --build`.
+
+### 5.6 Resolução de problemas (Docker)
+
+- **`Missing required env var: DISCORD_TOKEN` / `CLIENT_ID`**: preenche-os no `.env` (secção 5.4).
+- **Piper falha a arrancar / erro a carregar bibliotecas (`error while loading shared libraries` ou similar)**: confirma que montaste a **pasta inteira** do Piper (não só o binário). Se faltarem libs de sistema do runtime, instala-as na imagem (ex.: `apt-get install -y libgomp1 libstdc++6`) — a base `-slim` pode não as trazer.
+- **`/voice list` vazio / sem áudio**: confirma que há `.onnx` (+ `.onnx.json`) em `./models/` e que `DEFAULT_VOICE` corresponde a um deles.
