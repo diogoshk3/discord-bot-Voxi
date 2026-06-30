@@ -124,4 +124,21 @@ describe('PiperEngine.synth — spawn mockado (EPIPE / falhas)', () => {
 
     await expect(p).rejects.toThrow(/saiu com codigo 2: bad model/);
   });
+
+  it('calibração: spawn recebe --length_scale 1.5 para pt_PT-tugao-medium', async () => {
+    const child = makeFakeChild();
+    spawnMock.mockReturnValue(child as never);
+    const calibReq: SynthRequest = { text: 'ola', model: 'pt_PT-tugao-medium', speed: 1 };
+    writeFileSync(join(modelsDir, `${calibReq.model}.onnx`), 'dummy');
+
+    const p = engine.synth(calibReq);
+    const args = spawnMock.mock.calls[0][1] as string[];
+    const idx = args.indexOf('--length_scale');
+    expect(idx).toBeGreaterThanOrEqual(0);
+    expect(args[idx + 1]).toBe('1.5');
+
+    // settle a promise para nao deixar rejeicao pendente
+    child.emit('close', 1);
+    await expect(p).rejects.toThrow();
+  });
 });
