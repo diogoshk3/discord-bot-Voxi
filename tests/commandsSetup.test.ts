@@ -178,8 +178,10 @@ describe('/setup — faltam perms de voz', () => {
 
     const text = i.replies.join('\n');
     expect(text).toMatch(/falta/i); // reporta o que falta
-    expect(text).toMatch(/Connect/i);
-    expect(text).toMatch(/Speak/i);
+    // Afirma o MARCADOR DE FALTA junto de cada rotulo (nao basta o rotulo aparecer:
+    // ele e impresso em qualquer estado). `[^\n]*` confina a uma linha.
+    expect(text).toMatch(/❌[^\n]*Connect|Connect[^\n]*falta/i);
+    expect(text).toMatch(/❌[^\n]*Speak|Speak[^\n]*falta/i);
   });
 });
 
@@ -195,8 +197,10 @@ describe('/setup — falta SendMessages no canal de texto', () => {
   });
 
   it('marca a perm de texto como em falta mas grava canal+autoread', async () => {
-    // ViewChannel presente, SendMessages ausente: a linha "ver/escrever" so e OK
-    // com as DUAS (contrato 3a). Mesmo assim grava (politica de friccao minima).
+    // ViewChannel presente, SendMessages ausente: cada perm de texto tem a sua
+    // propria linha de checklist (contrato 3a). Mesmo assim grava (politica de
+    // friccao minima). Este e o caso que prova a precisao do P8.1: so SendMessages
+    // pode aparecer em falta — ViewChannel NAO pode ser marcada erradamente.
     const textCh = makeTextChannel('ch-text', [PermissionFlagsBits.ViewChannel]);
     const i = makeSetupInteraction({
       interactionChannel: textCh,
@@ -214,10 +218,14 @@ describe('/setup — falta SendMessages no canal de texto', () => {
     expect(cfg.ttsChannelId).toBe('ch-text');
     expect(cfg.autoread).toBe(true);
 
-    // Checklist reporta a perm de texto como em falta
+    // Checklist reporta SendMessages como em falta — e ViewChannel NAO em falta.
+    // `[^\n]*` confina o match a uma linha: se ViewChannel regredisse para
+    // "❌ ViewChannel — falta", nao haveria ✅ antes de ViewChannel nessa linha e
+    // o assert falharia (e o regression guard real do P8.1).
     const text = i.replies.join('\n');
     expect(text).toMatch(/falta/i);
-    expect(text).toMatch(/ViewChannel|escrever/i);
+    expect(text).toMatch(/❌[^\n]*SendMessages|SendMessages[^\n]*falta/i);
+    expect(text).toMatch(/✅[^\n]*ViewChannel/i);
   });
 });
 
@@ -335,7 +343,11 @@ describe('/setup — canal alvo nao e de texto', () => {
     await handleInteraction(i as any, deps);
 
     expect(i.replies.length).toBeGreaterThan(0);
+    // mensagem real do handler: pede para identificar/indicar um canal de texto
+    expect(i.replies.join('\n')).toMatch(/identificar|canal de texto/i);
+    // nada gravado: nem canal nem autoread
     expect(getGuildConfig(db, GUILD).ttsChannelId).toBeNull();
+    expect(getGuildConfig(db, GUILD).autoread).toBe(false);
   });
 });
 
