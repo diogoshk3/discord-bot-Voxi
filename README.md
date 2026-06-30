@@ -303,3 +303,17 @@ docker compose down            # pára e remove o container (os dados persistem 
 - **`Missing required env var: DISCORD_TOKEN` / `CLIENT_ID`**: preenche-os no `.env` (secção 5.4).
 - **Piper falha a arrancar / erro a carregar bibliotecas (`error while loading shared libraries` ou similar)**: confirma que montaste a **pasta inteira** do Piper (não só o binário). Se faltarem libs de sistema do runtime, instala-as na imagem (ex.: `apt-get install -y libgomp1 libstdc++6`) — a base `-slim` pode não as trazer.
 - **`/voice list` vazio / sem áudio**: confirma que há `.onnx` (+ `.onnx.json`) em `./models/` e que `DEFAULT_VOICE` corresponde a um deles.
+
+---
+
+## 6. Privacidade e Termos
+
+- [**Política de Privacidade** (`PRIVACY.md`)](PRIVACY.md) — que dados a instância guarda (apenas IDs do Discord + preferências/config), o que acontece ao conteúdo das mensagens, retenção e apagamento, e terceiros (Discord; OpenAI só se `TTS_ENGINE=neural`).
+- [**Termos de Serviço** (`TERMS.md`)](TERMS.md) — uso aceitável, ausência de garantias, limitação de responsabilidade e licença (MIT).
+
+> **Nota para o registo/verificação no Discord.** O Discord Developer Portal pede um **Privacy Policy URL** e um **Terms of Service URL** (ex.: para *Public Bot* / verificação). Quando este repositório for **público**, os URLs a colar nesses campos são os ficheiros aqui no repo:
+>
+> - Privacy Policy URL: `https://github.com/diogoshk3/discord-bot-Voxi/blob/main/PRIVACY.md`
+> - Terms of Service URL: `https://github.com/diogoshk3/discord-bot-Voxi/blob/main/TERMS.md`
+>
+> O repositório está **privado** por agora, por isso estes links só ficam acessíveis (e válidos para o Discord) depois de o tornares público. Antes de publicar, preenche o campo de contacto/responsável no fim de `PRIVACY.md`.
