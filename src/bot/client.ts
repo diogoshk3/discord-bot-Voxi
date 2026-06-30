@@ -1,6 +1,6 @@
 import { Client, GatewayIntentBits, Partials, Events, Interaction, Message } from 'discord.js';
 import type { BotDeps } from './deps';
-import { handleInteraction } from '../commands/index';
+import { handleInteraction, handleAutocomplete } from '../commands/index';
 import { handleMessage } from '../commands/messageHandler';
 import { buildPresence } from './presence';
 import { log } from '../logging/logger';
@@ -33,6 +33,10 @@ export function bindEvents(deps: BotDeps): void {
   });
 
   client.on(Events.InteractionCreate, (interaction: Interaction) => {
+    if (interaction.isAutocomplete()) {
+      void handleAutocomplete(interaction, deps);
+      return;
+    }
     if (!interaction.isChatInputCommand()) return;
     void handleInteraction(interaction, deps);
   });

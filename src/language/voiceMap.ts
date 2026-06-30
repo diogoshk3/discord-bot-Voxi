@@ -43,3 +43,63 @@ export function pickVoice(lang: string, available: string[], fallback: string): 
   const match = available.find((model) => model.startsWith(prefix));
   return match ?? fallback;
 }
+
+/**
+ * Nome de apresentação de cada locale Piper, escrito NA PRÓPRIA LÍNGUA (autónimo).
+ * Usado no dropdown de escolha de voz para ser beginner-friendly (o utilizador vê
+ * "Português", "English", "Français"… em vez do id técnico do modelo).
+ * Chave = locale (a parte antes do 1.º '-' no nome do modelo, ex. 'pt_PT', 'en_US').
+ * Onde há mais do que uma variante de uma língua, inclui a região para desambiguar.
+ */
+export const LOCALE_NAMES: Record<string, string> = {
+  ar_JO: 'العربية',
+  ca_ES: 'Català',
+  cs_CZ: 'Čeština',
+  cy_GB: 'Cymraeg',
+  da_DK: 'Dansk',
+  de_DE: 'Deutsch',
+  el_GR: 'Ελληνικά',
+  en_GB: 'English (UK)',
+  en_US: 'English (US)',
+  es_ES: 'Español',
+  es_MX: 'Español (México)',
+  fa_IR: 'فارسی',
+  fi_FI: 'Suomi',
+  fr_FR: 'Français',
+  hu_HU: 'Magyar',
+  is_IS: 'Íslenska',
+  it_IT: 'Italiano',
+  ka_GE: 'ქართული',
+  kk_KZ: 'Қазақ тілі',
+  lb_LU: 'Lëtzebuergesch',
+  lv_LV: 'Latviešu',
+  ne_NP: 'नेपाली',
+  nl_BE: 'Nederlands (België)',
+  nl_NL: 'Nederlands',
+  no_NO: 'Norsk',
+  pl_PL: 'Polski',
+  pt_BR: 'Português (Brasil)',
+  pt_PT: 'Português (Portugal)',
+  ro_RO: 'Română',
+  ru_RU: 'Русский',
+  sk_SK: 'Slovenčina',
+  sl_SI: 'Slovenščina',
+  sr_RS: 'Српски',
+  sv_SE: 'Svenska',
+  sw_CD: 'Kiswahili',
+  tr_TR: 'Türkçe',
+  uk_UA: 'Українська',
+  vi_VN: 'Tiếng Việt',
+  zh_CN: '中文',
+};
+
+/**
+ * Nome amigável de um modelo Piper para o dropdown: a língua escrita na própria
+ * língua, derivada do locale (parte antes do 1.º '-'). Se o locale não estiver
+ * mapeado, devolve o id do modelo tal e qual (fallback seguro, nunca esconde uma voz).
+ */
+export function modelDisplayName(model: string): string {
+  const dash = model.indexOf('-');
+  const locale = dash === -1 ? model : model.slice(0, dash);
+  return LOCALE_NAMES[locale] ?? model;
+}

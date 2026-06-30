@@ -1,6 +1,7 @@
 import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
+  AutocompleteInteraction,
   PermissionFlagsBits,
   PermissionsBitField,
   GuildMember,
@@ -26,6 +27,7 @@ import { cleanText } from '../textCleaning/clean';
 import { applyPronunciation } from '../textCleaning/pronunciation';
 import { isBlocked } from '../moderation/filter';
 import { resolveSynth } from './resolveSynth';
+import { modelDisplayName } from '../language/voiceMap';
 import { log } from '../logging/logger';
 
 /**
@@ -87,7 +89,7 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
       s
         .setName('set')
         .setDescription('Define a tua voz')
-        .addStringOption((o) => o.setName('model').setDescription('Modelo Piper').setRequired(true))
+        .addStringOption((o) => o.setName('model').setDescription('Modelo Piper').setRequired(true).setAutocomplete(true))
         .addNumberOption((o) => o.setName('speed').setDescription('Velocidade (0.5-2.0)').setRequired(false)),
     )
     .addSubcommand((s) => s.setName('list').setDescription('Lista os modelos disponiveis'))
@@ -103,7 +105,11 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
         .setName('preview')
         .setDescription('Toca uma frase de amostra na tua voz atual (ou num modelo especifico)')
         .addStringOption((o) =>
-          o.setName('model').setDescription('Modelo Piper (opcional)').setRequired(false),
+          o
+            .setName('model')
+            .setDescription('Modelo Piper (opcional)')
+            .setRequired(false)
+            .setAutocomplete(true),
         ),
     )
     .toJSON(),
@@ -159,7 +165,7 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
       s
         .setName('default-voice')
         .setDescription('Define a voz default do servidor (usada quando o user nao tem voz propria)')
-        .addStringOption((o) => o.setName('model').setDescription('Modelo Piper').setRequired(true)),
+        .addStringOption((o) => o.setName('model').setDescription('Modelo Piper').setRequired(true).setAutocomplete(true)),
     )
     .addSubcommand((s) => s.setName('show').setDescription('Mostra a configuracao atual do servidor'))
     .addSubcommand((s) => s.setName('reset').setDescription('Repoe a configuracao do servidor aos valores por defeito'))
@@ -816,6 +822,43 @@ async function handleHelp(i: ChatInputCommandInteraction): Promise<void> {
   lines.push('Primeiro passo recomendado: corre /setup no teu servidor.');
 
   await reply(i, lines.join('\n'));
+}
+
+/**
+ * Filtra os modelos disponíveis pelo que o utilizador escreveu (case-insensitive),
+ * limitado a 25 (máximo do Discord para autocomplete). Função pura e testável.
+ */
+export function filterModelChoices(
+  models: string[],
+  query: string,
+): { name: string; value: string }[] {
+  const q = query.trim().toLowerCase();
+  return models
+    .map((m) => ({ name: modelDisplayName(m), value: m }))
+    .filter((c) => c.name.toLowerCase().includes(q) || c.value.toLowerCase().includes(q))
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .slice(0, 25);
+}
+
+/**
+ * Autocomplete das opções `model` (/voice set, /voice preview, /config
+ * default-voice): mostra as vozes REALMENTE instaladas para o utilizador
+ * escolher de uma lista, em vez de escrever o nome à mão. Beginner-friendly.
+ */
+export async function handleAutocomplete(
+  i: AutocompleteInteraction,
+  deps: BotDeps,
+): Promise<void> {
+  try {
+    const focused = i.options.getFocused(true);
+    if (focused.name !== 'model') {
+      await i.respond([]);
+      return;
+    }
+    await i.respond(filterModelChoices(deps.availableModels, focused.value));
+  } catch (err) {
+    log.error('[autocomplete] erro', err);
+  }
 }
 
 export async function handleInteraction(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
