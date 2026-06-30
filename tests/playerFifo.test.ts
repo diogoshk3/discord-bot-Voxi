@@ -98,4 +98,54 @@ describe('GuildVoicePlayer FIFO (synth no worker)', () => {
 
     player.destroy();
   });
+
+  it('salta item cuja sintese rejeita e continua a fila (sem travar nem unhandledRejection)', async () => {
+    (globalThis as Record<string, unknown>).__playOrder = [];
+
+    // Engine falso: o 1o pedido REJEITA a sintese, o 2o resolve normalmente.
+    // Se o erro travasse a fila (bug), o 2o nunca tocaria. Com o skip do worker,
+    // o 1o e saltado e o 2o toca — a prova e __playOrder === ['ok'].
+    const engine: TTSEngine = {
+      synth: (req: SynthRequest) =>
+        req.text === 'falha'
+          ? Promise.reject(new Error('synth boom'))
+          : Promise.resolve(req.text),
+    };
+
+    // Captura unhandledRejection durante o teste — nao deve ocorrer nenhuma:
+    // o catch do playNext trata a rejeicao.
+    const unhandled: unknown[] = [];
+    const onUnhandled = (reason: unknown): void => {
+      unhandled.push(reason);
+    };
+    process.on('unhandledRejection', onUnhandled);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const conn = makeConnection() as any;
+    const player = new GuildVoicePlayer(conn, engine, 20, 60_000, () => {});
+
+    await Promise.all([
+      player.say({ text: 'falha', model: 'm', speed: 1 }),
+      player.say({ text: 'ok', model: 'm', speed: 1 }),
+    ]);
+
+    await vi.waitFor(
+      () => {
+        const order = (globalThis as Record<string, unknown>).__playOrder as string[];
+        expect(order).toHaveLength(1);
+      },
+      { timeout: 1000 },
+    );
+
+    // Dar uma volta extra ao event loop para apanhar qualquer rejeicao tardia.
+    await new Promise((r) => setTimeout(r, 0));
+    process.off('unhandledRejection', onUnhandled);
+
+    const order = (globalThis as Record<string, unknown>).__playOrder as string[];
+    // O item que falhou foi saltado; o seguinte tocou — a fila nao travou.
+    expect(order).toEqual(['ok']);
+    expect(unhandled).toEqual([]);
+
+    player.destroy();
+  });
 });
