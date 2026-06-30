@@ -9,6 +9,7 @@ import { GuildVoicePlayer } from './voice/player';
 import type { BotDeps } from './bot/deps';
 import { createClient, bindEvents } from './bot/client';
 import { registerCommands } from './bot/registerCommands';
+import { installSignalHandlers } from './bot/shutdown';
 
 function discoverModels(modelsDir: string): string[] {
   if (!existsSync(modelsDir)) return [];
@@ -41,6 +42,7 @@ async function main(): Promise<void> {
   };
 
   bindEvents(deps);
+  installSignalHandlers(deps);
 
   await registerCommands(config.token, config.clientId);
   await client.login(config.token);
