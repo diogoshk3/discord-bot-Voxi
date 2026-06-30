@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { SynthRequest, TTSEngine } from './engine';
 import { AudioCache, cacheKey } from './cache';
+import { lengthScaleFor } from './calibration';
 
 const PIPER_TIMEOUT_MS = 15000;
 
@@ -29,8 +30,7 @@ export class PiperEngine implements TTSEngine {
       throw new Error(`Modelo Piper nao encontrado: ${modelPath}`);
     }
 
-    const speed = req.speed > 0 ? req.speed : 1;
-    const lengthScale = 1 / speed; // Piper: length_scale baixo = mais rapido
+    const lengthScale = lengthScaleFor(req.model, req.speed);
 
     const workDir = mkdtempSync(join(tmpdir(), 'piper-'));
     const outPath = join(workDir, 'out.wav');
