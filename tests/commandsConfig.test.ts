@@ -25,7 +25,7 @@ function makeConfigDeps(db: Database.Database): BotDeps {
     players: new Map(),
     db,
     config: {},
-    availableModels: ['en_US-amy-medium', 'pt_PT-tugao-medium'],
+    availableModels: ['en_US-amy-medium', 'pt_PT-tugão-medium'],
   } as unknown as BotDeps;
 }
 
@@ -493,12 +493,12 @@ describe('/config default-voice — valida modelo disponivel', () => {
   it('aceita modelo disponivel e persiste o default_voice da guild', async () => {
     const i = makeConfigInteraction({
       sub: 'default-voice',
-      optionsMap: { model: 'pt_PT-tugao-medium' },
+      optionsMap: { model: 'pt_PT-tugão-medium' },
     });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
-    expect(i.replies.some((r) => /pt_PT-tugao-medium/.test(r))).toBe(true);
-    expect(getGuildConfig(db, GUILD).defaultVoice).toBe('pt_PT-tugao-medium');
+    expect(i.replies.some((r) => /pt_PT-tugão-medium/.test(r))).toBe(true);
+    expect(getGuildConfig(db, GUILD).defaultVoice).toBe('pt_PT-tugão-medium');
   });
 
   it('rejeita modelo desconhecido com mensagem clara e nao aplica', async () => {
@@ -533,7 +533,7 @@ describe('/config show — mostra config atual do servidor', () => {
       autoread: true,
       ttsRoleId: 'role-show-test',
       enabled: false,
-      defaultVoice: 'pt_PT-tugao-medium',
+      defaultVoice: 'pt_PT-tugão-medium',
       maxChars: 123,
       ratePerMin: 7,
     });
@@ -550,7 +550,7 @@ describe('/config show — mostra config atual do servidor', () => {
     expect(text).toMatch(/autoread.*on|on.*autoread/i);
     expect(text).toMatch(/role-show-test/);
     expect(text).toMatch(/enabled.*off|off.*enabled/i);
-    expect(text).toMatch(/pt_PT-tugao-medium/);
+    expect(text).toMatch(/pt_PT-tugão-medium/);
     expect(text).toMatch(/123/);
     expect(text).toMatch(/7/);
     expect(text).toMatch(/2/); // 2 palavras na blocklist
@@ -599,7 +599,7 @@ describe('/config reset — repoe config aos defaults', () => {
       autoread: true,
       ttsRoleId: 'role-reset-test',
       enabled: false,
-      defaultVoice: 'pt_PT-tugao-medium',
+      defaultVoice: 'pt_PT-tugão-medium',
       maxChars: 999,
       ratePerMin: 42,
     });

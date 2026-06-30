@@ -23,7 +23,7 @@ function makeDeps(db: Database.Database, player?: { say: ReturnType<typeof vi.fn
     players: new Map<string, unknown>(),
     db,
     config: { defaultSpeed: 1.0, defaultVoice: '' },
-    availableModels: ['en_US-amy-medium', 'pt_PT-tugao-medium'],
+    availableModels: ['en_US-amy-medium', 'pt_PT-tugão-medium'],
     limiters: new Map(),
   } as unknown as BotDeps;
   if (player) {
@@ -73,14 +73,14 @@ describe('/voice preview', () => {
   it('com model válido chama player.say com a frase de amostra e o model correto', async () => {
     const say = vi.fn().mockResolvedValue(undefined);
     const deps = makeDeps(db, { say });
-    const i = makePreviewInteraction({ model: 'pt_PT-tugao-medium' });
+    const i = makePreviewInteraction({ model: 'pt_PT-tugão-medium' });
 
     await handleInteraction(i as any, deps);
 
     expect(say).toHaveBeenCalledOnce();
     const req = say.mock.calls[0][0];
     expect(req.text).toBe(SAMPLE);
-    expect(req.model).toBe('pt_PT-tugao-medium');
+    expect(req.model).toBe('pt_PT-tugão-medium');
     expect(i.replies.some((r) => /amostra/i.test(r))).toBe(true);
   });
 
@@ -109,7 +109,7 @@ describe('/voice preview', () => {
 
   it('sem model usa a voz guardada do utilizador', async () => {
     // Guarda uma voz específica para o utilizador antes de chamar o comando.
-    setUserVoice(db, GUILD, USER, 'pt_PT-tugao-medium', 1.2);
+    setUserVoice(db, GUILD, USER, 'pt_PT-tugão-medium', 1.2);
 
     const say = vi.fn().mockResolvedValue(undefined);
     const deps = makeDeps(db, { say });
@@ -121,7 +121,7 @@ describe('/voice preview', () => {
     expect(say).toHaveBeenCalledOnce();
     const req = say.mock.calls[0][0];
     expect(req.text).toBe(SAMPLE);
-    expect(req.model).toBe('pt_PT-tugao-medium');
+    expect(req.model).toBe('pt_PT-tugão-medium');
     expect(req.speed).toBe(1.2);
   });
 });

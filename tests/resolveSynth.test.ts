@@ -2,17 +2,17 @@ import { describe, it, expect } from 'vitest';
 import { resolveSynth } from '../src/commands/resolveSynth';
 
 describe('resolveSynth', () => {
-  const available = ['en_US-amy', 'pt_PT-tugao', 'es_ES-davefx'];
+  const available = ['en_US-amy', 'pt_PT-tugão', 'es_ES-davefx'];
 
   it('usa a voz guardada do user quando existe (prioridade)', () => {
     const r = resolveSynth({
       text: 'hello world this is a test of language detection',
-      userVoice: { model: 'pt_PT-tugao', speed: 1.3 },
+      userVoice: { model: 'pt_PT-tugão', speed: 1.3 },
       available,
       defaultVoice: 'en_US-amy',
       defaultSpeed: 1.0,
     });
-    expect(r).toEqual({ text: 'hello world this is a test of language detection', model: 'pt_PT-tugao', speed: 1.3 });
+    expect(r).toEqual({ text: 'hello world this is a test of language detection', model: 'pt_PT-tugão', speed: 1.3 });
   });
 
   it('sem voz do user, deteta lingua e escolhe voz', () => {
@@ -47,7 +47,7 @@ describe('resolveSynth', () => {
         text: '',
         userVoice: { model: 'es_ES-davefx', speed: 0.9 },
         available,
-        guildDefaultVoice: 'pt_PT-tugao',
+        guildDefaultVoice: 'pt_PT-tugão',
         defaultVoice: 'en_US-amy',
         defaultSpeed: 1.0,
       });
@@ -59,11 +59,11 @@ describe('resolveSynth', () => {
         text: '',
         userVoice: null,
         available,
-        guildDefaultVoice: 'pt_PT-tugao',
+        guildDefaultVoice: 'pt_PT-tugão',
         defaultVoice: 'en_US-amy',
         defaultSpeed: 1.0,
       });
-      expect(r.model).toBe('pt_PT-tugao'); // guild default vence o .env
+      expect(r.model).toBe('pt_PT-tugão'); // guild default vence o .env
     });
 
     it('guild default vazio => cai no .env defaultVoice', () => {

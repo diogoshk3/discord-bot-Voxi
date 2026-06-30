@@ -32,11 +32,11 @@ describe('detectLang', () => {
 });
 
 describe('pickVoice', () => {
-  const available = ['pt_PT-tugao-medium', 'en_US-amy-medium', 'es_ES-davefx-medium'];
+  const available = ['pt_PT-tugão-medium', 'en_US-amy-medium', 'es_ES-davefx-medium'];
   const fallback = 'en_US-amy-medium';
 
   it('escolhe voz portuguesa para "por"', () => {
-    expect(pickVoice('por', available, fallback)).toBe('pt_PT-tugao-medium');
+    expect(pickVoice('por', available, fallback)).toBe('pt_PT-tugão-medium');
   });
 
   it('escolhe voz inglesa para "eng"', () => {
@@ -106,7 +106,7 @@ describe('pickVoice', () => {
 
   // Fallback: lingua mapeada mas sem modelo disponivel
   it('cai no fallback quando lingua tem prefixo mas nenhum modelo corresponde', () => {
-    expect(pickVoice('pol', ['pt_PT-tugao-medium', 'en_US-amy-medium'], fallback)).toBe(fallback);
+    expect(pickVoice('pol', ['pt_PT-tugão-medium', 'en_US-amy-medium'], fallback)).toBe(fallback);
   });
 
   // Determinismo: multiplos modelos com o mesmo prefixo → escolhe o primeiro por ordem
@@ -124,7 +124,7 @@ describe('pickVoice', () => {
   //     (qualquer um serve — o contrato e "devolve um modelo pt_", nao um
   //     ficheiro especifico; a ordem ja e coberta pelo teste de determinismo).
   it('"por" resolve para um modelo pt_ quando ha pt_PT e pt_BR', () => {
-    const models = ['pt_PT-tugao-medium', 'pt_BR-faber-medium', 'en_US-amy-medium'];
+    const models = ['pt_PT-tugão-medium', 'pt_BR-faber-medium', 'en_US-amy-medium'];
     const chosen = pickVoice('por', models, fallback);
     expect(chosen.startsWith('pt_')).toBe(true);
     expect(models).toContain(chosen);

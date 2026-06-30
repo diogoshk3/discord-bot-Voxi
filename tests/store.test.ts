@@ -35,8 +35,8 @@ describe('store', () => {
     });
 
     it('sets and gets a user voice', () => {
-      setUserVoice(db, G, U, 'pt_PT-tugao-medium', 1.2);
-      expect(getUserVoice(db, G, U)).toEqual({ model: 'pt_PT-tugao-medium', speed: 1.2 });
+      setUserVoice(db, G, U, 'pt_PT-tugão-medium', 1.2);
+      expect(getUserVoice(db, G, U)).toEqual({ model: 'pt_PT-tugão-medium', speed: 1.2 });
     });
 
     it('overwrites an existing voice (upsert)', () => {
@@ -273,11 +273,11 @@ describe('store', () => {
 
     it('patch que substitui defaultVoice nao perde outros campos', () => {
       setGuildConfig(db, G, { autoread: true, maxChars: 400 });
-      setGuildConfig(db, G, { defaultVoice: 'pt_PT-tugao-medium' });
+      setGuildConfig(db, G, { defaultVoice: 'pt_PT-tugão-medium' });
       const cfg = getGuildConfig(db, G);
       expect(cfg.autoread).toBe(true);
       expect(cfg.maxChars).toBe(400);
-      expect(cfg.defaultVoice).toBe('pt_PT-tugao-medium');
+      expect(cfg.defaultVoice).toBe('pt_PT-tugão-medium');
     });
   });
 });
