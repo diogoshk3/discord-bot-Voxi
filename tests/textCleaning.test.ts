@@ -94,6 +94,27 @@ describe('cleanText', () => {
       const r = cleanText(longo, { ...opts, maxChars: 10 });
       expect(r.length).toBe(10);
     });
+
+    it('nao parte surrogate pairs ao truncar (sem lone surrogates)', () => {
+      // 𝕏 (U+1D54F) e 2 code units UTF-16 e NAO e Extended_Pictographic,
+      // por isso sobrevive a limpeza. Truncar a um limite impar partia o par
+      // deixando um surrogate solitario -> lixo para o stdin do Piper.
+      const text = 'ab' + '𝕏'.repeat(5); // 'a','b', depois pares de surrogates
+      const r = cleanText(text, { ...opts, maxChars: 5 });
+      // Nenhum code unit pode ser um surrogate solitario (0xD800-0xDFFF sem par).
+      for (let idx = 0; idx < r.length; idx++) {
+        const code = r.charCodeAt(idx);
+        const isHigh = code >= 0xd800 && code <= 0xdbff;
+        const isLow = code >= 0xdc00 && code <= 0xdfff;
+        if (isHigh) {
+          const next = r.charCodeAt(idx + 1);
+          expect(next >= 0xdc00 && next <= 0xdfff).toBe(true);
+          idx++; // saltar o low surrogate ja validado
+        } else {
+          expect(isLow).toBe(false); // low surrogate sem high antes = orfao
+        }
+      }
+    });
   });
 
   describe('vazio', () => {

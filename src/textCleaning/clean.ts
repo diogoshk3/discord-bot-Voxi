@@ -44,9 +44,15 @@ export function cleanText(raw: string, opts: CleanOptions): string {
   // 7. colapsar whitespace + trim
   t = t.replace(RE_WS, ' ').trim();
 
-  // 8. truncar
+  // 8. truncar (sem partir surrogate pairs: se o ultimo code unit ficar
+  // um high surrogate orfao, recua um para nao emitir lixo ao Piper)
   if (t.length > opts.maxChars) {
-    t = t.slice(0, opts.maxChars);
+    let end = opts.maxChars;
+    const last = t.charCodeAt(end - 1);
+    if (last >= 0xd800 && last <= 0xdbff) {
+      end -= 1;
+    }
+    t = t.slice(0, end);
   }
 
   // 9. vazio -> ''
