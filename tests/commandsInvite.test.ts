@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { PermissionFlagsBits, PermissionsBitField } from 'discord.js';
 
 // Mock minimo de @discordjs/voice — o /invite nao liga a voz, mas o modulo de
@@ -7,7 +7,6 @@ vi.mock('@discordjs/voice', () => ({
   joinVoiceChannel: () => ({}),
   getVoiceConnection: () => undefined,
 }));
-import { vi } from 'vitest';
 
 import { handleInteraction, commandDefs } from '../src/commands/index';
 import type { BotDeps } from '../src/bot/deps';

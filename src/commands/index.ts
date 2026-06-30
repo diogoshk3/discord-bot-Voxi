@@ -688,11 +688,10 @@ async function handleStats(i: ChatInputCommandInteraction, deps: BotDeps): Promi
 async function handleInvite(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
   const clientId = deps.config.clientId;
   if (!clientId) {
-    await i.reply({
-      content:
-        'O link de convite ainda nao esta configurado (CLIENT_ID em falta). Avisa o admin do bot.',
-      flags: MessageFlags.Ephemeral,
-    });
+    await reply(
+      i,
+      'O Voxi ainda nao tem o link de convite configurado (CLIENT_ID em falta). Avisa o admin do bot.',
+    );
     return;
   }
   const params = new URLSearchParams({
