@@ -2,15 +2,15 @@
 
 > type it, hear it.
 
-**Voz natural, grátis e que não te abandona a meio — sem paywall, sem prefixos, lê sozinho na tua língua.** O Voxi é um bot de Text-to-Speech para Discord que lê texto em canais de voz com voz **neural** (Piper): comando `/tts`, auto-leitura de um canal configurado e leitura de menções/replies ao bot. Deteta a língua de cada mensagem e escolhe a voz sozinho, e cada utilizador pode fixar a sua própria voz.
+**Voz neural (não robótica) que não cai do canal — e cuja qualidade nunca fica atrás de paywall.** O Voxi é um bot de Text-to-Speech para Discord que lê texto em canais de voz com voz **neural** (Piper): comando `/tts`, auto-leitura de um canal configurado e leitura de menções/replies ao bot. Deteta a língua de cada mensagem e escolhe a voz sozinho, e cada utilizador pode fixar a sua própria voz.
 
-A maioria dos bots de TTS força-te a escolher: ou é grátis-mas-robótico, ou natural-mas-atrás de paywall — e o líder de mercado "desconecta durante horas". O Voxi junta o que **nenhum** bot de TTS reúne para línguas ocidentais (PT/EN/europeu):
+A maioria dos bots de TTS força-te a escolher: ou é grátis-mas-robótico, ou natural-mas-atrás de paywall — e o líder de mercado "desconecta durante horas". O Voxi tem tudo o que o líder tem (auto-leitura, `/setup` de um comando, deteta a língua sozinho) — e ainda os **dois** trunfos que o líder não reúne para línguas ocidentais (PT/EN/europeu):
 
-- **Voz neural genuinamente natural** — Piper, não a voz robótica do gTTS/eSpeak.
-- **100% grátis, qualidade NUNCA atrás de paywall** — sem vozes premium, sem "vota para desbloquear".
+- **Voz neural genuinamente natural, grátis** — Piper, não a voz robótica do gTTS/eSpeak do plano gratuito.
+- **Qualidade NUNCA atrás de paywall** — sem vozes premium pagas, sem "vota para desbloquear". O líder esconde as boas vozes atrás de ~€5/mês; aqui a melhor voz é a de fábrica.
 - **Não cai do canal de voz** — auto-reconexão à voz (mata o "desconecta durante horas" do líder).
-- **Auto-leitura sem prefixo** — lê um canal configurado e menções/replies ao bot, sem comando por mensagem.
-- **Deteta a língua por mensagem e escolhe a voz** automaticamente — em PT, EN e línguas europeias.
+
+Estes dois (voz neural grátis + fiabilidade) são o que distingue o Voxi. O resto é **paridade** — o líder também o faz, mas o Voxi não fica atrás: auto-leitura sem prefixo (lê um canal configurado e menções/replies, configurável em um passo com `/setup`) e deteção automática de língua por mensagem em PT, EN e línguas europeias.
 
 A par disto: moderação (blocklist, rate-limit, limite de chars, gating por canal), fila FIFO com `/skip`, auto-saída por inatividade e cache de áudio.
 
