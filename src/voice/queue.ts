@@ -1,5 +1,7 @@
+import type { SynthRequest } from '../tts/engine';
+
 export interface QueueItem {
-  audioPath: string;
+  req: SynthRequest;
 }
 
 export class PlayQueue {
