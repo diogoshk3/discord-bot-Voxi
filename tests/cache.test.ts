@@ -35,6 +35,12 @@ describe('cacheKey', () => {
     const b: SynthRequest = { text: 'a', model: 'bc', speed: 1 };
     expect(cacheKey(a)).not.toBe(cacheKey(b));
   });
+
+  it('does not collide on field boundaries', () => {
+    const a = cacheKey({ text: 'a b', model: 'c', speed: 1 });
+    const b = cacheKey({ text: 'a', model: 'b c', speed: 1 });
+    expect(a).not.toBe(b);
+  });
 });
 
 describe('AudioCache', () => {
