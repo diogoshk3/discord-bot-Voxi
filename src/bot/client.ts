@@ -2,6 +2,7 @@ import { Client, GatewayIntentBits, Partials, Events, Interaction, Message } fro
 import type { BotDeps } from './deps';
 import { handleInteraction } from '../commands/index';
 import { handleMessage } from '../commands/messageHandler';
+import { buildPresence } from './presence';
 import { log } from '../logging/logger';
 
 export function createClient(): Client {
@@ -22,6 +23,13 @@ export function bindEvents(deps: BotDeps): void {
 
   client.once(Events.ClientReady, (c) => {
     log.info(`[client] online como ${c.user.tag}`);
+    // P9.3 — presenca como auto-marketing subtil (marca + CTA). Defensivo: nunca
+    // deixar uma falha na presenca crashar o arranque do bot.
+    try {
+      c.user.setPresence(buildPresence(deps.config));
+    } catch (err) {
+      log.warn('[client] falha ao definir a presenca (ignorado)', err);
+    }
   });
 
   client.on(Events.InteractionCreate, (interaction: Interaction) => {

@@ -17,6 +17,7 @@ export interface AppConfig {
   ratePerMin: number;
   ttsEngine: TtsEngineKind;
   openaiApiKey?: string;
+  presenceText?: string;
 }
 
 function requireEnv(name: string): string {
@@ -73,5 +74,8 @@ export function loadConfig(): AppConfig {
     ratePerMin: numEnv('RATE_PER_MIN', 5),
     ttsEngine: engineEnv(),
     openaiApiKey: strEnv('OPENAI_API_KEY', '') || undefined,
+    // P9.3 — texto opcional da presenca; vazio/ausente => undefined e buildPresence
+    // usa o seu default de marca. Override exato quando definido.
+    presenceText: strEnv('PRESENCE_TEXT', '') || undefined,
   };
 }

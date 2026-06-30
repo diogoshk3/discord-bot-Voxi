@@ -31,6 +31,7 @@ describe('loadConfig', () => {
       RATE_PER_MIN: undefined,
       TTS_ENGINE: undefined,
       OPENAI_API_KEY: undefined,
+      PRESENCE_TEXT: undefined,
     });
   });
 
@@ -135,5 +136,17 @@ describe('loadConfig', () => {
     setEnv({ ...REQUIRED, TTS_ENGINE: 'bogus' });
     const cfg = loadConfig();
     expect(cfg.ttsEngine).toBe('piper');
+  });
+
+  // P9.3 — PRESENCE_TEXT opcional: ausente/vazio => undefined (buildPresence usa
+  // o seu default de marca); presente => override exato passado a buildPresence.
+  it('leaves presenceText undefined when PRESENCE_TEXT missing', () => {
+    setEnv(REQUIRED);
+    expect(loadConfig().presenceText).toBeUndefined();
+  });
+
+  it('reads PRESENCE_TEXT override from env', () => {
+    setEnv({ ...REQUIRED, PRESENCE_TEXT: 'type it, hear it. • /invite' });
+    expect(loadConfig().presenceText).toBe('type it, hear it. • /invite');
   });
 });
