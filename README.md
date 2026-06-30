@@ -52,8 +52,8 @@ O Piper precisa de **modelos de voz**. Cada modelo são 2 ficheiros: `<voz>.onnx
    models/
      en_US-amy-medium.onnx
      en_US-amy-medium.onnx.json
-     pt_PT-tugao-medium.onnx
-     pt_PT-tugao-medium.onnx.json
+     pt_PT-tugão-medium.onnx
+     pt_PT-tugão-medium.onnx.json
    ```
 4. O nome do modelo (sem extensão) — p.ex. `en_US-amy-medium` — é o que usas como `DEFAULT_VOICE` e em `/voice set`.
 

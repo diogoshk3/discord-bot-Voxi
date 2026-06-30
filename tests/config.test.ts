@@ -98,9 +98,9 @@ describe('loadConfig', () => {
   });
 
   it('uses string overrides', () => {
-    setEnv({ ...REQUIRED, DEFAULT_VOICE: 'pt_PT-tugao-medium' });
+    setEnv({ ...REQUIRED, DEFAULT_VOICE: 'pt_PT-tugão-medium' });
     const cfg = loadConfig();
-    expect(cfg.defaultVoice).toBe('pt_PT-tugao-medium');
+    expect(cfg.defaultVoice).toBe('pt_PT-tugão-medium');
   });
 
   // P7.3 — DEFAULT_VOICE regional: um valor de locale (pt_PT, pt_BR, de_DE...)
