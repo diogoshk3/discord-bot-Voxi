@@ -7,6 +7,7 @@ export interface GuildConfig {
   maxChars: number;
   ratePerMin: number;
   enabled: boolean;
+  ttsRoleId: string | null;
 }
 
 const DEFAULTS: GuildConfig = {
@@ -16,6 +17,7 @@ const DEFAULTS: GuildConfig = {
   maxChars: 300,
   ratePerMin: 5,
   enabled: true,
+  ttsRoleId: null,
 };
 
 interface GuildConfigRow {
@@ -26,6 +28,7 @@ interface GuildConfigRow {
   max_chars: number;
   rate_per_min: number;
   enabled: number;
+  tts_role_id: string | null;
 }
 
 export function getGuildConfig(db: Database.Database, guildId: string): GuildConfig {
@@ -40,6 +43,7 @@ export function getGuildConfig(db: Database.Database, guildId: string): GuildCon
     maxChars: row.max_chars,
     ratePerMin: row.rate_per_min,
     enabled: row.enabled === 1,
+    ttsRoleId: row.tts_role_id,
   };
 }
 
@@ -52,15 +56,16 @@ export function setGuildConfig(
   const next: GuildConfig = { ...current, ...patch };
   db.prepare(
     `INSERT INTO guild_config
-       (guild_id, tts_channel_id, autoread, default_voice, max_chars, rate_per_min, enabled)
-     VALUES (?, ?, ?, ?, ?, ?, ?)
+       (guild_id, tts_channel_id, autoread, default_voice, max_chars, rate_per_min, enabled, tts_role_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(guild_id) DO UPDATE SET
        tts_channel_id = excluded.tts_channel_id,
        autoread       = excluded.autoread,
        default_voice  = excluded.default_voice,
        max_chars      = excluded.max_chars,
        rate_per_min   = excluded.rate_per_min,
-       enabled        = excluded.enabled`,
+       enabled        = excluded.enabled,
+       tts_role_id    = excluded.tts_role_id`,
   ).run(
     guildId,
     next.ttsChannelId,
@@ -69,5 +74,6 @@ export function setGuildConfig(
     next.maxChars,
     next.ratePerMin,
     next.enabled ? 1 : 0,
+    next.ttsRoleId,
   );
 }
