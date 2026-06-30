@@ -7,6 +7,8 @@
 ![Docker ready](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)
 ![made with Piper](https://img.shields.io/badge/made%20with-Piper-5a4fcf)
 
+**Pronto para ir live? Ver [GO-LIVE.md](GO-LIVE.md).**
+
 **Voz neural (não robótica) que não cai do canal — e cuja qualidade nunca fica atrás de paywall.** O Voxi é um bot de Text-to-Speech para Discord que lê texto em canais de voz com voz **neural** (Piper): comando `/tts`, auto-leitura de um canal configurado e leitura de menções/replies ao bot. Deteta a língua de cada mensagem e escolhe a voz sozinho, e cada utilizador pode fixar a sua própria voz.
 
 A maioria dos bots de TTS força-te a escolher: ou é grátis-mas-robótico, ou natural-mas-atrás de paywall — e o líder de mercado "desconecta durante horas". O Voxi tem tudo o que o líder tem (auto-leitura, `/setup` de um comando, deteta a língua sozinho) — e ainda os **dois** trunfos que o líder não reúne para línguas ocidentais (PT/EN/europeu):
