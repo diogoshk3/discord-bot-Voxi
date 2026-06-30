@@ -9,8 +9,8 @@ import {
   createAudioResource,
   entersState,
 } from '@discordjs/voice';
-import type { TTSEngine, SynthRequest } from '../tts/engine.js';
-import { PlayQueue } from './queue.js';
+import type { TTSEngine, SynthRequest } from '../tts/engine';
+import { PlayQueue } from './queue';
 
 export class GuildVoicePlayer {
   private readonly player: AudioPlayer;
