@@ -579,3 +579,75 @@ describe('/config show — mostra config atual do servidor', () => {
     expect(text).toMatch(/dete/i);
   });
 });
+
+// ── /config reset ─────────────────────────────────────────────────────────────
+
+describe('/config reset — repoe config aos defaults', () => {
+  let db: Database.Database;
+
+  beforeEach(() => {
+    db = initDb(':memory:');
+  });
+  afterEach(() => {
+    db.close();
+  });
+
+  it('repoe a config aos defaults apos configurar valores nao-default', async () => {
+    // Configurar valores nao-default
+    setGuildConfig(db, GUILD, {
+      ttsChannelId: 'ch-reset-test',
+      autoread: true,
+      ttsRoleId: 'role-reset-test',
+      enabled: false,
+      defaultVoice: 'pt_PT-tugao-medium',
+      maxChars: 999,
+      ratePerMin: 42,
+    });
+
+    const i = makeConfigInteraction({ sub: 'reset' });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+
+    // Resposta de confirmacao clara
+    expect(i.replies.some((r) => /reposta|defeito|default/i.test(r))).toBe(true);
+
+    // Config volta aos defaults
+    const cfg = getGuildConfig(db, GUILD);
+    expect(cfg.ttsChannelId).toBeNull();
+    expect(cfg.autoread).toBe(false);
+    expect(cfg.ttsRoleId).toBeNull();
+    expect(cfg.enabled).toBe(true);
+    expect(cfg.defaultVoice).toBe('');
+    expect(cfg.maxChars).toBe(300);
+    expect(cfg.ratePerMin).toBe(5);
+  });
+
+  it('blocklist e pronuncia sao mantidas apos reset', async () => {
+    // Adicionar dados na blocklist e pronuncia
+    addBlockword(db, GUILD, 'spam');
+    addPronunciation(db, GUILD, 'gg', 'good game');
+    // Configurar algo nao-default para confirmar que o reset e da config base
+    setGuildConfig(db, GUILD, { maxChars: 999 });
+
+    const i = makeConfigInteraction({ sub: 'reset' });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+
+    // Config base reposta
+    expect(getGuildConfig(db, GUILD).maxChars).toBe(300);
+    // Blocklist e pronuncia mantidas — nao destruidas pelo reset
+    expect(getBlocklist(db, GUILD)).toContain('spam');
+    expect(getPronunciations(db, GUILD)).toEqual([{ term: 'gg', replacement: 'good game' }]);
+  });
+
+  it('reset em guild sem config previa nao rebenta', async () => {
+    // Sem nenhum setGuildConfig anterior — apagar uma linha que nao existe e no-op
+    const i = makeConfigInteraction({ sub: 'reset' });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+
+    expect(i.replies.some((r) => /reposta|defeito|default/i.test(r))).toBe(true);
+    // Getconfig ainda devolve defaults
+    expect(getGuildConfig(db, GUILD).maxChars).toBe(300);
+  });
+});
