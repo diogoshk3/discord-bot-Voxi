@@ -559,11 +559,14 @@ async function handleSetup(i: ChatInputCommandInteraction, deps: BotDeps): Promi
 
   const me = deps.client.user;
   const textPerms = me && fullCh.permissionsFor ? fullCh.permissionsFor(me) : null;
-  // O canal de texto precisa de ViewChannel E SendMessages (contrato 3a). Juntamos
-  // ambas numa unica linha "ver/escrever": so e 'ok' se o bot tiver as duas.
+  // O canal de texto precisa de ViewChannel E SendMessages (contrato 3a). Cada uma
+  // tem a sua propria linha de checklist, com o seu estado independente — assim o
+  // admin ve exatamente qual falta (antes fundiamos as duas e mostravamos "❌
+  // ViewChannel" mesmo quando so faltava SendMessages, o que enganava).
   const canView = textPerms?.has(PermissionFlagsBits.ViewChannel) ?? false;
   const canSend = textPerms?.has(PermissionFlagsBits.SendMessages) ?? false;
-  const viewState: PermState = canView && canSend ? 'ok' : 'missing';
+  const viewState: PermState = canView ? 'ok' : 'missing';
+  const sendState: PermState = canSend ? 'ok' : 'missing';
 
   // (b) Perms de voz: so da para verificar se o invocador esta num canal de voz.
   const voiceCh = member?.voice?.channel as
@@ -588,12 +591,13 @@ async function handleSetup(i: ChatInputCommandInteraction, deps: BotDeps): Promi
     'Auto-leitura: ligada',
     '',
     '**Permissoes:**',
-    permLine('ViewChannel (ver/escrever no canal de texto)', viewState),
+    permLine('ViewChannel (ver o canal de texto)', viewState),
+    permLine('SendMessages (escrever no canal de texto)', sendState),
     permLine('Connect (ligar ao canal de voz)', connectState),
     permLine('Speak (falar no canal de voz)', speakState),
   ];
 
-  const anyMissing = [viewState, connectState, speakState].includes('missing');
+  const anyMissing = [viewState, sendState, connectState, speakState].includes('missing');
   if (anyMissing) {
     lines.push(
       '',
