@@ -101,6 +101,14 @@ async function handleJoin(i: ChatInputCommandInteraction, deps: BotDeps): Promis
     await reply(i, 'Tens de estar num canal de voz.');
     return;
   }
+  // Verificar permissoes Connect/Speak ANTES de tocar no player existente: um
+  // /join para um canal proibido nao deve destruir um player que ja funciona.
+  const me = deps.client.user;
+  const perms = me ? channel.permissionsFor(me) : null;
+  if (!perms || !perms.has(PermissionFlagsBits.Connect) || !perms.has(PermissionFlagsBits.Speak)) {
+    await reply(i, `Nao tenho permissao para Ligar/Falar em ${channel.name}.`);
+    return;
+  }
   removePlayer(deps, i.guildId!);
   const connection = joinVoiceChannel({
     channelId: channel.id,
