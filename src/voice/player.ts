@@ -152,6 +152,17 @@ export class GuildVoicePlayer {
   private async handleDisconnect(): Promise<void> {
     if (this.destroyed || this.reconnecting) return;
     this.reconnecting = true;
+    // Semantica das metricas de voz (P7.4):
+    //  - voiceDrops: conta a QUEDA uma vez por episodio. O guard acima
+    //    (destroyed || reconnecting) impede que eventos Disconnected repetidos
+    //    durante o mesmo episodio de reconexao re-entrem e contem a dobrar.
+    //  - voiceReconnects: conta o SUCESSO uma vez, quando a ligacao confirma
+    //    estar de volta a Ready — seja pela recuperacao "soft" (entersState Ready
+    //    resolve) seja por rejoin manual bem-sucedido (tryRejoin devolve true).
+    //    Como tryRejoin devolve um unico booleano (resultado do loop de backoff),
+    //    o sucesso conta no RESULTADO, nunca por tentativa — um ciclo de backoff
+    //    nunca conta a dobrar. Episodio que falha de vez: drops +1, reconnects +0.
+    metrics.inc('voiceDrops');
     try {
       // Reconexao "soft": o gateway esta a renegociar a sessao de voz.
       await Promise.race([
@@ -160,14 +171,17 @@ export class GuildVoicePlayer {
       ]);
       // Recuperou — esperar que volte a Ready.
       await entersState(this.connection, VoiceConnectionStatus.Ready, 20_000);
+      metrics.inc('voiceReconnects');
     } catch {
-      // Nao recuperou — tentar rejoin manual algumas vezes.
+      // Nao recuperou via soft — tentar rejoin manual algumas vezes.
       const recovered = await this.tryRejoin(3);
       if (!recovered) {
         this.destroy();
         this.onIdle();
         return;
       }
+      // Rejoin manual recuperou a ligacao (voltou a Ready) — conta UM sucesso.
+      metrics.inc('voiceReconnects');
     } finally {
       this.reconnecting = false;
     }

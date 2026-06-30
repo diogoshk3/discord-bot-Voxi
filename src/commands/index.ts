@@ -627,6 +627,8 @@ async function handleStats(i: ChatInputCommandInteraction, deps: BotDeps): Promi
     `Cache hits: ${snap.cacheHits}`,
     `Cache misses: ${snap.cacheMisses}`,
     `Erros de sintese: ${snap.synthErrors}`,
+    `Quedas de voz: ${snap.voiceDrops}`,
+    `Reconexoes: ${snap.voiceReconnects}`,
     `Players ativos: ${deps.players.size}`,
     `Servidores: ${deps.client.guilds.cache.size}`,
     `Uptime: ${uptimeSec}s`,
