@@ -8,6 +8,11 @@ import { initDb } from '../src/store/db';
 import { getUserVoice, setUserVoice, resetUserVoice } from '../src/store/userVoice';
 import { getGuildConfig, setGuildConfig } from '../src/store/guildConfig';
 import { getBlocklist, addBlockword, removeBlockword } from '../src/store/blocklist';
+import {
+  getPronunciations,
+  addPronunciation,
+  removePronunciation,
+} from '../src/store/pronunciation';
 
 const G = 'guild-1';
 const U = 'user-1';
@@ -178,6 +183,44 @@ describe('store', () => {
       expect(list).toContain('café');
       expect(list).toContain('Café');
       expect(list.length).toBe(2);
+    });
+  });
+
+  describe('pronunciation', () => {
+    it('returns empty array when nothing is set', () => {
+      expect(getPronunciations(db, G)).toEqual([]);
+    });
+
+    it('adds and gets a term/replacement', () => {
+      addPronunciation(db, G, 'gg', 'good game');
+      expect(getPronunciations(db, G)).toEqual([{ term: 'gg', replacement: 'good game' }]);
+    });
+
+    it('re-adding the same term updates the replacement (upsert)', () => {
+      addPronunciation(db, G, 'gg', 'good game');
+      addPronunciation(db, G, 'gg', 'gigi');
+      expect(getPronunciations(db, G)).toEqual([{ term: 'gg', replacement: 'gigi' }]);
+    });
+
+    it('removes a term', () => {
+      addPronunciation(db, G, 'gg', 'good game');
+      addPronunciation(db, G, 'btw', 'by the way');
+      removePronunciation(db, G, 'gg');
+      expect(getPronunciations(db, G)).toEqual([{ term: 'btw', replacement: 'by the way' }]);
+    });
+
+    it('orders entries by term ASC (determinismo)', () => {
+      addPronunciation(db, G, 'zz', 'ultimo');
+      addPronunciation(db, G, 'aa', 'primeiro');
+      expect(getPronunciations(db, G)).toEqual([
+        { term: 'aa', replacement: 'primeiro' },
+        { term: 'zz', replacement: 'ultimo' },
+      ]);
+    });
+
+    it('isolates pronunciations per guild', () => {
+      addPronunciation(db, G, 'gg', 'good game');
+      expect(getPronunciations(db, 'guild-2')).toEqual([]);
     });
   });
 
