@@ -49,6 +49,10 @@ export function getGuildConfig(db: Database.Database, guildId: string): GuildCon
   };
 }
 
+export function resetGuildConfig(db: Database.Database, guildId: string): void {
+  db.prepare('DELETE FROM guild_config WHERE guild_id = ?').run(guildId);
+}
+
 export function setGuildConfig(
   db: Database.Database,
   guildId: string,

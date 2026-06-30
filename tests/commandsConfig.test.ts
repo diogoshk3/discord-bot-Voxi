@@ -10,8 +10,8 @@ vi.mock('@discordjs/voice', () => ({
 import { handleInteraction } from '../src/commands/index';
 import type { BotDeps } from '../src/bot/deps';
 import { initDb } from '../src/store/db';
-import { getGuildConfig, setGuildConfig } from '../src/store/guildConfig';
-import { getBlocklist } from '../src/store/blocklist';
+import { getGuildConfig, setGuildConfig, resetGuildConfig } from '../src/store/guildConfig';
+import { getBlocklist, addBlockword } from '../src/store/blocklist';
 import { getPronunciations, addPronunciation } from '../src/store/pronunciation';
 import type Database from 'better-sqlite3';
 
@@ -511,5 +511,71 @@ describe('/config default-voice — valida modelo disponivel', () => {
     expect(i.replies.some((r) => /desconhecido|list/i.test(r))).toBe(true);
     // default_voice da guild fica vazio (nao definido)
     expect(getGuildConfig(db, GUILD).defaultVoice).toBe('');
+  });
+});
+
+// ── /config show ──────────────────────────────────────────────────────────────
+
+describe('/config show — mostra config atual do servidor', () => {
+  let db: Database.Database;
+
+  beforeEach(() => {
+    db = initDb(':memory:');
+  });
+  afterEach(() => {
+    db.close();
+  });
+
+  it('mostra os valores guardados (nao os defaults)', async () => {
+    // Configurar valores nao-default para confirmar que vem do store, nao hard-coded
+    setGuildConfig(db, GUILD, {
+      ttsChannelId: 'ch-show-test',
+      autoread: true,
+      ttsRoleId: 'role-show-test',
+      enabled: false,
+      defaultVoice: 'pt_PT-tugao-medium',
+      maxChars: 123,
+      ratePerMin: 7,
+    });
+    addBlockword(db, GUILD, 'spam');
+    addBlockword(db, GUILD, 'flood');
+    addPronunciation(db, GUILD, 'gg', 'good game');
+
+    const i = makeConfigInteraction({ sub: 'show' });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+
+    const text = i.replies.join('\n');
+    expect(text).toMatch(/ch-show-test/);
+    expect(text).toMatch(/autoread.*on|on.*autoread/i);
+    expect(text).toMatch(/role-show-test/);
+    expect(text).toMatch(/enabled.*off|off.*enabled/i);
+    expect(text).toMatch(/pt_PT-tugao-medium/);
+    expect(text).toMatch(/123/);
+    expect(text).toMatch(/7/);
+    expect(text).toMatch(/2/); // 2 palavras na blocklist
+    expect(text).toMatch(/1/); // 1 entrada de pronuncia
+  });
+
+  it('mostra (nenhum) para canal nao definido e qualquer para role nao definido', async () => {
+    // Sem nenhuma config definida — defaults
+    const i = makeConfigInteraction({ sub: 'show' });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+
+    const text = i.replies.join('\n');
+    expect(text).toMatch(/nenhum/i);
+    expect(text).toMatch(/qualquer/i);
+    expect(text).toMatch(/dete/i); // "(deteção automática)"
+  });
+
+  it('mostra deteção automática para defaultVoice vazio', async () => {
+    setGuildConfig(db, GUILD, { defaultVoice: '' });
+    const i = makeConfigInteraction({ sub: 'show' });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+
+    const text = i.replies.join('\n');
+    expect(text).toMatch(/dete/i);
   });
 });

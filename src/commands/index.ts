@@ -12,7 +12,7 @@ import type { BotDeps } from '../bot/deps';
 import { getPlayer, removePlayer, getLimiter } from '../bot/deps';
 import { GuildVoicePlayer } from '../voice/player';
 import { getUserVoice, setUserVoice, resetUserVoice } from '../store/userVoice';
-import { getGuildConfig, setGuildConfig } from '../store/guildConfig';
+import { getGuildConfig, setGuildConfig, resetGuildConfig } from '../store/guildConfig';
 import { addBlockword, removeBlockword, getBlocklist } from '../store/blocklist';
 import {
   getPronunciations,
@@ -101,6 +101,8 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
         .setDescription('Define a voz default do servidor (usada quando o user nao tem voz propria)')
         .addStringOption((o) => o.setName('model').setDescription('Modelo Piper').setRequired(true)),
     )
+    .addSubcommand((s) => s.setName('show').setDescription('Mostra a configuracao atual do servidor'))
+    .addSubcommand((s) => s.setName('reset').setDescription('Repoe a configuracao do servidor aos valores por defeito'))
     .addSubcommandGroup((g) =>
       g
         .setName('blockword')
@@ -393,6 +395,32 @@ async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps): Prom
     }
     setGuildConfig(deps.db, i.guildId!, { defaultVoice: model });
     await reply(i, `Voz default do servidor: ${model}.`);
+  } else if (sub === 'show') {
+    const cfg = getGuildConfig(deps.db, i.guildId!);
+    const blocklistCount = getBlocklist(deps.db, i.guildId!).length;
+    const pronunciationCount = getPronunciations(deps.db, i.guildId!).length;
+    const channelStr = cfg.ttsChannelId ? `<#${cfg.ttsChannelId}>` : '(nenhum)';
+    const roleStr = cfg.ttsRoleId ? `<@&${cfg.ttsRoleId}>` : 'qualquer';
+    const voiceStr = cfg.defaultVoice || '(deteção automática)';
+    const lines = [
+      '**Configuracao do servidor:**',
+      `Canal TTS: ${channelStr}`,
+      `Autoread: ${cfg.autoread ? 'on' : 'off'}`,
+      `Role: ${roleStr}`,
+      `Enabled: ${cfg.enabled ? 'on' : 'off'}`,
+      `Voz default: ${voiceStr}`,
+      `Max chars: ${cfg.maxChars}`,
+      `Rate-limit: ${cfg.ratePerMin}/min`,
+      `Blocklist: ${blocklistCount} palavras`,
+      `Pronuncia: ${pronunciationCount} entradas`,
+    ];
+    await reply(i, lines.join('\n'));
+  } else if (sub === 'reset') {
+    resetGuildConfig(deps.db, i.guildId!);
+    await reply(
+      i,
+      'Config reposta aos valores por defeito. Blocklist e pronuncia mantidas.',
+    );
   }
 }
 
