@@ -17,6 +17,7 @@ resume o essencial e **liga** para o detalhe; não repete os guias completos.
 ## 1. Ativar "Public Bot"
 
 - [ ] No Developer Portal → Bot, liga o toggle **PUBLIC BOT** para qualquer pessoa poder convidar o Voxi; **verifica:** o toggle fica **ON**. _~1 min — detalhe: [docs/GO-PUBLIC.md §1](docs/GO-PUBLIC.md#1-ativar-public-bot)._
+- [ ] Carrega o **ícone/avatar da app** no Developer Portal (General Information → App Icon, e Bot → Avatar): usa **`assets/voxi-icon.png`** (no repo — também disponível em `voxi-brand-assets-refined/voxi-icon.png`). _~1 min._
 
 ## 2. Ativar o MESSAGE CONTENT intent
 
