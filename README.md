@@ -2,6 +2,11 @@
 
 > type it, hear it.
 
+![License](https://img.shields.io/badge/license-MIT-blue)
+![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)
+![Docker ready](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)
+![made with Piper](https://img.shields.io/badge/made%20with-Piper-5a4fcf)
+
 **Voz neural (não robótica) que não cai do canal — e cuja qualidade nunca fica atrás de paywall.** O Voxi é um bot de Text-to-Speech para Discord que lê texto em canais de voz com voz **neural** (Piper): comando `/tts`, auto-leitura de um canal configurado e leitura de menções/replies ao bot. Deteta a língua de cada mensagem e escolhe a voz sozinho, e cada utilizador pode fixar a sua própria voz.
 
 A maioria dos bots de TTS força-te a escolher: ou é grátis-mas-robótico, ou natural-mas-atrás de paywall — e o líder de mercado "desconecta durante horas". O Voxi tem tudo o que o líder tem (auto-leitura, `/setup` de um comando, deteta a língua sozinho) — e ainda os **dois** trunfos que o líder não reúne para línguas ocidentais (PT/EN/europeu):
@@ -15,6 +20,36 @@ Estes dois (voz neural grátis + fiabilidade) são o que distingue o Voxi. O res
 A par disto: moderação (blocklist, rate-limit, limite de chars, gating por canal), fila FIFO com `/skip`, auto-saída por inatividade e cache de áudio.
 
 > Estado: **v0** (núcleo competitivo). Motor neural pago, streaming e monetização estão **fora** deste v0. O Voxi é **self-host**: corre no teu PC ou podes **alojá-lo tu** num VPS via Docker (continua a exigir setup — não é um bot já alojado que se convida) — ver secção **Deploy em VPS (Docker)** no fim.
+
+---
+
+## Instalação em 3 linhas (quickstart)
+
+Já tens o Node (>= 20), o binário do Piper e pelo menos um modelo de voz `.onnx`? Então o mínimo para arrancar é:
+
+```bash
+git clone https://github.com/diogoshk3/discord-bot-Voxi.git voxi && cd voxi
+npm install                       # deps + bindings nativos
+cp .env.example .env              # edita: DISCORD_TOKEN, CLIENT_ID, PIPER_PATH, MODELS_DIR; depois: npm run register && npm run dev
+```
+
+Este é só o resumo. Para o passo-a-passo (binário do Piper, modelos de voz, todas as variáveis do `.env`), **[ver setup completo →](#1-pré-requisitos)**.
+
+## Níveis: Easy · Normal · Hard
+
+Três caminhos para o mesmo bot — escolhe pelo controlo/esforço que queres, não há um "mais fácil que convidar". Self-host exige sempre setup.
+
+| Nível | Para quem | Como | Secção |
+|---|---|---|---|
+| **Easy** | Quem quer o bot sempre online sem instalar Node à mão | Alojas tu numa VPS Linux com `docker compose` | [§5 Deploy em VPS (Docker)](#5-deploy-em-vps-docker) |
+| **Normal** | Quem corre no próprio PC para testar ou usar pontualmente | Node + Piper local, `npm install` → `npm run dev` | [§1 Pré-requisitos](#1-pré-requisitos) e [§2 Setup](#2-setup) |
+| **Hard** | Quem quer afinar vozes/motor ou experimentar TTS neural por API | Motor neural (`TTS_ENGINE=neural` + OpenAI) e tweaks de modelos/locale | [§1.5 Modelos](#15-modelos-de-voz-línguas) e [§5.4 `.env`](#54-ficheiro-env) |
+
+## Demo
+
+<!-- TODO: GIF demo — gravar ~10s a mostrar /tts a ler uma frase PT e uma EN com voz Piper, e colocar o GIF aqui (ex.: docs/demo.gif). -->
+
+_(demo em breve — GIF de ~10s a ler PT + EN com voz neural Piper.)_
 
 ---
 
@@ -317,3 +352,13 @@ docker compose down            # pára e remove o container (os dados persistem 
 > - Terms of Service URL: `https://github.com/diogoshk3/discord-bot-Voxi/blob/main/TERMS.md`
 >
 > O repositório está **privado** por agora, por isso estes links só ficam acessíveis (e válidos para o Discord) depois de o tornares público. Antes de publicar, preenche o campo de contacto/responsável no fim de `PRIVACY.md`.
+
+---
+
+## GitHub Topics
+
+Topics a aplicar ao repositório (para descoberta no GitHub), quando for público:
+
+<!-- topics: discord-tts-bot tts text-to-speech piper piper-tts self-hosted neural-tts -->
+
+`discord-tts-bot` · `tts` · `text-to-speech` · `piper` · `piper-tts` · `self-hosted` · `neural-tts`
