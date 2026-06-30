@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import type Database from 'better-sqlite3';
 import { initDb } from '../src/store/db';
 import { getUserVoice, setUserVoice, resetUserVoice } from '../src/store/userVoice';
@@ -172,5 +174,16 @@ describe('store', () => {
       expect(cfg.maxChars).toBe(400);
       expect(cfg.defaultVoice).toBe('pt_PT-tugao-medium');
     });
+  });
+});
+
+describe('initDb — erro de abertura', () => {
+  it('lanca erro com mensagem clara quando o caminho e invalido', () => {
+    // better-sqlite3 NAO cria directorios intermedios: um caminho cujo pai nao
+    // existe falha de forma fiavel (portavel, ao contrario de permission-denied).
+    const bad = join(tmpdir(), `nope-${Date.now()}-${Math.random().toString(36).slice(2)}`, 'x.db');
+    expect(() => initDb(bad)).toThrow(/Falha ao abrir a base de dados/);
+    // A mensagem inclui o caminho para diagnostico.
+    expect(() => initDb(bad)).toThrow(bad);
   });
 });

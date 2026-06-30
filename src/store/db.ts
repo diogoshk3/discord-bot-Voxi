@@ -1,8 +1,14 @@
 import Database from 'better-sqlite3';
 
 export function initDb(path: string): Database.Database {
-  const db = new Database(path);
-  db.pragma('journal_mode = WAL');
+  let db: Database.Database;
+  try {
+    db = new Database(path);
+    db.pragma('journal_mode = WAL');
+  } catch (err) {
+    // Mensagem clara em vez de stack trace cru (ex.: caminho invalido/sem permissoes).
+    throw new Error(`Falha ao abrir a base de dados em ${path}: ${(err as Error).message}`);
+  }
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS user_voice (
