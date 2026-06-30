@@ -3,4 +3,6 @@ dist
 .env
 cache/
 *.db
+*.db-*
 models/
+piper/
