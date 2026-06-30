@@ -29,6 +29,8 @@ describe('loadConfig', () => {
       QUEUE_CAP: undefined,
       MAX_CHARS: undefined,
       RATE_PER_MIN: undefined,
+      TTS_ENGINE: undefined,
+      OPENAI_API_KEY: undefined,
     });
   });
 
@@ -99,5 +101,25 @@ describe('loadConfig', () => {
     setEnv({ ...REQUIRED, DEFAULT_VOICE: 'pt_PT-tugao-medium' });
     const cfg = loadConfig();
     expect(cfg.defaultVoice).toBe('pt_PT-tugao-medium');
+  });
+
+  it('defaults ttsEngine to piper and leaves openaiApiKey undefined', () => {
+    setEnv(REQUIRED);
+    const cfg = loadConfig();
+    expect(cfg.ttsEngine).toBe('piper');
+    expect(cfg.openaiApiKey).toBeUndefined();
+  });
+
+  it('reads TTS_ENGINE=neural and OPENAI_API_KEY', () => {
+    setEnv({ ...REQUIRED, TTS_ENGINE: 'neural', OPENAI_API_KEY: 'sk-abc' });
+    const cfg = loadConfig();
+    expect(cfg.ttsEngine).toBe('neural');
+    expect(cfg.openaiApiKey).toBe('sk-abc');
+  });
+
+  it('falls back to piper on invalid TTS_ENGINE', () => {
+    setEnv({ ...REQUIRED, TTS_ENGINE: 'bogus' });
+    const cfg = loadConfig();
+    expect(cfg.ttsEngine).toBe('piper');
   });
 });

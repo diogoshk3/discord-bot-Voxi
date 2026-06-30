@@ -3,7 +3,7 @@ import path from 'node:path';
 import { loadConfig } from './config/index';
 import { initDb } from './store/db';
 import { AudioCache } from './tts/cache';
-import { PiperEngine } from './tts/piper';
+import { createEngine } from './tts/factory';
 import { GuildVoicePlayer } from './voice/player';
 import type { BotDeps } from './bot/deps';
 import { createClient, bindEvents } from './bot/client';
@@ -21,7 +21,7 @@ async function main(): Promise<void> {
   const config = loadConfig();
   const db = initDb(config.dbPath);
   const cache = new AudioCache(path.join(path.dirname(config.dbPath), 'audio-cache'));
-  const engine = new PiperEngine(config.piperPath, config.modelsDir, cache);
+  const engine = createEngine(config, cache);
 
   const availableModels = discoverModels(config.modelsDir);
   if (availableModels.length === 0) {
