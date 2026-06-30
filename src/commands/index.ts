@@ -53,6 +53,14 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
     .addSubcommand((s) =>
       s.setName('optin').setDescription('Volta a ser lido automaticamente no canal de auto-leitura'),
     )
+    .addSubcommand((s) =>
+      s
+        .setName('preview')
+        .setDescription('Toca uma frase de amostra na tua voz atual (ou num modelo especifico)')
+        .addStringOption((o) =>
+          o.setName('model').setDescription('Modelo Piper (opcional)').setRequired(false),
+        ),
+    )
     .toJSON(),
   new SlashCommandBuilder()
     .setName('config')
@@ -292,6 +300,41 @@ async function handleVoice(i: ChatInputCommandInteraction, deps: BotDeps): Promi
   } else if (sub === 'optin') {
     setOptIn(deps.db, i.guildId!, i.user.id);
     await reply(i, 'Voltas a ser lido automaticamente.');
+  } else if (sub === 'preview') {
+    const SAMPLE = 'Ola, eu sou o Voxi. type it, hear it.';
+    const explicitModel = i.options.getString('model');
+
+    // Valida o model explícito ANTES de verificar o player.
+    if (explicitModel !== null && !deps.availableModels.includes(explicitModel)) {
+      await reply(i, 'Modelo desconhecido. Usa /voice list.');
+      return;
+    }
+
+    const player = getPlayer(deps, i.guildId!);
+    if (!player) {
+      await reply(i, 'Nao estou num canal de voz. Usa /join primeiro.');
+      return;
+    }
+
+    const cfg = getGuildConfig(deps.db, i.guildId!);
+    const stored = getUserVoice(deps.db, i.guildId!, i.user.id);
+    // Se foi dado um model explícito, constrói um userVoice sintético para que
+    // resolveSynth o use directamente (sem deteção de língua). A velocidade
+    // vem da voz guardada do utilizador, senão do default global.
+    const userVoice =
+      explicitModel !== null
+        ? { model: explicitModel, speed: stored?.speed ?? deps.config.defaultSpeed }
+        : stored;
+    const req = resolveSynth({
+      text: SAMPLE,
+      userVoice,
+      available: deps.availableModels,
+      guildDefaultVoice: cfg.defaultVoice,
+      defaultVoice: deps.config.defaultVoice,
+      defaultSpeed: deps.config.defaultSpeed,
+    });
+    await player.say(req);
+    await reply(i, 'A reproduzir uma amostra…');
   }
 }
 
