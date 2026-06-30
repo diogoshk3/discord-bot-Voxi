@@ -24,6 +24,7 @@ function makeConfigDeps(db: Database.Database): BotDeps {
     players: new Map(),
     db,
     config: {},
+    availableModels: ['en_US-amy-medium', 'pt_PT-tugao-medium'],
   } as unknown as BotDeps;
 }
 
@@ -352,5 +353,72 @@ describe('/config blockword — validacao de palavra vazia', () => {
     await handleInteraction(i as any, deps);
     expect(i.replies.some((r) => /[Dd]esbloqueado/i.test(r))).toBe(true);
     expect(getBlocklist(db, GUILD)).not.toContain('spam');
+  });
+});
+
+// ── enabled (kill-switch) ─────────────────────────────────────────────────────
+
+describe('/config enabled — kill-switch do servidor', () => {
+  let db: Database.Database;
+
+  beforeEach(() => {
+    db = initDb(':memory:');
+  });
+  afterEach(() => {
+    db.close();
+  });
+
+  it('desliga o TTS (enabled=false) e persiste', async () => {
+    const i = makeConfigInteraction({ sub: 'enabled', optionsMap: { ativo: false } });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(i.replies.some((r) => /desativ|deslig/i.test(r))).toBe(true);
+    expect(getGuildConfig(db, GUILD).enabled).toBe(false);
+  });
+
+  it('liga o TTS (enabled=true) e persiste', async () => {
+    // Primeiro desligar para confirmar que volta a ligar.
+    setGuildConfig(db, GUILD, { enabled: false });
+    const i = makeConfigInteraction({ sub: 'enabled', optionsMap: { ativo: true } });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(i.replies.some((r) => /ativ|lig/i.test(r))).toBe(true);
+    expect(getGuildConfig(db, GUILD).enabled).toBe(true);
+  });
+});
+
+// ── default-voice ─────────────────────────────────────────────────────────────
+
+describe('/config default-voice — valida modelo disponivel', () => {
+  let db: Database.Database;
+
+  beforeEach(() => {
+    db = initDb(':memory:');
+  });
+  afterEach(() => {
+    db.close();
+  });
+
+  it('aceita modelo disponivel e persiste o default_voice da guild', async () => {
+    const i = makeConfigInteraction({
+      sub: 'default-voice',
+      optionsMap: { model: 'pt_PT-tugao-medium' },
+    });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(i.replies.some((r) => /pt_PT-tugao-medium/.test(r))).toBe(true);
+    expect(getGuildConfig(db, GUILD).defaultVoice).toBe('pt_PT-tugao-medium');
+  });
+
+  it('rejeita modelo desconhecido com mensagem clara e nao aplica', async () => {
+    const i = makeConfigInteraction({
+      sub: 'default-voice',
+      optionsMap: { model: 'xx_XX-naoexiste' },
+    });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(i.replies.some((r) => /desconhecido|list/i.test(r))).toBe(true);
+    // default_voice da guild fica vazio (nao definido)
+    expect(getGuildConfig(db, GUILD).defaultVoice).toBe('');
   });
 });

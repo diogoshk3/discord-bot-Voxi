@@ -82,6 +82,18 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
           o.setName('role').setDescription('Role permitido (vazio = sem restricao)').setRequired(false),
         ),
     )
+    .addSubcommand((s) =>
+      s
+        .setName('enabled')
+        .setDescription('Liga/desliga o TTS neste servidor (kill-switch)')
+        .addBooleanOption((o) => o.setName('ativo').setDescription('on/off').setRequired(true)),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName('default-voice')
+        .setDescription('Define a voz default do servidor (usada quando o user nao tem voz propria)')
+        .addStringOption((o) => o.setName('model').setDescription('Modelo Piper').setRequired(true)),
+    )
     .addSubcommandGroup((g) =>
       g
         .setName('blockword')
@@ -304,6 +316,20 @@ async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps): Prom
       setGuildConfig(deps.db, i.guildId!, { ttsRoleId: null });
       await reply(i, 'Restricao de role removida: todos podem ser lidos.');
     }
+  } else if (sub === 'enabled') {
+    // Kill-switch do servidor: o messageHandler ja ignora tudo quando enabled=false.
+    const on = i.options.getBoolean('ativo', true);
+    setGuildConfig(deps.db, i.guildId!, { enabled: on });
+    await reply(i, on ? 'TTS ativado neste servidor.' : 'TTS desativado neste servidor.');
+  } else if (sub === 'default-voice') {
+    // Valida contra os modelos disponiveis, tal como /voice set.
+    const model = i.options.getString('model', true);
+    if (!deps.availableModels.includes(model)) {
+      await reply(i, 'Modelo desconhecido. Usa /voice list.');
+      return;
+    }
+    setGuildConfig(deps.db, i.guildId!, { defaultVoice: model });
+    await reply(i, `Voz default do servidor: ${model}.`);
   }
 }
 
