@@ -1,0 +1,323 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { PermissionFlagsBits, ChannelType } from 'discord.js';
+
+// Mock minimo de @discordjs/voice — nao e usado no /config, mas o import resolve-o.
+vi.mock('@discordjs/voice', () => ({
+  joinVoiceChannel: () => ({}),
+  getVoiceConnection: () => undefined,
+}));
+
+import { handleInteraction } from '../src/commands/index';
+import type { BotDeps } from '../src/bot/deps';
+import { initDb } from '../src/store/db';
+import { getGuildConfig } from '../src/store/guildConfig';
+import { getBlocklist } from '../src/store/blocklist';
+import type Database from 'better-sqlite3';
+
+const GUILD = 'g-config-test';
+
+// ── helpers ─────────────────────────────────────────────────────────────────
+
+function makeConfigDeps(db: Database.Database): BotDeps {
+  return {
+    client: { user: { id: 'bot-1' } },
+    players: new Map(),
+    db,
+    config: {},
+  } as unknown as BotDeps;
+}
+
+interface FakeInteraction {
+  commandName: string;
+  guildId: string;
+  replies: string[];
+  reply: (opts: { content: string }) => Promise<void>;
+  isRepliable: () => boolean;
+  replied: boolean;
+  deferred: boolean;
+  member: unknown;
+  guild: unknown;
+  options: unknown;
+}
+
+function makeConfigInteraction(opts: {
+  sub?: string;
+  group?: string | null;
+  optionsMap?: Record<string, unknown>;
+  guild?: unknown;
+}): FakeInteraction {
+  const replies: string[] = [];
+  const optionsMap = opts.optionsMap ?? {};
+  return {
+    commandName: 'config',
+    guildId: GUILD,
+    replies,
+    replied: false,
+    deferred: false,
+    isRepliable: () => true,
+    reply: async (o: { content: string }) => {
+      replies.push(o.content);
+    },
+    member: {
+      permissions: { has: () => true }, // admin by default
+    },
+    guild: opts.guild ?? null,
+    options: {
+      getSubcommandGroup: (_required = false) => opts.group ?? null,
+      getSubcommand: () => opts.sub ?? '',
+      getInteger: (name: string) => (optionsMap[name] as number) ?? null,
+      getString: (name: string) => (optionsMap[name] as string) ?? '',
+      getBoolean: (name: string) => (optionsMap[name] as boolean) ?? false,
+      getChannel: (name: string) => (optionsMap[name] as unknown) ?? null,
+    },
+  };
+}
+
+// ── max-chars ────────────────────────────────────────────────────────────────
+
+describe('/config max-chars — validacao de range', () => {
+  let db: Database.Database;
+
+  beforeEach(() => {
+    db = initDb(':memory:');
+  });
+  afterEach(() => {
+    db.close();
+  });
+
+  it('rejeita valor 0 com mensagem clara e nao aplica', async () => {
+    const i = makeConfigInteraction({ sub: 'max-chars', optionsMap: { valor: 0 } });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(i.replies.some((r) => /max-chars|entre|1.*2000|2000.*1/i.test(r))).toBe(true);
+    expect(getGuildConfig(db, GUILD).maxChars).toBe(300); // default intacto
+  });
+
+  it('rejeita valor 2001 com mensagem clara e nao aplica', async () => {
+    const i = makeConfigInteraction({ sub: 'max-chars', optionsMap: { valor: 2001 } });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(i.replies.some((r) => /max-chars|entre|1.*2000|2000.*1/i.test(r))).toBe(true);
+    expect(getGuildConfig(db, GUILD).maxChars).toBe(300);
+  });
+
+  it('aceita valor 500 e persiste', async () => {
+    const i = makeConfigInteraction({ sub: 'max-chars', optionsMap: { valor: 500 } });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(i.replies.some((r) => /500/i.test(r))).toBe(true);
+    expect(getGuildConfig(db, GUILD).maxChars).toBe(500);
+  });
+
+  it('aceita valor limite 1 e persiste', async () => {
+    const i = makeConfigInteraction({ sub: 'max-chars', optionsMap: { valor: 1 } });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(getGuildConfig(db, GUILD).maxChars).toBe(1);
+  });
+
+  it('aceita valor limite 2000 e persiste', async () => {
+    const i = makeConfigInteraction({ sub: 'max-chars', optionsMap: { valor: 2000 } });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(getGuildConfig(db, GUILD).maxChars).toBe(2000);
+  });
+});
+
+// ── rate-limit ───────────────────────────────────────────────────────────────
+
+describe('/config rate-limit — validacao de range', () => {
+  let db: Database.Database;
+
+  beforeEach(() => {
+    db = initDb(':memory:');
+  });
+  afterEach(() => {
+    db.close();
+  });
+
+  it('rejeita valor 0 com mensagem clara e nao aplica', async () => {
+    const i = makeConfigInteraction({ sub: 'rate-limit', optionsMap: { valor: 0 } });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(i.replies.some((r) => /rate-limit|entre|1.*120|120.*1/i.test(r))).toBe(true);
+    expect(getGuildConfig(db, GUILD).ratePerMin).toBe(5); // default intacto
+  });
+
+  it('rejeita valor 121 com mensagem clara e nao aplica', async () => {
+    const i = makeConfigInteraction({ sub: 'rate-limit', optionsMap: { valor: 121 } });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(i.replies.some((r) => /rate-limit|entre|1.*120|120.*1/i.test(r))).toBe(true);
+    expect(getGuildConfig(db, GUILD).ratePerMin).toBe(5);
+  });
+
+  it('aceita valor 10 e persiste', async () => {
+    const i = makeConfigInteraction({ sub: 'rate-limit', optionsMap: { valor: 10 } });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(i.replies.some((r) => /10/i.test(r))).toBe(true);
+    expect(getGuildConfig(db, GUILD).ratePerMin).toBe(10);
+  });
+
+  it('aceita valor limite 1 e persiste', async () => {
+    const i = makeConfigInteraction({ sub: 'rate-limit', optionsMap: { valor: 1 } });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(getGuildConfig(db, GUILD).ratePerMin).toBe(1);
+  });
+
+  it('aceita valor limite 120 e persiste', async () => {
+    const i = makeConfigInteraction({ sub: 'rate-limit', optionsMap: { valor: 120 } });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(getGuildConfig(db, GUILD).ratePerMin).toBe(120);
+  });
+});
+
+// ── tts-channel ──────────────────────────────────────────────────────────────
+
+describe('/config tts-channel — validacao de tipo e acesso', () => {
+  let db: Database.Database;
+
+  beforeEach(() => {
+    db = initDb(':memory:');
+  });
+  afterEach(() => {
+    db.close();
+  });
+
+  it('rejeita canal de voz (tipo errado) com mensagem clara', async () => {
+    const fakeChannel = { id: 'ch-voice', type: ChannelType.GuildVoice };
+    const i = makeConfigInteraction({
+      sub: 'tts-channel',
+      optionsMap: { canal: fakeChannel },
+    });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(i.replies.some((r) => /texto|voz|categoria/i.test(r))).toBe(true);
+    expect(getGuildConfig(db, GUILD).ttsChannelId).toBeNull();
+  });
+
+  it('rejeita canal de texto sem permissao ViewChannel', async () => {
+    const fakeChannel = { id: 'ch-noaccess', type: ChannelType.GuildText };
+    const guild = {
+      channels: {
+        cache: {
+          get: () => ({
+            permissionsFor: () => ({ has: () => false }),
+          }),
+        },
+      },
+    };
+    const i = makeConfigInteraction({
+      sub: 'tts-channel',
+      optionsMap: { canal: fakeChannel },
+      guild,
+    });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(i.replies.some((r) => /acesso|permiss/i.test(r))).toBe(true);
+    expect(getGuildConfig(db, GUILD).ttsChannelId).toBeNull();
+  });
+
+  it('aceita canal de texto acessivel e persiste', async () => {
+    const fakeChannel = { id: 'ch-ok', type: ChannelType.GuildText };
+    const guild = {
+      channels: {
+        cache: {
+          get: () => ({
+            permissionsFor: () => ({ has: () => true }),
+          }),
+        },
+      },
+    };
+    const i = makeConfigInteraction({
+      sub: 'tts-channel',
+      optionsMap: { canal: fakeChannel },
+      guild,
+    });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(i.replies.some((r) => /ch-ok/.test(r))).toBe(true);
+    expect(getGuildConfig(db, GUILD).ttsChannelId).toBe('ch-ok');
+  });
+});
+
+// ── blockword add/remove ─────────────────────────────────────────────────────
+
+describe('/config blockword — validacao de palavra vazia', () => {
+  let db: Database.Database;
+
+  beforeEach(() => {
+    db = initDb(':memory:');
+  });
+  afterEach(() => {
+    db.close();
+  });
+
+  it('blockword add: rejeita string vazia com mensagem clara', async () => {
+    const i = makeConfigInteraction({
+      group: 'blockword',
+      sub: 'add',
+      optionsMap: { palavra: '' },
+    });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(i.replies.some((r) => /vazia|vazio|palavra/i.test(r))).toBe(true);
+    expect(getBlocklist(db, GUILD)).toHaveLength(0);
+  });
+
+  it('blockword add: rejeita string so com espacos (apos trim)', async () => {
+    const i = makeConfigInteraction({
+      group: 'blockword',
+      sub: 'add',
+      optionsMap: { palavra: '   ' },
+    });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(i.replies.some((r) => /vazia|vazio|palavra/i.test(r))).toBe(true);
+    expect(getBlocklist(db, GUILD)).toHaveLength(0);
+  });
+
+  it('blockword add: aceita palavra valida, guarda trimada', async () => {
+    const i = makeConfigInteraction({
+      group: 'blockword',
+      sub: 'add',
+      optionsMap: { palavra: '  spam  ' },
+    });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(i.replies.some((r) => /spam/i.test(r))).toBe(true);
+    expect(getBlocklist(db, GUILD)).toContain('spam');
+    // Nao guarda com espacos
+    expect(getBlocklist(db, GUILD)).not.toContain('  spam  ');
+  });
+
+  it('blockword remove: rejeita string vazia com mensagem clara', async () => {
+    const i = makeConfigInteraction({
+      group: 'blockword',
+      sub: 'remove',
+      optionsMap: { palavra: '' },
+    });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(i.replies.some((r) => /vazia|vazio|palavra/i.test(r))).toBe(true);
+  });
+
+  it('blockword remove: aceita palavra valida', async () => {
+    // Pre-adicionar via blocklist diretamente para depois remover
+    const { addBlockword } = await import('../src/store/blocklist');
+    addBlockword(db, GUILD, 'spam');
+
+    const i = makeConfigInteraction({
+      group: 'blockword',
+      sub: 'remove',
+      optionsMap: { palavra: 'spam' },
+    });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(i.replies.some((r) => /[Dd]esbloqueado/i.test(r))).toBe(true);
+    expect(getBlocklist(db, GUILD)).not.toContain('spam');
+  });
+});

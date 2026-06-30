@@ -62,13 +62,17 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
       s
         .setName('max-chars')
         .setDescription('Maximo de caracteres por mensagem')
-        .addIntegerOption((o) => o.setName('valor').setDescription('1-2000').setRequired(true)),
+        .addIntegerOption((o) =>
+          o.setName('valor').setDescription('1-2000').setRequired(true).setMinValue(1).setMaxValue(2000),
+        ),
     )
     .addSubcommand((s) =>
       s
         .setName('rate-limit')
         .setDescription('Mensagens por minuto por user')
-        .addIntegerOption((o) => o.setName('valor').setDescription('>=1').setRequired(true)),
+        .addIntegerOption((o) =>
+          o.setName('valor').setDescription('1-120').setRequired(true).setMinValue(1).setMaxValue(120),
+        ),
     )
     .addSubcommandGroup((g) =>
       g
@@ -230,7 +234,11 @@ async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps): Prom
   const group = i.options.getSubcommandGroup(false);
   if (group === 'blockword') {
     const sub = i.options.getSubcommand();
-    const word = i.options.getString('palavra', true);
+    const word = i.options.getString('palavra', true).trim();
+    if (!word) {
+      await reply(i, 'A palavra nao pode ser vazia.');
+      return;
+    }
     if (sub === 'add') {
       addBlockword(deps.db, i.guildId!, word);
       await reply(i, `Bloqueado: ${word}.`);
@@ -243,6 +251,18 @@ async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps): Prom
   const sub = i.options.getSubcommand();
   if (sub === 'tts-channel') {
     const ch = i.options.getChannel('canal', true);
+    if (ch.type !== ChannelType.GuildText) {
+      await reply(i, 'Tens de escolher um canal de texto (nao voz nem categoria).');
+      return;
+    }
+    const me = deps.client.user;
+    // ch pode ser um objeto parcial (APIChannel) — usa guild.channels.cache para obter o canal completo
+    const fullCh = i.guild?.channels.cache.get(ch.id);
+    const perms = me && fullCh ? fullCh.permissionsFor(me) : null;
+    if (!perms || !perms.has(PermissionFlagsBits.ViewChannel)) {
+      await reply(i, `Nao tenho acesso ao canal <#${ch.id}>. Verifica as permissoes.`);
+      return;
+    }
     setGuildConfig(deps.db, i.guildId!, { ttsChannelId: ch.id });
     await reply(i, `Canal de auto-leitura: <#${ch.id}>.`);
   } else if (sub === 'autoread') {
@@ -250,11 +270,19 @@ async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps): Prom
     setGuildConfig(deps.db, i.guildId!, { autoread: on });
     await reply(i, `Auto-leitura: ${on ? 'ligada' : 'desligada'}.`);
   } else if (sub === 'max-chars') {
-    const v = Math.min(2000, Math.max(1, i.options.getInteger('valor', true)));
+    const v = i.options.getInteger('valor', true);
+    if (v < 1 || v > 2000) {
+      await reply(i, 'O valor de max-chars tem de estar entre 1 e 2000.');
+      return;
+    }
     setGuildConfig(deps.db, i.guildId!, { maxChars: v });
     await reply(i, `Max chars: ${v}.`);
   } else if (sub === 'rate-limit') {
-    const v = Math.max(1, i.options.getInteger('valor', true));
+    const v = i.options.getInteger('valor', true);
+    if (v < 1 || v > 120) {
+      await reply(i, 'O valor de rate-limit tem de estar entre 1 e 120.');
+      return;
+    }
     setGuildConfig(deps.db, i.guildId!, { ratePerMin: v });
     await reply(i, `Rate-limit: ${v}/min.`);
   }
