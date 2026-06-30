@@ -94,3 +94,78 @@ describe('AudioCache', () => {
     expect(existsSync(stored)).toBe(true);
   });
 });
+
+describe('AudioCache.withNamespace', () => {
+  let dir: string;
+  let srcDir: string;
+
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), 'ttscache-ns-'));
+    srcDir = mkdtempSync(join(tmpdir(), 'ttssrc-ns-'));
+  });
+
+  afterEach(() => {
+    rmSync(dir, { recursive: true, force: true });
+    rmSync(srcDir, { recursive: true, force: true });
+  });
+
+  it('namespaces diferentes resolvem para subdiretorios distintos', () => {
+    const base = new AudioCache(dir);
+    const piper = base.withNamespace('piper');
+    const neural = base.withNamespace('neural');
+
+    const src = join(srcDir, 'out.wav');
+    writeFileSync(src, Buffer.from('audio'));
+
+    const piperPath = piper.put('chave', src);
+    const neuralPath = neural.put('chave', src);
+
+    expect(piperPath).toContain('piper');
+    expect(neuralPath).toContain('neural');
+    expect(piperPath).not.toBe(neuralPath);
+  });
+
+  it('hit num namespace nao e visivel no outro (sem cross-contamination)', () => {
+    const base = new AudioCache(dir);
+    const piper = base.withNamespace('piper');
+    const neural = base.withNamespace('neural');
+
+    const src = join(srcDir, 'out.wav');
+    writeFileSync(src, Buffer.from('audio'));
+
+    piper.put('chave', src);
+
+    // 'neural' nao tem a chave — nao deve encontrar o ficheiro do 'piper'
+    expect(neural.get('chave')).toBeNull();
+  });
+
+  it('mesma chave em namespaces diferentes nao colide — cada um le o seu proprio ficheiro', () => {
+    // cacheKey seria identico para a mesma SynthRequest, mas o dir e diferente
+    const base = new AudioCache(dir);
+    const piper = base.withNamespace('piper');
+    const neural = base.withNamespace('neural');
+
+    const src = join(srcDir, 'out.wav');
+    writeFileSync(src, Buffer.from('audio-piper'));
+
+    const src2 = join(srcDir, 'out2.wav');
+    writeFileSync(src2, Buffer.from('audio-neural'));
+
+    piper.put('abc123', src);
+    neural.put('abc123', src2);
+
+    // Cada namespace le o seu proprio ficheiro
+    expect(piper.get('abc123')).toBeTruthy();
+    expect(neural.get('abc123')).toBeTruthy();
+    expect(piper.get('abc123')).not.toBe(neural.get('abc123'));
+  });
+
+  it('withNamespace cria o subdiretorio automaticamente', () => {
+    const base = new AudioCache(dir);
+    const ns = base.withNamespace('someengine');
+    const src = join(srcDir, 'out.wav');
+    writeFileSync(src, Buffer.from('x'));
+    const stored = ns.put('k', src);
+    expect(existsSync(stored)).toBe(true);
+  });
+});

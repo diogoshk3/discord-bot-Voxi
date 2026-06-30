@@ -19,7 +19,7 @@ export function createEngine(config: AppConfig, cache: AudioCache): TTSEngine {
     if (!config.openaiApiKey) {
       throw new Error('TTS_ENGINE=neural requer OPENAI_API_KEY');
     }
-    return new NeuralEngine(config.openaiApiKey, cache);
+    return new NeuralEngine(config.openaiApiKey, cache.withNamespace('neural'));
   }
-  return new PiperEngine(config.piperPath, config.modelsDir, cache);
+  return new PiperEngine(config.piperPath, config.modelsDir, cache.withNamespace('piper'));
 }

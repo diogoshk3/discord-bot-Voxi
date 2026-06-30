@@ -18,6 +18,15 @@ export class AudioCache {
     mkdirSync(this.dir, { recursive: true });
   }
 
+  /**
+   * Devolve uma nova instância de AudioCache com o diretório raiz em
+   * `<dir>/<namespace>/`. Usado para isolar caches por motor (ex. 'piper'
+   * vs 'neural'), evitando que um motor sirva áudio produzido pelo outro.
+   */
+  withNamespace(namespace: string): AudioCache {
+    return new AudioCache(join(this.dir, namespace));
+  }
+
   private pathFor(key: string): string {
     return join(this.dir, `${key}.wav`);
   }
