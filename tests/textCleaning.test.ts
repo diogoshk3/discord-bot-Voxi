@@ -131,4 +131,49 @@ describe('cleanText', () => {
       expect(cleanText('', opts)).toBe('');
     });
   });
+
+  describe('edge-cases: emoji + URL + mencao juntos', () => {
+    it('limpa emoji + URL + mencao de user na mesma mensagem', () => {
+      // emoji removido, URL -> "link", mencao resolvida
+      expect(cleanText('😀 https://example.com <@123>', opts)).toBe('link @user123');
+    });
+
+    it('limpa role + custom emoji + URL na mesma mensagem', () => {
+      // role removed, custom emoji removed, URL -> "link"
+      expect(
+        cleanText('check <@&999> <:fire:123> at https://x.com', opts),
+      ).toBe('check at link');
+    });
+
+    it('mensagem so de emojis unicode devolve ""', () => {
+      expect(cleanText('😀🎉🔥', opts)).toBe('');
+    });
+  });
+
+  describe('edge-cases: markdown aninhado', () => {
+    it('remove inline code dentro de texto com bold, preservando o bold e o resto do texto', () => {
+      // clean.ts nao remove bold/italic; apenas code fences e inline code sao removidos
+      expect(cleanText('**negrito com `code` dentro**', opts)).toBe('**negrito com dentro**');
+    });
+
+    it('code fence que contem uma mencao: fence e removido, mencao nunca e resolvida', () => {
+      // o code block e strippado na fase 1, antes das mencoes na fase 4
+      expect(cleanText('antes ```\n<@123>\n``` depois', opts)).toBe('antes depois');
+    });
+  });
+
+  describe('edge-cases: unicode', () => {
+    it('preserva caracteres acentuados latinos (café, açaí)', () => {
+      expect(cleanText('café açaí', opts)).toBe('café açaí');
+    });
+
+    it('preserva script nao-latino (japonês)', () => {
+      expect(cleanText('こんにちは', opts)).toBe('こんにちは');
+    });
+
+    it('preserva char astral matematico 𝕏 (U+1D54F) que nao e Extended_Pictographic', () => {
+      // 𝕏 ocupa 2 code units UTF-16 mas nao e emoji, logo sobrevive a limpeza
+      expect(cleanText('a𝕏b', opts)).toBe('a𝕏b');
+    });
+  });
 });
