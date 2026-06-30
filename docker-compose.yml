@@ -37,6 +37,16 @@ services:
     env_file:
       - .env
 
+    # Health endpoint (OPCIONAL). O bot so abre o servidor de health se definires
+    # HEALTH_PORT no .env (ex.: HEALTH_PORT=8080); sem essa variavel nao expoe
+    # nada e o HEALTHCHECK da imagem faz no-op saudavel. Para um monitor EXTERNO
+    # (ex.: UptimeRobot) alcancar GET /health, publica a porta: descomenta o bloco
+    # abaixo e poe o MESMO valor que definiste em HEALTH_PORT nos dois lados.
+    # Mantido comentado de proposito — uma linha "${HEALTH_PORT:-}:..." partiria
+    # o compose quando HEALTH_PORT nao esta definido (o caso default).
+    # ports:
+    #   - "8080:8080"   # <host>:<container>, igual ao teu HEALTH_PORT
+
     volumes:
       # Dados persistentes: base de dados SQLite + WAL/SHM + cache de audio.
       # Volume NOMEADO (gerido pelo Docker) para o utilizador 'node' (uid 1000)
