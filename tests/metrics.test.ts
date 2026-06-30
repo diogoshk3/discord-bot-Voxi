@@ -126,6 +126,7 @@ describe('metrics — API básica', () => {
       synthErrors: 0,
       voiceDrops: 0,
       voiceReconnects: 0,
+      votes: 0,
     });
   });
 
@@ -182,6 +183,7 @@ describe('metrics — API básica', () => {
       synthErrors: 0,
       voiceDrops: 0,
       voiceReconnects: 0,
+      votes: 0,
     });
   });
 
@@ -383,6 +385,9 @@ describe('/stats — handleInteraction', () => {
     metrics.inc('voiceDrops');
     metrics.inc('voiceDrops');
     metrics.inc('voiceReconnects');
+    metrics.inc('votes');
+    metrics.inc('votes');
+    metrics.inc('votes');
 
     const deps = makeStatsDeps({
       players: new Map([['g1', {} as BotDeps['players'] extends Map<string, infer V> ? V : never]]),
@@ -399,6 +404,7 @@ describe('/stats — handleInteraction', () => {
     expect(reply).toContain('Erros de sintese: 1');
     expect(reply).toContain('Quedas de voz: 2');
     expect(reply).toContain('Reconexoes: 1');
+    expect(reply).toContain('Votos top.gg: 3');
     expect(reply).toContain('Players ativos: 1');
     expect(reply).toContain('Servidores: 3');
     expect(reply).toContain('Uptime:');
@@ -416,6 +422,7 @@ describe('/stats — handleInteraction', () => {
     expect(reply).toContain('Erros de sintese: 0');
     expect(reply).toContain('Quedas de voz: 0');
     expect(reply).toContain('Reconexoes: 0');
+    expect(reply).toContain('Votos top.gg: 0');
     expect(reply).toContain('Players ativos: 0');
   });
 

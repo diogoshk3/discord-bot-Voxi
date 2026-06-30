@@ -56,6 +56,14 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
     .setName('invite')
     .setDescription('Mostra o link para adicionar o Voxi ao teu servidor')
     .toJSON(),
+  // /vote — link para a pagina de voto do Voxi no top.gg (P11.5). Top-level e SEM
+  // setDefaultMemberPermissions (NAO admin-only): qualquer utilizador pode votar.
+  // Tal como o /invite, e um gatilho de crescimento — votar (gratis, a cada 12h)
+  // sobe a visibilidade do bot no top.gg.
+  new SlashCommandBuilder()
+    .setName('vote')
+    .setDescription('Mostra o link para votar no Voxi no top.gg')
+    .toJSON(),
   // /help — discovery de comandos em-app, para donos de servidor nao-tecnicos.
   // Top-level e SEM setDefaultMemberPermissions (NAO admin-only): qualquer
   // utilizador pode pedir a lista. O texto e DERIVADO destes commandDefs (ver
@@ -669,6 +677,7 @@ async function handleStats(i: ChatInputCommandInteraction, deps: BotDeps): Promi
     `Erros de sintese: ${snap.synthErrors}`,
     `Quedas de voz: ${snap.voiceDrops}`,
     `Reconexoes: ${snap.voiceReconnects}`,
+    `Votos top.gg: ${snap.votes}`,
     `Players ativos: ${deps.players.size}`,
     `Servidores: ${deps.client.guilds.cache.size}`,
     `Uptime: ${uptimeSec}s`,
@@ -709,6 +718,36 @@ async function handleInvite(i: ChatInputCommandInteraction, deps: BotDeps): Prom
   });
   const url = `https://discord.com/oauth2/authorize?${params.toString()}`;
   await i.reply({ content: `Adiciona o Voxi ao teu servidor:\n${url}` });
+}
+
+/**
+ * /vote — devolve o link da pagina de voto do Voxi no top.gg (P11.5),
+ * construido a partir do CLIENT_ID da config. Gatilho de crescimento, irmao do
+ * /invite.
+ *
+ * Decisoes de design (espelham o /invite):
+ *  - Reply NORMAL (nao ephemeral): o objetivo e PARTILHAR o link para que mais
+ *    gente vote, por isso fica visivel no canal — NAO usamos o helper reply()
+ *    (ephemeral); chamamos i.reply() diretamente sem flags.
+ *  - URL = https://top.gg/bot/<CLIENT_ID>/vote. O CLIENT_ID e o id da aplicacao
+ *    (o mesmo do /invite); o top.gg usa-o como id do bot na sua listagem.
+ *  - Sem CLIENT_ID configurado: mensagem clara ephemeral em vez de um link
+ *    partido (top.gg/bot//vote). Verificamos com !clientId (apanha undefined e
+ *    string vazia), tal como o /invite.
+ */
+async function handleVote(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
+  const clientId = deps.config.clientId;
+  if (!clientId) {
+    await reply(
+      i,
+      'O Voxi ainda nao tem o link de voto configurado (CLIENT_ID em falta). Avisa o admin do bot.',
+    );
+    return;
+  }
+  const url = `https://top.gg/bot/${clientId}/vote`;
+  await i.reply({
+    content: `Vota no Voxi (grátis, a cada 12h) e ajuda mais gente a encontrá-lo:\n${url}`,
+  });
 }
 
 /**
@@ -800,6 +839,8 @@ export async function handleInteraction(i: ChatInputCommandInteraction, deps: Bo
         return await handleStats(i, deps);
       case 'invite':
         return await handleInvite(i, deps);
+      case 'vote':
+        return await handleVote(i, deps);
       case 'help':
         return await handleHelp(i);
     }

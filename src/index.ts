@@ -11,6 +11,7 @@ import { createClient, bindEvents } from './bot/client';
 import { registerCommands } from './bot/registerCommands';
 import { installSignalHandlers } from './bot/shutdown';
 import { startHealthServer } from './health';
+import { startVoteWebhookServer } from './vote';
 
 function discoverModels(modelsDir: string): string[] {
   if (!existsSync(modelsDir)) return [];
@@ -52,6 +53,16 @@ async function main(): Promise<void> {
     startHealthServer(config);
   } catch (err) {
     log.error('[index] falha ao arrancar o servidor de health (ignorado)', err);
+  }
+
+  // P11.5 — webhook top.gg OPCIONAL para registar votos. So arranca se
+  // TOPGG_WEBHOOK_PORT estiver definida (porta dedicada, separada do health). Em
+  // try/catch defensivo: um problema a abrir a porta NUNCA deve impedir o bot de
+  // arrancar.
+  try {
+    startVoteWebhookServer(config);
+  } catch (err) {
+    log.error('[index] falha ao arrancar o webhook top.gg (ignorado)', err);
   }
 
   await registerCommands(config.token, config.clientId);

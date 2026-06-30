@@ -33,6 +33,8 @@ describe('loadConfig', () => {
       OPENAI_API_KEY: undefined,
       PRESENCE_TEXT: undefined,
       HEALTH_PORT: undefined,
+      TOPGG_WEBHOOK_PORT: undefined,
+      TOPGG_WEBHOOK_SECRET: undefined,
       BOT_SHARDS: undefined,
       // tambem limpamos a env reservada do discord.js para o teste de regressao
       // partir de um estado conhecido (so um teste a define de proposito).
@@ -170,6 +172,31 @@ describe('loadConfig', () => {
   it('leaves healthPort undefined on invalid HEALTH_PORT', () => {
     setEnv({ ...REQUIRED, HEALTH_PORT: 'abc' });
     expect(loadConfig().healthPort).toBeUndefined();
+  });
+
+  // P11.5 — TOPGG_WEBHOOK_PORT opcional: ausente/vazio => undefined (sem servidor
+  // de webhook); definido => numero; invalido => undefined (defensivo, igual ao
+  // HEALTH_PORT). TOPGG_WEBHOOK_SECRET opcional: ausente/vazio => undefined.
+  it('leaves topggWebhookPort/Secret undefined when env missing', () => {
+    setEnv(REQUIRED);
+    const cfg = loadConfig();
+    expect(cfg.topggWebhookPort).toBeUndefined();
+    expect(cfg.topggWebhookSecret).toBeUndefined();
+  });
+
+  it('parses TOPGG_WEBHOOK_PORT as a number when set', () => {
+    setEnv({ ...REQUIRED, TOPGG_WEBHOOK_PORT: '8081' });
+    expect(loadConfig().topggWebhookPort).toBe(8081);
+  });
+
+  it('leaves topggWebhookPort undefined on invalid TOPGG_WEBHOOK_PORT', () => {
+    setEnv({ ...REQUIRED, TOPGG_WEBHOOK_PORT: 'abc' });
+    expect(loadConfig().topggWebhookPort).toBeUndefined();
+  });
+
+  it('reads TOPGG_WEBHOOK_SECRET from env', () => {
+    setEnv({ ...REQUIRED, TOPGG_WEBHOOK_SECRET: 's3cr3t' });
+    expect(loadConfig().topggWebhookSecret).toBe('s3cr3t');
   });
 
   // P11.4 — BOT_SHARDS opcional: ausente/vazio => undefined (single-process

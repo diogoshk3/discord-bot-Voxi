@@ -20,6 +20,10 @@ export interface AppConfig {
   presenceText?: string;
   healthPort?: number;
   shards?: string;
+  // P11.5 — webhook top.gg OPCIONAL. Porta ausente => sem servidor (default).
+  // Secret ausente => webhook sem auth (inseguro; recomenda-se sempre defini-lo).
+  topggWebhookPort?: number;
+  topggWebhookSecret?: string;
 }
 
 function requireEnv(name: string): string {
@@ -106,5 +110,12 @@ export function loadConfig(): AppConfig {
     // configuraria o processo como um shard isolado — partindo o default. Manter
     // o nome distinto isola o opt-in do mecanismo interno do discord.js.
     shards: strEnv('BOT_SHARDS', '') || undefined,
+    // P11.5 — webhook top.gg OPCIONAL. TOPGG_WEBHOOK_PORT ausente/vazio/invalido
+    // => undefined => NAO arranca servidor de webhook (default), igual ao
+    // HEALTH_PORT. TOPGG_WEBHOOK_SECRET ausente/vazio => undefined => webhook sem
+    // auth (inseguro; ver startVoteWebhookServer, que avisa nesse caso). Porta
+    // dedicada, separada do HEALTH_PORT de proposito.
+    topggWebhookPort: numEnvOptional('TOPGG_WEBHOOK_PORT'),
+    topggWebhookSecret: strEnv('TOPGG_WEBHOOK_SECRET', '') || undefined,
   };
 }

@@ -10,6 +10,9 @@ export interface MetricsSnapshot {
   // Reconexao a voz (P7.4): quedas detetadas e reconexoes com sucesso.
   voiceDrops: number;
   voiceReconnects: number;
+  // Votos top.gg (P11.5): upvotes validos recebidos via webhook. Pings de "test"
+  // do dashboard top.gg NAO contam (so type === "upvote").
+  votes: number;
 }
 
 class Metrics {
@@ -19,6 +22,7 @@ class Metrics {
   synthErrors = 0;
   voiceDrops = 0;
   voiceReconnects = 0;
+  votes = 0;
 
   /** Incrementa um contador pelo nome. */
   inc(counter: keyof MetricsSnapshot): void {
@@ -34,6 +38,7 @@ class Metrics {
       synthErrors: this.synthErrors,
       voiceDrops: this.voiceDrops,
       voiceReconnects: this.voiceReconnects,
+      votes: this.votes,
     };
   }
 
@@ -45,6 +50,7 @@ class Metrics {
     this.synthErrors = 0;
     this.voiceDrops = 0;
     this.voiceReconnects = 0;
+    this.votes = 0;
   }
 }
 
