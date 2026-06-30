@@ -28,6 +28,36 @@ const LANG_TO_PREFIX: Record<string, string> = {
   ron: 'ro_',
   ell: 'el_',
   hun: 'hu_',
+  // Linguas dos restantes modelos Piper. Onde o franc pode devolver mais do que
+  // um codigo ISO 639-3 para a mesma lingua, mapeamos TODAS as variantes plausiveis
+  // para o mesmo prefixo. Codigos confirmados empiricamente com franc v5
+  // (node + amostras longas): arabe -> 'arb', persa -> 'fas', georgiano -> 'kat',
+  // cazaque -> 'kaz', letao -> 'lav', nepali -> 'nep', eslovaco -> 'slk',
+  // esloveno -> 'slv', servio -> 'srp', suaili -> 'swh', vietnamita -> 'vie',
+  // chines -> 'cmn'. Mantemos tambem as variantes alternativas (ara/pes/swa/zho).
+  // NOTA: cym (gales), isl (islandes) e ltz (luxemburgues) NAO sao emitidos pelo
+  // franc v5 (sem modelo de trigramas -> classifica-os como tzm/uzn/deu). As
+  // entradas ficam mesmo assim (corretas e forward-compatible): pickVoice e
+  // independente do franc, e se a fonte de detecao mudar passam a funcionar.
+  ara: 'ar_',
+  arb: 'ar_',
+  cym: 'cy_',
+  fas: 'fa_',
+  pes: 'fa_',
+  isl: 'is_',
+  kat: 'ka_',
+  kaz: 'kk_',
+  ltz: 'lb_',
+  lav: 'lv_',
+  nep: 'ne_',
+  slk: 'sk_',
+  slv: 'sl_',
+  srp: 'sr_',
+  swh: 'sw_',
+  swa: 'sw_',
+  vie: 'vi_',
+  cmn: 'zh_',
+  zho: 'zh_',
 };
 
 /**

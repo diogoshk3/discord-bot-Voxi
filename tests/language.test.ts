@@ -1,6 +1,49 @@
 import { describe, it, expect } from 'vitest';
 import { detectLang } from '../src/language/detect';
-import { pickVoice } from '../src/language/voiceMap';
+import { pickVoice, modelDisplayName } from '../src/language/voiceMap';
+
+// Catalogo estavel dos 38 modelos Piper (hardcoded de proposito — e o catalogo
+// fixo do projeto, nao deve depender de runtime/descoberta para os testes).
+const MODELS_38 = [
+  'ar_JO-kareem-medium',
+  'ca_ES-upc_ona-medium',
+  'cs_CZ-jirka-medium',
+  'cy_GB-bu_tts-medium',
+  'da_DK-talesyntese-medium',
+  'de_DE-mls-medium',
+  'el_GR-joy-medium',
+  'en_GB-alan-medium',
+  'en_US-amy-medium',
+  'es_ES-davefx-medium',
+  'es_MX-ald-medium',
+  'fa_IR-amir-medium',
+  'fi_FI-harri-medium',
+  'fr_FR-mls-medium',
+  'hu_HU-anna-medium',
+  'is_IS-bui-medium',
+  'it_IT-paola-medium',
+  'ka_GE-natia-medium',
+  'kk_KZ-iseke-x_low',
+  'lb_LU-marylux-medium',
+  'lv_LV-aivars-medium',
+  'ne_NP-chitwan-medium',
+  'nl_BE-nathalie-medium',
+  'nl_NL-alex-medium',
+  'pl_PL-darkman-medium',
+  'pt_BR-cadu-medium',
+  'pt_PT-tugao-medium',
+  'ro_RO-mihai-medium',
+  'ru_RU-denis-medium',
+  'sk_SK-lili-medium',
+  'sl_SI-artur-medium',
+  'sr_RS-serbski_institut-medium',
+  'sv_SE-alma-medium',
+  'sw_CD-lanfrica-medium',
+  'tr_TR-dfki-medium',
+  'uk_UA-ukrainian_tts-medium',
+  'vi_VN-vais1000-medium',
+  'zh_CN-chaowen-medium',
+];
 
 describe('detectLang', () => {
   it('deteta portugues numa frase longa', () => {
@@ -155,4 +198,75 @@ describe('pickVoice', () => {
       'es_ES-davefx-medium',
     );
   });
+});
+
+// ------------------------------------------------------------------
+// Mapeamento COMPLETO dos 38 modelos Piper (todas as linguas).
+// ------------------------------------------------------------------
+
+describe('modelDisplayName — cada um dos 38 modelos tem nome amigavel', () => {
+  // Para CADA modelo do catalogo, o nome de apresentacao tem de ser DIFERENTE
+  // do id cru (ou seja: o locale existe em LOCALE_NAMES). Falha => locale sem nome.
+  for (const model of MODELS_38) {
+    it(`tem nome amigavel para ${model}`, () => {
+      expect(modelDisplayName(model)).not.toBe(model);
+    });
+  }
+});
+
+describe('pickVoice — cada lingua dos 38 modelos routa para a voz certa', () => {
+  const fallback = 'en_US-amy-medium';
+
+  // codigo franc (confirmado empiricamente / alvo) -> prefixo de locale esperado.
+  // Inclui as variantes plausiveis que o franc pode devolver para a mesma lingua.
+  // Nota: cym/isl/ltz nao sao emitidos pelo franc v5 (mapeamento dormente, mas
+  // pickVoice e independente do franc — testamos so a rota do dicionario).
+  const cases: Array<[string, string]> = [
+    ['ara', 'ar_'],
+    ['arb', 'ar_'],
+    ['cym', 'cy_'],
+    ['fas', 'fa_'],
+    ['pes', 'fa_'],
+    ['isl', 'is_'],
+    ['kat', 'ka_'],
+    ['kaz', 'kk_'],
+    ['ltz', 'lb_'],
+    ['lav', 'lv_'],
+    ['nep', 'ne_'],
+    ['slk', 'sk_'],
+    ['slv', 'sl_'],
+    ['srp', 'sr_'],
+    ['swh', 'sw_'],
+    ['swa', 'sw_'],
+    ['vie', 'vi_'],
+    ['cmn', 'zh_'],
+    ['zho', 'zh_'],
+  ];
+
+  for (const [code, prefix] of cases) {
+    it(`"${code}" routa para um modelo ${prefix}*`, () => {
+      const chosen = pickVoice(code, MODELS_38, fallback);
+      expect(chosen.startsWith(prefix)).toBe(true);
+      expect(MODELS_38).toContain(chosen);
+    });
+  }
+
+  // Reforco: alguns mapeamentos antigos continuam a funcionar contra o catalogo dos 38.
+  const legacy: Array<[string, string]> = [
+    ['por', 'pt_'],
+    ['eng', 'en_'],
+    ['spa', 'es_'],
+    ['deu', 'de_'],
+    ['rus', 'ru_'],
+    ['ukr', 'uk_'],
+    ['ell', 'el_'],
+    ['cat', 'ca_'],
+  ];
+
+  for (const [code, prefix] of legacy) {
+    it(`(legado) "${code}" continua a routar para ${prefix}*`, () => {
+      const chosen = pickVoice(code, MODELS_38, fallback);
+      expect(chosen.startsWith(prefix)).toBe(true);
+    });
+  }
 });
