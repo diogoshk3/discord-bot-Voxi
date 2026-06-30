@@ -121,5 +121,56 @@ describe('store', () => {
       addBlockword(db, G, 'a');
       expect(getBlocklist(db, 'guild-2')).toEqual([]);
     });
+
+    it('adiciona e obtem palavras acentuadas (salázar, café)', () => {
+      addBlockword(db, G, 'salázar');
+      addBlockword(db, G, 'café');
+      const list = getBlocklist(db, G);
+      expect(list).toContain('salázar');
+      expect(list).toContain('café');
+    });
+
+    it('remove palavra acentuada correctamente', () => {
+      addBlockword(db, G, 'café');
+      addBlockword(db, G, 'salázar');
+      removeBlockword(db, G, 'café');
+      const list = getBlocklist(db, G);
+      expect(list).not.toContain('café');
+      expect(list).toContain('salázar');
+    });
+
+    it('tratamento case-sensitive: "Café" e "café" sao entradas distintas (sem COLLATE NOCASE)', () => {
+      // O schema nao declara COLLATE NOCASE, portanto a distinção maiúscula/minúscula
+      // é preservada — "Café" e "café" coexistem como entradas separadas.
+      addBlockword(db, G, 'café');
+      addBlockword(db, G, 'Café');
+      const list = getBlocklist(db, G);
+      expect(list).toContain('café');
+      expect(list).toContain('Café');
+      expect(list.length).toBe(2);
+    });
+  });
+
+  describe('guildConfig — patches sucessivos', () => {
+    it('tres patches sucessivos nao perdem campos anteriores', () => {
+      setGuildConfig(db, G, { ttsChannelId: 'chan-1' });
+      setGuildConfig(db, G, { maxChars: 500, ratePerMin: 10 });
+      setGuildConfig(db, G, { enabled: false });
+      const cfg = getGuildConfig(db, G);
+      expect(cfg.ttsChannelId).toBe('chan-1');   // do 1.º patch
+      expect(cfg.maxChars).toBe(500);            // do 2.º patch
+      expect(cfg.ratePerMin).toBe(10);           // do 2.º patch
+      expect(cfg.enabled).toBe(false);           // do 3.º patch
+      expect(cfg.defaultVoice).toBe('en_US-amy-medium'); // default inalterado
+    });
+
+    it('patch que substitui defaultVoice nao perde outros campos', () => {
+      setGuildConfig(db, G, { autoread: true, maxChars: 400 });
+      setGuildConfig(db, G, { defaultVoice: 'pt_PT-tugao-medium' });
+      const cfg = getGuildConfig(db, G);
+      expect(cfg.autoread).toBe(true);
+      expect(cfg.maxChars).toBe(400);
+      expect(cfg.defaultVoice).toBe('pt_PT-tugao-medium');
+    });
   });
 });
