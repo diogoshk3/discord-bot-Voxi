@@ -12,6 +12,7 @@ import {
 import type { TTSEngine, SynthRequest } from '../tts/engine';
 import { PlayQueue } from './queue';
 import { log } from '../logging/logger';
+import { metrics } from '../metrics';
 
 export class GuildVoicePlayer {
   private readonly player: AudioPlayer;
@@ -110,6 +111,7 @@ export class GuildVoicePlayer {
       audioPath = await this.engine.synth(next.req);
     } catch (err) {
       log.error('[player] erro na sintese, item saltado:', err);
+      metrics.inc('synthErrors');
       // Salta este item e continua a fila sem crashar (sem crescimento de stack:
       // estamos depois do await).
       void this.playNext();
@@ -123,6 +125,9 @@ export class GuildVoicePlayer {
       inputType: StreamType.Arbitrary,
     });
     this.current = resource;
+    // messagesSpoken: incrementa quando o áudio começa efectivamente a tocar
+    // (após síntese com sucesso e sem destroy entretanto).
+    metrics.inc('messagesSpoken');
     this.player.play(resource);
   }
 

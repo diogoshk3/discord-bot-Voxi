@@ -7,6 +7,7 @@ import {
   MessageFlags,
   type RESTPostAPIChatInputApplicationCommandsJSONBody,
 } from 'discord.js';
+import { metrics } from '../metrics';
 import { joinVoiceChannel, getVoiceConnection } from '@discordjs/voice';
 import type { BotDeps } from '../bot/deps';
 import { getPlayer, removePlayer, getLimiter } from '../bot/deps';
@@ -156,6 +157,11 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
         )
         .addSubcommand((s) => s.setName('list').setDescription('Lista os termos definidos')),
     )
+    .toJSON(),
+  new SlashCommandBuilder()
+    .setName('stats')
+    .setDescription('Estatísticas do bot (admin)')
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .toJSON(),
 ];
 
@@ -481,6 +487,27 @@ async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps): Prom
   }
 }
 
+async function handleStats(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
+  const member = i.member as GuildMember;
+  if (!member?.permissions?.has(PermissionFlagsBits.ManageGuild)) {
+    await reply(i, 'Precisas da permissao Gerir Servidor.');
+    return;
+  }
+  const snap = metrics.snapshot();
+  const uptimeSec = Math.floor(process.uptime());
+  const lines = [
+    '**Estatisticas do Voxi:**',
+    `Mensagens faladas: ${snap.messagesSpoken}`,
+    `Cache hits: ${snap.cacheHits}`,
+    `Cache misses: ${snap.cacheMisses}`,
+    `Erros de sintese: ${snap.synthErrors}`,
+    `Players ativos: ${deps.players.size}`,
+    `Servidores: ${deps.client.guilds.cache.size}`,
+    `Uptime: ${uptimeSec}s`,
+  ];
+  await reply(i, lines.join('\n'));
+}
+
 export async function handleInteraction(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
   try {
     switch (i.commandName) {
@@ -496,6 +523,8 @@ export async function handleInteraction(i: ChatInputCommandInteraction, deps: Bo
         return await handleVoice(i, deps);
       case 'config':
         return await handleConfig(i, deps);
+      case 'stats':
+        return await handleStats(i, deps);
     }
   } catch (err) {
     log.error('[command] erro em', i.commandName, err);

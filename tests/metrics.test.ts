@@ -1,0 +1,339 @@
+// tests/metrics.test.ts
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { EventEmitter } from 'node:events';
+
+// Mock de @discordjs/voice necessário para importar player.ts e commands/index.ts
+vi.mock('@discordjs/voice', async () => {
+  const { EventEmitter: EE } = await import('node:events');
+  const IDLE = 'idle';
+  class FakeAudioPlayer extends EE {
+    play(resource: { path: string }): void {
+      setTimeout(() => this.emit(IDLE), 0);
+    }
+    stop(): void {
+      this.emit(IDLE);
+    }
+  }
+  return {
+    AudioPlayerStatus: { Idle: IDLE },
+    VoiceConnectionStatus: {
+      Disconnected: 'disconnected',
+      Signalling: 'signalling',
+      Connecting: 'connecting',
+      Ready: 'ready',
+    },
+    StreamType: { Arbitrary: 'arbitrary' },
+    createAudioPlayer: () => new FakeAudioPlayer(),
+    createAudioResource: (path: string) => ({ path }),
+    entersState: () => Promise.resolve(),
+    joinVoiceChannel: () => ({}),
+    getVoiceConnection: () => undefined,
+  };
+});
+
+import { metrics } from '../src/metrics';
+import { AudioCache } from '../src/tts/cache';
+import type { TTSEngine, SynthRequest } from '../src/tts/engine';
+import { GuildVoicePlayer } from '../src/voice/player';
+import { handleInteraction } from '../src/commands/index';
+import type { BotDeps } from '../src/bot/deps';
+import { MessageFlags } from 'discord.js';
+
+// ── helpers ──────────────────────────────────────────────────────────────────
+
+function makeConnection() {
+  const conn = new EventEmitter() as EventEmitter & {
+    subscribe: () => void;
+    destroy: () => void;
+    rejoin: () => void;
+  };
+  conn.subscribe = () => {};
+  conn.destroy = () => {};
+  conn.rejoin = () => {};
+  return conn;
+}
+
+function makeStatsDeps(overrides: Partial<BotDeps> = {}): BotDeps {
+  return {
+    client: { user: { id: 'bot-1' }, guilds: { cache: { size: 3 } } },
+    players: new Map(),
+    db: {} as BotDeps['db'],
+    config: {},
+    availableModels: [],
+    limiters: new Map(),
+    engine: { synth: async () => '' },
+    ...overrides,
+  } as unknown as BotDeps;
+}
+
+interface FakeInteraction {
+  commandName: string;
+  guildId: string;
+  replies: string[];
+  reply: (opts: { content: string; flags?: number }) => Promise<void>;
+  isRepliable: () => boolean;
+  replied: boolean;
+  deferred: boolean;
+  member: unknown;
+  guild: unknown;
+  options: unknown;
+  user: { id: string };
+}
+
+function makeStatsInteraction(isAdmin = true): FakeInteraction {
+  const replies: string[] = [];
+  return {
+    commandName: 'stats',
+    guildId: 'g-stats-test',
+    replies,
+    replied: false,
+    deferred: false,
+    isRepliable: () => true,
+    reply: async (o: { content: string }) => {
+      replies.push(o.content);
+    },
+    member: {
+      permissions: { has: () => isAdmin },
+    },
+    guild: null,
+    options: {
+      getSubcommandGroup: () => null,
+      getSubcommand: () => '',
+      getString: () => null,
+      getBoolean: () => null,
+      getInteger: () => null,
+      getChannel: () => null,
+      getRole: () => null,
+    },
+    user: { id: 'u1' },
+  };
+}
+
+// ── 1. Módulo de métricas: API básica ─────────────────────────────────────────
+
+describe('metrics — API básica', () => {
+  beforeEach(() => metrics.reset());
+
+  it('começa a zero após reset()', () => {
+    const snap = metrics.snapshot();
+    expect(snap).toEqual({ messagesSpoken: 0, cacheHits: 0, cacheMisses: 0, synthErrors: 0 });
+  });
+
+  it('inc("cacheHits") incrementa só cacheHits', () => {
+    metrics.inc('cacheHits');
+    metrics.inc('cacheHits');
+    const snap = metrics.snapshot();
+    expect(snap.cacheHits).toBe(2);
+    expect(snap.cacheMisses).toBe(0);
+    expect(snap.messagesSpoken).toBe(0);
+    expect(snap.synthErrors).toBe(0);
+  });
+
+  it('inc("cacheMisses") incrementa só cacheMisses', () => {
+    metrics.inc('cacheMisses');
+    expect(metrics.snapshot().cacheMisses).toBe(1);
+    expect(metrics.snapshot().cacheHits).toBe(0);
+  });
+
+  it('inc("messagesSpoken") incrementa só messagesSpoken', () => {
+    metrics.inc('messagesSpoken');
+    metrics.inc('messagesSpoken');
+    metrics.inc('messagesSpoken');
+    expect(metrics.snapshot().messagesSpoken).toBe(3);
+  });
+
+  it('inc("synthErrors") incrementa só synthErrors', () => {
+    metrics.inc('synthErrors');
+    expect(metrics.snapshot().synthErrors).toBe(1);
+  });
+
+  it('snapshot() devolve uma cópia (não a referência interna)', () => {
+    metrics.inc('cacheHits');
+    const s1 = metrics.snapshot();
+    metrics.inc('cacheHits');
+    const s2 = metrics.snapshot();
+    // s1 não deve ter sido afetado pela segunda inc
+    expect(s1.cacheHits).toBe(1);
+    expect(s2.cacheHits).toBe(2);
+  });
+
+  it('reset() repõe todos os contadores a zero', () => {
+    metrics.inc('cacheHits');
+    metrics.inc('cacheMisses');
+    metrics.inc('messagesSpoken');
+    metrics.inc('synthErrors');
+    metrics.reset();
+    expect(metrics.snapshot()).toEqual({ messagesSpoken: 0, cacheHits: 0, cacheMisses: 0, synthErrors: 0 });
+  });
+});
+
+// ── 2. Wiring: AudioCache.get → cacheHits / cacheMisses ─────────────────────
+
+describe('AudioCache.get — wiring de métricas', () => {
+  let dir: string;
+  let srcDir: string;
+  let cache: AudioCache;
+
+  beforeEach(() => {
+    metrics.reset();
+    dir = mkdtempSync(join(tmpdir(), 'metrics-cache-'));
+    srcDir = mkdtempSync(join(tmpdir(), 'metrics-src-'));
+    cache = new AudioCache(dir);
+  });
+
+  afterEach(() => {
+    rmSync(dir, { recursive: true, force: true });
+    rmSync(srcDir, { recursive: true, force: true });
+  });
+
+  it('get em chave inexistente incrementa cacheMisses', () => {
+    cache.get('nao-existe');
+    expect(metrics.snapshot().cacheMisses).toBe(1);
+    expect(metrics.snapshot().cacheHits).toBe(0);
+  });
+
+  it('get em chave existente incrementa cacheHits', () => {
+    const src = join(srcDir, 'out.wav');
+    writeFileSync(src, Buffer.from('wav'));
+    cache.put('chave', src);
+
+    cache.get('chave');
+    expect(metrics.snapshot().cacheHits).toBe(1);
+    expect(metrics.snapshot().cacheMisses).toBe(0);
+  });
+
+  it('múltiplos gets acumulam corretamente (mix hit+miss)', () => {
+    const src = join(srcDir, 'out.wav');
+    writeFileSync(src, Buffer.from('wav'));
+    cache.put('k', src);
+
+    cache.get('k');       // hit
+    cache.get('k');       // hit
+    cache.get('miss1');   // miss
+    cache.get('miss2');   // miss
+    cache.get('miss3');   // miss
+
+    const snap = metrics.snapshot();
+    expect(snap.cacheHits).toBe(2);
+    expect(snap.cacheMisses).toBe(3);
+  });
+});
+
+// ── 3. Wiring: GuildVoicePlayer → messagesSpoken + synthErrors ───────────────
+
+describe('GuildVoicePlayer — wiring de métricas', () => {
+  beforeEach(() => metrics.reset());
+
+  it('messagesSpoken incrementa quando áudio começa a tocar', async () => {
+    const engine: TTSEngine = {
+      synth: async (req: SynthRequest) => req.text,
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const conn = makeConnection() as any;
+    const player = new GuildVoicePlayer(conn, engine, 20, 60_000, () => {});
+
+    await player.say({ text: 'ola', model: 'm', speed: 1 });
+
+    await vi.waitFor(
+      () => expect(metrics.snapshot().messagesSpoken).toBe(1),
+      { timeout: 1000 },
+    );
+
+    player.destroy();
+    expect(metrics.snapshot().synthErrors).toBe(0);
+  });
+
+  it('synthErrors incrementa quando a síntese falha', async () => {
+    const engine: TTSEngine = {
+      synth: async () => { throw new Error('piper boom'); },
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const conn = makeConnection() as any;
+    const player = new GuildVoicePlayer(conn, engine, 20, 60_000, () => {});
+
+    await player.say({ text: 'texto', model: 'm', speed: 1 });
+
+    await vi.waitFor(
+      () => expect(metrics.snapshot().synthErrors).toBe(1),
+      { timeout: 1000 },
+    );
+
+    player.destroy();
+    expect(metrics.snapshot().messagesSpoken).toBe(0);
+  });
+
+  it('synthErrors não incrementa quando síntese tem sucesso', async () => {
+    const engine: TTSEngine = {
+      synth: async (req: SynthRequest) => req.text,
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const conn = makeConnection() as any;
+    const player = new GuildVoicePlayer(conn, engine, 20, 60_000, () => {});
+
+    await player.say({ text: 'teste', model: 'm', speed: 1 });
+
+    await vi.waitFor(
+      () => expect(metrics.snapshot().messagesSpoken).toBeGreaterThanOrEqual(1),
+      { timeout: 1000 },
+    );
+
+    player.destroy();
+    expect(metrics.snapshot().synthErrors).toBe(0);
+  });
+});
+
+// ── 4. /stats via handleInteraction ──────────────────────────────────────────
+
+describe('/stats — handleInteraction', () => {
+  beforeEach(() => metrics.reset());
+
+  it('responde com os contadores e info do bot', async () => {
+    metrics.inc('messagesSpoken');
+    metrics.inc('messagesSpoken');
+    metrics.inc('cacheHits');
+    metrics.inc('cacheMisses');
+    metrics.inc('synthErrors');
+
+    const deps = makeStatsDeps({
+      players: new Map([['g1', {} as BotDeps['players'] extends Map<string, infer V> ? V : never]]),
+    });
+
+    const i = makeStatsInteraction(true);
+    await handleInteraction(i as unknown as import('discord.js').ChatInputCommandInteraction, deps);
+
+    expect(i.replies).toHaveLength(1);
+    const reply = i.replies[0];
+    expect(reply).toContain('Mensagens faladas: 2');
+    expect(reply).toContain('Cache hits: 1');
+    expect(reply).toContain('Cache misses: 1');
+    expect(reply).toContain('Erros de sintese: 1');
+    expect(reply).toContain('Players ativos: 1');
+    expect(reply).toContain('Servidores: 3');
+    expect(reply).toContain('Uptime:');
+  });
+
+  it('mostra zeros quando nenhum evento ocorreu ainda', async () => {
+    const deps = makeStatsDeps();
+    const i = makeStatsInteraction(true);
+    await handleInteraction(i as unknown as import('discord.js').ChatInputCommandInteraction, deps);
+
+    const reply = i.replies[0];
+    expect(reply).toContain('Mensagens faladas: 0');
+    expect(reply).toContain('Cache hits: 0');
+    expect(reply).toContain('Cache misses: 0');
+    expect(reply).toContain('Erros de sintese: 0');
+    expect(reply).toContain('Players ativos: 0');
+  });
+
+  it('bloqueia utilizadores sem ManageGuild', async () => {
+    const deps = makeStatsDeps();
+    const i = makeStatsInteraction(false); // não é admin
+    await handleInteraction(i as unknown as import('discord.js').ChatInputCommandInteraction, deps);
+
+    expect(i.replies).toHaveLength(1);
+    expect(i.replies[0]).toContain('permissao');
+  });
+});
