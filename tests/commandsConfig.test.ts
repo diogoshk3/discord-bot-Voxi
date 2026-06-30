@@ -12,6 +12,7 @@ import type { BotDeps } from '../src/bot/deps';
 import { initDb } from '../src/store/db';
 import { getGuildConfig, setGuildConfig } from '../src/store/guildConfig';
 import { getBlocklist } from '../src/store/blocklist';
+import { getPronunciations, addPronunciation } from '../src/store/pronunciation';
 import type Database from 'better-sqlite3';
 
 const GUILD = 'g-config-test';
@@ -353,6 +354,96 @@ describe('/config blockword — validacao de palavra vazia', () => {
     await handleInteraction(i as any, deps);
     expect(i.replies.some((r) => /[Dd]esbloqueado/i.test(r))).toBe(true);
     expect(getBlocklist(db, GUILD)).not.toContain('spam');
+  });
+});
+
+// ── pronunciation add/remove/list ─────────────────────────────────────────────
+
+describe('/config pronunciation — add/remove/list', () => {
+  let db: Database.Database;
+
+  beforeEach(() => {
+    db = initDb(':memory:');
+  });
+  afterEach(() => {
+    db.close();
+  });
+
+  it('add: rejeita termo vazio com mensagem clara e nao aplica', async () => {
+    const i = makeConfigInteraction({
+      group: 'pronunciation',
+      sub: 'add',
+      optionsMap: { termo: '   ', pronuncia: 'good game' },
+    });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(i.replies.some((r) => /termo|vazio|vazia/i.test(r))).toBe(true);
+    expect(getPronunciations(db, GUILD)).toHaveLength(0);
+  });
+
+  it('add: rejeita pronuncia vazia com mensagem clara e nao aplica', async () => {
+    const i = makeConfigInteraction({
+      group: 'pronunciation',
+      sub: 'add',
+      optionsMap: { termo: 'gg', pronuncia: '   ' },
+    });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(i.replies.some((r) => /pronuncia|vazio|vazia/i.test(r))).toBe(true);
+    expect(getPronunciations(db, GUILD)).toHaveLength(0);
+  });
+
+  it('add: aceita termo+pronuncia validos, guarda trimado', async () => {
+    const i = makeConfigInteraction({
+      group: 'pronunciation',
+      sub: 'add',
+      optionsMap: { termo: '  gg  ', pronuncia: '  good game  ' },
+    });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(i.replies.some((r) => /gg.*good game/i.test(r))).toBe(true);
+    expect(getPronunciations(db, GUILD)).toEqual([{ term: 'gg', replacement: 'good game' }]);
+  });
+
+  it('remove: remove um termo existente', async () => {
+    addPronunciation(db, GUILD, 'gg', 'good game');
+    const i = makeConfigInteraction({
+      group: 'pronunciation',
+      sub: 'remove',
+      optionsMap: { termo: 'gg' },
+    });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(i.replies.some((r) => /removida|gg/i.test(r))).toBe(true);
+    expect(getPronunciations(db, GUILD)).toHaveLength(0);
+  });
+
+  it('remove: rejeita termo vazio com mensagem clara', async () => {
+    const i = makeConfigInteraction({
+      group: 'pronunciation',
+      sub: 'remove',
+      optionsMap: { termo: '' },
+    });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(i.replies.some((r) => /termo|vazio|vazia/i.test(r))).toBe(true);
+  });
+
+  it('list: mostra os termos definidos', async () => {
+    addPronunciation(db, GUILD, 'gg', 'good game');
+    addPronunciation(db, GUILD, 'btw', 'by the way');
+    const i = makeConfigInteraction({ group: 'pronunciation', sub: 'list' });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(i.replies.some((r) => /gg.*good game/i.test(r))).toBe(true);
+    expect(i.replies.some((r) => /btw.*by the way/i.test(r))).toBe(true);
+  });
+
+  it('list: mensagem para dicionario vazio (sem opcoes nao rebenta)', async () => {
+    const i = makeConfigInteraction({ group: 'pronunciation', sub: 'list' });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(i.replies.some((r) => /nenhum/i.test(r))).toBe(true);
   });
 });
 

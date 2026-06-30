@@ -14,7 +14,13 @@ import { GuildVoicePlayer } from '../voice/player';
 import { getUserVoice, setUserVoice, resetUserVoice } from '../store/userVoice';
 import { getGuildConfig, setGuildConfig } from '../store/guildConfig';
 import { addBlockword, removeBlockword, getBlocklist } from '../store/blocklist';
+import {
+  getPronunciations,
+  addPronunciation,
+  removePronunciation,
+} from '../store/pronunciation';
 import { cleanText } from '../textCleaning/clean';
+import { applyPronunciation } from '../textCleaning/pronunciation';
 import { isBlocked } from '../moderation/filter';
 import { resolveSynth } from './resolveSynth';
 
@@ -111,6 +117,27 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
             .addStringOption((o) => o.setName('palavra').setDescription('Palavra a desbloquear').setRequired(true)),
         ),
     )
+    .addSubcommandGroup((g) =>
+      g
+        .setName('pronunciation')
+        .setDescription('Gere o dicionario de pronuncia')
+        .addSubcommand((s) =>
+          s
+            .setName('add')
+            .setDescription('Adiciona/edita um termo')
+            .addStringOption((o) => o.setName('termo').setDescription('Termo a substituir').setRequired(true))
+            .addStringOption((o) =>
+              o.setName('pronuncia').setDescription('Como deve ser lido').setRequired(true),
+            ),
+        )
+        .addSubcommand((s) =>
+          s
+            .setName('remove')
+            .setDescription('Remove um termo')
+            .addStringOption((o) => o.setName('termo').setDescription('Termo a remover').setRequired(true)),
+        )
+        .addSubcommand((s) => s.setName('list').setDescription('Lista os termos definidos')),
+    )
     .toJSON(),
 ];
 
@@ -195,16 +222,21 @@ async function handleTts(i: ChatInputCommandInteraction, deps: BotDeps): Promise
     return;
   }
 
+  // dicionario de pronuncia por servidor: aplicado DEPOIS do cleanText e ANTES do
+  // synth. Aplicado antes da blocklist para que o texto realmente falado seja o que
+  // a blocklist guarda (uma pronuncia que produza uma palavra bloqueada e apanhada).
+  const spoken = applyPronunciation(cleaned, getPronunciations(deps.db, i.guildId!));
+
   // blocklist antes de sintetizar
   const blocklist = getBlocklist(deps.db, i.guildId!);
-  if (isBlocked(cleaned, blocklist)) {
+  if (isBlocked(spoken, blocklist)) {
     await i.editReply('Esse texto contem uma palavra bloqueada.');
     return;
   }
 
   const userVoice = getUserVoice(deps.db, i.guildId!, i.user.id);
   const req = resolveSynth({
-    text: cleaned,
+    text: spoken,
     userVoice,
     available: deps.availableModels,
     guildDefaultVoice: cfg.defaultVoice,
@@ -266,6 +298,36 @@ async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps): Prom
     } else {
       removeBlockword(deps.db, i.guildId!, word);
       await reply(i, `Desbloqueado: ${word}.`);
+    }
+    return;
+  }
+  if (group === 'pronunciation') {
+    const sub = i.options.getSubcommand();
+    // `list` nao tem opcoes: tratar ANTES de exigir o termo (getString(..., true) lancaria).
+    if (sub === 'list') {
+      const dict = getPronunciations(deps.db, i.guildId!);
+      const out = dict.length
+        ? dict.map((e) => `- ${e.term} -> ${e.replacement || '(vazio)'}`).join('\n')
+        : '(nenhum)';
+      await reply(i, `Dicionario de pronuncia:\n${out}`);
+      return;
+    }
+    const term = i.options.getString('termo', true).trim();
+    if (!term) {
+      await reply(i, 'O termo nao pode ser vazio.');
+      return;
+    }
+    if (sub === 'add') {
+      const replacement = i.options.getString('pronuncia', true).trim();
+      if (!replacement) {
+        await reply(i, 'A pronuncia nao pode ser vazia.');
+        return;
+      }
+      addPronunciation(deps.db, i.guildId!, term, replacement);
+      await reply(i, `Pronuncia definida: ${term} -> ${replacement}.`);
+    } else {
+      removePronunciation(deps.db, i.guildId!, term);
+      await reply(i, `Pronuncia removida: ${term}.`);
     }
     return;
   }
