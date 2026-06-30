@@ -124,14 +124,17 @@ async function handleLeave(i: ChatInputCommandInteraction, deps: BotDeps): Promi
 }
 
 async function handleTts(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
+  // A sintese pode demorar ate ~15s; defer imediato para nao perder o token (3s).
+  await i.deferReply({ flags: MessageFlags.Ephemeral });
+
   const player = getPlayer(deps, i.guildId!);
   if (!player) {
-    await reply(i, 'Nao estou num canal de voz. Usa /join primeiro.');
+    await i.editReply('Nao estou num canal de voz. Usa /join primeiro.');
     return;
   }
   const raw = i.options.getString('texto', true).trim();
   if (!raw) {
-    await reply(i, 'Nada para ler.');
+    await i.editReply('Nada para ler.');
     return;
   }
   const cfg = getGuildConfig(deps.db, i.guildId!);
@@ -139,7 +142,7 @@ async function handleTts(i: ChatInputCommandInteraction, deps: BotDeps): Promise
   // rate-limit por user (mesmo pipeline do messageHandler)
   const rl = getLimiter(deps, i.guildId!, cfg.ratePerMin);
   if (!rl.allow(i.user.id, Date.now())) {
-    await reply(i, 'Estas a ir rapido demais. Espera um pouco.');
+    await i.editReply('Estas a ir rapido demais. Espera um pouco.');
     return;
   }
 
@@ -156,14 +159,14 @@ async function handleTts(i: ChatInputCommandInteraction, deps: BotDeps): Promise
     },
   });
   if (!cleaned) {
-    await reply(i, 'Nada para ler depois da limpeza.');
+    await i.editReply('Nada para ler depois da limpeza.');
     return;
   }
 
   // blocklist antes de sintetizar
   const blocklist = getBlocklist(deps.db, i.guildId!);
   if (isBlocked(cleaned, blocklist)) {
-    await reply(i, 'Esse texto contem uma palavra bloqueada.');
+    await i.editReply('Esse texto contem uma palavra bloqueada.');
     return;
   }
 
@@ -172,11 +175,11 @@ async function handleTts(i: ChatInputCommandInteraction, deps: BotDeps): Promise
     text: cleaned,
     userVoice,
     available: deps.availableModels,
-    defaultVoice: cfg.defaultVoice,
+    defaultVoice: deps.config.defaultVoice,
     defaultSpeed: deps.config.defaultSpeed,
   });
   await player.say(req);
-  await reply(i, 'Na fila.');
+  await i.editReply('Na fila.');
 }
 
 async function handleSkip(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {

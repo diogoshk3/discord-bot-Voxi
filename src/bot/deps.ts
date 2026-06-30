@@ -12,7 +12,7 @@ export interface BotDeps {
   config: AppConfig;
   availableModels: string[];
   players: Map<string, GuildVoicePlayer>;
-  limiters: Map<string, RateLimiter>;
+  limiters: Map<string, { limiter: RateLimiter; perMin: number }>;
 }
 
 export function getPlayer(deps: BotDeps, guildId: string): GuildVoicePlayer | undefined {
@@ -28,10 +28,11 @@ export function removePlayer(deps: BotDeps, guildId: string): void {
 }
 
 export function getLimiter(deps: BotDeps, guildId: string, perMin: number): RateLimiter {
-  let l = deps.limiters.get(guildId);
-  if (!l) {
-    l = new RateLimiter(perMin);
-    deps.limiters.set(guildId, l);
+  let entry = deps.limiters.get(guildId);
+  // Recria o limiter quando o perMin muda (ex.: /config rate-limit em runtime).
+  if (!entry || entry.perMin !== perMin) {
+    entry = { limiter: new RateLimiter(perMin), perMin };
+    deps.limiters.set(guildId, entry);
   }
-  return l;
+  return entry.limiter;
 }

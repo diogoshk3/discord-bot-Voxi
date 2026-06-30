@@ -60,7 +60,7 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
       text: cleaned,
       userVoice,
       available: deps.availableModels,
-      defaultVoice: cfg.defaultVoice,
+      defaultVoice: deps.config.defaultVoice,
       defaultSpeed: deps.config.defaultSpeed,
     });
 

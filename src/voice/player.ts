@@ -34,13 +34,13 @@ export class GuildVoicePlayer {
 
     this.player.on(AudioPlayerStatus.Idle, () => {
       this.current = null;
-      this.playNext();
+      void this.playNext();
     });
 
     this.player.on('error', (err) => {
       console.error('[player] erro no AudioPlayer:', err);
       this.current = null;
-      this.playNext();
+      void this.playNext();
     });
 
     this.connection.on(VoiceConnectionStatus.Disconnected, () => {
@@ -52,14 +52,16 @@ export class GuildVoicePlayer {
 
   async say(req: SynthRequest): Promise<void> {
     if (this.destroyed) return;
-    const audioPath = await this.engine.synth(req);
-    const ok = this.queue.enqueue({ audioPath });
+    // Enfileira SINCRONAMENTE por ordem de chegada (preserva FIFO da spec §7).
+    // A sintese acontece no worker (playNext), nao aqui, para nao reordenar
+    // pedidos concorrentes pela duracao/cache-hit da sintese.
+    const ok = this.queue.enqueue({ req });
     if (!ok) {
-      console.warn('[player] fila cheia, descartado:', audioPath);
+      console.warn('[player] fila cheia, pedido descartado');
       return;
     }
     if (!this.playing) {
-      this.playNext();
+      void this.playNext();
     }
   }
 
@@ -88,7 +90,7 @@ export class GuildVoicePlayer {
     }
   }
 
-  private playNext(): void {
+  private async playNext(): Promise<void> {
     if (this.destroyed) return;
     const next = this.queue.dequeue();
     if (!next) {
@@ -97,8 +99,26 @@ export class GuildVoicePlayer {
       return;
     }
     this.clearIdleTimer();
+    // IMPORTANTE: marcar `playing` ANTES do await da sintese. Isto impede que um
+    // `say()` concorrente (que ve `!this.playing`) arranque um segundo worker de
+    // drain durante a sintese, o que quebraria a ordem FIFO.
     this.playing = true;
-    const resource = createAudioResource(next.audioPath, {
+
+    let audioPath: string;
+    try {
+      audioPath = await this.engine.synth(next.req);
+    } catch (err) {
+      console.error('[player] erro na sintese, item saltado:', err);
+      // Salta este item e continua a fila sem crashar (sem crescimento de stack:
+      // estamos depois do await).
+      void this.playNext();
+      return;
+    }
+
+    // A sintese pode ter demorado; o player pode ter sido destruido entretanto.
+    if (this.destroyed) return;
+
+    const resource = createAudioResource(audioPath, {
       inputType: StreamType.Arbitrary,
     });
     this.current = resource;
