@@ -159,6 +159,18 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
     )
     .toJSON(),
   new SlashCommandBuilder()
+    .setName('setup')
+    .setDescription('Configuracao guiada num so passo (admin)')
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
+    .addChannelOption((o) =>
+      o
+        .setName('canal')
+        .setDescription('Canal de auto-leitura (omitir = usa o canal atual)')
+        .addChannelTypes(ChannelType.GuildText)
+        .setRequired(false),
+    )
+    .toJSON(),
+  new SlashCommandBuilder()
     .setName('stats')
     .setDescription('Estatísticas do bot (admin)')
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
@@ -487,6 +499,120 @@ async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps): Prom
   }
 }
 
+// Estado de cada item do checklist de permissoes:
+//  - 'ok'         -> o bot tem a permissao
+//  - 'missing'    -> o bot NAO tem a permissao (precisa de ser corrigida)
+//  - 'unchecked'  -> nao foi possivel verificar agora (ex.: perms de voz quando
+//                    o invocador nao esta num canal de voz) — sera validada no /join
+type PermState = 'ok' | 'missing' | 'unchecked';
+
+function permLine(label: string, state: PermState): string {
+  if (state === 'ok') return `✅ ${label}`;
+  if (state === 'missing') return `❌ ${label} — falta`;
+  return `⏳ ${label} — nao verificado (sera validado no /join)`;
+}
+
+/**
+ * /setup — assistente guiado para admins. Reduz a friccao de "settings nao
+ * beginner-friendly": configura o canal de auto-leitura + liga autoread num so
+ * passo e devolve um checklist claro das permissoes do bot.
+ *
+ * Decisoes de design (o contrato e omisso nalguns pontos):
+ *  - Apenas um *tipo de canal invalido* (nao-texto) BLOQUEIA a gravacao. Perms em
+ *    falta (texto OU voz) NAO bloqueiam: gravamos canal+autoread na mesma e
+ *    avisamos no checklist. O objetivo e tirar o admin do estado "tentei tudo".
+ *  - ViewChannel em falta e tratado como as restantes: aparece no checklist como
+ *    "falta" mas a config e gravada na mesma (consistente com a politica de voz).
+ *  - Resolucao do canal: a opcao `canal` pode chegar como APIChannel parcial
+ *    (so id), tal como no /config tts-channel — resolvemos via guild.channels.cache.
+ *    O canal da interacao (i.channel) ja vem completo; o fallback `?? ref`
+ *    garante que esse caminho funciona mesmo sem hit na cache.
+ */
+async function handleSetup(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
+  const member = i.member as GuildMember;
+  if (!member?.permissions?.has(PermissionFlagsBits.ManageGuild)) {
+    await reply(i, 'Precisas da permissao Gerir Servidor.');
+    return;
+  }
+
+  // (a) Resolver o canal alvo: opcao `canal` ou, se omitida, o canal da interacao.
+  const ref = (i.options.getChannel('canal', false) as { id: string; type?: number } | null) ?? i.channel;
+  if (!ref || !('id' in ref)) {
+    await reply(i, 'Nao consegui identificar o canal. Indica um canal de texto na opcao "canal".');
+    return;
+  }
+  // Resolve o canal completo (com permissionsFor) a partir da cache; o canal da
+  // interacao ja e completo, por isso o fallback `?? ref` cobre esse caso.
+  const fullCh = (i.guild?.channels.cache.get(ref.id) ?? ref) as {
+    id: string;
+    type?: number;
+    permissionsFor?: (u: unknown) => { has: (flag: bigint) => boolean } | null;
+  };
+
+  if (fullCh.type !== ChannelType.GuildText) {
+    await reply(
+      i,
+      'O canal de auto-leitura tem de ser um canal de texto do servidor (nao voz nem categoria). Indica um na opcao "canal".',
+    );
+    return;
+  }
+
+  const me = deps.client.user;
+  const textPerms = me && fullCh.permissionsFor ? fullCh.permissionsFor(me) : null;
+  // O canal de texto precisa de ViewChannel E SendMessages (contrato 3a). Juntamos
+  // ambas numa unica linha "ver/escrever": so e 'ok' se o bot tiver as duas.
+  const canView = textPerms?.has(PermissionFlagsBits.ViewChannel) ?? false;
+  const canSend = textPerms?.has(PermissionFlagsBits.SendMessages) ?? false;
+  const viewState: PermState = canView && canSend ? 'ok' : 'missing';
+
+  // (b) Perms de voz: so da para verificar se o invocador esta num canal de voz.
+  const voiceCh = member?.voice?.channel as
+    | { name?: string; permissionsFor?: (u: unknown) => { has: (flag: bigint) => boolean } | null }
+    | null
+    | undefined;
+  let connectState: PermState = 'unchecked';
+  let speakState: PermState = 'unchecked';
+  if (voiceCh) {
+    const vp = me && voiceCh.permissionsFor ? voiceCh.permissionsFor(me) : null;
+    connectState = vp?.has(PermissionFlagsBits.Connect) ? 'ok' : 'missing';
+    speakState = vp?.has(PermissionFlagsBits.Speak) ? 'ok' : 'missing';
+  }
+
+  // (c) Configura num so passo — SEMPRE, mesmo que faltem perms (so avisamos).
+  setGuildConfig(deps.db, i.guildId!, { ttsChannelId: fullCh.id, autoread: true });
+
+  // (d) Resumo beginner-friendly.
+  const lines: string[] = [
+    '**Setup do Voxi concluido.**',
+    `Canal de auto-leitura: <#${fullCh.id}>`,
+    'Auto-leitura: ligada',
+    '',
+    '**Permissoes:**',
+    permLine('ViewChannel (ver/escrever no canal de texto)', viewState),
+    permLine('Connect (ligar ao canal de voz)', connectState),
+    permLine('Speak (falar no canal de voz)', speakState),
+  ];
+
+  const anyMissing = [viewState, connectState, speakState].includes('missing');
+  if (anyMissing) {
+    lines.push(
+      '',
+      'Para corrigir o que falta: nas definicoes do servidor abre o role do Voxi (ou as permissoes do canal) e ativa as permissoes marcadas com ❌.',
+    );
+  }
+  if (connectState === 'unchecked' || speakState === 'unchecked') {
+    lines.push(
+      '',
+      'Nao estas num canal de voz, por isso nao deu para verificar Connect/Speak agora — serao validados quando correres /join.',
+    );
+  }
+  if (!anyMissing && connectState === 'ok' && speakState === 'ok') {
+    lines.push('', 'Esta tudo pronto. Entra num canal de voz e usa /join.');
+  }
+
+  await reply(i, lines.join('\n'));
+}
+
 async function handleStats(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
   const member = i.member as GuildMember;
   if (!member?.permissions?.has(PermissionFlagsBits.ManageGuild)) {
@@ -523,6 +649,8 @@ export async function handleInteraction(i: ChatInputCommandInteraction, deps: Bo
         return await handleVoice(i, deps);
       case 'config':
         return await handleConfig(i, deps);
+      case 'setup':
+        return await handleSetup(i, deps);
       case 'stats':
         return await handleStats(i, deps);
     }
