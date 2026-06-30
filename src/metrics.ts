@@ -7,6 +7,9 @@ export interface MetricsSnapshot {
   cacheHits: number;
   cacheMisses: number;
   synthErrors: number;
+  // Reconexao a voz (P7.4): quedas detetadas e reconexoes com sucesso.
+  voiceDrops: number;
+  voiceReconnects: number;
 }
 
 class Metrics {
@@ -14,6 +17,8 @@ class Metrics {
   cacheHits = 0;
   cacheMisses = 0;
   synthErrors = 0;
+  voiceDrops = 0;
+  voiceReconnects = 0;
 
   /** Incrementa um contador pelo nome. */
   inc(counter: keyof MetricsSnapshot): void {
@@ -27,6 +32,8 @@ class Metrics {
       cacheHits: this.cacheHits,
       cacheMisses: this.cacheMisses,
       synthErrors: this.synthErrors,
+      voiceDrops: this.voiceDrops,
+      voiceReconnects: this.voiceReconnects,
     };
   }
 
@@ -36,6 +43,8 @@ class Metrics {
     this.cacheHits = 0;
     this.cacheMisses = 0;
     this.synthErrors = 0;
+    this.voiceDrops = 0;
+    this.voiceReconnects = 0;
   }
 }
 

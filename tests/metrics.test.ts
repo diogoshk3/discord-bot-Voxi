@@ -119,7 +119,14 @@ describe('metrics — API básica', () => {
 
   it('começa a zero após reset()', () => {
     const snap = metrics.snapshot();
-    expect(snap).toEqual({ messagesSpoken: 0, cacheHits: 0, cacheMisses: 0, synthErrors: 0 });
+    expect(snap).toEqual({
+      messagesSpoken: 0,
+      cacheHits: 0,
+      cacheMisses: 0,
+      synthErrors: 0,
+      voiceDrops: 0,
+      voiceReconnects: 0,
+    });
   });
 
   it('inc("cacheHits") incrementa só cacheHits', () => {
@@ -165,8 +172,34 @@ describe('metrics — API básica', () => {
     metrics.inc('cacheMisses');
     metrics.inc('messagesSpoken');
     metrics.inc('synthErrors');
+    metrics.inc('voiceDrops');
+    metrics.inc('voiceReconnects');
     metrics.reset();
-    expect(metrics.snapshot()).toEqual({ messagesSpoken: 0, cacheHits: 0, cacheMisses: 0, synthErrors: 0 });
+    expect(metrics.snapshot()).toEqual({
+      messagesSpoken: 0,
+      cacheHits: 0,
+      cacheMisses: 0,
+      synthErrors: 0,
+      voiceDrops: 0,
+      voiceReconnects: 0,
+    });
+  });
+
+  it('inc("voiceDrops") incrementa só voiceDrops', () => {
+    metrics.inc('voiceDrops');
+    metrics.inc('voiceDrops');
+    const snap = metrics.snapshot();
+    expect(snap.voiceDrops).toBe(2);
+    expect(snap.voiceReconnects).toBe(0);
+    expect(snap.messagesSpoken).toBe(0);
+    expect(snap.synthErrors).toBe(0);
+  });
+
+  it('inc("voiceReconnects") incrementa só voiceReconnects', () => {
+    metrics.inc('voiceReconnects');
+    const snap = metrics.snapshot();
+    expect(snap.voiceReconnects).toBe(1);
+    expect(snap.voiceDrops).toBe(0);
   });
 });
 
@@ -285,6 +318,57 @@ describe('GuildVoicePlayer — wiring de métricas', () => {
   });
 });
 
+// ── 3b. Wiring: GuildVoicePlayer → voiceDrops + voiceReconnects ───────────────
+// O mock partilhado de @discordjs/voice (topo do ficheiro) tem
+// entersState: () => Promise.resolve(), por isso a recuperacao "soft" no
+// handleDisconnect resolve sempre: um episodio de queda = 1 drop + 1 reconnect.
+
+describe('GuildVoicePlayer — wiring de reconexao (voiceDrops/voiceReconnects)', () => {
+  beforeEach(() => metrics.reset());
+
+  it('uma queda (Disconnected) -> voiceDrops sobe 1 e a recuperacao -> voiceReconnects sobe 1', async () => {
+    const engine: TTSEngine = { synth: async (req: SynthRequest) => req.text };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const conn = makeConnection() as any;
+    const player = new GuildVoicePlayer(conn, engine, 20, 60_000, () => {});
+
+    // Emite a queda: handleDisconnect conta o drop e, como entersState resolve
+    // sempre (mock), a recuperacao "soft" volta a Ready -> conta o reconnect.
+    conn.emit('disconnected');
+
+    await vi.waitFor(
+      () => expect(metrics.snapshot().voiceReconnects).toBe(1),
+      { timeout: 1000 },
+    );
+    expect(metrics.snapshot().voiceDrops).toBe(1);
+
+    player.destroy();
+  });
+
+  it('Disconnected repetido no mesmo episodio nao conta a dobrar (dedup por episodio)', async () => {
+    const engine: TTSEngine = { synth: async (req: SynthRequest) => req.text };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const conn = makeConnection() as any;
+    const player = new GuildVoicePlayer(conn, engine, 20, 60_000, () => {});
+
+    // Dois eventos Disconnected SINCRONOS no mesmo episodio: o primeiro entra em
+    // handleDisconnect, poe reconnecting=true e conta o drop antes do 1o await;
+    // o segundo bate no guard (reconnecting) e retorna logo, sem contar.
+    conn.emit('disconnected');
+    conn.emit('disconnected');
+
+    await vi.waitFor(
+      () => expect(metrics.snapshot().voiceReconnects).toBe(1),
+      { timeout: 1000 },
+    );
+    // Episodio unico: exatamente 1 drop e 1 reconnect, apesar dos 2 eventos.
+    expect(metrics.snapshot().voiceDrops).toBe(1);
+    expect(metrics.snapshot().voiceReconnects).toBe(1);
+
+    player.destroy();
+  });
+});
+
 // ── 4. /stats via handleInteraction ──────────────────────────────────────────
 
 describe('/stats — handleInteraction', () => {
@@ -296,6 +380,9 @@ describe('/stats — handleInteraction', () => {
     metrics.inc('cacheHits');
     metrics.inc('cacheMisses');
     metrics.inc('synthErrors');
+    metrics.inc('voiceDrops');
+    metrics.inc('voiceDrops');
+    metrics.inc('voiceReconnects');
 
     const deps = makeStatsDeps({
       players: new Map([['g1', {} as BotDeps['players'] extends Map<string, infer V> ? V : never]]),
@@ -310,6 +397,8 @@ describe('/stats — handleInteraction', () => {
     expect(reply).toContain('Cache hits: 1');
     expect(reply).toContain('Cache misses: 1');
     expect(reply).toContain('Erros de sintese: 1');
+    expect(reply).toContain('Quedas de voz: 2');
+    expect(reply).toContain('Reconexoes: 1');
     expect(reply).toContain('Players ativos: 1');
     expect(reply).toContain('Servidores: 3');
     expect(reply).toContain('Uptime:');
@@ -325,6 +414,8 @@ describe('/stats — handleInteraction', () => {
     expect(reply).toContain('Cache hits: 0');
     expect(reply).toContain('Cache misses: 0');
     expect(reply).toContain('Erros de sintese: 0');
+    expect(reply).toContain('Quedas de voz: 0');
+    expect(reply).toContain('Reconexoes: 0');
     expect(reply).toContain('Players ativos: 0');
   });
 
