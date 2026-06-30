@@ -36,6 +36,16 @@ describe('cleanText', () => {
     });
   });
 
+  describe('mencoes de role', () => {
+    it('remove role mention <@&123> (nao a le literalmente)', () => {
+      // Antes do fix, <@&123> sobrevivia a todas as fases e era lido como "<@&123>".
+      const r = cleanText('atencao <@&123> pessoal', opts);
+      expect(r).not.toContain('<@&123>');
+      expect(r).not.toContain('123');
+      expect(r).toBe('atencao pessoal');
+    });
+  });
+
   describe('emojis', () => {
     it('remove custom emoji <:nome:789>', () => {
       expect(cleanText('boa <:pog:789> festa', opts)).toBe('boa festa');

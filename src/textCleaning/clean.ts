@@ -7,6 +7,7 @@ export interface CleanOptions {
 const RE_CODE_BLOCK = /```[\s\S]*?```/g;
 const RE_INLINE_CODE = /`[^`]*`/g;
 const RE_URL = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/gi;
+const RE_ROLE = /<@&\d+>/g;
 const RE_USER = /<@!?(\d+)>/g;
 const RE_CHANNEL = /<#(\d+)>/g;
 const RE_CUSTOM_EMOJI = /<a?:\w+:\d+>/g;
@@ -25,26 +26,29 @@ export function cleanText(raw: string, opts: CleanOptions): string {
   // 2. URLs -> "link"
   t = t.replace(RE_URL, 'link');
 
-  // 3. mencoes de user e canal
+  // 3. mencoes de role (sem resolver: removidas para nao serem lidas como "<@&id>")
+  t = t.replace(RE_ROLE, ' ');
+
+  // 4. mencoes de user e canal
   t = t.replace(RE_USER, (_m, id: string) => opts.resolveUser(id));
   t = t.replace(RE_CHANNEL, (_m, id: string) => opts.resolveChannel(id));
 
-  // 4. emojis: custom e unicode
+  // 5. emojis: custom e unicode
   t = t.replace(RE_CUSTOM_EMOJI, ' ');
   t = t.replace(RE_UNICODE_EMOJI, ' ');
 
-  // 5. colapsar repeticoes (minusculas cap 3, maiusculas cap 2)
+  // 6. colapsar repeticoes (minusculas cap 3, maiusculas cap 2)
   t = t.replace(RE_REPEAT_LOWER, '$1$1$1');
   t = t.replace(RE_REPEAT_UPPER, '$1$1');
 
-  // 6. colapsar whitespace + trim
+  // 7. colapsar whitespace + trim
   t = t.replace(RE_WS, ' ').trim();
 
-  // 7. truncar
+  // 8. truncar
   if (t.length > opts.maxChars) {
     t = t.slice(0, opts.maxChars);
   }
 
-  // 8. vazio -> ''
+  // 9. vazio -> ''
   return t;
 }
