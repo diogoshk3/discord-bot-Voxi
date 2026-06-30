@@ -41,6 +41,12 @@ export function initDb(path: string): Database.Database {
         replacement TEXT NOT NULL,
         PRIMARY KEY (guild_id, term)
       );
+
+      CREATE TABLE IF NOT EXISTS tts_optout (
+        guild_id TEXT NOT NULL,
+        user_id  TEXT NOT NULL,
+        PRIMARY KEY (guild_id, user_id)
+      );
     `);
 
     // Migracao idempotente para DBs criadas antes da coluna tts_role_id existir.

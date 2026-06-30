@@ -13,6 +13,7 @@ import {
   addPronunciation,
   removePronunciation,
 } from '../src/store/pronunciation';
+import { isOptedOut, setOptOut, setOptIn } from '../src/store/optout';
 
 const G = 'guild-1';
 const U = 'user-1';
@@ -221,6 +222,39 @@ describe('store', () => {
     it('isolates pronunciations per guild', () => {
       addPronunciation(db, G, 'gg', 'good game');
       expect(getPronunciations(db, 'guild-2')).toEqual([]);
+    });
+  });
+
+  describe('optout', () => {
+    it('isOptedOut e false quando nada foi definido', () => {
+      expect(isOptedOut(db, G, U)).toBe(false);
+    });
+
+    it('setOptOut marca o utilizador e isOptedOut passa a true', () => {
+      setOptOut(db, G, U);
+      expect(isOptedOut(db, G, U)).toBe(true);
+    });
+
+    it('setOptOut e idempotente (marcar duas vezes nao rebenta)', () => {
+      setOptOut(db, G, U);
+      setOptOut(db, G, U);
+      expect(isOptedOut(db, G, U)).toBe(true);
+    });
+
+    it('setOptIn limpa o opt-out e isOptedOut volta a false', () => {
+      setOptOut(db, G, U);
+      setOptIn(db, G, U);
+      expect(isOptedOut(db, G, U)).toBe(false);
+    });
+
+    it('isola o opt-out por guild', () => {
+      setOptOut(db, G, U);
+      expect(isOptedOut(db, 'guild-2', U)).toBe(false);
+    });
+
+    it('isola o opt-out por utilizador', () => {
+      setOptOut(db, G, U);
+      expect(isOptedOut(db, G, 'user-2')).toBe(false);
     });
   });
 
