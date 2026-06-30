@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import BetterSqlite3 from 'better-sqlite3';
 import type Database from 'better-sqlite3';
 import { initDb } from '../src/store/db';
 import { getUserVoice, setUserVoice, resetUserVoice } from '../src/store/userVoice';
@@ -59,7 +60,32 @@ describe('store', () => {
         maxChars: 300,
         ratePerMin: 5,
         enabled: true,
+        ttsRoleId: null,
       });
+    });
+
+    it('ttsRoleId default e null', () => {
+      expect(getGuildConfig(db, G).ttsRoleId).toBeNull();
+    });
+
+    it('persiste e le ttsRoleId', () => {
+      setGuildConfig(db, G, { ttsRoleId: 'role-42' });
+      expect(getGuildConfig(db, G).ttsRoleId).toBe('role-42');
+    });
+
+    it('pode limpar ttsRoleId de volta a null', () => {
+      setGuildConfig(db, G, { ttsRoleId: 'role-42' });
+      setGuildConfig(db, G, { ttsRoleId: null });
+      expect(getGuildConfig(db, G).ttsRoleId).toBeNull();
+    });
+
+    it('um patch de ttsRoleId nao perde outros campos', () => {
+      setGuildConfig(db, G, { maxChars: 500, autoread: true });
+      setGuildConfig(db, G, { ttsRoleId: 'role-7' });
+      const cfg = getGuildConfig(db, G);
+      expect(cfg.ttsRoleId).toBe('role-7');
+      expect(cfg.maxChars).toBe(500);
+      expect(cfg.autoread).toBe(true);
     });
 
     it('persists a partial patch and keeps other defaults', () => {
@@ -71,6 +97,7 @@ describe('store', () => {
         maxChars: 300,
         ratePerMin: 5,
         enabled: true,
+        ttsRoleId: null,
       });
     });
 
@@ -197,6 +224,61 @@ describe('initDb — erro de abertura', () => {
     writeFileSync(file, 'isto nao e uma base de dados sqlite, e texto qualquer\n');
     try {
       expect(() => initDb(file)).toThrow(/Falha ao abrir a base de dados/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('initDb — migracao tts_role_id em DB de esquema antigo', () => {
+  it('adiciona a coluna tts_role_id a uma DB sem ela e o get devolve null', () => {
+    // initDb abre por caminho, por isso a migracao tem de ser testada em ficheiro
+    // real (nao :memory:). Criamos uma DB com o esquema ANTIGO (sem tts_role_id),
+    // inserimos uma linha, fechamos; depois corremos initDb e confirmamos a coluna.
+    const dir = mkdtempSync(join(tmpdir(), 'migdb-'));
+    const file = join(dir, 'old-schema.sqlite');
+    try {
+      const old = new BetterSqlite3(file);
+      old.exec(`
+        CREATE TABLE guild_config (
+          guild_id       TEXT PRIMARY KEY,
+          tts_channel_id TEXT,
+          autoread       INTEGER NOT NULL DEFAULT 0,
+          default_voice  TEXT NOT NULL DEFAULT 'en_US-amy-medium',
+          max_chars      INTEGER NOT NULL DEFAULT 300,
+          rate_per_min   INTEGER NOT NULL DEFAULT 5,
+          enabled        INTEGER NOT NULL DEFAULT 1
+        );
+      `);
+      old
+        .prepare(
+          `INSERT INTO guild_config (guild_id, tts_channel_id, autoread, default_voice, max_chars, rate_per_min, enabled)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        )
+        .run('g-old', 'chan-old', 1, 'en_US-amy-medium', 300, 5, 1);
+      old.close();
+
+      // Antes da migracao a coluna nao existe.
+      const before = new BetterSqlite3(file);
+      const colsBefore = before.pragma('table_info(guild_config)') as Array<{ name: string }>;
+      expect(colsBefore.some((c) => c.name === 'tts_role_id')).toBe(false);
+      before.close();
+
+      // initDb corre a migracao idempotente.
+      const db = initDb(file);
+      const colsAfter = db.pragma('table_info(guild_config)') as Array<{ name: string }>;
+      expect(colsAfter.some((c) => c.name === 'tts_role_id')).toBe(true);
+
+      // A linha antiga continua la e ttsRoleId vem como null (coluna nova, sem valor).
+      expect(getGuildConfig(db, 'g-old').ttsRoleId).toBeNull();
+      expect(getGuildConfig(db, 'g-old').ttsChannelId).toBe('chan-old');
+
+      // Idempotente: correr initDb de novo no mesmo ficheiro nao rebenta.
+      db.close();
+      const db2 = initDb(file);
+      const cols2 = db2.pragma('table_info(guild_config)') as Array<{ name: string }>;
+      expect(cols2.filter((c) => c.name === 'tts_role_id')).toHaveLength(1);
+      db2.close();
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

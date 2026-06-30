@@ -25,7 +25,8 @@ export function initDb(path: string): Database.Database {
         default_voice  TEXT NOT NULL DEFAULT 'en_US-amy-medium',
         max_chars      INTEGER NOT NULL DEFAULT 300,
         rate_per_min   INTEGER NOT NULL DEFAULT 5,
-        enabled        INTEGER NOT NULL DEFAULT 1
+        enabled        INTEGER NOT NULL DEFAULT 1,
+        tts_role_id    TEXT
       );
 
       CREATE TABLE IF NOT EXISTS blocklist (
@@ -34,6 +35,14 @@ export function initDb(path: string): Database.Database {
         PRIMARY KEY (guild_id, word)
       );
     `);
+
+    // Migracao idempotente para DBs criadas antes da coluna tts_role_id existir.
+    // O CREATE TABLE IF NOT EXISTS acima nao altera tabelas ja existentes, por isso
+    // verificamos o esquema e adicionamos a coluna so quando falta (no-op em DBs novas).
+    const cols = db.pragma('table_info(guild_config)') as Array<{ name: string }>;
+    if (!cols.some((c) => c.name === 'tts_role_id')) {
+      db.exec('ALTER TABLE guild_config ADD COLUMN tts_role_id TEXT');
+    }
 
     return db;
   } catch (err) {
