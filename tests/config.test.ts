@@ -32,6 +32,7 @@ describe('loadConfig', () => {
       TTS_ENGINE: undefined,
       OPENAI_API_KEY: undefined,
       PRESENCE_TEXT: undefined,
+      HEALTH_PORT: undefined,
     });
   });
 
@@ -148,5 +149,22 @@ describe('loadConfig', () => {
   it('reads PRESENCE_TEXT override from env', () => {
     setEnv({ ...REQUIRED, PRESENCE_TEXT: 'type it, hear it. • /invite' });
     expect(loadConfig().presenceText).toBe('type it, hear it. • /invite');
+  });
+
+  // P9.7 — HEALTH_PORT opcional: ausente/vazio => undefined (sem servidor);
+  // definido => numero. Valor invalido cai em undefined (defensivo).
+  it('leaves healthPort undefined when HEALTH_PORT missing', () => {
+    setEnv(REQUIRED);
+    expect(loadConfig().healthPort).toBeUndefined();
+  });
+
+  it('parses HEALTH_PORT as a number when set', () => {
+    setEnv({ ...REQUIRED, HEALTH_PORT: '8080' });
+    expect(loadConfig().healthPort).toBe(8080);
+  });
+
+  it('leaves healthPort undefined on invalid HEALTH_PORT', () => {
+    setEnv({ ...REQUIRED, HEALTH_PORT: 'abc' });
+    expect(loadConfig().healthPort).toBeUndefined();
   });
 });

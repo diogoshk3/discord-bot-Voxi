@@ -18,6 +18,7 @@ export interface AppConfig {
   ttsEngine: TtsEngineKind;
   openaiApiKey?: string;
   presenceText?: string;
+  healthPort?: number;
 }
 
 function requireEnv(name: string): string {
@@ -39,6 +40,19 @@ function numEnv(name: string, fallback: number): number {
   if (raw === undefined || raw.trim() === '') return fallback;
   const parsed = Number(raw);
   return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+/**
+ * Numero OPCIONAL: ausente/vazio => undefined (ao contrario de numEnv, que tem
+ * sempre fallback). Valor nao-numerico tambem => undefined — a escolha
+ * defensiva, consistente com o resto do modulo: nao arrancamos um servidor por
+ * causa de um typo na env. Usado por HEALTH_PORT (sem porta => sem servidor).
+ */
+function numEnvOptional(name: string): number | undefined {
+  const raw = process.env[name];
+  if (raw === undefined || raw.trim() === '') return undefined;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : undefined;
 }
 
 /**
@@ -77,5 +91,8 @@ export function loadConfig(): AppConfig {
     // P9.3 — texto opcional da presenca; vazio/ausente => undefined e buildPresence
     // usa o seu default de marca. Override exato quando definido.
     presenceText: strEnv('PRESENCE_TEXT', '') || undefined,
+    // P9.7 — porta OPCIONAL do health endpoint HTTP (uptime monitors). Ausente
+    // => undefined => NAO arranca servidor nenhum (default). Definida => numero.
+    healthPort: numEnvOptional('HEALTH_PORT'),
   };
 }
