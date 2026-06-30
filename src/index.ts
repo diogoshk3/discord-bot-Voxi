@@ -10,6 +10,7 @@ import type { BotDeps } from './bot/deps';
 import { createClient, bindEvents } from './bot/client';
 import { registerCommands } from './bot/registerCommands';
 import { installSignalHandlers } from './bot/shutdown';
+import { startHealthServer } from './health';
 
 function discoverModels(modelsDir: string): string[] {
   if (!existsSync(modelsDir)) return [];
@@ -43,6 +44,15 @@ async function main(): Promise<void> {
 
   bindEvents(deps);
   installSignalHandlers(deps);
+
+  // P9.7 — health endpoint HTTP OPCIONAL (uptime monitors). So arranca se
+  // HEALTH_PORT estiver definida. Em try/catch defensivo: um problema a abrir a
+  // porta (ex.: ja em uso) NUNCA deve impedir o bot de arrancar.
+  try {
+    startHealthServer(config);
+  } catch (err) {
+    log.error('[index] falha ao arrancar o servidor de health (ignorado)', err);
+  }
 
   await registerCommands(config.token, config.clientId);
   await client.login(config.token);
