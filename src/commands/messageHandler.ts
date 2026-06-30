@@ -7,6 +7,7 @@ import { getGuildConfig } from '../store/guildConfig';
 import { getBlocklist } from '../store/blocklist';
 import { getPronunciations } from '../store/pronunciation';
 import { getUserVoice } from '../store/userVoice';
+import { isOptedOut } from '../store/optout';
 import { applyPronunciation } from '../textCleaning/pronunciation';
 import { resolveSynth } from './resolveSynth';
 import { log } from '../logging/logger';
@@ -39,6 +40,18 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     if (cfg.ttsRoleId) {
       const member = message.member;
       if (!member || !member.roles.cache.has(cfg.ttsRoleId)) return;
+    }
+
+    // Opt-out por utilizador: so silencia a leitura PASSIVA do canal de auto-leitura.
+    // Uma mencao/reply ao bot e uma accao EXPLICITA do utilizador (como /tts), por isso
+    // NAO e bloqueada pelo opt-out — so a leitura automatica do canal e que e.
+    if (
+      isAutoreadChannel &&
+      !isMention &&
+      !isReplyToBot &&
+      isOptedOut(deps.db, message.guildId, message.author.id)
+    ) {
+      return;
     }
 
     // gating: jogador ativo nesta guild
