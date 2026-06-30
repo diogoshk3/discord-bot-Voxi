@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import type Database from 'better-sqlite3';
 import { initDb } from '../src/store/db';
 import { getUserVoice, setUserVoice, resetUserVoice } from '../src/store/userVoice';
@@ -185,5 +186,19 @@ describe('initDb — erro de abertura', () => {
     expect(() => initDb(bad)).toThrow(/Falha ao abrir a base de dados/);
     // A mensagem inclui o caminho para diagnostico.
     expect(() => initDb(bad)).toThrow(bad);
+  });
+
+  it('lanca erro com mensagem clara quando o ficheiro nao e uma BD valida', () => {
+    // Um ficheiro existente que nao e SQLite: new Database() passa (validacao lazy)
+    // e o erro so surge em db.exec ("file is not a database"). O try alargado
+    // transforma isso na mesma mensagem clara em vez de stack trace cru.
+    const dir = mkdtempSync(join(tmpdir(), 'baddb-'));
+    const file = join(dir, 'not-a-db.sqlite');
+    writeFileSync(file, 'isto nao e uma base de dados sqlite, e texto qualquer\n');
+    try {
+      expect(() => initDb(file)).toThrow(/Falha ao abrir a base de dados/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
