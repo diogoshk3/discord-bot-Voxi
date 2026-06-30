@@ -1,6 +1,8 @@
-# tts-bot
+# Voxi
 
-Bot de Text-to-Speech para Discord com **voz neural gratuita** (Piper, self-host) e foco em **fiabilidade**. Lê texto em canais de voz: comando `/tts`, auto-leitura de um canal configurado, e leitura de menções/replies ao bot. Deteta a língua por mensagem e escolhe a voz; cada utilizador pode fixar a sua própria voz. Inclui moderação (blocklist, rate-limit, limite de chars, gating por canal), fila FIFO com `/skip`, auto-reconexão à voz, auto-saída por inatividade e cache de áudio.
+> type it, hear it.
+
+Bot de Text-to-Speech para Discord com **voz neural gratuita** (Piper, self-host) e foco em **fiabilidade**. O Voxi lê texto em canais de voz: comando `/tts`, auto-leitura de um canal configurado, e leitura de menções/replies ao bot. Deteta a língua por mensagem e escolhe a voz; cada utilizador pode fixar a sua própria voz. Inclui moderação (blocklist, rate-limit, limite de chars, gating por canal), fila FIFO com `/skip`, auto-reconexão à voz, auto-saída por inatividade e cache de áudio.
 
 > Estado: **v0** (núcleo competitivo). Motor neural pago, streaming, dicionário de pronúncia, monetização e Docker/VPS estão **fora** deste v0.
 
@@ -93,7 +95,7 @@ Faz esta checklist com o bot a correr (`npm run dev`) e tu num servidor Discord 
 
 ### 3.1 Criar e configurar a aplicação Discord
 
-- [ ] Em https://discord.com/developers/applications → **New Application** → dá um nome.
+- [ ] Em https://discord.com/developers/applications → **New Application** → dá o nome **Voxi** (recomendado para consistência de marca).
 - [ ] Separador **Bot** → **Reset Token** → copia o token para `DISCORD_TOKEN` no `.env`.
 - [ ] **General Information** → copia o **Application ID** para `CLIENT_ID` no `.env`.
 - [ ] Separador **Bot** → secção **Privileged Gateway Intents** → ativa:

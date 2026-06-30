@@ -1,3 +1,5 @@
+Nome do produto: **Voxi** — *type it, hear it.*
+
 # Design — TTS Bot (v0 "núcleo competitivo")
 
 Data: 2026-06-30

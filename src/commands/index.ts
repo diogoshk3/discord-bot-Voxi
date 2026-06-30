@@ -31,7 +31,7 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
   new SlashCommandBuilder().setName('leave').setDescription('Sai do canal de voz').toJSON(),
   new SlashCommandBuilder()
     .setName('tts')
-    .setDescription('Le um texto em voz alta')
+    .setDescription('Voxi le um texto em voz alta')
     .addStringOption((o) => o.setName('texto').setDescription('O que ler').setRequired(true))
     .toJSON(),
   new SlashCommandBuilder().setName('skip').setDescription('Salta o audio atual').toJSON(),
