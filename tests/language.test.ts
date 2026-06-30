@@ -113,4 +113,46 @@ describe('pickVoice', () => {
   it('com multiplos modelos do mesmo prefixo escolhe o primeiro por ordem', () => {
     expect(pickVoice('eng', ['en_GB-alan-low', 'en_US-amy-medium'], fallback)).toBe('en_GB-alan-low');
   });
+
+  // ------------------------------------------------------------------
+  // P7.3 — linguas em falta (PT/europeu). Provas de contrato: confirmam
+  // que o prefixo 'por' -> 'pt_' cobre tanto pt_PT como pt_BR (ambos
+  // comecam por 'pt_'), e que outros europeus resolvem quando ha modelo.
+  // ------------------------------------------------------------------
+
+  // (a) Com pt_PT E pt_BR disponiveis, "por" resolve para um modelo pt_
+  //     (qualquer um serve — o contrato e "devolve um modelo pt_", nao um
+  //     ficheiro especifico; a ordem ja e coberta pelo teste de determinismo).
+  it('"por" resolve para um modelo pt_ quando ha pt_PT e pt_BR', () => {
+    const models = ['pt_PT-tugao-medium', 'pt_BR-faber-medium', 'en_US-amy-medium'];
+    const chosen = pickVoice('por', models, fallback);
+    expect(chosen.startsWith('pt_')).toBe(true);
+    expect(models).toContain(chosen);
+  });
+
+  // (b) So pt_BR disponivel → resolve para pt_BR (prova que 'pt_' apanha BR,
+  //     nao apenas PT).
+  it('"por" resolve para pt_BR quando so ha pt_BR', () => {
+    expect(pickVoice('por', ['pt_BR-faber-medium', 'en_US-amy-medium'], fallback)).toBe(
+      'pt_BR-faber-medium',
+    );
+  });
+
+  // (c) Sem qualquer modelo pt_ → fallback.
+  it('"por" cai no fallback quando nao ha nenhum modelo pt_', () => {
+    expect(pickVoice('por', ['en_US-amy-medium', 'es_ES-davefx-medium'], fallback)).toBe(fallback);
+  });
+
+  // (d) Outros europeus ocidentais resolvem quando ha modelo do locale.
+  it('"deu" resolve para de_DE quando ha modelo alemao', () => {
+    expect(pickVoice('deu', ['de_DE-thorsten-medium', 'en_US-amy-medium'], fallback)).toBe(
+      'de_DE-thorsten-medium',
+    );
+  });
+
+  it('"spa" resolve para es_ES quando ha modelo espanhol', () => {
+    expect(pickVoice('spa', ['es_ES-davefx-medium', 'en_US-amy-medium'], fallback)).toBe(
+      'es_ES-davefx-medium',
+    );
+  });
 });

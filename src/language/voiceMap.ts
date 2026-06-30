@@ -4,6 +4,10 @@
  */
 const LANG_TO_PREFIX: Record<string, string> = {
   // Linguas originais
+  // 'por' -> 'pt_' cobre DELIBERADAMENTE pt_PT e pt_BR: o franc devolve sempre
+  // 'por' para portugues (sem distinguir variante) e ambos os locales Piper
+  // ('pt_PT-...', 'pt_BR-...') comecam por 'pt_', logo pickVoice apanha o
+  // primeiro modelo pt_ disponivel (ver tests P7.3 em tests/language.test.ts).
   por: 'pt_',
   eng: 'en_',
   spa: 'es_',

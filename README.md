@@ -71,6 +71,33 @@ Edita `.env`:
 | `MAX_CHARS` | Máximo de caracteres por mensagem, p.ex. `300` |
 | `RATE_PER_MIN` | Mensagens por minuto por utilizador, p.ex. `5` |
 
+### 1.5 Modelos de voz (línguas)
+
+O Voxi **deteta a língua de cada mensagem** e escolhe automaticamente um modelo cujo nome começa pelo **prefixo de locale** dessa língua. Basta colocares o modelo certo em `models/`.
+
+**Onde obter modelos.** Todos os modelos Piper vivem em **https://huggingface.co/rhasspy/piper-voices** (pasta por língua/país/voz). Cada voz são sempre **2 ficheiros**: `<voz>.onnx` + `<voz>.onnx.json`. Descarrega **ambos** e põe-nos em `models/`.
+
+**Como o nome do ficheiro mapeia para a deteção.** O Voxi olha apenas para o **prefixo de locale** no início do nome do ficheiro (`pt_`, `en_`, `es_`, ...). Por isso `pt_PT-tugão-medium` **e** `pt_BR-faber-medium` contam ambos como Português — se só tiveres um, é esse que toca; se tiveres os dois, toca o primeiro por ordem. Se não houver nenhum modelo da língua detetada, o Voxi cai no `DEFAULT_VOICE`.
+
+Línguas mapeadas (código de deteção → prefixo do nome de ficheiro):
+
+| Língua | Prefixo | Exemplo de modelo |
+|---|---|---|
+| Português (PT **e** BR) | `pt_` | `pt_PT-tugão-medium`, `pt_BR-faber-medium` |
+| Inglês | `en_` | `en_US-amy-medium`, `en_GB-alan-low` |
+| Espanhol | `es_` | `es_ES-davefx-medium` |
+| Francês | `fr_` | `fr_FR-siwis-medium` |
+| Alemão | `de_` | `de_DE-thorsten-medium` |
+| Italiano | `it_` | `it_IT-riccardo-x_low` |
+| Neerlandês | `nl_` | `nl_NL-mls-medium` |
+| Russo | `ru_` | `ru_RU-dmitri-medium` |
+| Polaco · Ucraniano · Turco · Checo · Catalão | `pl_` · `uk_` · `tr_` · `cs_` · `ca_` | — |
+| Sueco · Finlandês · Dinamarquês · Romeno · Grego · Húngaro | `sv_` · `fi_` · `da_` · `ro_` · `el_` · `hu_` | — |
+
+> Não precisas de **todas** as línguas: põe só os modelos que queres servir. As que não tiverem modelo caem no `DEFAULT_VOICE`.
+
+**`DEFAULT_VOICE` regional.** O default de fábrica é `en_US-amy-medium`, mas podes pôr **qualquer** modelo presente em `models/` — incluindo um regional — diretamente no `.env`. Exemplos: `DEFAULT_VOICE=pt_PT-tugão-medium`, `pt_BR-faber-medium`, `es_ES-davefx-medium`, `fr_FR-siwis-medium`, `de_DE-thorsten-medium`. É a voz usada quando a língua detetada não tem modelo correspondente (e o ponto de partida para servidores maioritariamente PT/europeus).
+
 ---
 
 ## 2. Setup

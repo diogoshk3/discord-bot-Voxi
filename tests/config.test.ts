@@ -103,6 +103,20 @@ describe('loadConfig', () => {
     expect(cfg.defaultVoice).toBe('pt_PT-tugao-medium');
   });
 
+  // P7.3 — DEFAULT_VOICE regional: um valor de locale (pt_PT, pt_BR, de_DE...)
+  // e aceite tal e qual via env, sem mexer no default de fabrica do codigo.
+  // (O beforeEach limpa DEFAULT_VOICE entre testes, por isso o "default de
+  //  fabrica" e provado pelo teste 'applies string defaults' acima.)
+  it('aceita DEFAULT_VOICE regional via env (pt_BR)', () => {
+    setEnv({ ...REQUIRED, DEFAULT_VOICE: 'pt_BR-faber-medium' });
+    expect(loadConfig().defaultVoice).toBe('pt_BR-faber-medium');
+  });
+
+  it('default de fabrica do DEFAULT_VOICE permanece en_US-amy-medium (nao regional)', () => {
+    setEnv(REQUIRED);
+    expect(loadConfig().defaultVoice).toBe('en_US-amy-medium');
+  });
+
   it('defaults ttsEngine to piper and leaves openaiApiKey undefined', () => {
     setEnv(REQUIRED);
     const cfg = loadConfig();
