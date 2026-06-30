@@ -3,6 +3,7 @@
  * usados nos nomes de modelos Piper (ex. 'por' -> 'pt_', 'eng' -> 'en_').
  */
 const LANG_TO_PREFIX: Record<string, string> = {
+  // Linguas originais
   por: 'pt_',
   eng: 'en_',
   spa: 'es_',
@@ -11,6 +12,18 @@ const LANG_TO_PREFIX: Record<string, string> = {
   ita: 'it_',
   nld: 'nl_',
   rus: 'ru_',
+  // Linguas adicionadas (P3.3)
+  pol: 'pl_',
+  ukr: 'uk_',
+  tur: 'tr_',
+  ces: 'cs_',
+  cat: 'ca_',
+  swe: 'sv_',
+  fin: 'fi_',
+  dan: 'da_',
+  ron: 'ro_',
+  ell: 'el_',
+  hun: 'hu_',
 };
 
 /**
