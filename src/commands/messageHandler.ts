@@ -5,7 +5,9 @@ import { isBlocked } from '../moderation/filter';
 import { cleanText } from '../textCleaning/clean';
 import { getGuildConfig } from '../store/guildConfig';
 import { getBlocklist } from '../store/blocklist';
+import { getPronunciations } from '../store/pronunciation';
 import { getUserVoice } from '../store/userVoice';
+import { applyPronunciation } from '../textCleaning/pronunciation';
 import { resolveSynth } from './resolveSynth';
 
 export async function handleMessage(message: Message, deps: BotDeps): Promise<void> {
@@ -60,14 +62,18 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     });
     if (!cleaned) return;
 
+    // dicionario de pronuncia por servidor: aplicado DEPOIS do cleanText e ANTES do
+    // synth (e antes da blocklist, para que o texto realmente falado seja guardado).
+    const spoken = applyPronunciation(cleaned, getPronunciations(deps.db, message.guildId));
+
     // blocklist antes de sintetizar
     const blocklist = getBlocklist(deps.db, message.guildId);
-    if (isBlocked(cleaned, blocklist)) return;
+    if (isBlocked(spoken, blocklist)) return;
 
     // escolha de voz: voz do user vence, senao deteta lingua
     const userVoice = getUserVoice(deps.db, message.guildId, message.author.id);
     const req = resolveSynth({
-      text: cleaned,
+      text: spoken,
       userVoice,
       available: deps.availableModels,
       guildDefaultVoice: cfg.defaultVoice,
