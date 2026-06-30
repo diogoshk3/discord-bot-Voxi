@@ -10,7 +10,7 @@ vi.mock('@discordjs/voice', () => ({
 import { handleInteraction } from '../src/commands/index';
 import type { BotDeps } from '../src/bot/deps';
 import { initDb } from '../src/store/db';
-import { getGuildConfig } from '../src/store/guildConfig';
+import { getGuildConfig, setGuildConfig } from '../src/store/guildConfig';
 import { getBlocklist } from '../src/store/blocklist';
 import type Database from 'better-sqlite3';
 
@@ -69,6 +69,7 @@ function makeConfigInteraction(opts: {
       getString: (name: string) => (optionsMap[name] as string) ?? '',
       getBoolean: (name: string) => (optionsMap[name] as boolean) ?? false,
       getChannel: (name: string) => (optionsMap[name] as unknown) ?? null,
+      getRole: (name: string) => (optionsMap[name] as unknown) ?? null,
     },
   };
 }
@@ -241,6 +242,38 @@ describe('/config tts-channel — validacao de tipo e acesso', () => {
     await handleInteraction(i as any, deps);
     expect(i.replies.some((r) => /ch-ok/.test(r))).toBe(true);
     expect(getGuildConfig(db, GUILD).ttsChannelId).toBe('ch-ok');
+  });
+});
+
+// ── role (gating por role) ────────────────────────────────────────────────────
+
+describe('/config role — definir e limpar', () => {
+  let db: Database.Database;
+
+  beforeEach(() => {
+    db = initDb(':memory:');
+  });
+  afterEach(() => {
+    db.close();
+  });
+
+  it('define o ttsRoleId quando um role e fornecido', async () => {
+    const fakeRole = { id: 'role-99', name: 'Leitores' };
+    const i = makeConfigInteraction({ sub: 'role', optionsMap: { role: fakeRole } });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(i.replies.some((r) => /role-99|restrit/i.test(r))).toBe(true);
+    expect(getGuildConfig(db, GUILD).ttsRoleId).toBe('role-99');
+  });
+
+  it('limpa o ttsRoleId quando o role e omitido', async () => {
+    // Primeiro definir, depois limpar (role omitido → getRole devolve null).
+    setGuildConfig(db, GUILD, { ttsRoleId: 'role-99' });
+    const i = makeConfigInteraction({ sub: 'role', optionsMap: {} });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(i.replies.some((r) => /remov|sem restricao|todos/i.test(r))).toBe(true);
+    expect(getGuildConfig(db, GUILD).ttsRoleId).toBeNull();
   });
 });
 

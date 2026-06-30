@@ -74,6 +74,14 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
           o.setName('valor').setDescription('1-120').setRequired(true).setMinValue(1).setMaxValue(120),
         ),
     )
+    .addSubcommand((s) =>
+      s
+        .setName('role')
+        .setDescription('Restringe a auto-leitura a um role (omitir o role limpa a restricao)')
+        .addRoleOption((o) =>
+          o.setName('role').setDescription('Role permitido (vazio = sem restricao)').setRequired(false),
+        ),
+    )
     .addSubcommandGroup((g) =>
       g
         .setName('blockword')
@@ -285,6 +293,16 @@ async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps): Prom
     }
     setGuildConfig(deps.db, i.guildId!, { ratePerMin: v });
     await reply(i, `Rate-limit: ${v}/min.`);
+  } else if (sub === 'role') {
+    // Opcao de role e opcional: omiti-la (getRole devolve null) limpa a restricao.
+    const role = i.options.getRole('role', false);
+    if (role) {
+      setGuildConfig(deps.db, i.guildId!, { ttsRoleId: role.id });
+      await reply(i, `Auto-leitura restrita ao role <@&${role.id}>.`);
+    } else {
+      setGuildConfig(deps.db, i.guildId!, { ttsRoleId: null });
+      await reply(i, 'Restricao de role removida: todos podem ser lidos.');
+    }
   }
 }
 

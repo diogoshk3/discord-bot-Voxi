@@ -28,6 +28,16 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
 
     if (!isAutoreadChannel && !isMention && !isReplyToBot) return;
 
+    // Gating por role: se a guild definiu um role permitido, so o autor com esse
+    // role e lido por auto-leitura (cobre canal, mencao e resposta). Sem role
+    // (null) mantem-se o comportamento atual (sem restricao). Membro ausente -> ignora.
+    // Nota: aplica-se a /tts? Nao. /tts e uma accao explicita do utilizador (escreve
+    // o comando), nao auto-leitura, por isso o gating de role e so para mensagens.
+    if (cfg.ttsRoleId) {
+      const member = message.member;
+      if (!member || !member.roles.cache.has(cfg.ttsRoleId)) return;
+    }
+
     // gating: jogador ativo nesta guild
     const player = getPlayer(deps, message.guildId);
     if (!player) return;
