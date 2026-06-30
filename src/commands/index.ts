@@ -278,7 +278,12 @@ export async function handleInteraction(i: ChatInputCommandInteraction, deps: Bo
     }
   } catch (err) {
     console.error('[command] erro em', i.commandName, err);
-    if (i.isRepliable() && !i.replied && !i.deferred) {
+    if (!i.isRepliable()) return;
+    if (i.deferred && !i.replied) {
+      // Ja foi deferido (caso do /tts): editReply para o utilizador receber o erro
+      // em vez de ficar preso em "a pensar...".
+      await i.editReply({ content: 'Ocorreu um erro.' }).catch(() => {});
+    } else if (!i.replied) {
       await i.reply({ content: 'Ocorreu um erro.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }
