@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/voxi-banner.png" alt="Voxi — type it, hear it." width="640"></p>
+
 # Voxi
 
 > type it, hear it.

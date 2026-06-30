@@ -29,3 +29,6 @@ coverage
 *.log
 npm-debug.log*
 docs
+
+# Brand assets (imagens de docs/README): nao precisam na imagem runtime.
+assets/
