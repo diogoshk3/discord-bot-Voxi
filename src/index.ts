@@ -1,6 +1,7 @@
 import { readdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { loadConfig } from './config/index';
+import { log } from './logging/logger';
 import { initDb } from './store/db';
 import { AudioCache } from './tts/cache';
 import { createEngine } from './tts/factory';
@@ -25,7 +26,7 @@ async function main(): Promise<void> {
 
   const availableModels = discoverModels(config.modelsDir);
   if (availableModels.length === 0) {
-    console.warn(`[index] nenhum modelo .onnx em ${config.modelsDir} — /voice list ficara vazio.`);
+    log.warn(`[index] nenhum modelo .onnx em ${config.modelsDir} — /voice list ficara vazio.`);
   }
 
   const client = createClient();
@@ -46,6 +47,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((err) => {
-  console.error('[index] falha fatal no arranque', err);
+  log.error('[index] falha fatal no arranque', err);
   process.exit(1);
 });

@@ -2,6 +2,7 @@ import { Client, GatewayIntentBits, Partials, Events, Interaction, Message } fro
 import type { BotDeps } from './deps';
 import { handleInteraction } from '../commands/index';
 import { handleMessage } from '../commands/messageHandler';
+import { log } from '../logging/logger';
 
 export function createClient(): Client {
   return new Client({
@@ -20,7 +21,7 @@ export function bindEvents(deps: BotDeps): void {
   const { client } = deps;
 
   client.once(Events.ClientReady, (c) => {
-    console.log(`[client] online como ${c.user.tag}`);
+    log.info(`[client] online como ${c.user.tag}`);
   });
 
   client.on(Events.InteractionCreate, (interaction: Interaction) => {
@@ -33,13 +34,13 @@ export function bindEvents(deps: BotDeps): void {
   });
 
   client.on(Events.Error, (err) => {
-    console.error('[client] erro do gateway', err);
+    log.error('[client] erro do gateway', err);
   });
 
   process.on('unhandledRejection', (reason) => {
-    console.error('[process] unhandledRejection', reason);
+    log.error('[process] unhandledRejection', reason);
   });
   process.on('uncaughtException', (err) => {
-    console.error('[process] uncaughtException', err);
+    log.error('[process] uncaughtException', err);
   });
 }

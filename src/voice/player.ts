@@ -11,6 +11,7 @@ import {
 } from '@discordjs/voice';
 import type { TTSEngine, SynthRequest } from '../tts/engine';
 import { PlayQueue } from './queue';
+import { log } from '../logging/logger';
 
 export class GuildVoicePlayer {
   private readonly player: AudioPlayer;
@@ -38,7 +39,7 @@ export class GuildVoicePlayer {
     });
 
     this.player.on('error', (err) => {
-      console.error('[player] erro no AudioPlayer:', err);
+      log.error('[player] erro no AudioPlayer:', err);
       this.current = null;
       void this.playNext();
     });
@@ -57,7 +58,7 @@ export class GuildVoicePlayer {
     // pedidos concorrentes pela duracao/cache-hit da sintese.
     const ok = this.queue.enqueue({ req });
     if (!ok) {
-      console.warn('[player] fila cheia, pedido descartado');
+      log.warn('[player] fila cheia, pedido descartado');
       return;
     }
     if (!this.playing) {
@@ -108,7 +109,7 @@ export class GuildVoicePlayer {
     try {
       audioPath = await this.engine.synth(next.req);
     } catch (err) {
-      console.error('[player] erro na sintese, item saltado:', err);
+      log.error('[player] erro na sintese, item saltado:', err);
       // Salta este item e continua a fila sem crashar (sem crescimento de stack:
       // estamos depois do await).
       void this.playNext();
