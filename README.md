@@ -2,9 +2,19 @@
 
 > type it, hear it.
 
-Bot de Text-to-Speech para Discord com **voz neural gratuita** (Piper, self-host) e foco em **fiabilidade**. O Voxi lê texto em canais de voz: comando `/tts`, auto-leitura de um canal configurado, e leitura de menções/replies ao bot. Deteta a língua por mensagem e escolhe a voz; cada utilizador pode fixar a sua própria voz. Inclui moderação (blocklist, rate-limit, limite de chars, gating por canal), fila FIFO com `/skip`, auto-reconexão à voz, auto-saída por inatividade e cache de áudio.
+**Voz natural, grátis e que não te abandona a meio — sem paywall, sem prefixos, lê sozinho na tua língua.** O Voxi é um bot de Text-to-Speech para Discord que lê texto em canais de voz com voz **neural** (Piper): comando `/tts`, auto-leitura de um canal configurado e leitura de menções/replies ao bot. Deteta a língua de cada mensagem e escolhe a voz sozinho, e cada utilizador pode fixar a sua própria voz.
 
-> Estado: **v0** (núcleo competitivo). Motor neural pago, streaming e monetização estão **fora** deste v0. O caminho de deploy hosted em VPS via Docker está incluído — ver secção **Deploy em VPS (Docker)** no fim.
+A maioria dos bots de TTS força-te a escolher: ou é grátis-mas-robótico, ou natural-mas-atrás de paywall — e o líder de mercado "desconecta durante horas". O Voxi junta o que **nenhum** bot de TTS reúne para línguas ocidentais (PT/EN/europeu):
+
+- **Voz neural genuinamente natural** — Piper, não a voz robótica do gTTS/eSpeak.
+- **100% grátis, qualidade NUNCA atrás de paywall** — sem vozes premium, sem "vota para desbloquear".
+- **Não cai do canal de voz** — auto-reconexão à voz (mata o "desconecta durante horas" do líder).
+- **Auto-leitura sem prefixo** — lê um canal configurado e menções/replies ao bot, sem comando por mensagem.
+- **Deteta a língua por mensagem e escolhe a voz** automaticamente — em PT, EN e línguas europeias.
+
+A par disto: moderação (blocklist, rate-limit, limite de chars, gating por canal), fila FIFO com `/skip`, auto-saída por inatividade e cache de áudio.
+
+> Estado: **v0** (núcleo competitivo). Motor neural pago, streaming e monetização estão **fora** deste v0. O Voxi é **self-host**: corre no teu PC ou podes **alojá-lo tu** num VPS via Docker (continua a exigir setup — não é um bot já alojado que se convida) — ver secção **Deploy em VPS (Docker)** no fim.
 
 ---
 
