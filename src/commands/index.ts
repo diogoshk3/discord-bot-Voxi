@@ -2,6 +2,7 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
   PermissionFlagsBits,
+  PermissionsBitField,
   GuildMember,
   ChannelType,
   MessageFlags,
@@ -27,7 +28,34 @@ import { isBlocked } from '../moderation/filter';
 import { resolveSynth } from './resolveSynth';
 import { log } from '../logging/logger';
 
+/**
+ * Permissoes minimas que o Voxi precisa no servidor onde for convidado, derivadas
+ * dos 5 bits nomeados via PermissionsBitField (NAO um numero magico):
+ *  - Connect/Speak       -> entrar e falar nos canais de voz (o core do bot)
+ *  - ViewChannel         -> ver os canais (texto e voz)
+ *  - SendMessages        -> responder no canal de texto
+ *  - ReadMessageHistory  -> ler o historico do canal de auto-leitura
+ * Exportado como string (representacao do bigint) porque e isso que o parametro
+ * `permissions` do URL OAuth2 espera. Derivado e testavel: o teste recomputa o
+ * mesmo inteiro a partir dos bits, por isso deixar cair um bit aqui parte o teste.
+ */
+export const INVITE_PERMISSIONS: string = new PermissionsBitField([
+  PermissionFlagsBits.Connect,
+  PermissionFlagsBits.Speak,
+  PermissionFlagsBits.ViewChannel,
+  PermissionFlagsBits.SendMessages,
+  PermissionFlagsBits.ReadMessageHistory,
+])
+  .bitfield.toString();
+
 export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
+  // /invite — gatilho do loop viral: qualquer utilizador pode pedir o link de
+  // convite OAuth2 do bot. Top-level e SEM setDefaultMemberPermissions (nao
+  // admin-only), para que quem ouve o Voxi numa call o possa adicionar.
+  new SlashCommandBuilder()
+    .setName('invite')
+    .setDescription('Mostra o link para adicionar o Voxi ao teu servidor')
+    .toJSON(),
   new SlashCommandBuilder().setName('join').setDescription('Entra no teu canal de voz').toJSON(),
   new SlashCommandBuilder().setName('leave').setDescription('Sai do canal de voz').toJSON(),
   new SlashCommandBuilder()
@@ -640,6 +668,42 @@ async function handleStats(i: ChatInputCommandInteraction, deps: BotDeps): Promi
   await reply(i, lines.join('\n'));
 }
 
+/**
+ * /invite — devolve o URL de convite OAuth2 do bot, construido a partir do
+ * CLIENT_ID da config. Gatilho do "loop viral".
+ *
+ * Decisoes de design:
+ *  - Reply NORMAL (nao ephemeral): o objetivo do comando e partilhar o link, por
+ *    isso queremos que fique visivel no canal para quem mais quiser adicionar o
+ *    Voxi. Por isso NAO usamos o helper reply() (que e ephemeral) — chamamos
+ *    i.reply() diretamente sem flags.
+ *  - O URL e montado com URLSearchParams para escapar corretamente os valores; o
+ *    scope "bot applications.commands" fica codificado (o espaco vira '+'), o que
+ *    e valido para o endpoint OAuth2.
+ *  - permissions = INVITE_PERMISSIONS (inteiro derivado dos 5 bits, ver topo).
+ *  - Sem CLIENT_ID configurado: respondemos com uma mensagem clara em vez de
+ *    gerar um link partido (client_id vazio). Verificamos com !clientId para
+ *    apanhar tanto undefined como string vazia.
+ */
+async function handleInvite(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
+  const clientId = deps.config.clientId;
+  if (!clientId) {
+    await i.reply({
+      content:
+        'O link de convite ainda nao esta configurado (CLIENT_ID em falta). Avisa o admin do bot.',
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+  const params = new URLSearchParams({
+    client_id: clientId,
+    scope: 'bot applications.commands',
+    permissions: INVITE_PERMISSIONS,
+  });
+  const url = `https://discord.com/oauth2/authorize?${params.toString()}`;
+  await i.reply({ content: `Adiciona o Voxi ao teu servidor:\n${url}` });
+}
+
 export async function handleInteraction(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
   try {
     switch (i.commandName) {
@@ -659,6 +723,8 @@ export async function handleInteraction(i: ChatInputCommandInteraction, deps: Bo
         return await handleSetup(i, deps);
       case 'stats':
         return await handleStats(i, deps);
+      case 'invite':
+        return await handleInvite(i, deps);
     }
   } catch (err) {
     log.error('[command] erro em', i.commandName, err);
