@@ -264,7 +264,7 @@ Com autoread ligado, escreve cada um e confirma o comportamento ouvido:
 
 ## 5. Deploy em VPS (Docker)
 
-Caminho **hosted / invite-and-go**: corres o Voxi numa VPS Linux com `docker compose`, sem instalar Node nem build tools à mão. O bot é um cliente websocket de saída — **não** expõe portas nem precisa de domínio/reverse-proxy.
+Caminho **self-host alojado** (alojas tu numa VPS): corres o Voxi numa VPS Linux com `docker compose`, sem instalar Node nem build tools à mão. O bot é um cliente websocket de saída — **não** expõe portas nem precisa de domínio/reverse-proxy.
 
 > Estado: o build da imagem e a síntese real do Piper são **(verificação ao vivo pendente)** — não foram corridos neste ambiente.
 

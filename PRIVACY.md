@@ -38,7 +38,7 @@ Para evitar re-sintetizar frases repetidas, o Voxi guarda os **ficheiros de áud
 
 - **A chave (nome do ficheiro) é um hash** `SHA-1` calculado a partir de `texto_limpo + modelo_de_voz + velocidade`. O texto em claro **não** aparece no nome do ficheiro nem na base de dados, e o hash **não** é reversível para recuperar o texto.
 - **No entanto, o ficheiro `.wav` em si é o áudio falado da mensagem limpa.** Quem tiver acesso ao sistema de ficheiros da instância pode reproduzir esse ficheiro e ouvir o conteúdo. Isto não é um "esconderijo" do conteúdo — é apenas o áudio gerado, guardado para reutilização.
-- A cache é **limitada e regenerável**: por defeito mantém no máximo ~500 ficheiros por motor (política LRU — os mais antigos são apagados primeiro). **Persiste no disco** entre reinícios do bot até ser expulsa pela política de limite, ou até o operador apagar a pasta. Se for apagada, o áudio é simplesmente re-sintetizado quando necessário.
+- A cache é **limitada e regenerável**: por defeito mantém no máximo ~500 ficheiros por motor (limite por contagem — os mais antigos por data de criação são apagados primeiro). **Persiste no disco** entre reinícios do bot até ser expulsa pela política de limite, ou até o operador apagar a pasta. Se for apagada, o áudio é simplesmente re-sintetizado quando necessário.
 
 Em resumo: **não guardamos o texto original**, apenas o áudio gerado por hash, que é limitado, regenerável e apagável.
 

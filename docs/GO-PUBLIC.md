@@ -121,6 +121,14 @@ defeito**:
   fazer um pedido HTTP a `http://<host>:<HEALTH_PORT>/health` e alertar-te se
   deixar de responder `200`.
 
+> **Nota (deploy Docker):** o `docker-compose.yml` recomendado (README §5) **não**
+> publica portas — o container não expõe `HEALTH_PORT` para fora por defeito. Para
+> um monitor **externo** alcançar o endpoint num deploy Docker, acrescenta
+> `ports: ["<HEALTH_PORT>:<HEALTH_PORT>"]` ao serviço `voxi` no `docker-compose.yml`
+> (ou faz bind apenas à loopback/rede interna se só monitorizares a partir da
+> própria máquina). Em **deploy nativo** (sem Docker) o processo já escuta no host,
+> por isso não é preciso passo extra.
+
 > Nota: se expuseres a porta para fora da VPS (ex.: mapeá-la no Docker e abrir no
 > firewall), garante que só o monitor lhe chega; o endpoint em si é inócuo, mas
 > não há razão para o deixar mais aberto do que o necessário.
