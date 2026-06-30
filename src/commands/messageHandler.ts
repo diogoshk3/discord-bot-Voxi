@@ -17,7 +17,11 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     if (!cfg.enabled) return;
 
     const isAutoreadChannel = cfg.autoread && cfg.ttsChannelId === message.channelId;
-    const isMention = message.mentions.has(deps.client.user!.id);
+    const isMention = message.mentions.has(deps.client.user!.id, {
+      ignoreEveryone: true,
+      ignoreRoles: true,
+      ignoreRepliedUser: true,
+    });
     const isReplyToBot =
       message.reference?.messageId != null &&
       message.mentions.repliedUser?.id === deps.client.user!.id;

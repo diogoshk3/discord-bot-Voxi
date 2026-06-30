@@ -101,6 +101,7 @@ async function handleJoin(i: ChatInputCommandInteraction, deps: BotDeps): Promis
     await reply(i, 'Tens de estar num canal de voz.');
     return;
   }
+  removePlayer(deps, i.guildId!);
   const connection = joinVoiceChannel({
     channelId: channel.id,
     guildId: i.guildId!,
@@ -108,7 +109,6 @@ async function handleJoin(i: ChatInputCommandInteraction, deps: BotDeps): Promis
     selfDeaf: true,
     selfMute: false,
   });
-  removePlayer(deps, i.guildId!);
   const player = new GuildVoicePlayer(connection, deps.engine, deps.config.queueCap, deps.config.inactivityMs, () => {
     removePlayer(deps, i.guildId!);
     getVoiceConnection(i.guildId!)?.destroy();
