@@ -95,6 +95,14 @@ Piper e os modelos `.onnx` têm de existir** — ou **dentro da imagem**, ou num
 **volume persistente** que o plano ofereça. Sem uma dessas duas coisas, o Piper
 não arranca em PaaS efémero; nesse caso **prefere a Opção A (Oracle) ou B (VPS)**.
 
+> **A base de dados SQLite também é efémera.** Num PaaS com FS efémero, a
+> `tts.db` (`DB_PATH=/data/tts.db`) é apagada a cada redeploy/restart — não é só
+> a cache de áudio que se regenera. Isso significa que **toda a configuração
+> por-servidor do `/setup`** (canal de TTS, voz por servidor, blocklist,
+> pronúncias, etc.) se perde a cada deploy. Recomendação: monta um **volume/disco
+> persistente** para `/data` (onde vive a `tts.db`), ou **prefere VPS/Oracle**, se
+> quiseres manter a config entre deploys.
+
 Passos básicos:
 
 1. Liga o repositório ao projeto no Railway/Render (deploy a partir do
