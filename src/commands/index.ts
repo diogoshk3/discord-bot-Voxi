@@ -195,6 +195,7 @@ async function handleTts(i: ChatInputCommandInteraction, deps: BotDeps): Promise
     text: cleaned,
     userVoice,
     available: deps.availableModels,
+    guildDefaultVoice: cfg.defaultVoice,
     defaultVoice: deps.config.defaultVoice,
     defaultSpeed: deps.config.defaultSpeed,
   });

@@ -56,7 +56,7 @@ describe('store', () => {
       expect(getGuildConfig(db, G)).toEqual({
         ttsChannelId: null,
         autoread: false,
-        defaultVoice: 'en_US-amy-medium',
+        defaultVoice: '', // vazio = guild nao definiu voz default
         maxChars: 300,
         ratePerMin: 5,
         enabled: true,
@@ -93,7 +93,7 @@ describe('store', () => {
       expect(getGuildConfig(db, G)).toEqual({
         ttsChannelId: 'chan-1',
         autoread: true,
-        defaultVoice: 'en_US-amy-medium',
+        defaultVoice: '', // vazio = guild nao definiu voz default
         maxChars: 300,
         ratePerMin: 5,
         enabled: true,
@@ -191,7 +191,7 @@ describe('store', () => {
       expect(cfg.maxChars).toBe(500);            // do 2.º patch
       expect(cfg.ratePerMin).toBe(10);           // do 2.º patch
       expect(cfg.enabled).toBe(false);           // do 3.º patch
-      expect(cfg.defaultVoice).toBe('en_US-amy-medium'); // default inalterado
+      expect(cfg.defaultVoice).toBe(''); // vazio = guild nao definiu voz default
     });
 
     it('patch que substitui defaultVoice nao perde outros campos', () => {

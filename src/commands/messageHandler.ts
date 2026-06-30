@@ -70,6 +70,7 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
       text: cleaned,
       userVoice,
       available: deps.availableModels,
+      guildDefaultVoice: cfg.defaultVoice,
       defaultVoice: deps.config.defaultVoice,
       defaultSpeed: deps.config.defaultSpeed,
     });

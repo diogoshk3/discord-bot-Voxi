@@ -13,7 +13,9 @@ export interface GuildConfig {
 const DEFAULTS: GuildConfig = {
   ttsChannelId: null,
   autoread: false,
-  defaultVoice: 'en_US-amy-medium',
+  // Vazio = a guild nao definiu voz default; a precedencia em resolveSynth cai
+  // entao para config.defaultVoice (.env). Ver /config default-voice.
+  defaultVoice: '',
   maxChars: 300,
   ratePerMin: 5,
   enabled: true,

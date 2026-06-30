@@ -38,4 +38,67 @@ describe('resolveSynth', () => {
     expect(r.model).toBe('en_US-amy');
     expect(r.speed).toBe(1.0);
   });
+
+  describe('precedencia de voz default (sem voz de user, lingua desconhecida)', () => {
+    // Texto vazio => detectLang nao mapeia => usa-se o fallback derivado da
+    // precedencia (guildDefaultVoice || defaultVoice || 'en_US-amy-medium').
+    it('voz do user vence sempre, mesmo com guild default definido', () => {
+      const r = resolveSynth({
+        text: '',
+        userVoice: { model: 'es_ES-davefx', speed: 0.9 },
+        available,
+        guildDefaultVoice: 'pt_PT-tugao',
+        defaultVoice: 'en_US-amy',
+        defaultSpeed: 1.0,
+      });
+      expect(r).toEqual({ text: '', model: 'es_ES-davefx', speed: 0.9 });
+    });
+
+    it('sem voz de user mas guild default definido => usa guild default', () => {
+      const r = resolveSynth({
+        text: '',
+        userVoice: null,
+        available,
+        guildDefaultVoice: 'pt_PT-tugao',
+        defaultVoice: 'en_US-amy',
+        defaultSpeed: 1.0,
+      });
+      expect(r.model).toBe('pt_PT-tugao'); // guild default vence o .env
+    });
+
+    it('guild default vazio => cai no .env defaultVoice', () => {
+      const r = resolveSynth({
+        text: '',
+        userVoice: null,
+        available,
+        guildDefaultVoice: '',
+        defaultVoice: 'en_US-amy',
+        defaultSpeed: 1.0,
+      });
+      expect(r.model).toBe('en_US-amy'); // .env continua a funcionar como fallback
+    });
+
+    it('guild default ausente (undefined) => cai no .env defaultVoice', () => {
+      const r = resolveSynth({
+        text: '',
+        userVoice: null,
+        available,
+        defaultVoice: 'en_US-amy',
+        defaultSpeed: 1.0,
+      });
+      expect(r.model).toBe('en_US-amy');
+    });
+
+    it('sem guild default e sem .env => fallback final en_US-amy-medium', () => {
+      const r = resolveSynth({
+        text: '',
+        userVoice: null,
+        available,
+        guildDefaultVoice: '',
+        defaultVoice: '',
+        defaultSpeed: 1.0,
+      });
+      expect(r.model).toBe('en_US-amy-medium');
+    });
+  });
 });
