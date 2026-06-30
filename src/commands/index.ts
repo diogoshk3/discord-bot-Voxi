@@ -56,6 +56,14 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
     .setName('invite')
     .setDescription('Mostra o link para adicionar o Voxi ao teu servidor')
     .toJSON(),
+  // /help — discovery de comandos em-app, para donos de servidor nao-tecnicos.
+  // Top-level e SEM setDefaultMemberPermissions (NAO admin-only): qualquer
+  // utilizador pode pedir a lista. O texto e DERIVADO destes commandDefs (ver
+  // handleHelp), por isso este comando inclui-se a si proprio no grupo "Geral".
+  new SlashCommandBuilder()
+    .setName('help')
+    .setDescription('Mostra a lista de comandos do Voxi')
+    .toJSON(),
   new SlashCommandBuilder().setName('join').setDescription('Entra no teu canal de voz').toJSON(),
   new SlashCommandBuilder().setName('leave').setDescription('Sai do canal de voz').toJSON(),
   new SlashCommandBuilder()
@@ -703,6 +711,74 @@ async function handleInvite(i: ChatInputCommandInteraction, deps: BotDeps): Prom
   await i.reply({ content: `Adiciona o Voxi ao teu servidor:\n${url}` });
 }
 
+/**
+ * /help — discovery de comandos em-app, pensado para donos de servidor
+ * nao-tecnicos. Responde com uma lista AGRUPADA dos comandos com descricoes
+ * curtas em PT.
+ *
+ * Decisoes de design:
+ *  - O texto e DERIVADO de `commandDefs` (nome + descricao), NAO hardcoded: assim
+ *    nunca diverge dos comandos reais e o teste-guard (cada comando top-level tem
+ *    de aparecer no /help) e genuinamente protetor. Se alguem adicionar um comando
+ *    a commandDefs e nao o cobrir aqui, o guard parte.
+ *  - Os grupos (Geral / Voz / Admin) sao uma divisao semantica que NAO existe nos
+ *    dados, por isso resolvemo-la por uma regra de particao aplicada por FILTRO do
+ *    array (nao por listar nomes a mao):
+ *      • default_member_permissions presente  -> Admin (config, setup, stats)
+ *      • name === 'voice'                      -> Voz (por utilizador)
+ *      • resto                                 -> Geral (invite, join, leave, tts,
+ *                                                 skip, help)
+ *    Filtrar (em vez de hardcodear nomes por grupo) garante que nenhum comando cai
+ *    em falta nem em dois grupos.
+ *  - Subcomandos: o /voice (6 subcomandos, todos por-utilizador) e expandido a
+ *    partir das suas options (type 1 = subcomando) — auto-sincronizado. O /config
+ *    tem ~13 subcomandos + 2 grupos; lista-los todos lutaria contra "curta" e o
+ *    cap de 2000 chars do Discord, por isso e resumido numa linha (aponta para
+ *    /config show / /setup). Mantem a mensagem curta e beginner-friendly.
+ *  - Reply ephemeral (via helper reply()) para nao poluir o canal.
+ */
+function helpSubcommands(def: RESTPostAPIChatInputApplicationCommandsJSONBody): string[] {
+  // Extrai apenas subcomandos diretos (option type 1 = Subcommand). Ignora grupos
+  // (type 2) — usado so para o /voice, que nao tem grupos.
+  return (def.options ?? [])
+    .filter((o) => (o as { type?: number }).type === 1)
+    .map((o) => (o as { name: string }).name);
+}
+
+async function handleHelp(i: ChatInputCommandInteraction): Promise<void> {
+  const isAdmin = (d: RESTPostAPIChatInputApplicationCommandsJSONBody): boolean =>
+    d.default_member_permissions != null;
+
+  const geral = commandDefs.filter((d) => !isAdmin(d) && d.name !== 'voice');
+  const voz = commandDefs.filter((d) => d.name === 'voice');
+  const admin = commandDefs.filter((d) => isAdmin(d));
+
+  const lines: string[] = ['**Voxi — type it, hear it.**', 'Aqui ficam os comandos do bot.', ''];
+
+  lines.push('**Geral**');
+  for (const d of geral) lines.push(`• /${d.name} — ${d.description}`);
+  lines.push('');
+
+  lines.push('**Voz (por utilizador)**');
+  for (const d of voz) {
+    lines.push(`• /${d.name} — ${d.description}`);
+    const subs = helpSubcommands(d);
+    if (subs.length) lines.push(`   subcomandos: ${subs.map((s) => `/${d.name} ${s}`).join(', ')}`);
+  }
+  lines.push('');
+
+  lines.push('**Admin** (precisa de Gerir Servidor)');
+  for (const d of admin) lines.push(`• /${d.name} — ${d.description}`);
+  // /config tem muitos subcomandos; em vez de os listar todos (poluiria a
+  // mensagem) apontamos para /config show, que imprime a config atual.
+  lines.push('   (/config tem varios subcomandos — usa /config show para veres a config atual)');
+  lines.push('');
+
+  lines.push('Primeiro passo recomendado: corre /setup no teu servidor.');
+
+  await reply(i, lines.join('\n'));
+}
+
 export async function handleInteraction(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
   try {
     switch (i.commandName) {
@@ -724,6 +800,8 @@ export async function handleInteraction(i: ChatInputCommandInteraction, deps: Bo
         return await handleStats(i, deps);
       case 'invite':
         return await handleInvite(i, deps);
+      case 'help':
+        return await handleHelp(i);
     }
   } catch (err) {
     log.error('[command] erro em', i.commandName, err);
