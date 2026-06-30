@@ -100,9 +100,31 @@ export class PiperEngine implements TTSEngine {
         }
       });
 
+      // Se o Piper morre instantaneamente, escrever no stdin emite 'error' (EPIPE).
+      // Sem listener, isso seria uma excecao nao tratada que crasha o processo.
+      // O 'close'/'error' do child ja resolvem/rejeitam a sintese; aqui apenas
+      // engolimos o erro do pipe (e rejeitamos defensivamente se ainda nao settled
+      // e nao for EPIPE — EPIPE significa que o child ja fechou e o 'close' trata).
+      child.stdin?.on('error', (err: NodeJS.ErrnoException) => {
+        if (settled) return;
+        if (err.code === 'EPIPE') return; // child morreu -> 'close' vai tratar
+        settled = true;
+        clearTimeout(timer);
+        reject(new Error(`Falha ao escrever no stdin do Piper: ${err.message}`));
+      });
+
       // Texto a sintetizar vai pelo stdin (uma linha).
-      child.stdin?.write(text.endsWith('\n') ? text : `${text}\n`);
-      child.stdin?.end();
+      try {
+        child.stdin?.write(text.endsWith('\n') ? text : `${text}\n`);
+        child.stdin?.end();
+      } catch (err) {
+        // write/end sincronos podem lancar se o stream ja estiver destruido.
+        if (!settled) {
+          settled = true;
+          clearTimeout(timer);
+          reject(new Error(`Falha ao escrever no stdin do Piper: ${(err as Error).message}`));
+        }
+      }
     });
   }
 }
