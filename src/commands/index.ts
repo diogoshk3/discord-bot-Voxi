@@ -14,6 +14,7 @@ import { GuildVoicePlayer } from '../voice/player';
 import { getUserVoice, setUserVoice, resetUserVoice } from '../store/userVoice';
 import { getGuildConfig, setGuildConfig, resetGuildConfig } from '../store/guildConfig';
 import { addBlockword, removeBlockword, getBlocklist } from '../store/blocklist';
+import { setOptOut, setOptIn } from '../store/optout';
 import {
   getPronunciations,
   addPronunciation,
@@ -46,6 +47,12 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
     )
     .addSubcommand((s) => s.setName('list').setDescription('Lista os modelos disponiveis'))
     .addSubcommand((s) => s.setName('reset').setDescription('Repoe a tua voz por defeito'))
+    .addSubcommand((s) =>
+      s.setName('optout').setDescription('Deixa de ser lido automaticamente no canal de auto-leitura'),
+    )
+    .addSubcommand((s) =>
+      s.setName('optin').setDescription('Volta a ser lido automaticamente no canal de auto-leitura'),
+    )
     .toJSON(),
   new SlashCommandBuilder()
     .setName('config')
@@ -278,6 +285,13 @@ async function handleVoice(i: ChatInputCommandInteraction, deps: BotDeps): Promi
   } else if (sub === 'reset') {
     resetUserVoice(deps.db, i.guildId!, i.user.id);
     await reply(i, 'Voz reposta por defeito.');
+  } else if (sub === 'optout') {
+    // Por-utilizador (sem gate de admin): cada um gere o seu opt-out da auto-leitura.
+    setOptOut(deps.db, i.guildId!, i.user.id);
+    await reply(i, 'Ja nao seras lido automaticamente. Usa /voice optin para voltar.');
+  } else if (sub === 'optin') {
+    setOptIn(deps.db, i.guildId!, i.user.id);
+    await reply(i, 'Voltas a ser lido automaticamente.');
   }
 }
 
