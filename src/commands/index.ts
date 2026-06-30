@@ -23,6 +23,7 @@ import { cleanText } from '../textCleaning/clean';
 import { applyPronunciation } from '../textCleaning/pronunciation';
 import { isBlocked } from '../moderation/filter';
 import { resolveSynth } from './resolveSynth';
+import { log } from '../logging/logger';
 
 export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
   new SlashCommandBuilder().setName('join').setDescription('Entra no teu canal de voz').toJSON(),
@@ -412,7 +413,7 @@ export async function handleInteraction(i: ChatInputCommandInteraction, deps: Bo
         return await handleConfig(i, deps);
     }
   } catch (err) {
-    console.error('[command] erro em', i.commandName, err);
+    log.error('[command] erro em', i.commandName, err);
     if (!i.isRepliable()) return;
     if (i.deferred && !i.replied) {
       // Ja foi deferido (caso do /tts): editReply para o utilizador receber o erro

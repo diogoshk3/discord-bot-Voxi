@@ -9,6 +9,7 @@ import { getPronunciations } from '../store/pronunciation';
 import { getUserVoice } from '../store/userVoice';
 import { applyPronunciation } from '../textCleaning/pronunciation';
 import { resolveSynth } from './resolveSynth';
+import { log } from '../logging/logger';
 
 export async function handleMessage(message: Message, deps: BotDeps): Promise<void> {
   try {
@@ -83,6 +84,6 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
 
     await player.say(req);
   } catch (err) {
-    console.error('[messageHandler] erro', err);
+    log.error('[messageHandler] erro', err);
   }
 }

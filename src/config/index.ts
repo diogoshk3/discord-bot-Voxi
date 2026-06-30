@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { log } from '../logging/logger';
 
 export type TtsEngineKind = 'piper' | 'neural';
 
@@ -51,7 +52,7 @@ function engineEnv(): TtsEngineKind {
   if (raw === undefined || raw.trim() === '') return 'piper';
   const value = raw.trim().toLowerCase();
   if (value === 'piper' || value === 'neural') return value;
-  console.warn(
+  log.warn(
     `[config] TTS_ENGINE invalido: "${raw}". Valores aceites: piper | neural. A usar 'piper'.`,
   );
   return 'piper';
