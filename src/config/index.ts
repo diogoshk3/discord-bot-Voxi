@@ -19,6 +19,7 @@ export interface AppConfig {
   openaiApiKey?: string;
   presenceText?: string;
   healthPort?: number;
+  shards?: string;
 }
 
 function requireEnv(name: string): string {
@@ -94,5 +95,16 @@ export function loadConfig(): AppConfig {
     // P9.7 — porta OPCIONAL do health endpoint HTTP (uptime monitors). Ausente
     // => undefined => NAO arranca servidor nenhum (default). Definida => numero.
     healthPort: numEnvOptional('HEALTH_PORT'),
+    // P11.4 — valor CRU do BOT_SHARDS (opt-in de sharding). Ausente/vazio =>
+    // undefined => single-process (default). A interpretacao (auto / N / single) e
+    // feita por resolveShardCount no launcher src/shard.ts — aqui so transportamos
+    // a string.
+    // NB: a env chama-se BOT_SHARDS e NAO `SHARDS` de proposito. `SHARDS` (e
+    // `SHARD_COUNT`) sao reservadas: o construtor do Client do discord.js le-as
+    // diretamente de process.env. Num arranque single-process (`npm start`),
+    // `SHARDS=auto` faria `JSON.parse('auto')` crashar o Client, e `SHARDS=N`
+    // configuraria o processo como um shard isolado — partindo o default. Manter
+    // o nome distinto isola o opt-in do mecanismo interno do discord.js.
+    shards: strEnv('BOT_SHARDS', '') || undefined,
   };
 }

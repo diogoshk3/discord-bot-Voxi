@@ -134,7 +134,8 @@ Passos básicos:
 **Úteis (opcionais):** `DEFAULT_VOICE` (modelo presente em `./models/`),
 `DEFAULT_SPEED`, `INACTIVITY_MS`, `QUEUE_CAP`, `MAX_CHARS`, `RATE_PER_MIN`,
 `LOG_LEVEL`, `TTS_ENGINE` (`piper` default | `neural`), `OPENAI_API_KEY`
-(só se `TTS_ENGINE=neural`), `HEALTH_PORT` (ver abaixo). Tabela completa: README §5.4.
+(só se `TTS_ENGINE=neural`), `HEALTH_PORT` (ver abaixo), `BOT_SHARDS` (ver "Escalar"
+abaixo). Tabela completa: README §5.4.
 
 > **Em deploy Docker (Opções A/B)**, **não** definas `DB_PATH` / `MODELS_DIR` /
 > `PIPER_PATH` no `.env` — vêm já fixos do `docker-compose.yml` com os caminhos do
@@ -158,6 +159,15 @@ endpoint quando `HEALTH_PORT` está definido e faz no-op saudável quando não e
 
 Detalhes e notas de segurança do endpoint: **[docs/GO-PUBLIC.md](docs/GO-PUBLIC.md)**
 (secção "Monitorização de uptime").
+
+### Escalar (sharding, opcional — só perto de ~1000+ guilds)
+
+O default é single-process (`npm start` / `node dist/index.js`) e serve confortavelmente
+até perto dos ~1000 guilds — não precisas de fazer nada. Para escalar além disso, o
+Discord exige múltiplos *gateway shards* (≈1 shard / 1000 guilds): define `BOT_SHARDS`
+(`auto`, ou um inteiro ≥ 2) e arranca com **`npm run start:sharded`** (`node dist/shard.js`),
+que faz spawn de um processo por shard. Com `BOT_SHARDS` vazio/ausente, `start:sharded`
+comporta-se como o arranque normal. O `npm start` continua single-process e ignora `BOT_SHARDS`.
 
 ---
 

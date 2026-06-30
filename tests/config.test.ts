@@ -33,6 +33,10 @@ describe('loadConfig', () => {
       OPENAI_API_KEY: undefined,
       PRESENCE_TEXT: undefined,
       HEALTH_PORT: undefined,
+      BOT_SHARDS: undefined,
+      // tambem limpamos a env reservada do discord.js para o teste de regressao
+      // partir de um estado conhecido (so um teste a define de proposito).
+      SHARDS: undefined,
     });
   });
 
@@ -166,5 +170,38 @@ describe('loadConfig', () => {
   it('leaves healthPort undefined on invalid HEALTH_PORT', () => {
     setEnv({ ...REQUIRED, HEALTH_PORT: 'abc' });
     expect(loadConfig().healthPort).toBeUndefined();
+  });
+
+  // P11.4 — BOT_SHARDS opcional: ausente/vazio => undefined (single-process
+  // default); presente => string CRUA passada a resolveShardCount no launcher. O
+  // config so transporta o valor; a interpretacao (auto/N/single) vive em
+  // src/sharding.ts. NB: a env e BOT_SHARDS, NAO `SHARDS` — esta ultima colide com
+  // uma env reservada lida pelo Client do discord.js e partiria o `npm start`.
+  it('leaves shards undefined when BOT_SHARDS missing', () => {
+    setEnv(REQUIRED);
+    expect(loadConfig().shards).toBeUndefined();
+  });
+
+  it('leaves shards undefined when BOT_SHARDS is empty', () => {
+    setEnv({ ...REQUIRED, BOT_SHARDS: '' });
+    expect(loadConfig().shards).toBeUndefined();
+  });
+
+  it('reads BOT_SHARDS raw value from env', () => {
+    setEnv({ ...REQUIRED, BOT_SHARDS: 'auto' });
+    expect(loadConfig().shards).toBe('auto');
+  });
+
+  it('reads numeric BOT_SHARDS as the raw string', () => {
+    setEnv({ ...REQUIRED, BOT_SHARDS: '4' });
+    expect(loadConfig().shards).toBe('4');
+  });
+
+  // P11.4 (regressao) — a env reservada `SHARDS` do discord.js NAO deve influenciar
+  // config.shards. Se um utilizador definir SHARDS por engano, o nosso opt-in
+  // (BOT_SHARDS) continua a mandar — e fica undefined, ou seja single-process.
+  it('ignores the reserved SHARDS env (only BOT_SHARDS controls sharding)', () => {
+    setEnv({ ...REQUIRED, SHARDS: 'auto', BOT_SHARDS: undefined });
+    expect(loadConfig().shards).toBeUndefined();
   });
 });
