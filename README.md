@@ -4,6 +4,7 @@
 
 > type it, hear it.
 
+[![CI](https://github.com/diogoshk3/discord-bot-Voxi/actions/workflows/ci.yml/badge.svg)](https://github.com/diogoshk3/discord-bot-Voxi/actions/workflows/ci.yml)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)
 ![Docker ready](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)
