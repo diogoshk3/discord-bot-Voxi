@@ -153,4 +153,34 @@ describe('/tts — guard de vazio (nada legivel -> nao sintetiza)', () => {
 
     expect(say).toHaveBeenCalledOnce();
   });
+
+  // Beginner-friendly: sem player, a mensagem GUIA o principiante (entra num canal
+  // de voz E corre /join), em vez de so constatar o estado.
+  it('sem player responde uma mensagem que GUIA a juntar-se a voz e correr /join', async () => {
+    const say = vi.fn();
+    const deps = makeDeps(db); // sem player
+    const i = makeTtsInteraction('Hello everyone!');
+
+    await handleInteraction(i as any, deps);
+
+    expect(say).not.toHaveBeenCalled();
+    const text = i.replies.join('\n');
+    expect(text).toMatch(/\/join/); // aponta o comando a correr
+    expect(text).toMatch(/voice channel/i); // diz para entrar num canal de voz
+  });
+
+  // nothingAfterClean deve ser instrutivo (dizer o que fazer), nao so terse.
+  it('só emoji → nothingAfterClean pede texto legivel/normal', async () => {
+    const say = vi.fn();
+    const deps = makeDeps(db, { say });
+    const i = makeTtsInteraction('❤️');
+
+    await handleInteraction(i as any, deps);
+
+    expect(say).not.toHaveBeenCalled();
+    const text = i.replies.join('\n');
+    // continua a falar de "nothing/read" (compat) mas agora sugere texto normal
+    expect(text).toMatch(/nothing|read/i);
+    expect(text).toMatch(/some text|letters|words|normal/i);
+  });
 });
