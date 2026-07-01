@@ -76,7 +76,12 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
         return ch && 'name' in ch ? (ch.name as string) : 'canal';
       },
     });
-    if (!cleaned) return;
+    // Guard de vazio endurecido: exige pelo menos UMA letra ou numero (\p{L}\p{N}).
+    // Cobre nao so o vazio '' como qualquer texto que ficou so com pontuacao,
+    // simbolos ou residuo zero-width (rede de seguranca para o strip de emoji):
+    // nada disso e "legivel", por isso nao vale a pena mandar ao synth (clipe
+    // vazio/inutil). Nota: isto passa a ignorar tambem "!!!" (so-pontuacao).
+    if (!/[\p{L}\p{N}]/u.test(cleaned)) return;
 
     // expansao de girias/abreviaturas por lingua: aplicada DEPOIS do cleanText
     // (precisa de texto sem URLs/mencoes para detetar a lingua) e ANTES da
