@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { filterModelChoices } from '../src/commands/index';
+import { describe, it, expect, vi } from 'vitest';
+import { filterModelChoices, handleAutocomplete } from '../src/commands/index';
 import { modelDisplayName } from '../src/language/voiceMap';
 
 describe('modelDisplayName', () => {
@@ -42,5 +42,52 @@ describe('filterModelChoices (autocomplete)', () => {
   it('limita a 25 sugestoes (maximo do Discord)', () => {
     const many = Array.from({ length: 40 }, (_, i) => `en_US-voz${i}-medium`);
     expect(filterModelChoices(many, '').length).toBe(25);
+  });
+
+  it('com >25 modelos devolve exatamente 25, ordenados (sort ANTES do slice)', () => {
+    // Locales nao mapeados -> modelDisplayName cai no id cru, por isso cada modelo
+    // tem um nome DISTINTO (ao contrario dos en_US-… que colapsam em "English (US)").
+    // Baralhamos a entrada para provar que a ordenacao acontece antes do corte: se
+    // o slice viesse antes do sort, o resultado nao seria o prefixo ordenado.
+    const ids = Array.from({ length: 30 }, (_, i) =>
+      `zz_ZZ-v${String(i).padStart(2, '0')}-medium`,
+    );
+    const shuffled = [...ids].reverse(); // ordem de entrada != ordem final
+    const out = filterModelChoices(shuffled, '');
+    expect(out.length).toBe(25);
+    // Os 25 primeiros por nome (id cru) ordenado — nao os 25 primeiros da entrada.
+    const expected = [...ids].sort((a, b) => a.localeCompare(b)).slice(0, 25);
+    expect(out.map((c) => c.value)).toEqual(expected);
+  });
+
+  it('query que nao bate em nada devolve [] (sem sugestoes)', () => {
+    expect(filterModelChoices(models, 'zzzz-nao-existe')).toEqual([]);
+  });
+});
+
+describe('handleAutocomplete', () => {
+  // Deps minimo: o handler so le deps.availableModels no ramo 'model'.
+  const deps = { availableModels: ['pt_PT-tugao-medium', 'en_US-amy-medium'] } as any;
+
+  it('opcao focada e "model": responde com as choices filtradas', async () => {
+    const respond = vi.fn();
+    const i = {
+      options: { getFocused: () => ({ name: 'model', value: 'amy' }) },
+      respond,
+    } as any;
+    await handleAutocomplete(i, deps);
+    expect(respond).toHaveBeenCalledTimes(1);
+    expect(respond).toHaveBeenCalledWith([{ name: 'English (US)', value: 'en_US-amy-medium' }]);
+  });
+
+  it('opcao focada NAO e "model": responde [] (ramo nao-model)', async () => {
+    const respond = vi.fn();
+    const i = {
+      options: { getFocused: () => ({ name: 'speed', value: '1.0' }) },
+      respond,
+    } as any;
+    await handleAutocomplete(i, deps);
+    expect(respond).toHaveBeenCalledTimes(1);
+    expect(respond).toHaveBeenCalledWith([]);
   });
 });
