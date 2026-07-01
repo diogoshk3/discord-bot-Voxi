@@ -289,6 +289,17 @@ export const catalog: Record<string, Entry> = {
     en: 'off',
     pt: 'off',
   },
+  // /config language — troca do idioma da INTERFACE. A confirmacao e mostrada JA
+  // na NOVA lingua (o handler chama t() com o locale escolhido), por isso os dois
+  // valores devem soar naturais em cada idioma. {language} = nome legivel (endonimo).
+  'config.language.set': {
+    en: 'Interface language set to {language}.',
+    pt: 'Idioma da interface definido para {language}.',
+  },
+  'config.language.unsupported': {
+    en: "That language isn't supported yet.",
+    pt: 'Esse idioma ainda nao e suportado.',
+  },
 
   // ── /setup ────────────────────────────────────────────────────────────────
   'setup.noChannel': {

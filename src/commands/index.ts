@@ -32,7 +32,13 @@ import { isBlocked } from '../moderation/filter';
 import { resolveSynth } from './resolveSynth';
 import { modelDisplayName } from '../language/voiceMap';
 import { log } from '../logging/logger';
-import { t, DEFAULT_LOCALE } from '../i18n/index';
+import {
+  t,
+  DEFAULT_LOCALE,
+  SUPPORTED_LOCALES,
+  LOCALE_DISPLAY_NAMES,
+  type SupportedLocale,
+} from '../i18n/index';
 
 /**
  * Locale da INTERFACE para uma interacao. Le `guild_config.locale` da guild; em
@@ -186,6 +192,23 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
         .setName('default-voice')
         .setDescription("Set the server's default voice (used when the user has no voice of their own)")
         .addStringOption((o) => o.setName('model').setDescription('Piper model').setRequired(true).setAutocomplete(true)),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName('language')
+        .setDescription('Set the interface language (English is the default)')
+        // As CHOICES sao DERIVADAS de SUPPORTED_LOCALES (map -> {name,value}): quando
+        // se adiciona um locale ao i18n, este comando acompanha automaticamente, sem
+        // editar aqui. O nome legivel vem de LOCALE_DISPLAY_NAMES (endonimo).
+        .addStringOption((o) =>
+          o
+            .setName('locale')
+            .setDescription('Interface language')
+            .setRequired(true)
+            .addChoices(
+              ...SUPPORTED_LOCALES.map((l) => ({ name: LOCALE_DISPLAY_NAMES[l], value: l })),
+            ),
+        ),
     )
     .addSubcommand((s) => s.setName('show').setDescription("Show the server's current configuration"))
     .addSubcommand((s) => s.setName('reset').setDescription("Reset the server's configuration to defaults"))
@@ -589,6 +612,24 @@ async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps): Prom
     }
     setGuildConfig(deps.db, i.guildId!, { defaultVoice: model });
     await reply(i, t('config.defaultVoiceSet', locale, { model }));
+  } else if (sub === 'language') {
+    // Troca do idioma da INTERFACE. As choices ja limitam a SUPPORTED_LOCALES, mas
+    // validamos de novo (defensivo) — includes() precisa do cast porque o array e
+    // `readonly ['en','pt']` e o input e string. Locale invalido -> erro amigavel
+    // no locale ATUAL (o pedido nao e utilizavel); nao persiste nada.
+    const requested = i.options.getString('locale', true);
+    if (!SUPPORTED_LOCALES.includes(requested as SupportedLocale)) {
+      await reply(i, t('config.language.unsupported', locale));
+      return;
+    }
+    const chosen = requested as SupportedLocale;
+    setGuildConfig(deps.db, i.guildId!, { locale: chosen });
+    // Confirmacao JA na NOVA lingua (usa `chosen`, nao `locale`): o admin ve logo
+    // que a mudanca surtiu efeito. {language} = nome legivel do idioma escolhido.
+    await reply(
+      i,
+      t('config.language.set', chosen, { language: LOCALE_DISPLAY_NAMES[chosen] }),
+    );
   } else if (sub === 'show') {
     const cfg = getGuildConfig(deps.db, i.guildId!);
     const blocklistCount = getBlocklist(deps.db, i.guildId!).length;
