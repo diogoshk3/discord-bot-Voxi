@@ -138,6 +138,24 @@ export const catalog: Record<string, Entry> = {
     pt: 'Ola, eu sou o Voxi. type it, hear it.',
   },
 
+  // ── /laugh · /joke (diversao por-utilizador; tocam audio via player.say) ────
+  // Confirmacao do /laugh: reutiliza o gate tts.notInVoice para "sem player" e
+  // tts.busy para fila cheia (consistencia com /tts e /voice preview).
+  'laugh.playing': {
+    en: 'Haha! Playing that in your voice…',
+    pt: 'Haha! A reproduzir na tua voz…',
+  },
+  // Confirmacao do /joke: inclui a piada para o utilizador a ver escrita tambem.
+  'joke.playing': {
+    en: 'Telling a joke…\n> {joke}',
+    pt: 'A contar uma piada…\n> {joke}',
+  },
+  // idioma pedido nao existe na lista de linguas suportadas.
+  'joke.unknownLang': {
+    en: "I don't know that language. Pick one from the list.",
+    pt: 'Nao conheco essa lingua. Escolhe uma da lista.',
+  },
+
   // ── /voice abbrev (abreviaturas pessoais, globais) ─────────────────────────
   'voice.abbrev.added': {
     en: 'Got it — {term} will be read as {replacement}.',
