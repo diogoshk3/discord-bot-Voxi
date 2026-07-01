@@ -1,0 +1,113 @@
+import { describe, it, expect } from 'vitest';
+import { PermissionFlagsBits, ChannelType } from 'discord.js';
+import { pickWelcomeChannel, buildWelcomeEmbed } from '../src/bot/welcome';
+
+// Testes das pecas PURAS/testaveis do welcome embed (guildCreate). NAO simulamos
+// o evento real do gateway — o handler em client.ts so liga estas funcoes.
+
+// Canal de texto fake com o mesmo padrao `permissionsFor: () => ({ has })` dos
+// testes de /setup. `granted` sao as flags que o bot tem nesse canal.
+function makeChannel(id: string, type: number, granted: bigint[]): unknown {
+  return {
+    id,
+    type,
+    permissionsFor: () => ({ has: (flag: bigint) => granted.includes(flag) }),
+  };
+}
+
+// Guild fake: `me` e a referencia do bot; systemChannel e a cache (Collection-like
+// via array de canais) sao configuraveis.
+function makeGuild(opts: {
+  systemChannel?: unknown;
+  channels?: unknown[];
+  me?: unknown;
+}): unknown {
+  // Distingue "me nao fornecido" (default = bot fake) de "me explicitamente null"
+  // (bot ausente): usamos 'me' in opts em vez de ?? para nao colapsar o null.
+  const me = 'me' in opts ? opts.me : { id: 'bot-1' };
+  return {
+    members: { me },
+    systemChannel: opts.systemChannel ?? null,
+    channels: { cache: opts.channels ?? [] },
+  };
+}
+
+const POST = [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages];
+
+describe('pickWelcomeChannel', () => {
+  it('escolhe o systemChannel quando o bot pode la enviar', () => {
+    const sys = makeChannel('sys', ChannelType.GuildText, POST);
+    const other = makeChannel('other', ChannelType.GuildText, POST);
+    const guild = makeGuild({ systemChannel: sys, channels: [other] });
+    const picked = pickWelcomeChannel(guild as any);
+    expect((picked as { id: string })?.id).toBe('sys');
+  });
+
+  it('cai no 1.º canal de texto enviavel quando falta perm no systemChannel', () => {
+    // systemChannel existe mas o bot nao tem SendMessages la -> nao serve.
+    const sys = makeChannel('sys', ChannelType.GuildText, [PermissionFlagsBits.ViewChannel]);
+    const bad = makeChannel('bad', ChannelType.GuildText, []); // sem perms
+    const good = makeChannel('good', ChannelType.GuildText, POST);
+    const guild = makeGuild({ systemChannel: sys, channels: [bad, good] });
+    const picked = pickWelcomeChannel(guild as any);
+    expect((picked as { id: string })?.id).toBe('good');
+  });
+
+  it('ignora canais que nao sao de texto no fallback', () => {
+    const voice = makeChannel('voice', ChannelType.GuildVoice, POST); // voz, nao serve
+    const text = makeChannel('text', ChannelType.GuildText, POST);
+    const guild = makeGuild({ systemChannel: null, channels: [voice, text] });
+    const picked = pickWelcomeChannel(guild as any);
+    expect((picked as { id: string })?.id).toBe('text');
+  });
+
+  it('devolve null quando nenhum canal serve', () => {
+    const bad = makeChannel('bad', ChannelType.GuildText, []); // sem SendMessages
+    const voice = makeChannel('voice', ChannelType.GuildVoice, POST);
+    const guild = makeGuild({ systemChannel: null, channels: [bad, voice] });
+    expect(pickWelcomeChannel(guild as any)).toBeNull();
+  });
+
+  it('devolve null quando nao ha referencia do bot (members.me ausente)', () => {
+    const text = makeChannel('text', ChannelType.GuildText, POST);
+    const guild = makeGuild({ systemChannel: text, channels: [text], me: null });
+    expect(pickWelcomeChannel(guild as any)).toBeNull();
+  });
+
+  it('aceita a cache como Collection (iteravel de pares [id, ch])', () => {
+    const text = makeChannel('text', ChannelType.GuildText, POST);
+    // Simula uma Collection do discord.js: iteravel de [id, ch].
+    const cache = new Map<string, unknown>([['text', text]]);
+    const guild = {
+      members: { me: { id: 'bot-1' } },
+      systemChannel: null,
+      channels: { cache },
+    };
+    const picked = pickWelcomeChannel(guild as any);
+    expect((picked as { id: string })?.id).toBe('text');
+  });
+});
+
+describe('buildWelcomeEmbed', () => {
+  it('constroi um embed com titulo, descricao e mencao a /setup e /help', () => {
+    const embed = buildWelcomeEmbed('en');
+    const json = embed.toJSON();
+    expect(json.title).toBeTruthy();
+    expect(json.description).toBeTruthy();
+    expect(json.description).toContain('/setup');
+    expect(json.description).toContain('/help');
+  });
+
+  it('serializa sem violar os limites do Discord', () => {
+    const embed = buildWelcomeEmbed('en');
+    expect(() => embed.toJSON()).not.toThrow();
+  });
+
+  it('usa o default (en) quando o locale e omitido e menciona a marca Voxi', () => {
+    const embed = buildWelcomeEmbed();
+    const json = embed.toJSON();
+    const text = `${json.title}\n${json.description}\n${json.footer?.text ?? ''}`;
+    expect(text).toContain('Voxi');
+    expect(text).toContain('/setup');
+  });
+});

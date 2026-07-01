@@ -355,6 +355,16 @@ export const catalog: Record<string, Entry> = {
     en: "Everything's ready. Hop into a voice channel and run /join.",
     pt: 'Esta tudo pronto. Entra num canal de voz e usa /join.',
   },
+  // /setup juntou-se JA ao canal de voz do invocador (reutilizou a logica de /join).
+  'setup.joinedVoice': {
+    en: "I've joined {channel} too — no need to run /join.",
+    pt: 'Ja entrei em {channel} — nao precisas de correr /join.',
+  },
+  // Proximo passo quando o /setup ja se juntou a voz: e so escrever.
+  'setup.readyTalk': {
+    en: "Everything's ready. Type in the auto-read channel and I'll read it out loud.",
+    pt: 'Esta tudo pronto. Escreve no canal de auto-leitura e eu leio em voz alta.',
+  },
 
   // ── /stats ────────────────────────────────────────────────────────────────
   'stats.title': {
@@ -458,5 +468,22 @@ export const catalog: Record<string, Entry> = {
   'help.footer': {
     en: 'New here? Run {command} to get started.',
     pt: 'Primeira vez? Corre {command} para comecares.',
+  },
+
+  // ── welcome embed (guildCreate) ────────────────────────────────────────────
+  // Enviado UMA vez quando o Voxi entra num servidor novo. Guild nova nao tem
+  // config, por isso o locale e sempre o default ('en'). Beginner-friendly: diz
+  // o que o Voxi faz + como comecar (/setup) + onde ver a ajuda (/help).
+  'welcome.title': {
+    en: 'Thanks for adding Voxi! 👋',
+    pt: 'Obrigado por adicionares o Voxi! 👋',
+  },
+  'welcome.description': {
+    en: "Voxi reads your chat out loud in voice channels — type it, hear it.\n\n**Get started in one step:** run {setup} and I'll set up auto-read and join your voice channel.\n\nNeed the full command list? Run {help}.",
+    pt: 'O Voxi le o teu chat em voz alta nos canais de voz — escreve e ouve.\n\n**Comeca num passo:** corre {setup} e eu configuro a auto-leitura e entro no teu canal de voz.\n\nQueres a lista completa de comandos? Corre {help}.',
+  },
+  'welcome.footer': {
+    en: 'Voxi — type it, hear it.',
+    // Sem `pt`: a tagline e a mesma em qualquer idioma (fallback a en).
   },
 };

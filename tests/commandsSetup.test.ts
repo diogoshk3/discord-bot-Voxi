@@ -1,12 +1,36 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { PermissionFlagsBits, ChannelType } from 'discord.js';
 
-// Mock minimo de @discordjs/voice — o /setup nao liga a voz, mas o modulo de
-// comandos importa-o no topo, por isso o import precisa de resolver.
-vi.mock('@discordjs/voice', () => ({
-  joinVoiceChannel: () => ({}),
-  getVoiceConnection: () => undefined,
-}));
+// Mock de @discordjs/voice — o /setup passou a JUNTAR-SE a voz (reutiliza a
+// logica de /join) quando o invocador esta num canal de voz com Connect+Speak,
+// por isso os testes de caminho feliz constroem um GuildVoicePlayer REAL. Este
+// mock (copiado do commandsJoin.test.ts) fornece o suficiente para o construtor
+// do player: um AudioPlayer falso, entersState resolvido e uma conexao com
+// subscribe/on/destroy.
+const joinVoiceChannel = vi.fn();
+const getVoiceConnection = vi.fn();
+vi.mock('@discordjs/voice', async () => {
+  const { EventEmitter } = await import('node:events');
+  class FakeAudioPlayer extends EventEmitter {
+    play(): void {}
+    stop(): void {}
+  }
+  return {
+    joinVoiceChannel: (...args: unknown[]) => joinVoiceChannel(...args),
+    getVoiceConnection: (...args: unknown[]) => getVoiceConnection(...args),
+    createAudioPlayer: () => new FakeAudioPlayer(),
+    createAudioResource: (path: string) => ({ path }),
+    entersState: () => Promise.resolve(),
+    AudioPlayerStatus: { Idle: 'idle' },
+    VoiceConnectionStatus: {
+      Disconnected: 'disconnected',
+      Signalling: 'signalling',
+      Connecting: 'connecting',
+      Ready: 'ready',
+    },
+    StreamType: { Arbitrary: 'arbitrary' },
+  };
+});
 
 import { handleInteraction, commandDefs } from '../src/commands/index';
 import type { BotDeps } from '../src/bot/deps';
@@ -16,6 +40,19 @@ import type Database from 'better-sqlite3';
 
 const GUILD = 'g-setup-test';
 
+// Conexao falsa devolvida por joinVoiceChannel — so precisa de subscribe/on/destroy
+// porque o GuildVoicePlayer real e construido no handler quando o /setup se junta
+// a voz. Reposta antes de CADA teste (o /setup so se junta no caminho feliz).
+beforeEach(() => {
+  joinVoiceChannel.mockReset();
+  getVoiceConnection.mockReset();
+  joinVoiceChannel.mockReturnValue({
+    subscribe: () => {},
+    on: () => {},
+    destroy: () => {},
+  });
+});
+
 // ── helpers ─────────────────────────────────────────────────────────────────
 
 function makeSetupDeps(db: Database.Database): BotDeps {
@@ -23,7 +60,9 @@ function makeSetupDeps(db: Database.Database): BotDeps {
     client: { user: { id: 'bot-1' } },
     players: new Map(),
     db,
-    config: {},
+    // queueCap/inactivityMs sao lidos pelo construtor do GuildVoicePlayer quando o
+    // /setup se junta a voz no caminho feliz.
+    config: { queueCap: 10, inactivityMs: 1000 },
     availableModels: ['en_US-amy-medium'],
   } as unknown as BotDeps;
 }
@@ -93,6 +132,9 @@ function makeSetupInteraction(opts: {
       voice: { channel: opts.voiceChannel ?? null },
     },
     guild: {
+      // voiceAdapterCreator e usado por joinVoiceChannel quando o /setup se junta
+      // a voz no caminho feliz.
+      voiceAdapterCreator: {},
       channels: {
         cache: { get: (id: string) => cache[id] },
       },
@@ -144,6 +186,12 @@ describe('/setup — caminho feliz (todas as perms + em VC)', () => {
     expect(text).toMatch(/Connect/i);
     expect(text).toMatch(/Speak/i);
     expect(text).not.toMatch(/missing|falta/i);
+
+    // /setup passou a juntar-se JA a voz no caminho feliz (reutiliza a logica de
+    // /join): confirma que se juntou e limpa o player para nao deixar timers.
+    expect(joinVoiceChannel).toHaveBeenCalledTimes(1);
+    expect(text).toMatch(/Sala/); // menciona o canal de voz onde entrou
+    deps.players.get(GUILD)?.destroy();
   });
 });
 
@@ -184,6 +232,12 @@ describe('/setup — faltam perms de voz', () => {
     // ele e impresso em qualquer estado). `[^\n]*` confina a uma linha.
     expect(text).toMatch(/❌[^\n]*Connect|Connect[^\n]*missing/i);
     expect(text).toMatch(/❌[^\n]*Speak|Speak[^\n]*missing/i);
+
+    // RECONCILIACAO /setup vs /join: sem Connect/Speak, o /setup NAO deve juntar-se
+    // a voz (so avisa no checklist). Se o guard 'ok && ok' regredisse e o setup se
+    // juntasse sempre, isto apanhava.
+    expect(joinVoiceChannel).not.toHaveBeenCalled();
+    expect(deps.players.get(GUILD)).toBeUndefined();
   });
 });
 
@@ -229,6 +283,9 @@ describe('/setup — falta SendMessages no canal de texto', () => {
     expect(text).toMatch(/missing/i);
     expect(text).toMatch(/❌[^\n]*SendMessages|SendMessages[^\n]*missing/i);
     expect(text).toMatch(/✅[^\n]*ViewChannel/i);
+
+    // Connect+Speak presentes na voz -> /setup juntou-se; limpar o player.
+    deps.players.get(GUILD)?.destroy();
   });
 });
 
@@ -265,6 +322,11 @@ describe('/setup — invocador fora de um canal de voz', () => {
     // Migrado PT->EN (P16.2): "… not checked yet (I'll verify it on /join)"
     expect(text).toMatch(/\/join/i);
     expect(text).toMatch(/verify|checked/i);
+
+    // RECONCILIACAO /setup vs /join: fora de um canal de voz nao ha como verificar
+    // Connect/Speak, por isso o /setup NAO se junta (deixa isso para o /join).
+    expect(joinVoiceChannel).not.toHaveBeenCalled();
+    expect(deps.players.get(GUILD)).toBeUndefined();
   });
 });
 
@@ -304,6 +366,9 @@ describe('/setup — opcao canal explicita', () => {
     expect(getGuildConfig(db, GUILD).ttsChannelId).toBe('ch-option');
     expect(i.replies.join('\n')).toMatch(/ch-option/);
     expect(i.replies.join('\n')).not.toMatch(/ch-interaction/);
+
+    // Invocador em voz com Connect+Speak -> /setup tambem se juntou; limpar player.
+    deps.players.get(GUILD)?.destroy();
   });
 });
 

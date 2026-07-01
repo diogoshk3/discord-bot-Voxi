@@ -251,21 +251,39 @@ async function reply(i: ChatInputCommandInteraction, content: string): Promise<v
   await i.reply({ content, flags: MessageFlags.Ephemeral });
 }
 
-async function handleJoin(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
-  const locale = localeFor(deps, i.guildId);
+/**
+ * Resultado (discriminado) de tentar juntar o Voxi ao canal de voz do invocador.
+ * NAO contem texto de UI — quem chama e que renderiza a mensagem (via t()), para
+ * que uma unica interacao produza uma unica resposta. Isto e o que permite
+ * partilhar a logica entre /join (que responde) e /setup (que dobra o resultado
+ * no seu checklist), sem arriscar um duplo-reply na mesma interacao.
+ */
+export type JoinOutcome =
+  | { status: 'no-channel' }
+  | { status: 'missing-perms'; channelName: string }
+  | { status: 'joined'; channelName: string };
+
+/**
+ * Logica PARTILHADA de "entrar no canal de voz do invocador", extraida do antigo
+ * handleJoin para poder ser reutilizada pelo /setup (onboarding guiado). Efeitos:
+ * verifica Connect/Speak, (re)cria o player e a conexao. NAO responde a interacao
+ * — devolve um JoinOutcome que o chamador traduz. Contrato preservado:
+ *  - sem canal de voz            -> { status: 'no-channel' } (nao mexe no player)
+ *  - faltam Connect/Speak        -> { status: 'missing-perms' } (nao destroi o player existente)
+ *  - ok                          -> junta-se e devolve { status: 'joined' }
+ */
+export function joinUserVoice(i: ChatInputCommandInteraction, deps: BotDeps): JoinOutcome {
   const member = i.member as GuildMember;
   const channel = member?.voice?.channel;
   if (!channel) {
-    await reply(i, t('join.needVoiceChannel', locale));
-    return;
+    return { status: 'no-channel' };
   }
   // Verificar permissoes Connect/Speak ANTES de tocar no player existente: um
   // /join para um canal proibido nao deve destruir um player que ja funciona.
   const me = deps.client.user;
   const perms = me ? channel.permissionsFor(me) : null;
   if (!perms || !perms.has(PermissionFlagsBits.Connect) || !perms.has(PermissionFlagsBits.Speak)) {
-    await reply(i, t('join.missingPerms', locale, { channel: channel.name }));
-    return;
+    return { status: 'missing-perms', channelName: channel.name };
   }
   removePlayer(deps, i.guildId!);
   const connection = joinVoiceChannel({
@@ -280,7 +298,23 @@ async function handleJoin(i: ChatInputCommandInteraction, deps: BotDeps): Promis
     getVoiceConnection(i.guildId!)?.destroy();
   });
   deps.players.set(i.guildId!, player);
-  await reply(i, t('join.joined', locale, { channel: channel.name }));
+  return { status: 'joined', channelName: channel.name };
+}
+
+async function handleJoin(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
+  const locale = localeFor(deps, i.guildId);
+  const outcome = joinUserVoice(i, deps);
+  switch (outcome.status) {
+    case 'no-channel':
+      await reply(i, t('join.needVoiceChannel', locale));
+      return;
+    case 'missing-perms':
+      await reply(i, t('join.missingPerms', locale, { channel: outcome.channelName }));
+      return;
+    case 'joined':
+      await reply(i, t('join.joined', locale, { channel: outcome.channelName }));
+      return;
+  }
 }
 
 async function handleLeave(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
@@ -666,6 +700,22 @@ async function handleSetup(i: ChatInputCommandInteraction, deps: BotDeps): Promi
   // (c) Configura num so passo — SEMPRE, mesmo que faltem perms (so avisamos).
   setGuildConfig(deps.db, i.guildId!, { ttsChannelId: fullCh.id, autoread: true });
 
+  // (c2) Onboarding de 1-passo: se o invocador esta num canal de voz E o bot tem
+  // Connect+Speak la (connectState/speakState === 'ok'), juntamo-nos JA a voz
+  // reutilizando a MESMA logica de /join (helper partilhado joinUserVoice) — o
+  // principiante fica pronto sem ter de correr /join a seguir. Se faltarem perms
+  // ou nao estiver em voz, NAO tentamos juntar (o checklist ja avisa) — a reconci-
+  // liacao e: /join = "entrar na voz" simples; /setup = onboarding guiado (config
+  // + juntar-se quando da). O joinUserVoice NAO responde a interacao; dobramos o
+  // resultado numa linha do checklist para manter UMA unica resposta.
+  let joinedChannelName: string | null = null;
+  if (connectState === 'ok' && speakState === 'ok') {
+    const outcome = joinUserVoice(i, deps);
+    if (outcome.status === 'joined') {
+      joinedChannelName = outcome.channelName;
+    }
+  }
+
   // (d) Resumo beginner-friendly.
   const lines: string[] = [
     t('setup.done', locale),
@@ -679,6 +729,10 @@ async function handleSetup(i: ChatInputCommandInteraction, deps: BotDeps): Promi
     permLine(t('setup.permSpeak', locale), speakState, locale),
   ];
 
+  if (joinedChannelName !== null) {
+    lines.push('', t('setup.joinedVoice', locale, { channel: joinedChannelName }));
+  }
+
   const anyMissing = [viewState, sendState, connectState, speakState].includes('missing');
   if (anyMissing) {
     lines.push('', t('setup.fixHint', locale));
@@ -686,8 +740,10 @@ async function handleSetup(i: ChatInputCommandInteraction, deps: BotDeps): Promi
   if (connectState === 'unchecked' || speakState === 'unchecked') {
     lines.push('', t('setup.voiceUncheckedNote', locale));
   }
+  // Ja juntos a voz -> proximo passo e so escrever; senao (nao estava em voz mas
+  // tudo o resto ok) mantemos a dica de correr /join.
   if (!anyMissing && connectState === 'ok' && speakState === 'ok') {
-    lines.push('', t('setup.allGood', locale));
+    lines.push('', joinedChannelName !== null ? t('setup.readyTalk', locale) : t('setup.allGood', locale));
   }
 
   await reply(i, lines.join('\n'));
