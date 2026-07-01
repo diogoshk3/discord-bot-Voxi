@@ -14,6 +14,12 @@ import {
   removePronunciation,
 } from '../src/store/pronunciation';
 import { isOptedOut, setOptOut, setOptIn } from '../src/store/optout';
+import {
+  getUserAbbrev,
+  addUserAbbrev,
+  removeUserAbbrev,
+  countUserAbbrev,
+} from '../src/store/userAbbrev';
 
 const G = 'guild-1';
 const U = 'user-1';
@@ -275,6 +281,123 @@ describe('store', () => {
     it('isola o opt-out por utilizador', () => {
       setOptOut(db, G, U);
       expect(isOptedOut(db, G, 'user-2')).toBe(false);
+    });
+  });
+
+  // ── userAbbrev (GLOBAL, keyed por user_id — sem guild) ─────────────────────
+  describe('userAbbrev', () => {
+    it('devolve lista vazia quando nada foi definido', () => {
+      expect(getUserAbbrev(db, U)).toEqual([]);
+      expect(countUserAbbrev(db, U)).toBe(0);
+    });
+
+    it('adiciona e obtem um termo/replacement (term guardado em minusculas)', () => {
+      expect(addUserAbbrev(db, U, 'brb', 'bora rapaz')).toEqual({ ok: true });
+      expect(getUserAbbrev(db, U)).toEqual([{ term: 'brb', replacement: 'bora rapaz' }]);
+    });
+
+    it('guarda o term em minusculas (BRB -> brb)', () => {
+      addUserAbbrev(db, U, 'BRB', 'bora rapaz');
+      expect(getUserAbbrev(db, U)).toEqual([{ term: 'brb', replacement: 'bora rapaz' }]);
+    });
+
+    it('re-adicionar o mesmo termo edita o replacement (upsert)', () => {
+      addUserAbbrev(db, U, 'js', 'JavaScript');
+      addUserAbbrev(db, U, 'js', 'jota esse');
+      expect(getUserAbbrev(db, U)).toEqual([{ term: 'js', replacement: 'jota esse' }]);
+    });
+
+    it('remove um termo', () => {
+      addUserAbbrev(db, U, 'js', 'JavaScript');
+      addUserAbbrev(db, U, 'ts', 'TypeScript');
+      removeUserAbbrev(db, U, 'js');
+      expect(getUserAbbrev(db, U)).toEqual([{ term: 'ts', replacement: 'TypeScript' }]);
+    });
+
+    it('remove case-insensitive (remover TS remove ts)', () => {
+      addUserAbbrev(db, U, 'ts', 'TypeScript');
+      removeUserAbbrev(db, U, 'TS');
+      expect(getUserAbbrev(db, U)).toEqual([]);
+    });
+
+    it('ordena por term ASC (determinismo)', () => {
+      addUserAbbrev(db, U, 'zz', 'ultimo');
+      addUserAbbrev(db, U, 'aa', 'primeiro');
+      expect(getUserAbbrev(db, U)).toEqual([
+        { term: 'aa', replacement: 'primeiro' },
+        { term: 'zz', replacement: 'ultimo' },
+      ]);
+    });
+
+    it('e GLOBAL: o mesmo user_id partilha entre "servidores" (nao ha guild)', () => {
+      // A store nao tem guild_id — a chave e so o user_id. Um segundo user e isolado.
+      addUserAbbrev(db, U, 'brb', 'bora rapaz');
+      expect(getUserAbbrev(db, 'user-2')).toEqual([]);
+      expect(getUserAbbrev(db, U)).toHaveLength(1);
+    });
+
+    // ── validacao ──────────────────────────────────────────────────────────
+    it('rejeita termo com espacos (nao e uma unica palavra)', () => {
+      const r = addUserAbbrev(db, U, 'a b', 'algo');
+      expect(r.ok).toBe(false);
+      expect(r.reason).toBe('invalid-term');
+      expect(getUserAbbrev(db, U)).toEqual([]);
+    });
+
+    it('rejeita termo com pontuacao/simbolos', () => {
+      expect(addUserAbbrev(db, U, 'a.b', 'algo').reason).toBe('invalid-term');
+      expect(addUserAbbrev(db, U, 'a-b', 'algo').reason).toBe('invalid-term');
+      expect(addUserAbbrev(db, U, '', 'algo').reason).toBe('invalid-term');
+    });
+
+    it('aceita termo com letras e digitos (unicode)', () => {
+      expect(addUserAbbrev(db, U, 'js2', 'JavaScript dois').ok).toBe(true);
+      expect(addUserAbbrev(db, U, 'ação', 'aksaun').ok).toBe(true);
+    });
+
+    it('rejeita termo demasiado longo (> 50)', () => {
+      const long = 'a'.repeat(51);
+      expect(addUserAbbrev(db, U, long, 'algo').reason).toBe('invalid-term');
+    });
+
+    it('rejeita replacement vazio (apos trim)', () => {
+      expect(addUserAbbrev(db, U, 'brb', '   ').reason).toBe('empty-replacement');
+      expect(getUserAbbrev(db, U)).toEqual([]);
+    });
+
+    it('rejeita replacement demasiado longo (> 200)', () => {
+      const long = 'x'.repeat(201);
+      expect(addUserAbbrev(db, U, 'brb', long).reason).toBe('too-long-replacement');
+    });
+
+    // ── cap de 10 ────────────────────────────────────────────────────────────
+    it('aplica o cap de 10: o 11.o termo NOVO e rejeitado', () => {
+      for (let n = 0; n < 10; n++) {
+        expect(addUserAbbrev(db, U, `t${n}`, `r${n}`).ok).toBe(true);
+      }
+      expect(countUserAbbrev(db, U)).toBe(10);
+      const r = addUserAbbrev(db, U, 'extra', 'demais');
+      expect(r.ok).toBe(false);
+      expect(r.reason).toBe('cap');
+      expect(countUserAbbrev(db, U)).toBe(10);
+    });
+
+    it('no cap, ATUALIZAR um termo existente e permitido (nao conta como novo)', () => {
+      for (let n = 0; n < 10; n++) {
+        addUserAbbrev(db, U, `t${n}`, `r${n}`);
+      }
+      expect(countUserAbbrev(db, U)).toBe(10);
+      // t5 ja existe -> update passa mesmo estando no cap.
+      const r = addUserAbbrev(db, U, 't5', 'novo valor');
+      expect(r.ok).toBe(true);
+      expect(countUserAbbrev(db, U)).toBe(10);
+      expect(getUserAbbrev(db, U).find((e) => e.term === 't5')?.replacement).toBe('novo valor');
+    });
+
+    it('o cap conta por user_id (users diferentes tem caps independentes)', () => {
+      for (let n = 0; n < 10; n++) addUserAbbrev(db, U, `t${n}`, `r${n}`);
+      // outro user ainda pode adicionar.
+      expect(addUserAbbrev(db, 'user-2', 'brb', 'bora rapaz').ok).toBe(true);
     });
   });
 

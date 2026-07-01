@@ -39,6 +39,7 @@ function makeVoiceInteraction(sub: string) {
       replies.push(o.content);
     },
     options: {
+      getSubcommandGroup: (_required = false) => null,
       getSubcommand: () => sub,
       getString: () => '',
       getNumber: () => null,

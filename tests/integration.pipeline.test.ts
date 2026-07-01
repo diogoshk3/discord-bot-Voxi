@@ -38,6 +38,7 @@ import { setGuildConfig } from '../src/store/guildConfig';
 import { addBlockword } from '../src/store/blocklist';
 import { setOptOut } from '../src/store/optout';
 import { addPronunciation } from '../src/store/pronunciation';
+import { addUserAbbrev } from '../src/store/userAbbrev';
 
 const GUILD = 'g-integration';
 const CHAN = 'chan-autoread';
@@ -241,5 +242,38 @@ describe('pipeline central — integracao end-to-end (store real + player falso)
     );
     // Continua a detetar PT apos a substituicao.
     expect(req.model.startsWith('pt_')).toBe(true);
+  });
+
+  // ── 7. ABREVIATURA PESSOAL (global, por user) aplicada no pipeline ─────────
+  it('abreviatura pessoal do utilizador -> termo substituido no texto falado', async () => {
+    // 'sdv' -> "seja o que Deus quiser" (atalho pessoal do USER, sem guild).
+    addUserAbbrev(db, USER, 'sdv', 'seja bem vindo ao servidor');
+    const deps = makeDeps(db, say);
+    const content =
+      'ola pessoal sdv espero que gostem de aqui estar e que fiquem muito tempo connosco todos';
+
+    await handleMessage(makeMessage({ content }), deps);
+
+    expect(say).toHaveBeenCalledTimes(1);
+    const req = say.mock.calls[0][0];
+    expect(req.text).toBe(
+      'ola pessoal seja bem vindo ao servidor espero que gostem de aqui estar e que fiquem muito tempo connosco todos',
+    );
+  });
+
+  // ── 8. PRECEDENCIA: pessoal > giria embutida ──────────────────────────────
+  it('abreviatura pessoal SOMBREIA uma giria EN embutida (pessoal vence)', async () => {
+    // 'brb' e giria embutida ("be right back"), mas o USER define o seu proprio.
+    addUserAbbrev(db, USER, 'brb', 'bora rapaz vamos embora daqui para fora agora ja meus amigos');
+    const deps = makeDeps(db, say);
+    const content = 'brb';
+
+    await handleMessage(makeMessage({ content }), deps);
+
+    expect(say).toHaveBeenCalledTimes(1);
+    const req = say.mock.calls[0][0];
+    // Pessoal aplicado ANTES do embutido: sai o texto pessoal, NAO "be right back".
+    expect(req.text).toBe('bora rapaz vamos embora daqui para fora agora ja meus amigos');
+    expect(req.text).not.toContain('be right back');
   });
 });

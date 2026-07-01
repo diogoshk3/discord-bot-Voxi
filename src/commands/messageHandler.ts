@@ -6,9 +6,11 @@ import { cleanText } from '../textCleaning/clean';
 import { getGuildConfig } from '../store/guildConfig';
 import { getBlocklist } from '../store/blocklist';
 import { getPronunciations } from '../store/pronunciation';
+import { getUserAbbrev } from '../store/userAbbrev';
 import { getUserVoice } from '../store/userVoice';
 import { isOptedOut } from '../store/optout';
 import { applyPronunciation } from '../textCleaning/pronunciation';
+import { applyUserAbbrev } from '../textCleaning/userAbbrev';
 import { expandAbbreviations, isAllEnglishAbbrev } from '../textCleaning/abbreviations';
 import { resolveSynth } from './resolveSynth';
 import { log } from '../logging/logger';
@@ -82,18 +84,23 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     // vazio/inutil). Nota: isto passa a ignorar tambem "!!!" (so-pontuacao).
     if (!/[\p{L}\p{N}]/u.test(cleaned)) return;
 
-    // Stretch P18: se a mensagem limpa e SO girias EN ("brb", "omg lol"), forcamos
-    // uma voz inglesa para elas soarem com o sotaque certo mesmo que o user tenha
-    // uma voz fixada noutra lingua. Calculado ANTES da expansao (a expansao ja nao
-    // deteta 'eng' de forma fiavel em texto curto).
-    const forceLang = isAllEnglishAbbrev(cleaned) ? 'eng' : undefined;
+    // Abreviaturas PESSOAIS do utilizador (globais, chave = author.id): aplicadas
+    // PRIMEIRO — precedencia pessoal > embutido. Em qualquer lingua; no-op se o user
+    // nao tiver nenhuma.
+    const personal = applyUserAbbrev(cleaned, getUserAbbrev(deps.db, message.author.id));
 
-    // expansao de girias INGLESAS: aplicada DEPOIS do cleanText e ANTES da pronuncia
-    // — assim as entradas de pronuncia operam sobre a palavra ja expandida (o
-    // tradeoff e que o utilizador nao consegue forcar a leitura literal de uma giria
-    // via pronuncia). As girias sao SO EN e aplicam-se em qualquer lingua. Mesma
-    // ordem no handleTts.
-    const expanded = expandAbbreviations(cleaned);
+    // Stretch P18: se a mensagem e SO girias EN ("brb", "omg lol"), forcamos uma voz
+    // inglesa para soarem com o sotaque certo mesmo que o user tenha uma voz fixada
+    // noutra lingua. Calculado sobre o texto JA com as abreviaturas pessoais, para que
+    // um atalho pessoal que sombreie uma giria nao force ingles indevidamente.
+    const forceLang = isAllEnglishAbbrev(personal) ? 'eng' : undefined;
+
+    // expansao de girias INGLESAS embutidas: DEPOIS das pessoais e ANTES da pronuncia
+    // — assim as entradas de pronuncia operam sobre a palavra ja expandida (o tradeoff
+    // e que o utilizador nao consegue forcar a leitura literal de uma giria via
+    // pronuncia). As girias sao SO EN e aplicam-se em qualquer lingua. Mesma ordem no
+    // handleTts.
+    const expanded = expandAbbreviations(personal);
 
     // dicionario de pronuncia por servidor: aplicado DEPOIS do cleanText e ANTES do
     // synth (e antes da blocklist, para que o texto realmente falado seja guardado).

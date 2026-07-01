@@ -52,6 +52,7 @@ function makePreviewInteraction(opts: { model?: string | null } = {}) {
       replies.push(o.content);
     },
     options: {
+      getSubcommandGroup: (_required = false) => null,
       getSubcommand: () => 'preview',
       getString: (name: string, _required?: boolean) => {
         if (name === 'model') return modelValue;

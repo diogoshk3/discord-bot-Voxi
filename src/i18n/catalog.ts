@@ -138,6 +138,40 @@ export const catalog: Record<string, Entry> = {
     pt: 'Ola, eu sou o Voxi. type it, hear it.',
   },
 
+  // ── /voice abbrev (abreviaturas pessoais, globais) ─────────────────────────
+  'voice.abbrev.added': {
+    en: 'Got it — {term} will be read as {replacement}.',
+    pt: 'Feito — {term} passa a ser lido como {replacement}.',
+  },
+  'voice.abbrev.removed': {
+    en: 'Removed your abbreviation for {term}.',
+    pt: 'Removi a tua abreviatura de {term}.',
+  },
+  'voice.abbrev.listHeader': {
+    en: 'Your personal abbreviations ({count}/{cap} used):',
+    pt: 'As tuas abreviaturas pessoais ({count}/{cap} usadas):',
+  },
+  'voice.abbrev.listEmpty': {
+    en: "(none yet — add one with /voice abbrev add)",
+    pt: '(nenhuma ainda — cria uma com /voice abbrev add)',
+  },
+  'voice.abbrev.capReached': {
+    en: "You've reached the limit of {cap} personal abbreviations. Remove one before adding another.",
+    pt: 'Chegaste ao limite de {cap} abreviaturas pessoais. Remove uma antes de adicionar outra.',
+  },
+  'voice.abbrev.invalidTerm': {
+    en: 'The term must be a single word (letters and digits only), up to 50 characters.',
+    pt: 'O termo tem de ser uma unica palavra (so letras e digitos), ate 50 caracteres.',
+  },
+  'voice.abbrev.emptyReplacement': {
+    en: "The reading can't be empty.",
+    pt: 'A leitura nao pode ser vazia.',
+  },
+  'voice.abbrev.tooLong': {
+    en: 'The reading is too long (max 200 characters).',
+    pt: 'A leitura e demasiado longa (maximo 200 caracteres).',
+  },
+
   // ── /config ───────────────────────────────────────────────────────────────
   'config.wordEmpty': {
     en: "The word can't be empty.",

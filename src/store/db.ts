@@ -48,6 +48,13 @@ export function initDb(path: string): Database.Database {
         user_id  TEXT NOT NULL,
         PRIMARY KEY (guild_id, user_id)
       );
+
+      CREATE TABLE IF NOT EXISTS user_abbreviation (
+        user_id     TEXT NOT NULL,
+        term        TEXT NOT NULL,
+        replacement TEXT NOT NULL,
+        PRIMARY KEY (user_id, term)
+      );
     `);
 
     // Migracao idempotente para DBs criadas antes da coluna tts_role_id existir.
