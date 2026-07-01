@@ -8,6 +8,7 @@ vi.mock('@discordjs/voice', () => ({
 import { handleInteraction, handleAutocomplete, filterJokeLanguages } from '../src/commands/index';
 import type { BotDeps } from '../src/bot/deps';
 import { initDb } from '../src/store/db';
+import { setGuildConfig } from '../src/store/guildConfig';
 import { laughterFor } from '../src/content/laughter';
 import { JOKE_LANGUAGES } from '../src/content/jokes';
 import type Database from 'better-sqlite3';
@@ -151,6 +152,23 @@ describe('/joke', () => {
     await handleInteraction(i as any, deps);
 
     expect(i.replies.some((r) => /busy/i.test(r))).toBe(true);
+  });
+
+  // ── rate-limit por-utilizador (mesmo limiter do /tts) ───────────────────────
+  // ratePerMin=0 -> RateLimiter.allow devolve sempre false. Sem o guard, o /joke
+  // enfileirava sem limite (vetor de spam da fila de voz). Idioma VALIDO ('en')
+  // para o teste falhar pelo limiter e nao pelo unknownLang.
+  it('quando o limiter nega responde tts.tooFast e NAO chama say', async () => {
+    setGuildConfig(db, GUILD, { ratePerMin: 0 });
+    const say = vi.fn().mockResolvedValue(true);
+    const deps = makeDeps(db, { say });
+    const i = makeJokeInteraction({ idioma: 'en', risos: false });
+
+    await handleInteraction(i as any, deps);
+
+    expect(say).not.toHaveBeenCalled();
+    // t('tts.tooFast', 'en') = "Whoa, slow down a little — try again in a moment."
+    expect(i.replies.some((r) => /slow down/i.test(r))).toBe(true);
   });
 });
 

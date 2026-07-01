@@ -145,4 +145,21 @@ describe('/laugh', () => {
     expect(say).toHaveBeenCalledOnce();
     expect(i.replies.some((r) => /busy/i.test(r))).toBe(true);
   });
+
+  // ── rate-limit por-utilizador (mesmo limiter do /tts) ───────────────────────
+  // ratePerMin=0 -> RateLimiter.allow devolve sempre false. Sem o guard, o /laugh
+  // enfileirava sem limite (vetor de spam da fila de voz). Com o guard, responde
+  // tts.tooFast e NAO chama say.
+  it('quando o limiter nega responde tts.tooFast e NAO chama say', async () => {
+    setGuildConfig(db, GUILD, { ratePerMin: 0 });
+    const say = vi.fn().mockResolvedValue(true);
+    const deps = makeDeps(db, { say });
+    const i = makeLaughInteraction();
+
+    await handleInteraction(i as any, deps);
+
+    expect(say).not.toHaveBeenCalled();
+    // t('tts.tooFast', 'en') = "Whoa, slow down a little — try again in a moment."
+    expect(i.replies.some((r) => /slow down/i.test(r))).toBe(true);
+  });
 });

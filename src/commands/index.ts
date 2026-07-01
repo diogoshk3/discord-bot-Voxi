@@ -542,6 +542,16 @@ async function handleLaugh(i: ChatInputCommandInteraction, deps: BotDeps): Promi
     return;
   }
   const cfg = getGuildConfig(deps.db, i.guildId!);
+
+  // rate-limit por-utilizador (MESMO limiter do /tts): sem isto o /laugh enfileirava
+  // sem limite -> vetor de spam da fila de voz. Corre APOS o deferReply para o
+  // editReply funcionar.
+  const rl = getLimiter(deps, i.guildId!, cfg.ratePerMin);
+  if (!rl.allow(i.user.id, Date.now())) {
+    await i.editReply(t('tts.tooFast', locale));
+    return;
+  }
+
   const stored = getUserVoice(deps.db, i.guildId!, i.user.id);
   // Precedencia da voz: voz guardada do user > default_voice da guild > .env > amy.
   const model =
@@ -580,6 +590,16 @@ async function handleJoke(i: ChatInputCommandInteraction, deps: BotDeps): Promis
   // Voz para a lingua escolhida: 1.º modelo instalado com o prefixo; se nao houver
   // (a lingua nao tem modelo instalado), cai no default da guild / .env / amy.
   const cfg = getGuildConfig(deps.db, i.guildId!);
+
+  // rate-limit por-utilizador (MESMO limiter do /tts): sem isto o /joke enfileirava
+  // sem limite -> vetor de spam da fila de voz. Corre APOS o deferReply para o
+  // editReply funcionar.
+  const rl = getLimiter(deps, i.guildId!, cfg.ratePerMin);
+  if (!rl.allow(i.user.id, Date.now())) {
+    await i.editReply(t('tts.tooFast', locale));
+    return;
+  }
+
   const model =
     deps.availableModels.find((m) => m.startsWith(lang.prefix)) ||
     cfg.defaultVoice ||
