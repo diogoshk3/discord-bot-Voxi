@@ -37,7 +37,7 @@ import { expandAbbreviations, isAllEnglishAbbrev } from '../textCleaning/abbrevi
 import { isBlocked } from '../moderation/filter';
 import { resolveSynth } from './resolveSynth';
 import type { SynthRequest } from '../tts/engine';
-import { modelDisplayName } from '../language/voiceMap';
+import { modelDisplayName, formatVoiceList } from '../language/voiceMap';
 import { laughterFor } from '../content/laughter';
 import { JOKE_LANGUAGES, jokeLangByKey, pickJoke } from '../content/jokes';
 import { log } from '../logging/logger';
@@ -703,8 +703,11 @@ async function handleVoice(i: ChatInputCommandInteraction, deps: BotDeps): Promi
     setUserVoice(deps.db, i.guildId!, i.user.id, model, clamped);
     await reply(i, t('voice.set', locale, { model, speed: clamped }));
   } else if (sub === 'list') {
+    // Beginner-friendly: em vez de uma lista plana de ids Piper, agrupa por lingua
+    // com nomes humanos (formatVoiceList). O id cru fica entre parenteses para
+    // /voice set continuar copy-pasteavel. Cabecalho i18n; vozes/linguas autonimos.
     const list = deps.availableModels.length
-      ? deps.availableModels.map((m) => `- ${m}`).join('\n')
+      ? formatVoiceList(deps.availableModels)
       : t('voice.listEmpty', locale);
     await reply(i, `${t('voice.listHeader', locale)}\n${list}`);
   } else if (sub === 'reset') {
