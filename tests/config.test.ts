@@ -36,6 +36,7 @@ describe('loadConfig', () => {
       TOPGG_WEBHOOK_PORT: undefined,
       TOPGG_WEBHOOK_SECRET: undefined,
       BOT_SHARDS: undefined,
+      MULTILINGUAL_SEGMENTS: undefined,
       // tambem limpamos a env reservada do discord.js para o teste de regressao
       // partir de um estado conhecido (so um teste a define de proposito).
       SHARDS: undefined,
@@ -230,5 +231,37 @@ describe('loadConfig', () => {
   it('ignores the reserved SHARDS env (only BOT_SHARDS controls sharding)', () => {
     setEnv({ ...REQUIRED, SHARDS: 'auto', BOT_SHARDS: undefined });
     expect(loadConfig().shards).toBeUndefined();
+  });
+
+  // P14.4 — MULTILINGUAL_SEGMENTS (flag EXPERIMENTAL, default OFF). Ausente/vazio
+  // => false (comportamento inalterado: voz unica por frase). 'true' => true.
+  // Parsing booleano tolerante como as outras flags do modulo.
+  it('multilingualSegments defaults to false when MULTILINGUAL_SEGMENTS missing', () => {
+    setEnv(REQUIRED);
+    expect(loadConfig().multilingualSegments).toBe(false);
+  });
+
+  it('multilingualSegments false when MULTILINGUAL_SEGMENTS empty', () => {
+    setEnv({ ...REQUIRED, MULTILINGUAL_SEGMENTS: '' });
+    expect(loadConfig().multilingualSegments).toBe(false);
+  });
+
+  it('reads MULTILINGUAL_SEGMENTS=true as true', () => {
+    setEnv({ ...REQUIRED, MULTILINGUAL_SEGMENTS: 'true' });
+    expect(loadConfig().multilingualSegments).toBe(true);
+  });
+
+  it('MULTILINGUAL_SEGMENTS is case-insensitive (TRUE / True -> true)', () => {
+    setEnv({ ...REQUIRED, MULTILINGUAL_SEGMENTS: 'TRUE' });
+    expect(loadConfig().multilingualSegments).toBe(true);
+    setEnv({ ...REQUIRED, MULTILINGUAL_SEGMENTS: 'True' });
+    expect(loadConfig().multilingualSegments).toBe(true);
+  });
+
+  it('MULTILINGUAL_SEGMENTS with a non-true value (e.g. "1"/"yes") stays false (only "true" enables)', () => {
+    setEnv({ ...REQUIRED, MULTILINGUAL_SEGMENTS: '1' });
+    expect(loadConfig().multilingualSegments).toBe(false);
+    setEnv({ ...REQUIRED, MULTILINGUAL_SEGMENTS: 'yes' });
+    expect(loadConfig().multilingualSegments).toBe(false);
   });
 });

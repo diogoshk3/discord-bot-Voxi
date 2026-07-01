@@ -3,10 +3,12 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { createEngine } from '../src/tts/factory';
+import { createEngine, selectEngine } from '../src/tts/factory';
 import { AudioCache } from '../src/tts/cache';
 import { PiperEngine } from '../src/tts/piper';
 import { NeuralEngine } from '../src/tts/neural';
+import { MultiSegmentEngine } from '../src/tts/multiSegment';
+import type { TTSEngine } from '../src/tts/engine';
 import type { AppConfig } from '../src/config/index';
 
 function baseConfig(overrides: Partial<AppConfig> = {}): AppConfig {
@@ -24,6 +26,7 @@ function baseConfig(overrides: Partial<AppConfig> = {}): AppConfig {
     ratePerMin: 5,
     ttsEngine: 'piper',
     openaiApiKey: undefined,
+    multilingualSegments: false,
     ...overrides,
   };
 }
@@ -58,5 +61,35 @@ describe('createEngine', () => {
     expect(() =>
       createEngine(baseConfig({ ttsEngine: 'neural', openaiApiKey: undefined }), cache),
     ).toThrow(/TTS_ENGINE=neural requer OPENAI_API_KEY/);
+  });
+});
+
+// P14.4 — selectEngine: prova EXECUTAVEL da invariante do caminho OFF (o motor
+// base e devolvido INTACTO) e do wiring ON (embrulha em MultiSegmentEngine).
+describe('selectEngine (flag MULTILINGUAL_SEGMENTS)', () => {
+  let dir: string;
+  let cache: AudioCache;
+  // motor base falso (basta o contrato synth): so nos interessa a SELECAO.
+  const base: TTSEngine = { synth: async () => '/tmp/x.wav' };
+  const AVAILABLE = ['en_US-amy-medium', 'ru_RU-denis-medium'];
+
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), 'selcache-'));
+    cache = new AudioCache(dir);
+  });
+
+  afterEach(() => {
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('flag OFF (default) -> devolve o motor base TAL E QUAL (identidade ===)', () => {
+    const engine = selectEngine(base, baseConfig({ multilingualSegments: false }), AVAILABLE, cache);
+    expect(engine).toBe(base);
+  });
+
+  it('flag ON -> embrulha o base num MultiSegmentEngine', () => {
+    const engine = selectEngine(base, baseConfig({ multilingualSegments: true }), AVAILABLE, cache);
+    expect(engine).toBeInstanceOf(MultiSegmentEngine);
+    expect(engine).not.toBe(base);
   });
 });

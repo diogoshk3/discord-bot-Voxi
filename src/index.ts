@@ -4,7 +4,7 @@ import { loadConfig } from './config/index';
 import { log } from './logging/logger';
 import { initDb } from './store/db';
 import { AudioCache } from './tts/cache';
-import { createEngine } from './tts/factory';
+import { createEngine, selectEngine } from './tts/factory';
 import { GuildVoicePlayer } from './voice/player';
 import type { BotDeps } from './bot/deps';
 import { createClient, bindEvents } from './bot/client';
@@ -25,11 +25,22 @@ async function main(): Promise<void> {
   const config = loadConfig();
   const db = initDb(config.dbPath);
   const cache = new AudioCache(path.join(path.dirname(config.dbPath), 'audio-cache'));
-  const engine = createEngine(config, cache);
 
   const availableModels = discoverModels(config.modelsDir);
   if (availableModels.length === 0) {
     log.warn(`[index] nenhum modelo .onnx em ${config.modelsDir} — /voice list ficara vazio.`);
+  }
+
+  // Motor base (Piper/Neural). P14.4: selectEngine embrulha-o num
+  // MultiSegmentEngine SO se a flag EXPERIMENTAL multilingualSegments estiver ON.
+  // Com a flag OFF (default), devolve o motor base tal e qual — caminho
+  // byte-a-byte o de hoje.
+  const baseEngine = createEngine(config, cache);
+  const engine = selectEngine(baseEngine, config, availableModels, cache);
+  if (config.multilingualSegments) {
+    log.warn(
+      '[index] MULTILINGUAL_SEGMENTS ON — sintese multi-lingua por-segmento EXPERIMENTAL ativa.',
+    );
   }
 
   const client = createClient();

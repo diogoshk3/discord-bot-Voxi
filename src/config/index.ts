@@ -24,6 +24,10 @@ export interface AppConfig {
   // Secret ausente => webhook sem auth (inseguro; recomenda-se sempre defini-lo).
   topggWebhookPort?: number;
   topggWebhookSecret?: string;
+  // P14.4 — flag EXPERIMENTAL (default OFF). Quando ON, textos com mais do que
+  // uma lingua sao sintetizados POR-SEGMENTO (voz certa por lingua) e os WAVs
+  // concatenados. OFF => comportamento inalterado (voz unica por frase).
+  multilingualSegments: boolean;
 }
 
 function requireEnv(name: string): string {
@@ -58,6 +62,17 @@ function numEnvOptional(name: string): number | undefined {
   if (raw === undefined || raw.trim() === '') return undefined;
   const parsed = Number(raw);
   return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+/**
+ * Flag booleana OPT-IN: default `false`. So o valor exato 'true' (case-insensitive)
+ * liga; qualquer outra coisa (ausente, vazio, '1', 'yes', typo) fica `false`.
+ * Escolha conservadora — uma feature experimental so liga com intencao explicita.
+ */
+function boolEnv(name: string): boolean {
+  const raw = process.env[name];
+  if (raw === undefined) return false;
+  return raw.trim().toLowerCase() === 'true';
 }
 
 /**
@@ -117,5 +132,8 @@ export function loadConfig(): AppConfig {
     // dedicada, separada do HEALTH_PORT de proposito.
     topggWebhookPort: numEnvOptional('TOPGG_WEBHOOK_PORT'),
     topggWebhookSecret: strEnv('TOPGG_WEBHOOK_SECRET', '') || undefined,
+    // P14.4 — sintese multi-lingua por-segmento (EXPERIMENTAL). Default OFF: sem
+    // esta env (ou != 'true'), o comportamento e exatamente o de hoje (voz unica).
+    multilingualSegments: boolEnv('MULTILINGUAL_SEGMENTS'),
   };
 }
