@@ -1,5 +1,6 @@
 import { Client, GatewayIntentBits, Partials, Events, Interaction, Message, Guild } from 'discord.js';
 import type { BotDeps } from './deps';
+import { handleGuildDelete } from './deps';
 import { handleInteraction, handleAutocomplete } from '../commands/index';
 import { handleMessage } from '../commands/messageHandler';
 import { buildPresence } from './presence';
@@ -68,6 +69,16 @@ export function bindEvents(deps: BotDeps): void {
         log.warn('[client] falha ao enviar welcome embed (ignorado)', err);
       }
     })();
+  });
+
+  // guildDelete — o Voxi saiu (kick/leave) ou perdeu acesso a uma guild. Libertar
+  // os recursos retidos por guildId (limiter + player) para nao vazar memoria em
+  // uptime longo. Toda a logica testavel esta em handleGuildDelete (deps.ts);
+  // aqui so ligamos o evento. Nota: o Discord tambem dispara isto em outages
+  // transitorios (guild.available === false) — destruir o player nesse caso e
+  // inofensivo (e recriado on-demand quando a guild volta).
+  client.on(Events.GuildDelete, (guild: Guild) => {
+    handleGuildDelete(deps, guild.id);
   });
 
   client.on(Events.Error, (err) => {
