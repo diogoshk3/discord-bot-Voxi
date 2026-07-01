@@ -125,7 +125,7 @@ describe('PiperEngine.synth — spawn mockado (EPIPE / falhas)', () => {
     await expect(p).rejects.toThrow(/saiu com codigo 2: bad model/);
   });
 
-  it('calibração: spawn recebe --length_scale 1.5 para pt_PT-tugao-medium', async () => {
+  it('calibração: spawn recebe --length_scale ~1.65 para pt_PT-tugao-medium (1.5 ×1.10 orgânico)', async () => {
     const child = makeFakeChild();
     spawnMock.mockReturnValue(child as never);
     const calibReq: SynthRequest = { text: 'ola', model: 'pt_PT-tugao-medium', speed: 1 };
@@ -135,7 +135,9 @@ describe('PiperEngine.synth — spawn mockado (EPIPE / falhas)', () => {
     const args = spawnMock.mock.calls[0][1] as string[];
     const idx = args.indexOf('--length_scale');
     expect(idx).toBeGreaterThanOrEqual(0);
-    expect(args[idx + 1]).toBe('1.5');
+    // 1.5 × 1.10 = 1.6500000000000001 em ponto flutuante; o arg é String(number),
+    // por isso comparamos numericamente com tolerância.
+    expect(Number(args[idx + 1])).toBeCloseTo(1.65);
 
     // settle a promise para nao deixar rejeicao pendente
     child.emit('close', 1);
@@ -143,9 +145,9 @@ describe('PiperEngine.synth — spawn mockado (EPIPE / falhas)', () => {
   });
 
   // Params de qualidade: com o engine construido SEM overrides (defaults do
-  // Piper), os args levam noise_scale/noise_w/sentence_silence nos defaults do
-  // Piper E o length_scale continua com a calibracao (tugao ×1.5). Zero regressao.
-  it('defaults de qualidade: args levam --noise_scale/--noise_w/--sentence_silence nos defaults do Piper, length_scale intacto', async () => {
+  // preset ORGÂNICO), os args levam noise_scale/noise_w/sentence_silence nos
+  // defaults orgânicos E o length_scale reflete a calibracao ×1.10 (tugao ~1.65).
+  it('defaults de qualidade: args levam --noise_scale/--noise_w/--sentence_silence nos defaults orgânicos, length_scale ×1.10', async () => {
     const child = makeFakeChild();
     spawnMock.mockReturnValue(child as never);
     const calibReq: SynthRequest = { text: 'ola', model: 'pt_PT-tugao-medium', speed: 1 };
@@ -155,19 +157,19 @@ describe('PiperEngine.synth — spawn mockado (EPIPE / falhas)', () => {
     const args = spawnMock.mock.calls[0][1] as string[];
 
     const ls = args.indexOf('--length_scale');
-    expect(args[ls + 1]).toBe('1.5'); // calibracao tugao preservada
+    expect(Number(args[ls + 1])).toBeCloseTo(1.65); // calibracao tugao (1.5) × 1.10 orgânico
 
     const ns = args.indexOf('--noise_scale');
     expect(ns).toBeGreaterThanOrEqual(0);
-    expect(args[ns + 1]).toBe('0.667');
+    expect(args[ns + 1]).toBe('0.75');
 
     const nw = args.indexOf('--noise_w');
     expect(nw).toBeGreaterThanOrEqual(0);
-    expect(args[nw + 1]).toBe('0.8');
+    expect(args[nw + 1]).toBe('0.95');
 
     const ss = args.indexOf('--sentence_silence');
     expect(ss).toBeGreaterThanOrEqual(0);
-    expect(args[ss + 1]).toBe('0.2');
+    expect(args[ss + 1]).toBe('0.4');
 
     child.emit('close', 1);
     await expect(p).rejects.toThrow();

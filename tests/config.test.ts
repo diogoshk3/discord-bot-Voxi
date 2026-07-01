@@ -268,30 +268,32 @@ describe('loadConfig', () => {
     expect(loadConfig().multilingualSegments).toBe(false);
   });
 
-  // Params de qualidade Piper (noiseScale/noiseW/sentenceSilence). Defaults
-  // IGUAIS aos defaults do proprio Piper => sem qualquer mudanca audivel. Env
-  // opcional e numerica (numEnv: invalido/ausente => fallback ao default).
-  it('applies Piper synth-quality defaults when env missing (0.667 / 0.8 / 0.2)', () => {
+  // Params de qualidade Piper (noiseScale/noiseW/sentenceSilence). Defaults =
+  // preset ORGÂNICO (0.75 / 0.95 / 0.4) escolhido em A/B pelo operador: som mais
+  // natural. Env opcional e numerica (numEnv: invalido/ausente => fallback ao default).
+  it('applies organic synth-quality defaults when env missing (0.75 / 0.95 / 0.4)', () => {
     setEnv(REQUIRED);
     const cfg = loadConfig();
-    expect(cfg.noiseScale).toBe(0.667);
-    expect(cfg.noiseW).toBe(0.8);
-    expect(cfg.sentenceSilence).toBe(0.2);
-  });
-
-  it('parses NOISE_SCALE / NOISE_W / SENTENCE_SILENCE overrides from env', () => {
-    setEnv({ ...REQUIRED, NOISE_SCALE: '0.5', NOISE_W: '0.9', SENTENCE_SILENCE: '0.4' });
-    const cfg = loadConfig();
-    expect(cfg.noiseScale).toBe(0.5);
-    expect(cfg.noiseW).toBe(0.9);
+    expect(cfg.noiseScale).toBe(0.75);
+    expect(cfg.noiseW).toBe(0.95);
     expect(cfg.sentenceSilence).toBe(0.4);
   });
 
-  it('falls back to defaults when synth-quality env is not a number', () => {
+  it('parses NOISE_SCALE / NOISE_W / SENTENCE_SILENCE overrides from env', () => {
+    // Env continua a mandar por cima do default orgânico (valores != aos defaults
+    // para provar de forma inequívoca que o override ganha).
+    setEnv({ ...REQUIRED, NOISE_SCALE: '0.5', NOISE_W: '0.9', SENTENCE_SILENCE: '0.3' });
+    const cfg = loadConfig();
+    expect(cfg.noiseScale).toBe(0.5);
+    expect(cfg.noiseW).toBe(0.9);
+    expect(cfg.sentenceSilence).toBe(0.3);
+  });
+
+  it('falls back to organic defaults when synth-quality env is not a number', () => {
     setEnv({ ...REQUIRED, NOISE_SCALE: 'abc', NOISE_W: '', SENTENCE_SILENCE: 'xyz' });
     const cfg = loadConfig();
-    expect(cfg.noiseScale).toBe(0.667);
-    expect(cfg.noiseW).toBe(0.8);
-    expect(cfg.sentenceSilence).toBe(0.2);
+    expect(cfg.noiseScale).toBe(0.75);
+    expect(cfg.noiseW).toBe(0.95);
+    expect(cfg.sentenceSilence).toBe(0.4);
   });
 });

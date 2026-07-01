@@ -20,26 +20,36 @@ export const VOICE_CALIBRATION: Record<string, number> = {
 };
 
 /**
- * length_scale efetivo para um pedido: aplica a calibração da voz (default 1)
- * e divide pela velocidade do utilizador (speed>0; valores inválidos => 1).
- * Piper: length_scale baixo = mais rápido; alto = mais lento.
+ * Fator de length_scale GLOBAL do preset ORGÂNICO (escolhido em A/B pelo
+ * operador: "organic forte"). Multiplica POR CIMA da calibração por-voz para
+ * abrandar ligeiramente TODAS as vozes — fala menos apressada, som mais natural.
+ * 1.10 = +10% de duração. Compõe-se com VOICE_CALIBRATION (que NÃO muda): p.ex.
+ * uma voz sem calibração (1) resolve a 1.10; o tugão (1.5) resolve a 1.65.
+ */
+export const ORGANIC_LENGTH_SCALE = 1.1;
+
+/**
+ * length_scale efetivo para um pedido: aplica a calibração da voz (default 1),
+ * multiplica pelo fator ORGÂNICO global (ORGANIC_LENGTH_SCALE) e divide pela
+ * velocidade do utilizador (speed>0; valores inválidos => 1). Piper: length_scale
+ * baixo = mais rápido; alto = mais lento. Esta é a ÚNICA fonte do --length_scale.
  */
 export function lengthScaleFor(model: string, speed: number): number {
   const safeSpeed = speed > 0 ? speed : 1;
   const calibration = VOICE_CALIBRATION[model] ?? 1;
-  return calibration / safeSpeed;
+  return (calibration * ORGANIC_LENGTH_SCALE) / safeSpeed;
 }
 
 /**
  * Parâmetros de QUALIDADE de síntese do Piper (independentes da velocidade).
- * Correspondem a flags do binário; os defaults globais devem ser IGUAIS aos
- * defaults do próprio Piper para não haver mudança audível:
- *   noiseScale (--noise_scale)      default 0.667
- *   noiseW     (--noise_w)          default 0.8
- *   sentenceSilence (--sentence_silence) default 0.2 (segundos)
+ * Correspondem a flags do binário. Os defaults globais são o preset ORGÂNICO
+ * (escolhido em A/B pelo operador: som mais natural), NÃO os defaults do Piper:
+ *   noiseScale (--noise_scale)      0.75 (Piper: 0.667) — mais variação tímbrica
+ *   noiseW     (--noise_w)          0.95 (Piper: 0.8)   — mais variação de duração
+ *   sentenceSilence (--sentence_silence) 0.4 (Piper: 0.2) segundos — respira mais
  *
  * NB: o length_scale NÃO vive aqui — continua a ser a única fonte a função
- * lengthScaleFor (calibração da voz × velocidade do utilizador). Ver abaixo.
+ * lengthScaleFor (calibração da voz × ORGANIC_LENGTH_SCALE / velocidade). Ver acima.
  */
 export interface SynthParams {
   noiseScale: number;
@@ -48,15 +58,16 @@ export interface SynthParams {
 }
 
 /**
- * Defaults do PRÓPRIO Piper. Fonte ÚNICA — referenciados pela config (fallback
- * das envs NOISE_SCALE/NOISE_W/SENTENCE_SILENCE) E pelo fallback do construtor
- * do PiperEngine, para que os dois nunca divirjam. Mantê-los aqui garante que,
- * sem qualquer env nem override, o output é byte-a-byte o de hoje.
+ * Defaults GLOBAIS de síntese = preset ORGÂNICO "forte" (escolhido em A/B pelo
+ * operador). Fonte ÚNICA — referenciados pela config (fallback das envs
+ * NOISE_SCALE/NOISE_W/SENTENCE_SILENCE) E pelo fallback do construtor do
+ * PiperEngine, para que os dois nunca divirjam. Continuam env-overridable; estes
+ * são apenas o novo default de fábrica (mais natural que os defaults do Piper).
  */
 export const PIPER_DEFAULT_SYNTH_PARAMS: SynthParams = {
-  noiseScale: 0.667,
-  noiseW: 0.8,
-  sentenceSilence: 0.2,
+  noiseScale: 0.75,
+  noiseW: 0.95,
+  sentenceSilence: 0.4,
 };
 
 /**

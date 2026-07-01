@@ -24,7 +24,7 @@ export function createEngine(config: AppConfig, cache: AudioCache): TTSEngine {
   }
   return new PiperEngine(config.piperPath, config.modelsDir, cache.withNamespace('piper'), {
     // Params de qualidade globais vindos da config (envs NOISE_*/SENTENCE_SILENCE).
-    // Defaults = defaults do Piper => sem regressao audivel se as envs nao existirem.
+    // Defaults = preset ORGANICO (0.75/0.95/0.4) quando as envs nao existirem.
     noiseScale: config.noiseScale,
     noiseW: config.noiseW,
     sentenceSilence: config.sentenceSilence,

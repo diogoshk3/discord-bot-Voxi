@@ -35,8 +35,8 @@ export class PiperEngine implements TTSEngine {
   private readonly modelsDir: string;
   private readonly cache: AudioCache;
   // Defaults GLOBAIS de qualidade (noise_scale/noise_w/sentence_silence). Param
-  // opcional: ausente => defaults do proprio Piper => output inalterado. A config
-  // (factory) injeta aqui os valores globais vindos das envs NOISE_*.
+  // opcional: ausente => preset ORGANICO (PIPER_DEFAULT_SYNTH_PARAMS = 0.75/0.95/0.4).
+  // A config (factory) injeta aqui os valores globais vindos das envs NOISE_*.
   private readonly synthDefaults: SynthParams;
 
   constructor(

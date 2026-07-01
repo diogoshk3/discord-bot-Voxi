@@ -8,26 +8,29 @@ import {
   type SynthParams,
 } from '../src/tts/calibration';
 
-describe('lengthScaleFor — calibração de velocidade por-voz', () => {
-  it('voz sem calibração: length_scale = 1/speed (comportamento antigo preservado)', () => {
-    expect(lengthScaleFor('en_US-amy-medium', 1)).toBe(1);
-    expect(lengthScaleFor('en_US-amy-medium', 2)).toBe(0.5);
-    expect(lengthScaleFor('en_US-amy-medium', 0.5)).toBe(2);
+describe('lengthScaleFor — calibração de velocidade por-voz (preset ORGÂNICO ×1.10)', () => {
+  it('voz sem calibração: length_scale = 1.10/speed (fator orgânico global aplicado)', () => {
+    // Preset orgânico: fala menos apressada => ×1.10 por cima da calibração (1).
+    expect(lengthScaleFor('en_US-amy-medium', 1)).toBeCloseTo(1.1);
+    expect(lengthScaleFor('en_US-amy-medium', 2)).toBeCloseTo(0.55);
+    expect(lengthScaleFor('en_US-amy-medium', 0.5)).toBeCloseTo(2.2);
   });
 
-  it('tugão (pt_PT) tem calibração 1.5 e aplica-a a velocidade normal', () => {
+  it('tugão (pt_PT) mantém calibração 1.5 mas resolve a 1.65 efetivo (×1.10 orgânico)', () => {
+    // A VOICE_CALIBRATION NÃO muda (continua 1.5); o ×1.10 orgânico compõe-se por cima.
     expect(VOICE_CALIBRATION['pt_PT-tugao-medium']).toBe(1.5);
-    expect(lengthScaleFor('pt_PT-tugao-medium', 1)).toBe(1.5);
+    expect(lengthScaleFor('pt_PT-tugao-medium', 1)).toBeCloseTo(1.65);
   });
 
-  it('a calibração compõe-se com a velocidade do utilizador (multiplicativa)', () => {
-    expect(lengthScaleFor('pt_PT-tugao-medium', 0.5)).toBe(3);
-    expect(lengthScaleFor('pt_PT-tugao-medium', 2)).toBe(0.75);
+  it('a calibração compõe-se com a velocidade do utilizador (multiplicativa) e o ×1.10', () => {
+    // 1.5 × 1.10 / 0.5 = 3.3 ; 1.5 × 1.10 / 2 = 0.825
+    expect(lengthScaleFor('pt_PT-tugao-medium', 0.5)).toBeCloseTo(3.3);
+    expect(lengthScaleFor('pt_PT-tugao-medium', 2)).toBeCloseTo(0.825);
   });
 
   it('speed inválido (0 ou negativo) trata como 1', () => {
-    expect(lengthScaleFor('en_US-amy-medium', 0)).toBe(1);
-    expect(lengthScaleFor('pt_PT-tugao-medium', -3)).toBe(1.5);
+    expect(lengthScaleFor('en_US-amy-medium', 0)).toBeCloseTo(1.1);
+    expect(lengthScaleFor('pt_PT-tugao-medium', -3)).toBeCloseTo(1.65);
   });
 });
 
