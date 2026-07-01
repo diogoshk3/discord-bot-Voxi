@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { log } from '../logging/logger';
+import { PIPER_DEFAULT_SYNTH_PARAMS } from '../tts/calibration';
 
 export type TtsEngineKind = 'piper' | 'neural';
 
@@ -28,6 +29,14 @@ export interface AppConfig {
   // uma lingua sao sintetizados POR-SEGMENTO (voz certa por lingua) e os WAVs
   // concatenados. OFF => comportamento inalterado (voz unica por frase).
   multilingualSegments: boolean;
+  // Params de QUALIDADE de sintese do Piper, configuraveis globalmente. Defaults
+  // IGUAIS aos defaults do proprio Piper (0.667 / 0.8 / 0.2s) => sem mudanca
+  // audivel por defeito. Sao a superficie global; a afinacao por-voz vive em
+  // VOICE_PARAM_OVERRIDES (src/tts/calibration.ts). Escolher valores melhores
+  // que o default e decisao de ouvido do operador.
+  noiseScale: number;
+  noiseW: number;
+  sentenceSilence: number;
 }
 
 function requireEnv(name: string): string {
@@ -135,5 +144,11 @@ export function loadConfig(): AppConfig {
     // P14.4 — sintese multi-lingua por-segmento (EXPERIMENTAL). Default OFF: sem
     // esta env (ou != 'true'), o comportamento e exatamente o de hoje (voz unica).
     multilingualSegments: boolEnv('MULTILINGUAL_SEGMENTS'),
+    // Params de qualidade Piper. Defaults = defaults do proprio Piper (fonte
+    // unica em PIPER_DEFAULT_SYNTH_PARAMS) => sem regressao audivel. numEnv faz
+    // parsing seguro: env ausente/vazia/nao-numerica cai no default.
+    noiseScale: numEnv('NOISE_SCALE', PIPER_DEFAULT_SYNTH_PARAMS.noiseScale),
+    noiseW: numEnv('NOISE_W', PIPER_DEFAULT_SYNTH_PARAMS.noiseW),
+    sentenceSilence: numEnv('SENTENCE_SILENCE', PIPER_DEFAULT_SYNTH_PARAMS.sentenceSilence),
   };
 }

@@ -22,7 +22,13 @@ export function createEngine(config: AppConfig, cache: AudioCache): TTSEngine {
     }
     return new NeuralEngine(config.openaiApiKey, cache.withNamespace('neural'));
   }
-  return new PiperEngine(config.piperPath, config.modelsDir, cache.withNamespace('piper'));
+  return new PiperEngine(config.piperPath, config.modelsDir, cache.withNamespace('piper'), {
+    // Params de qualidade globais vindos da config (envs NOISE_*/SENTENCE_SILENCE).
+    // Defaults = defaults do Piper => sem regressao audivel se as envs nao existirem.
+    noiseScale: config.noiseScale,
+    noiseW: config.noiseW,
+    sentenceSilence: config.sentenceSilence,
+  });
 }
 
 /**

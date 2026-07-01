@@ -5,7 +5,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { SynthRequest, TTSEngine } from './engine';
 import { AudioCache, cacheKey } from './cache';
-import { lengthScaleFor } from './calibration';
+import {
+  lengthScaleFor,
+  synthParamsFor,
+  PIPER_DEFAULT_SYNTH_PARAMS,
+  type SynthParams,
+} from './calibration';
 
 const PIPER_TIMEOUT_MS = 15000;
 
@@ -28,11 +33,21 @@ export class PiperEngine implements TTSEngine {
   private readonly piperPath: string;
   private readonly modelsDir: string;
   private readonly cache: AudioCache;
+  // Defaults GLOBAIS de qualidade (noise_scale/noise_w/sentence_silence). Param
+  // opcional: ausente => defaults do proprio Piper => output inalterado. A config
+  // (factory) injeta aqui os valores globais vindos das envs NOISE_*.
+  private readonly synthDefaults: SynthParams;
 
-  constructor(piperPath: string, modelsDir: string, cache: AudioCache) {
+  constructor(
+    piperPath: string,
+    modelsDir: string,
+    cache: AudioCache,
+    synthDefaults: SynthParams = PIPER_DEFAULT_SYNTH_PARAMS,
+  ) {
     this.piperPath = piperPath;
     this.modelsDir = modelsDir;
     this.cache = cache;
+    this.synthDefaults = synthDefaults;
   }
 
   async synth(req: SynthRequest): Promise<string> {
@@ -50,12 +65,15 @@ export class PiperEngine implements TTSEngine {
     }
 
     const lengthScale = lengthScaleFor(req.model, req.speed);
+    // Params de qualidade: defaults globais + override por-voz (VAZIO hoje). O
+    // length_scale NAO passa por aqui — continua a vir so de lengthScaleFor.
+    const params = synthParamsFor(req.model, this.synthDefaults);
 
     const workDir = mkdtempSync(join(tmpdir(), 'piper-'));
     const outPath = join(workDir, 'out.wav');
 
     try {
-      await this.runPiper(modelPath, outPath, lengthScale, req.text);
+      await this.runPiper(modelPath, outPath, lengthScale, params, req.text);
 
       if (!existsSync(outPath) || statSync(outPath).size === 0) {
         throw new Error('Piper nao gerou WAV (ficheiro vazio ou inexistente)');
@@ -71,9 +89,13 @@ export class PiperEngine implements TTSEngine {
     modelPath: string,
     outPath: string,
     lengthScale: number,
+    params: SynthParams,
     text: string,
   ): Promise<void> {
     return new Promise<void>((resolve, reject) => {
+      // Flags de qualidade em underscore, a espelhar o estilo de --length_scale.
+      // Todos os valores sao NUMEROS de config/calibracao (nunca strings de
+      // utilizador) — formatados com String(); nada nao-confiavel entra nos args.
       const args = [
         '--model',
         modelPath,
@@ -81,6 +103,12 @@ export class PiperEngine implements TTSEngine {
         outPath,
         '--length_scale',
         String(lengthScale),
+        '--noise_scale',
+        String(params.noiseScale),
+        '--noise_w',
+        String(params.noiseW),
+        '--sentence_silence',
+        String(params.sentenceSilence),
       ];
 
       const child = spawn(this.piperPath, args, {

@@ -37,6 +37,9 @@ describe('loadConfig', () => {
       TOPGG_WEBHOOK_SECRET: undefined,
       BOT_SHARDS: undefined,
       MULTILINGUAL_SEGMENTS: undefined,
+      NOISE_SCALE: undefined,
+      NOISE_W: undefined,
+      SENTENCE_SILENCE: undefined,
       // tambem limpamos a env reservada do discord.js para o teste de regressao
       // partir de um estado conhecido (so um teste a define de proposito).
       SHARDS: undefined,
@@ -263,5 +266,32 @@ describe('loadConfig', () => {
     expect(loadConfig().multilingualSegments).toBe(false);
     setEnv({ ...REQUIRED, MULTILINGUAL_SEGMENTS: 'yes' });
     expect(loadConfig().multilingualSegments).toBe(false);
+  });
+
+  // Params de qualidade Piper (noiseScale/noiseW/sentenceSilence). Defaults
+  // IGUAIS aos defaults do proprio Piper => sem qualquer mudanca audivel. Env
+  // opcional e numerica (numEnv: invalido/ausente => fallback ao default).
+  it('applies Piper synth-quality defaults when env missing (0.667 / 0.8 / 0.2)', () => {
+    setEnv(REQUIRED);
+    const cfg = loadConfig();
+    expect(cfg.noiseScale).toBe(0.667);
+    expect(cfg.noiseW).toBe(0.8);
+    expect(cfg.sentenceSilence).toBe(0.2);
+  });
+
+  it('parses NOISE_SCALE / NOISE_W / SENTENCE_SILENCE overrides from env', () => {
+    setEnv({ ...REQUIRED, NOISE_SCALE: '0.5', NOISE_W: '0.9', SENTENCE_SILENCE: '0.4' });
+    const cfg = loadConfig();
+    expect(cfg.noiseScale).toBe(0.5);
+    expect(cfg.noiseW).toBe(0.9);
+    expect(cfg.sentenceSilence).toBe(0.4);
+  });
+
+  it('falls back to defaults when synth-quality env is not a number', () => {
+    setEnv({ ...REQUIRED, NOISE_SCALE: 'abc', NOISE_W: '', SENTENCE_SILENCE: 'xyz' });
+    const cfg = loadConfig();
+    expect(cfg.noiseScale).toBe(0.667);
+    expect(cfg.noiseW).toBe(0.8);
+    expect(cfg.sentenceSilence).toBe(0.2);
   });
 });
