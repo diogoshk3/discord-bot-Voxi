@@ -44,8 +44,8 @@ export const catalog: Record<string, Entry> = {
     pt: 'Preciso das permissoes **Ligar** e **Falar** em {channel}.',
   },
   'join.joined': {
-    en: "I'm in {channel} now — start talking and I'll read it out.",
-    pt: 'Entrei em {channel} — escreve e eu leio em voz alta.',
+    en: "I'm in {channel}! Use /tts <text> to make me speak, or run /setup to auto-read a text channel.",
+    pt: 'Entrei em {channel}! Usa /tts <texto> para eu falar, ou corre /setup para ler um canal automaticamente.',
   },
   'leave.left': {
     en: 'Left the voice channel. See you next time!',

@@ -121,6 +121,11 @@ describe('handleJoin — permissoes Connect/Speak', () => {
     expect(joinVoiceChannel).toHaveBeenCalledTimes(1);
     // Migrado PT->EN (P16.2): confirmacao de entrada menciona o canal.
     expect(i.replies.some((r) => /Geral/.test(r))).toBe(true);
+    // A mensagem NAO deve prometer auto-leitura (so /setup a liga). Tem de sugerir
+    // /setup (para auto-ler um canal) e /tts (para falar ja) — sem enganar o iniciante.
+    const joinedText = i.replies.join(' ');
+    expect(joinedText).toContain('/setup');
+    expect(joinedText).toContain('/tts');
 
     // Limpeza: destruir o player criado para nao deixar timers pendurados.
     const player = deps.players.get('g1');
