@@ -104,6 +104,14 @@ describe('/config max-chars — validacao de range', () => {
     expect(getGuildConfig(db, GUILD).maxChars).toBe(300);
   });
 
+  it('rejeita valor 9999 (muito acima do maximo) e nao persiste', async () => {
+    const i = makeConfigInteraction({ sub: 'max-chars', optionsMap: { valor: 9999 } });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(i.replies.some((r) => /max-chars|entre|1.*2000|2000.*1/i.test(r))).toBe(true);
+    expect(getGuildConfig(db, GUILD).maxChars).toBe(300); // default intacto
+  });
+
   it('aceita valor 500 e persiste', async () => {
     const i = makeConfigInteraction({ sub: 'max-chars', optionsMap: { valor: 500 } });
     const deps = makeConfigDeps(db);
@@ -153,6 +161,14 @@ describe('/config rate-limit — validacao de range', () => {
     await handleInteraction(i as any, deps);
     expect(i.replies.some((r) => /rate-limit|entre|1.*120|120.*1/i.test(r))).toBe(true);
     expect(getGuildConfig(db, GUILD).ratePerMin).toBe(5);
+  });
+
+  it('rejeita valor 9999 (muito acima do maximo) e nao persiste', async () => {
+    const i = makeConfigInteraction({ sub: 'rate-limit', optionsMap: { valor: 9999 } });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(i.replies.some((r) => /rate-limit|entre|1.*120|120.*1/i.test(r))).toBe(true);
+    expect(getGuildConfig(db, GUILD).ratePerMin).toBe(5); // default intacto
   });
 
   it('aceita valor 10 e persiste', async () => {
