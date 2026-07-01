@@ -70,4 +70,18 @@ describe('/skip — distingue "nada a tocar" de "saltei" (P18.3)', () => {
     expect(i.replies.some((r) => /skipped/i.test(r))).toBe(true);
     expect(i.replies.some((r) => /nothing/i.test(r))).toBe(false);
   });
+
+  // Beginner-friendly: sem player (bot fora da voz) a mensagem GUIA a correr /join
+  // em vez de so constatar "not in a voice channel".
+  it('sem player responde uma mensagem que GUIA a correr /join', async () => {
+    const deps = makeDeps(); // sem player
+    const i = makeSkipInteraction();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await handleInteraction(i as any, deps);
+
+    const text = i.replies.join('\n');
+    expect(text).toMatch(/\/join/);
+    expect(text).toMatch(/voice channel/i);
+  });
 });

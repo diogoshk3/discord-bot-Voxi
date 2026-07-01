@@ -52,8 +52,8 @@ export const catalog: Record<string, Entry> = {
     pt: 'Sai do canal de voz. Ate a proxima!',
   },
   'skip.notInVoice': {
-    en: "I'm not in a voice channel right now.",
-    pt: 'Nao estou num canal de voz de momento.',
+    en: "I'm not in a voice channel yet — join one and run /join first, then try again.",
+    pt: 'Ainda nao estou num canal de voz — entra num e corre /join primeiro, depois tenta outra vez.',
   },
   'skip.skipped': {
     en: 'Skipped.',
@@ -64,17 +64,19 @@ export const catalog: Record<string, Entry> = {
     en: 'Nothing is playing right now.',
     pt: 'Não está nada a tocar de momento.',
   },
+  // Partilhada por /tts, /joke e /laugh ("sem player" -> bot fora da voz). Guia o
+  // principiante: junta-te a uma call E corre /join, depois tenta outra vez.
   'tts.notInVoice': {
-    en: "I'm not in a voice channel yet — run /join first.",
-    pt: 'Ainda nao estou num canal de voz — usa /join primeiro.',
+    en: "I'm not in a voice channel yet — join one and run /join, then try again.",
+    pt: 'Ainda nao estou num canal de voz — entra num e corre /join, depois tenta outra vez.',
   },
   'tts.nothingToRead': {
-    en: "There's nothing to read there.",
-    pt: 'Nao ha nada para ler.',
+    en: "There's nothing to read there — send me some text to say.",
+    pt: 'Nao ha nada para ler — manda-me algum texto para eu dizer.',
   },
   'tts.nothingAfterClean': {
-    en: "After tidying that up there was nothing left to read.",
-    pt: 'Depois da limpeza nao sobrou nada para ler.',
+    en: "After tidying that up there was nothing left to read — try some normal text (letters or words).",
+    pt: 'Depois da limpeza nao sobrou nada para ler — tenta texto normal (letras ou palavras).',
   },
   'tts.tooFast': {
     en: "Whoa, slow down a little — try again in a moment.",
