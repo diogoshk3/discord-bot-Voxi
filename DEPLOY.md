@@ -149,6 +149,12 @@ docker compose logs -f voxi
 Esperado: uma linha tipo `[client] online como <bot>#<tag>`. Os slash commands são
 registados automaticamente no arranque — não corras `npm run register`.
 
+No arranque há também um health-check do ffmpeg: `[health] ffmpeg OK (<versão>)`. Se
+vires `[health] ffmpeg nao encontrado ou invalido …`, o binário do `ffmpeg-static`
+falta ou é da **plataforma errada** (ex.: um build Linux baixado como `ffmpeg.exe` no
+Windows). O bot arranca na mesma, mas a reprodução de voz vai falhar — corre no
+Windows `node node_modules/ffmpeg-static/install.js` para rebaixar o binário certo.
+
 ### Health endpoint (uptime monitor, opcional)
 
 Desligado por defeito. Define `HEALTH_PORT` (ex.: `HEALTH_PORT=8080`) no `.env` para

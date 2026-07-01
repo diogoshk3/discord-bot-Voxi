@@ -11,6 +11,7 @@ import { createClient, bindEvents } from './bot/client';
 import { registerCommands } from './bot/registerCommands';
 import { installSignalHandlers } from './bot/shutdown';
 import { startHealthServer } from './health';
+import { checkFfmpeg } from './health/ffmpeg';
 import { startVoteWebhookServer } from './vote';
 
 function discoverModels(modelsDir: string): string[] {
@@ -29,6 +30,25 @@ async function main(): Promise<void> {
   const availableModels = discoverModels(config.modelsDir);
   if (availableModels.length === 0) {
     log.warn(`[index] nenhum modelo .onnx em ${config.modelsDir} — /voice list ficara vazio.`);
+  }
+
+  // P13.2 — health-check do ffmpeg no ARRANQUE. O @discordjs/voice transcodifica
+  // o audio via prism-media -> ffmpeg; se o binario faltar/for da plataforma
+  // errada, a 1a reproducao rebentava tarde com um unhandledRejection cru. Aqui
+  // verificamos cedo e, se falhar, logamos um ERRO CLARO e acionavel (loud &
+  // early — foi exatamente este o modo de falha silencioso do 1o teste ao vivo).
+  // NAO fazemos process.exit/throw: o bot arranca na mesma (so a reproducao e que
+  // falharia), o objetivo e trocar o erro tardio por um aviso antecipado. O check
+  // vai em try/catch para nunca poder impedir o boot.
+  try {
+    const ff = checkFfmpeg();
+    if (ff.ok) {
+      log.info(`[health] ffmpeg OK (${ff.version})`);
+    } else {
+      log.error(`[health] ${ff.error}`);
+    }
+  } catch (err) {
+    log.error('[health] falha inesperada no health-check do ffmpeg (ignorado)', err);
   }
 
   // Motor base (Piper/Neural). P14.4: selectEngine embrulha-o num
