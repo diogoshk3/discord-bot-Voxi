@@ -39,6 +39,7 @@ import { resolveSynth } from './resolveSynth';
 import type { SynthRequest } from '../tts/engine';
 import { modelDisplayName } from '../language/voiceMap';
 import { laughterFor } from '../content/laughter';
+import { JOKE_LANGUAGES, jokeLangByKey, pickJoke } from '../content/jokes';
 import { log } from '../logging/logger';
 import {
   t,
@@ -550,6 +551,49 @@ async function handleLaugh(i: ChatInputCommandInteraction, deps: BotDeps): Promi
   // say() devolve false quando a fila esta no cap: nesse caso reutilizamos tts.busy.
   const queued = await player.say(req);
   await i.editReply(queued ? t('laugh.playing', locale) : t('tts.busy', locale));
+}
+
+/**
+ * /joke — conta uma piada curta na LINGUA escolhida (`idioma`, autocomplete). A voz
+ * e escolhida pela LINGUA (primeiro modelo de deps.availableModels cujo nome comeca
+ * pelo prefixo da lingua; se nenhum, cai no default da guild/.env). Se `risos` for
+ * true, acrescenta o riso dessa lingua no fim. Como a lingua e CONHECIDA (escolhida,
+ * nao detetada), construimos o SynthRequest diretamente — sem resolveSynth/detectLang
+ * (mesma logica do /voice preview e do /laugh).
+ */
+async function handleJoke(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
+  await i.deferReply({ flags: MessageFlags.Ephemeral });
+  const locale = localeFor(deps, i.guildId);
+  const player = getPlayer(deps, i.guildId!);
+  if (!player) {
+    await i.editReply(t('tts.notInVoice', locale));
+    return;
+  }
+  const langKey = i.options.getString('idioma', true);
+  const lang = jokeLangByKey(langKey);
+  if (!lang) {
+    await i.editReply(t('joke.unknownLang', locale));
+    return;
+  }
+  const risos = i.options.getBoolean('risos', true);
+
+  // Voz para a lingua escolhida: 1.º modelo instalado com o prefixo; se nao houver
+  // (a lingua nao tem modelo instalado), cai no default da guild / .env / amy.
+  const cfg = getGuildConfig(deps.db, i.guildId!);
+  const model =
+    deps.availableModels.find((m) => m.startsWith(lang.prefix)) ||
+    cfg.defaultVoice ||
+    deps.config.defaultVoice ||
+    'en_US-amy-medium';
+
+  // pickJoke e PURO/seeded; em runtime usamos Date.now() como seed (variedade sem
+  // sacrificar a testabilidade determinista da funcao).
+  const joke = pickJoke(langKey, Date.now());
+  const text = risos ? `${joke} ${laughterFor(lang.prefix)}` : joke;
+  const req: SynthRequest = { text, model, speed: deps.config.defaultSpeed };
+  const queued = await player.say(req);
+  // Confirmacao inclui a piada escrita (o user ve o que esta a ser lido).
+  await i.editReply(queued ? t('joke.playing', locale, { joke }) : t('tts.busy', locale));
 }
 
 /**
@@ -1178,9 +1222,23 @@ export function filterModelChoices(
 }
 
 /**
+ * Filtra as linguas suportadas do /joke pelo que o utilizador escreve na opcao
+ * `idioma` (case-insensitive, por substring do display name em INGLES), limitado a
+ * 25 (maximo do Discord para autocomplete). Suportamos 34 linguas > 25, por isso o
+ * cap e mesmo necessario (uma query vazia excederia o limite). Pura e testavel.
+ */
+export function filterJokeLanguages(query: string): { name: string; value: string }[] {
+  const q = query.trim().toLowerCase();
+  return JOKE_LANGUAGES.filter((l) => l.display.toLowerCase().includes(q))
+    .map((l) => ({ name: l.display, value: l.key }))
+    .slice(0, 25);
+}
+
+/**
  * Autocomplete das opções `model` (/voice set, /voice preview, /config
- * default-voice): mostra as vozes REALMENTE instaladas para o utilizador
- * escolher de uma lista, em vez de escrever o nome à mão. Beginner-friendly.
+ * default-voice) e `idioma` (/joke): mostra as vozes REALMENTE instaladas / as
+ * linguas suportadas para o utilizador escolher de uma lista, em vez de escrever o
+ * nome à mão. Beginner-friendly. Qualquer outra opção -> [] (sem sugestões).
  */
 export async function handleAutocomplete(
   i: AutocompleteInteraction,
@@ -1188,11 +1246,15 @@ export async function handleAutocomplete(
 ): Promise<void> {
   try {
     const focused = i.options.getFocused(true);
-    if (focused.name !== 'model') {
-      await i.respond([]);
+    if (focused.name === 'model') {
+      await i.respond(filterModelChoices(deps.availableModels, focused.value));
       return;
     }
-    await i.respond(filterModelChoices(deps.availableModels, focused.value));
+    if (focused.name === 'idioma') {
+      await i.respond(filterJokeLanguages(focused.value));
+      return;
+    }
+    await i.respond([]);
   } catch (err) {
     log.error('[autocomplete] erro', err);
   }
@@ -1211,6 +1273,8 @@ export async function handleInteraction(i: ChatInputCommandInteraction, deps: Bo
         return await handleSkip(i, deps);
       case 'laugh':
         return await handleLaugh(i, deps);
+      case 'joke':
+        return await handleJoke(i, deps);
       case 'voice':
         return await handleVoice(i, deps);
       case 'config':
