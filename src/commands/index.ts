@@ -38,6 +38,7 @@ import { isBlocked } from '../moderation/filter';
 import { resolveSynth } from './resolveSynth';
 import type { SynthRequest } from '../tts/engine';
 import { modelDisplayName } from '../language/voiceMap';
+import { laughterFor } from '../content/laughter';
 import { log } from '../logging/logger';
 import {
   t,
@@ -115,6 +116,29 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
     .addStringOption((o) => o.setName('texto').setDescription('What to read').setRequired(true))
     .toJSON(),
   new SlashCommandBuilder().setName('skip').setDescription('Skip the current audio').toJSON(),
+  // /laugh — diversao por-utilizador (como /tts): o Voxi ri na voz ATUAL do user.
+  // Sem opcoes, sem gate de admin; exige um player ativo (user numa call).
+  new SlashCommandBuilder()
+    .setName('laugh')
+    .setDescription('Voxi laughs out loud in your current voice')
+    .toJSON(),
+  // /joke — conta uma piada curta na LINGUA escolhida. `idioma` usa AUTOCOMPLETE
+  // (nao choices): suportamos ~34 linguas e o Discord limita choices estaticas a
+  // 25. `risos` (obrigatorio) acrescenta uma gargalhada no fim.
+  new SlashCommandBuilder()
+    .setName('joke')
+    .setDescription('Voxi tells a short joke in the language you pick')
+    .addStringOption((o) =>
+      o
+        .setName('idioma')
+        .setDescription('Language of the joke')
+        .setRequired(true)
+        .setAutocomplete(true),
+    )
+    .addBooleanOption((o) =>
+      o.setName('risos').setDescription('Add laughter at the end?').setRequired(true),
+    )
+    .toJSON(),
   new SlashCommandBuilder()
     .setName('voice')
     .setDescription('Manage your voice')
@@ -485,6 +509,47 @@ async function handleSkip(i: ChatInputCommandInteraction, deps: BotDeps): Promis
   }
   player.skip();
   await reply(i, t('skip.skipped', locale));
+}
+
+/**
+ * Prefixo de locale a partir de um nome de modelo Piper: a parte inicial ate ao
+ * primeiro '_' inclusive (ex. 'en_US-amy-medium' -> 'en_', 'pt_PT-tugao' -> 'pt_').
+ * Se nao houver '_', devolve '' (o laughterFor cai no fallback "hahaha"). PURO.
+ * E o MESMO formato de prefixo usado em LANG_TO_PREFIX / pickVoice, para que
+ * laughterFor(prefix) e a escolha de voz falem a mesma lingua.
+ */
+export function localePrefixOf(model: string): string {
+  const us = model.indexOf('_');
+  return us === -1 ? '' : model.slice(0, us + 1);
+}
+
+/**
+ * /laugh — o Voxi ri na voz ATUALMENTE selecionada pelo utilizador. Por-utilizador
+ * (como /tts), sem gate de admin, mas exige um player ativo (user numa call). A voz
+ * e RESOLVIDA por precedencia (voz do user > default da guild > .env) e o riso e
+ * escolhido pela LINGUA dessa voz (nao por deteccao) — por isso construimos o
+ * SynthRequest DIRETAMENTE, sem passar por resolveSynth/detectLang (mesma logica do
+ * /voice preview: a lingua e conhecida, nao detetada).
+ */
+async function handleLaugh(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
+  // A sintese pode demorar; defer imediato para nao perder o token (3s).
+  await i.deferReply({ flags: MessageFlags.Ephemeral });
+  const locale = localeFor(deps, i.guildId);
+  const player = getPlayer(deps, i.guildId!);
+  if (!player) {
+    await i.editReply(t('tts.notInVoice', locale));
+    return;
+  }
+  const cfg = getGuildConfig(deps.db, i.guildId!);
+  const stored = getUserVoice(deps.db, i.guildId!, i.user.id);
+  // Precedencia da voz: voz guardada do user > default_voice da guild > .env > amy.
+  const model =
+    stored?.model || cfg.defaultVoice || deps.config.defaultVoice || 'en_US-amy-medium';
+  const speed = stored?.speed ?? deps.config.defaultSpeed;
+  const req: SynthRequest = { text: laughterFor(localePrefixOf(model)), model, speed };
+  // say() devolve false quando a fila esta no cap: nesse caso reutilizamos tts.busy.
+  const queued = await player.say(req);
+  await i.editReply(queued ? t('laugh.playing', locale) : t('tts.busy', locale));
 }
 
 /**
@@ -1144,6 +1209,8 @@ export async function handleInteraction(i: ChatInputCommandInteraction, deps: Bo
         return await handleTts(i, deps);
       case 'skip':
         return await handleSkip(i, deps);
+      case 'laugh':
+        return await handleLaugh(i, deps);
       case 'voice':
         return await handleVoice(i, deps);
       case 'config':
