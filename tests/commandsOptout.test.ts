@@ -60,7 +60,8 @@ describe('/voice optout / optin — opt-out por utilizador (sem gate de admin)',
     const i = makeVoiceInteraction('optout');
     await handleInteraction(i as any, makeDeps(db));
     expect(isOptedOut(db, GUILD, USER)).toBe(true);
-    expect(i.replies.some((r) => /automaticamente|lido/i.test(r))).toBe(true);
+    // Migrado PT->EN: "You won't be read automatically anymore. …"
+    expect(i.replies.some((r) => /automatically|optin/i.test(r))).toBe(true);
   });
 
   it('optin limpa o opt-out e responde claramente', async () => {
@@ -68,7 +69,8 @@ describe('/voice optout / optin — opt-out por utilizador (sem gate de admin)',
     const i = makeVoiceInteraction('optin');
     await handleInteraction(i as any, makeDeps(db));
     expect(isOptedOut(db, GUILD, USER)).toBe(false);
-    expect(i.replies.some((r) => /volta|lido/i.test(r))).toBe(true);
+    // Migrado PT->EN: "You'll be read automatically again."
+    expect(i.replies.some((r) => /automatically|read/i.test(r))).toBe(true);
   });
 
   it('optout depois optin: o estado persiste corretamente entre comandos', async () => {

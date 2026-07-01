@@ -137,12 +137,13 @@ describe('/setup — caminho feliz (todas as perms + em VC)', () => {
 
     const text = i.replies.join('\n');
     expect(text).toMatch(/ch-text/); // menciona o canal alvo
-    expect(text).toMatch(/auto-?leitura|autoread/i);
-    // checklist com marcas de OK (sem "falta" nas tres perms)
+    // Migrado PT->EN (P16.2): "Auto-read: on"
+    expect(text).toMatch(/auto-?read|auto-?leitura/i);
+    // checklist com marcas de OK (sem "missing"/"falta" nas tres perms)
     expect(text).toMatch(/ViewChannel/i);
     expect(text).toMatch(/Connect/i);
     expect(text).toMatch(/Speak/i);
-    expect(text).not.toMatch(/falta/i);
+    expect(text).not.toMatch(/missing|falta/i);
   });
 });
 
@@ -177,11 +178,12 @@ describe('/setup — faltam perms de voz', () => {
     expect(cfg.autoread).toBe(true);
 
     const text = i.replies.join('\n');
-    expect(text).toMatch(/falta/i); // reporta o que falta
+    // Migrado PT->EN (P16.2): "❌ {label} — missing"
+    expect(text).toMatch(/missing/i); // reporta o que falta
     // Afirma o MARCADOR DE FALTA junto de cada rotulo (nao basta o rotulo aparecer:
     // ele e impresso em qualquer estado). `[^\n]*` confina a uma linha.
-    expect(text).toMatch(/❌[^\n]*Connect|Connect[^\n]*falta/i);
-    expect(text).toMatch(/❌[^\n]*Speak|Speak[^\n]*falta/i);
+    expect(text).toMatch(/❌[^\n]*Connect|Connect[^\n]*missing/i);
+    expect(text).toMatch(/❌[^\n]*Speak|Speak[^\n]*missing/i);
   });
 });
 
@@ -223,8 +225,9 @@ describe('/setup — falta SendMessages no canal de texto', () => {
     // "❌ ViewChannel — falta", nao haveria ✅ antes de ViewChannel nessa linha e
     // o assert falharia (e o regression guard real do P8.1).
     const text = i.replies.join('\n');
-    expect(text).toMatch(/falta/i);
-    expect(text).toMatch(/❌[^\n]*SendMessages|SendMessages[^\n]*falta/i);
+    // Migrado PT->EN (P16.2): "❌ {label} — missing"
+    expect(text).toMatch(/missing/i);
+    expect(text).toMatch(/❌[^\n]*SendMessages|SendMessages[^\n]*missing/i);
     expect(text).toMatch(/✅[^\n]*ViewChannel/i);
   });
 });
@@ -259,8 +262,9 @@ describe('/setup — invocador fora de um canal de voz', () => {
 
     const text = i.replies.join('\n');
     // estado "nao verificado" (nao "falta"): menciona o /join
+    // Migrado PT->EN (P16.2): "… not checked yet (I'll verify it on /join)"
     expect(text).toMatch(/\/join/i);
-    expect(text).toMatch(/verific/i);
+    expect(text).toMatch(/verify|checked/i);
   });
 });
 
@@ -328,7 +332,8 @@ describe('/setup — canal alvo nao e de texto', () => {
     const deps = makeSetupDeps(db);
     await handleInteraction(i as any, deps);
 
-    expect(i.replies.some((r) => /texto/i.test(r))).toBe(true);
+    // Migrado PT->EN (P16.2): "… has to be a text channel …"
+    expect(i.replies.some((r) => /text channel|texto/i.test(r))).toBe(true);
     // nada gravado
     expect(getGuildConfig(db, GUILD).ttsChannelId).toBeNull();
     expect(getGuildConfig(db, GUILD).autoread).toBe(false);
@@ -343,8 +348,9 @@ describe('/setup — canal alvo nao e de texto', () => {
     await handleInteraction(i as any, deps);
 
     expect(i.replies.length).toBeGreaterThan(0);
-    // mensagem real do handler: pede para identificar/indicar um canal de texto
-    expect(i.replies.join('\n')).toMatch(/identificar|canal de texto/i);
+    // mensagem real do handler: pede para indicar um canal de texto
+    // Migrado PT->EN (P16.2): "I couldn't tell which channel to use. …"
+    expect(i.replies.join('\n')).toMatch(/which channel|text channel|canal de texto/i);
     // nada gravado: nem canal nem autoread
     expect(getGuildConfig(db, GUILD).ttsChannelId).toBeNull();
     expect(getGuildConfig(db, GUILD).autoread).toBe(false);

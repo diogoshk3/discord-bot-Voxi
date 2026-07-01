@@ -398,15 +398,16 @@ describe('/stats — handleInteraction', () => {
 
     expect(i.replies).toHaveLength(1);
     const reply = i.replies[0];
-    expect(reply).toContain('Mensagens faladas: 2');
+    // Migrado PT->EN (P16.2): /stats renderiza via t() em ingles por defeito.
+    expect(reply).toContain('Messages spoken: 2');
     expect(reply).toContain('Cache hits: 1');
     expect(reply).toContain('Cache misses: 1');
-    expect(reply).toContain('Erros de sintese: 1');
-    expect(reply).toContain('Quedas de voz: 2');
-    expect(reply).toContain('Reconexoes: 1');
-    expect(reply).toContain('Votos top.gg: 3');
-    expect(reply).toContain('Players ativos: 1');
-    expect(reply).toContain('Servidores: 3');
+    expect(reply).toContain('Synthesis errors: 1');
+    expect(reply).toContain('Voice drops: 2');
+    expect(reply).toContain('Reconnects: 1');
+    expect(reply).toContain('top.gg votes: 3');
+    expect(reply).toContain('Active players: 1');
+    expect(reply).toContain('Servers: 3');
     expect(reply).toContain('Uptime:');
   });
 
@@ -416,14 +417,15 @@ describe('/stats — handleInteraction', () => {
     await handleInteraction(i as unknown as import('discord.js').ChatInputCommandInteraction, deps);
 
     const reply = i.replies[0];
-    expect(reply).toContain('Mensagens faladas: 0');
+    // Migrado PT->EN (P16.2): /stats renderiza via t() em ingles por defeito.
+    expect(reply).toContain('Messages spoken: 0');
     expect(reply).toContain('Cache hits: 0');
     expect(reply).toContain('Cache misses: 0');
-    expect(reply).toContain('Erros de sintese: 0');
-    expect(reply).toContain('Quedas de voz: 0');
-    expect(reply).toContain('Reconexoes: 0');
-    expect(reply).toContain('Votos top.gg: 0');
-    expect(reply).toContain('Players ativos: 0');
+    expect(reply).toContain('Synthesis errors: 0');
+    expect(reply).toContain('Voice drops: 0');
+    expect(reply).toContain('Reconnects: 0');
+    expect(reply).toContain('top.gg votes: 0');
+    expect(reply).toContain('Active players: 0');
   });
 
   it('bloqueia utilizadores sem ManageGuild', async () => {
@@ -432,6 +434,7 @@ describe('/stats — handleInteraction', () => {
     await handleInteraction(i as unknown as import('discord.js').ChatInputCommandInteraction, deps);
 
     expect(i.replies).toHaveLength(1);
-    expect(i.replies[0]).toContain('permissao');
+    // Migrado PT->EN: "You need the **Manage Server** permission to do that."
+    expect(i.replies[0]).toMatch(/permission|Manage Server/i);
   });
 });
