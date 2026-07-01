@@ -1,6 +1,6 @@
 // tests/wavConcat.test.ts — P14.4a
 import { describe, it, expect } from 'vitest';
-import { concatWavs } from '../src/tts/wavConcat';
+import { concatWavs, silenceWav } from '../src/tts/wavConcat';
 
 // Formato canonico Piper: PCM 22050 Hz, mono, 16-bit.
 const SAMPLE_RATE = 22050;
@@ -224,5 +224,49 @@ describe('concatWavs — validacao de formato', () => {
 
   it('array vazio -> lanca erro claro', () => {
     expect(() => concatWavs([])).toThrow(/vazio|empty|pelo menos|at least/i);
+  });
+});
+
+describe('silenceWav — WAV de silencio (zeros) no formato Piper', () => {
+  it('2000ms -> data com 2000/1000*22050*2 = 88200 bytes de zeros', () => {
+    const ms = 2000;
+    const expectedBytes = Math.round((ms / 1000) * SAMPLE_RATE) * BLOCK_ALIGN; // 88200
+    const out = silenceWav(ms);
+    const h = readHeader(out);
+
+    expect(h.riff).toBe('RIFF');
+    expect(h.wave).toBe('WAVE');
+    expect(h.dataId).toBe('data');
+    expect(h.sampleRate).toBe(SAMPLE_RATE);
+    expect(h.channels).toBe(CHANNELS);
+    expect(h.bits).toBe(BITS);
+    expect(h.dataSize).toBe(expectedBytes);
+    expect(expectedBytes).toBe(88200);
+    // Todo o corpo e zeros (silencio).
+    const body = out.subarray(44);
+    expect(body.length).toBe(expectedBytes);
+    expect(body.every((byte) => byte === 0)).toBe(true);
+  });
+
+  it('e um WAV valido que concatWavs aceita: prepend leading silence', () => {
+    const ms = 2000;
+    const silenceBytes = Math.round((ms / 1000) * SAMPLE_RATE) * BLOCK_ALIGN; // 88200
+    const real = makeWav(Buffer.from([1, 2, 3, 4, 5, 6]));
+    // Prepend do silencio ANTES do audio real, sem gaps extra.
+    const out = concatWavs([silenceWav(ms), real], { silenceMs: 0 });
+    const h = readHeader(out);
+
+    expect(h.dataSize).toBe(silenceBytes + 6);
+    const body = out.subarray(44);
+    // Os primeiros 88200 bytes sao zeros (o silencio leading).
+    expect(body.subarray(0, silenceBytes).every((byte) => byte === 0)).toBe(true);
+    // Seguidos exatamente pelo audio real.
+    expect(body.subarray(silenceBytes)).toEqual(Buffer.from([1, 2, 3, 4, 5, 6]));
+  });
+
+  it('0ms -> data vazia (WAV valido, sem amostras)', () => {
+    const out = silenceWav(0);
+    const h = readHeader(out);
+    expect(h.dataSize).toBe(0);
   });
 });

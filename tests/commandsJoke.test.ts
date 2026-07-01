@@ -108,27 +108,53 @@ describe('/joke', () => {
     expect(req.text).toMatch(CYRILLIC);
   });
 
-  it('risos:true acrescenta o riso da lingua no fim do texto', async () => {
+  it('risos:true enfileira DUAS falas: a piada, e depois o riso com pausa (leadSilenceMs:2000)', async () => {
     const say = vi.fn().mockResolvedValue(true);
     const deps = makeDeps(db, { say });
     const i = makeJokeInteraction({ idioma: 'ru', risos: true });
 
     await handleInteraction(i as any, deps);
 
-    const req = say.mock.calls[0][0];
-    // Texto termina com o riso russo (Cirilico), separado por espaco.
-    expect(req.text.endsWith(' ' + laughterFor('ru_'))).toBe(true);
+    // Duas falas separadas: a piada (imediata) e o riso (com 2s de silencio a frente).
+    expect(say).toHaveBeenCalledTimes(2);
+
+    // 1.ª fala: SO a piada, SEM riso e SEM leadSilenceMs.
+    const jokeReq = say.mock.calls[0][0];
+    expect(jokeReq.text.endsWith(laughterFor('ru_'))).toBe(false);
+    expect(jokeReq.leadSilenceMs).toBeUndefined();
+
+    // 2.ª fala: o riso da lingua, com 2000ms de silencio a frente (a pausa real).
+    const laughReq = say.mock.calls[1][0];
+    expect(laughReq.text).toBe(laughterFor('ru_'));
+    expect(laughReq.leadSilenceMs).toBe(2000);
+    // Mesma voz da piada.
+    expect(laughReq.model).toBe(jokeReq.model);
   });
 
-  it('risos:false NAO acrescenta riso', async () => {
+  it('risos:false enfileira UMA so fala: a piada, sem riso', async () => {
     const say = vi.fn().mockResolvedValue(true);
     const deps = makeDeps(db, { say });
     const i = makeJokeInteraction({ idioma: 'en', risos: false });
 
     await handleInteraction(i as any, deps);
 
+    expect(say).toHaveBeenCalledOnce();
     const req = say.mock.calls[0][0];
     expect(req.text.endsWith(laughterFor('en_'))).toBe(false);
+    expect(req.leadSilenceMs).toBeUndefined();
+  });
+
+  it('risos:true com fila cheia (say false na piada): NAO enfileira o riso e responde busy', async () => {
+    // A piada nao entrou na fila (cap) -> nao adianta enfileirar o riso. Uma so
+    // chamada a say, e a resposta e busy (nao "playing").
+    const say = vi.fn().mockResolvedValue(false);
+    const deps = makeDeps(db, { say });
+    const i = makeJokeInteraction({ idioma: 'ru', risos: true });
+
+    await handleInteraction(i as any, deps);
+
+    expect(say).toHaveBeenCalledOnce();
+    expect(i.replies.some((r) => /busy/i.test(r))).toBe(true);
   });
 
   it('sem modelo instalado para a lingua cai no default (.env)', async () => {

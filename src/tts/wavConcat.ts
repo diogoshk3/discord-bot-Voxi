@@ -113,6 +113,18 @@ function buildWav(data: Buffer): Buffer {
 }
 
 /**
+ * Constroi um WAV canonico (22050/mono/16-bit) contendo APENAS silencio (zeros) de
+ * `ms` milissegundos. PURO. Reutiliza `buildWav` e as constantes de formato Piper,
+ * por isso o header e byte-a-byte compativel com os WAVs do PiperEngine (e passa no
+ * validateFormat do concatWavs). Serve para PREPENDER silencio a uma fala:
+ * `concatWavs([silenceWav(ms), realWav], { silenceMs: 0 })`. `ms<=0` -> data vazia.
+ */
+export function silenceWav(ms: number): Buffer {
+  const samples = Math.max(0, Math.round((ms / 1000) * REQUIRED_SAMPLE_RATE));
+  return buildWav(Buffer.alloc(samples * BLOCK_ALIGN)); // zeros
+}
+
+/**
  * Concatena varios WAVs PCM (22050/mono/16-bit) num unico WAV, com um bloco de
  * silencio (zeros) entre cada par de segmentos (N-1 gaps: nem leading nem
  * trailing). Valida o formato de todos os inputs; reconstroi o header com os

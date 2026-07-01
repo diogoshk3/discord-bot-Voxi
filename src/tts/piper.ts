@@ -1,10 +1,11 @@
 // src/tts/piper.ts
 import { spawn } from 'node:child_process';
-import { mkdtempSync, existsSync, statSync, rmSync } from 'node:fs';
+import { mkdtempSync, existsSync, statSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { SynthRequest, TTSEngine } from './engine';
 import { AudioCache, cacheKey } from './cache';
+import { concatWavs, silenceWav } from './wavConcat';
 import {
   lengthScaleFor,
   synthParamsFor,
@@ -77,6 +78,19 @@ export class PiperEngine implements TTSEngine {
 
       if (!existsSync(outPath) || statSync(outPath).size === 0) {
         throw new Error('Piper nao gerou WAV (ficheiro vazio ou inexistente)');
+      }
+
+      // Pausa opcional: PREPENDER `leadSilenceMs` de silencio ao WAV base. Escreve
+      // o ficheiro com silencio DENTRO do workDir (o `finally` limpa; cache.put
+      // copia antes disso). A chave da cache ja inclui leadSilenceMs (ver cacheKey),
+      // por isso a versao com/sem silencio nao colidem.
+      if (req.leadSilenceMs && req.leadSilenceMs > 0) {
+        const withSilence = concatWavs([silenceWav(req.leadSilenceMs), readFileSync(outPath)], {
+          silenceMs: 0,
+        });
+        const silPath = join(workDir, 'out-silence.wav');
+        writeFileSync(silPath, withSilence);
+        return this.cache.put(key, silPath);
       }
 
       return this.cache.put(key, outPath);

@@ -63,6 +63,23 @@ describe('cacheKey', () => {
     const b = cacheKey({ text: 'a', model: 'b c', speed: 1 });
     expect(a).not.toBe(b);
   });
+
+  // ── leadSilenceMs: PREPEND de silencio afeta o audio -> tem de afetar a chave ──
+  it('muda quando leadSilenceMs muda', () => {
+    expect(cacheKey(base)).not.toBe(cacheKey({ ...base, leadSilenceMs: 2000 }));
+  });
+
+  it('back-compat: leadSilenceMs undefined vs 0 -> MESMA chave (e igual a sem silencio)', () => {
+    const noField = cacheKey(base); // leadSilenceMs undefined
+    const zero = cacheKey({ ...base, leadSilenceMs: 0 });
+    expect(zero).toBe(noField);
+  });
+
+  it('valores distintos de leadSilenceMs -> chaves distintas', () => {
+    expect(cacheKey({ ...base, leadSilenceMs: 1000 })).not.toBe(
+      cacheKey({ ...base, leadSilenceMs: 2000 }),
+    );
+  });
 });
 
 describe('AudioCache', () => {

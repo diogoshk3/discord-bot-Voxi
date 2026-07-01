@@ -649,6 +649,13 @@ async function handleLaugh(i: ChatInputCommandInteraction, deps: BotDeps): Promi
 }
 
 /**
+ * Pausa (ms) entre a piada e o riso no /joke. O riso e uma fala SEPARADA que leva
+ * este valor em `leadSilenceMs` (silencio PREPENDido), criando um intervalo real —
+ * o Voxi fala a piada, espera ~2s, e SO DEPOIS ri.
+ */
+const JOKE_LAUGH_PAUSE_MS = 2000;
+
+/**
  * /joke — conta uma piada curta na LINGUA escolhida (`idioma`, autocomplete). A voz
  * e escolhida pela LINGUA (primeiro modelo de deps.availableModels cujo nome comeca
  * pelo prefixo da lingua; se nenhum, cai no default da guild/.env). Se `risos` for
@@ -694,9 +701,26 @@ async function handleJoke(i: ChatInputCommandInteraction, deps: BotDeps): Promis
   // pickJoke e PURO/seeded; em runtime usamos Date.now() como seed (variedade sem
   // sacrificar a testabilidade determinista da funcao).
   const joke = pickJoke(langKey, Date.now());
-  const text = risos ? `${joke} ${laughterFor(lang.prefix)}` : joke;
-  const req: SynthRequest = { text, model, speed: deps.config.defaultSpeed };
-  const queued = await player.say(req);
+  const speed = deps.config.defaultSpeed;
+
+  // Enfileira SEMPRE a piada sozinha primeiro. O reply baseia-se NESTA fala: se a
+  // fila estiver cheia (say false), respondemos busy e nao enfileiramos o riso.
+  const queued = await player.say({ text: joke, model, speed });
+
+  // Se `risos` E a piada entrou na fila, enfileira o RISO como fala SEPARADA com uma
+  // pausa real de 2s A FRENTE (leadSilenceMs). Assim o Voxi fala a piada, PAUSA ~2s,
+  // e SO DEPOIS ri (em vez de rir colado ao fim da piada, como antes). O riso e
+  // best-effort: se a fila enche entretanto, simplesmente nao ri (o reply ja reflete
+  // a piada). Duas fila-items: um /skip durante a piada nao apanha o riso — aceitavel.
+  if (queued && risos) {
+    await player.say({
+      text: laughterFor(lang.prefix),
+      model,
+      speed,
+      leadSilenceMs: JOKE_LAUGH_PAUSE_MS,
+    });
+  }
+
   // Confirmacao inclui a piada escrita (o user ve o que esta a ser lido).
   await i.editReply(queued ? t('joke.playing', locale, { joke }) : t('tts.busy', locale));
 }
