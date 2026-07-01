@@ -10,7 +10,7 @@ const RE_URL = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/gi;
 const RE_ROLE = /<@&\d+>/g;
 const RE_USER = /<@!?(\d+)>/g;
 const RE_CHANNEL = /<#(\d+)>/g;
-const RE_CUSTOM_EMOJI = /<a?:\w+:\d+>/g;
+const RE_CUSTOM_EMOJI = /<a?:(\w+):\d+>/g;
 const RE_UNICODE_EMOJI = /\p{Extended_Pictographic}/gu;
 // Componentes zero-width de emoji modernos + regional indicators (bandeiras). O
 // strip de \p{Extended_Pictographic} remove o pictograma BASE mas NAO estes:
@@ -34,8 +34,10 @@ export function cleanText(raw: string, opts: CleanOptions): string {
   t = t.replace(RE_CODE_BLOCK, ' ');
   t = t.replace(RE_INLINE_CODE, ' ');
 
-  // 2. URLs -> "link"
-  t = t.replace(RE_URL, 'link');
+  // 2. URLs -> REMOVIDAS (o Diogo nao quer que o bot leia links). Cobre tambem os
+  // GIFs do Tenor/Giphy, que chegam como URL no content. (Anexos .gif nem estao
+  // no content, por isso ja nao eram lidos.)
+  t = t.replace(RE_URL, ' ');
 
   // 3. mencoes de role (sem resolver: removidas para nao serem lidas como "<@&id>")
   t = t.replace(RE_ROLE, ' ');
@@ -44,9 +46,13 @@ export function cleanText(raw: string, opts: CleanOptions): string {
   t = t.replace(RE_USER, (_m, id: string) => opts.resolveUser(id));
   t = t.replace(RE_CHANNEL, (_m, id: string) => opts.resolveChannel(id));
 
-  // 5. emojis: custom, unicode base, e os componentes zero-width/bandeiras que o
-  // strip de \p{Extended_Pictographic} deixava para tras.
-  t = t.replace(RE_CUSTOM_EMOJI, ' ');
+  // 5. emojis:
+  //  - CUSTOM do Discord (<:nome:id> / <a:nome:id>): o Diogo quer que sejam LIDOS,
+  //    por isso substitui-se pelo NOME (underscores -> espacos, ex. party_blob ->
+  //    "party blob"). Espacos a volta para separar do texto adjacente.
+  //  - UNICODE (😀) e os componentes zero-width/bandeiras: REMOVIDOS (o Piper nao
+  //    fala emojis unicode; o Diogo pediu so os custom).
+  t = t.replace(RE_CUSTOM_EMOJI, (_m, name: string) => ` ${name.replace(/_/g, ' ')} `);
   t = t.replace(RE_UNICODE_EMOJI, ' ');
   t = t.replace(RE_EMOJI_EXTRA, '');
 

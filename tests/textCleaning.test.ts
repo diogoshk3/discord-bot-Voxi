@@ -10,13 +10,13 @@ const opts: CleanOptions = {
 
 describe('cleanText', () => {
   describe('URLs', () => {
-    it('substitui http(s) por "link"', () => {
-      expect(cleanText('vai a https://exemplo.com agora', opts)).toBe('vai a link agora');
-      expect(cleanText('http://a.b/c?x=1', opts)).toBe('link');
+    it('remove http(s) (nao le links)', () => {
+      expect(cleanText('vai a https://exemplo.com agora', opts)).toBe('vai a agora');
+      expect(cleanText('http://a.b/c?x=1', opts)).toBe('');
     });
 
-    it('substitui www. por "link"', () => {
-      expect(cleanText('ve www.exemplo.com ja', opts)).toBe('ve link ja');
+    it('remove www. (nao le links)', () => {
+      expect(cleanText('ve www.exemplo.com ja', opts)).toBe('ve ja');
     });
   });
 
@@ -47,12 +47,16 @@ describe('cleanText', () => {
   });
 
   describe('emojis', () => {
-    it('remove custom emoji <:nome:789>', () => {
-      expect(cleanText('boa <:pog:789> festa', opts)).toBe('boa festa');
+    it('LE o nome do custom emoji <:nome:789>', () => {
+      expect(cleanText('boa <:pog:789> festa', opts)).toBe('boa pog festa');
     });
 
-    it('remove custom emoji animado <a:nome:789>', () => {
-      expect(cleanText('boa <a:dance:111> festa', opts)).toBe('boa festa');
+    it('LE o nome do custom emoji animado <a:nome:789>', () => {
+      expect(cleanText('boa <a:dance:111> festa', opts)).toBe('boa dance festa');
+    });
+
+    it('custom emoji com underscore -> nome com espacos', () => {
+      expect(cleanText('<:party_blob:1>', opts)).toBe('party blob');
     });
 
     it('remove emoji unicode', () => {
@@ -160,15 +164,15 @@ describe('cleanText', () => {
 
   describe('edge-cases: emoji + URL + mencao juntos', () => {
     it('limpa emoji + URL + mencao de user na mesma mensagem', () => {
-      // emoji removido, URL -> "link", mencao resolvida
-      expect(cleanText('😀 https://example.com <@123>', opts)).toBe('link @user123');
+      // emoji unicode removido, URL removida (nao le links), mencao resolvida
+      expect(cleanText('😀 https://example.com <@123>', opts)).toBe('@user123');
     });
 
     it('limpa role + custom emoji + URL na mesma mensagem', () => {
-      // role removed, custom emoji removed, URL -> "link"
+      // role removido, custom emoji LIDO (fire), URL removida (nao le links)
       expect(
         cleanText('check <@&999> <:fire:123> at https://x.com', opts),
-      ).toBe('check at link');
+      ).toBe('check fire at');
     });
 
     it('mensagem so de emojis unicode devolve ""', () => {
