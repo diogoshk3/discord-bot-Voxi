@@ -83,6 +83,12 @@ export const catalog: Record<string, Entry> = {
     en: "Got it — it's in the queue.",
     pt: 'Feito — esta na fila.',
   },
+  // Fila no cap: o pedido NAO entrou na fila. Usada por /tts e /voice preview para
+  // nao mentir "queued"/"playing" quando nada foi enfileirado (P18.1).
+  'tts.busy': {
+    en: "I'm busy right now — try again in a moment.",
+    pt: 'Estou ocupado agora — tenta daqui a um instante.',
+  },
 
   // ── /voice ────────────────────────────────────────────────────────────────
   'voice.unknownModel': {

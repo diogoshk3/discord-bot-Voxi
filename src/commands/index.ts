@@ -414,8 +414,11 @@ async function handleTts(i: ChatInputCommandInteraction, deps: BotDeps): Promise
     defaultVoice: deps.config.defaultVoice,
     defaultSpeed: deps.config.defaultSpeed,
   });
-  await player.say(req);
-  await i.editReply(t('tts.queued', locale));
+  // say() devolve false quando a fila esta no cap (nada foi enfileirado): nesse caso
+  // NAO mentir "queued" — responder que estamos ocupados. So o sinal SINCRONO de
+  // fila-cheia; nao esperamos pela reproducao real (fora de escopo).
+  const queued = await player.say(req);
+  await i.editReply(queued ? t('tts.queued', locale) : t('tts.busy', locale));
 }
 
 async function handleSkip(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
@@ -490,8 +493,10 @@ async function handleVoice(i: ChatInputCommandInteraction, deps: BotDeps): Promi
       defaultVoice: deps.config.defaultVoice,
       defaultSpeed: deps.config.defaultSpeed,
     });
-    await player.say(req);
-    await reply(i, t('voice.previewPlaying', locale));
+    // say() devolve false quando a fila esta no cap: nesse caso NAO mentir "a
+    // reproduzir" — reutilizamos a mesma chave tts.busy do /tts (consistencia).
+    const queued = await player.say(req);
+    await reply(i, queued ? t('voice.previewPlaying', locale) : t('tts.busy', locale));
   }
 }
 

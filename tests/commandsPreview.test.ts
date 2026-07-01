@@ -73,7 +73,8 @@ describe('/voice preview', () => {
   });
 
   it('com model válido chama player.say com a frase de amostra e o model correto', async () => {
-    const say = vi.fn().mockResolvedValue(undefined);
+    // say() devolve true (enfileirou) -> a resposta e "playing a sample".
+    const say = vi.fn().mockResolvedValue(true);
     const deps = makeDeps(db, { say });
     const i = makePreviewInteraction({ model: 'pt_PT-tugão-medium' });
 
@@ -85,6 +86,21 @@ describe('/voice preview', () => {
     expect(req.model).toBe('pt_PT-tugão-medium');
     // Migrado PT->EN: "Playing a sample…"
     expect(i.replies.some((r) => /sample/i.test(r))).toBe(true);
+  });
+
+  it('quando say() devolve false (fila cheia) responde "busy", NAO "sample"', async () => {
+    // P18.1: fila no cap -> say() resolve false -> o preview responde tts.busy em
+    // vez de mentir "a reproduzir uma amostra".
+    const say = vi.fn().mockResolvedValue(false);
+    const deps = makeDeps(db, { say });
+    const i = makePreviewInteraction({ model: 'en_US-amy-medium' });
+
+    await handleInteraction(i as any, deps);
+
+    expect(say).toHaveBeenCalledOnce();
+    // t('tts.busy', 'en') = "I'm busy right now — try again in a moment."
+    expect(i.replies.some((r) => /busy/i.test(r))).toBe(true);
+    expect(i.replies.some((r) => /sample/i.test(r))).toBe(false);
   });
 
   it('model inválido responde com mensagem de erro e NÃO chama say', async () => {
@@ -114,7 +130,7 @@ describe('/voice preview', () => {
     // Guarda uma voz específica para o utilizador antes de chamar o comando.
     setUserVoice(db, GUILD, USER, 'pt_PT-tugão-medium', 1.2);
 
-    const say = vi.fn().mockResolvedValue(undefined);
+    const say = vi.fn().mockResolvedValue(true);
     const deps = makeDeps(db, { say });
     // model === null → nenhuma opção fornecida
     const i = makePreviewInteraction({ model: null });

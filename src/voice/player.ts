@@ -57,19 +57,26 @@ export class GuildVoicePlayer {
     this.armIdleTimer();
   }
 
-  async say(req: SynthRequest): Promise<void> {
-    if (this.destroyed) return;
+  async say(req: SynthRequest): Promise<boolean> {
+    // Devolve o RESULTADO SINCRONO de enfileirar: true se o pedido entrou na fila,
+    // false se foi descartado (player destruido OU fila no cap). Os comandos
+    // explicitos (/tts, /voice preview) usam este boolean para nao mentir "queued"
+    // quando NADA entrou na fila. NB: so o sinal SINCRONO de fila-cheia — synth-skip
+    // / ligacao-nao-Ready acontecem DEPOIS no worker (playNext), portanto NAO se
+    // refletem aqui (por design; ver comentarios em playNext).
+    if (this.destroyed) return false;
     // Enfileira SINCRONAMENTE por ordem de chegada (preserva FIFO da spec §7).
     // A sintese acontece no worker (playNext), nao aqui, para nao reordenar
     // pedidos concorrentes pela duracao/cache-hit da sintese.
     const ok = this.queue.enqueue({ req });
     if (!ok) {
       log.warn('[player] fila cheia, pedido descartado');
-      return;
+      return false;
     }
     if (!this.playing) {
       void this.playNext();
     }
+    return true;
   }
 
   skip(): void {

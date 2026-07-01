@@ -1,0 +1,99 @@
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+
+// Mock minimo de @discordjs/voice — nao e usado no caminho do /tts (o player e
+// injectado nas deps), mas o import de index.ts precisa de resolver.
+vi.mock('@discordjs/voice', () => ({
+  joinVoiceChannel: () => ({}),
+  getVoiceConnection: () => undefined,
+}));
+
+import { handleInteraction } from '../src/commands/index';
+import type { BotDeps } from '../src/bot/deps';
+import { initDb } from '../src/store/db';
+import type Database from 'better-sqlite3';
+
+const GUILD = 'g-tts';
+const USER = 'u-tts';
+
+function makeDeps(db: Database.Database, player?: { say: ReturnType<typeof vi.fn> }): BotDeps {
+  const deps = {
+    client: { user: { id: 'bot-1' }, users: { cache: new Map() } },
+    players: new Map<string, unknown>(),
+    db,
+    config: { defaultSpeed: 1.0, defaultVoice: '' },
+    availableModels: ['en_US-amy-medium'],
+    limiters: new Map(),
+  } as unknown as BotDeps;
+  if (player) {
+    (deps.players as Map<string, unknown>).set(GUILD, player);
+  }
+  return deps;
+}
+
+function makeTtsInteraction(text: string) {
+  const replies: string[] = [];
+  return {
+    commandName: 'tts',
+    guildId: GUILD,
+    user: { id: USER },
+    replies,
+    replied: false,
+    deferred: false,
+    isRepliable: () => true,
+    deferReply: async function (this: { deferred: boolean }) {
+      this.deferred = true;
+    },
+    editReply: async (o: string | { content: string }) => {
+      replies.push(typeof o === 'string' ? o : o.content);
+    },
+    // guild.members.cache / channels.cache usados pelo cleanText resolver.
+    guild: {
+      members: { cache: new Map() },
+      channels: { cache: new Map() },
+    },
+    options: {
+      getString: (name: string, _required?: boolean) => {
+        if (name === 'texto') return text;
+        return null;
+      },
+      getNumber: () => null,
+    },
+  };
+}
+
+describe('/tts — say() cheio nao mente "queued"', () => {
+  let db: Database.Database;
+
+  beforeEach(() => {
+    db = initDb(':memory:');
+  });
+  afterEach(() => {
+    db.close();
+  });
+
+  it('quando say() devolve true responde "queued"', async () => {
+    const say = vi.fn().mockResolvedValue(true);
+    const deps = makeDeps(db, { say });
+    const i = makeTtsInteraction('ola mundo');
+
+    await handleInteraction(i as any, deps);
+
+    expect(say).toHaveBeenCalledOnce();
+    // t('tts.queued', 'en') = "Got it — it's in the queue."
+    expect(i.replies.some((r) => /queue/i.test(r))).toBe(true);
+    expect(i.replies.some((r) => /busy/i.test(r))).toBe(false);
+  });
+
+  it('quando say() devolve false (fila cheia) responde "busy", NAO "queued"', async () => {
+    const say = vi.fn().mockResolvedValue(false);
+    const deps = makeDeps(db, { say });
+    const i = makeTtsInteraction('ola mundo');
+
+    await handleInteraction(i as any, deps);
+
+    expect(say).toHaveBeenCalledOnce();
+    // t('tts.busy', 'en') = "I'm busy right now — try again in a moment."
+    expect(i.replies.some((r) => /busy/i.test(r))).toBe(true);
+    expect(i.replies.some((r) => /queue/i.test(r))).toBe(false);
+  });
+});
