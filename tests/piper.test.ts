@@ -5,7 +5,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawn } from 'node:child_process';
-import { PiperEngine } from '../src/tts/piper';
+import { PiperEngine, isSafeModelName } from '../src/tts/piper';
 import { AudioCache } from '../src/tts/cache';
 import type { SynthRequest } from '../src/tts/engine';
 
@@ -140,5 +140,45 @@ describe('PiperEngine.synth — spawn mockado (EPIPE / falhas)', () => {
     // settle a promise para nao deixar rejeicao pendente
     child.emit('close', 1);
     await expect(p).rejects.toThrow();
+  });
+});
+
+describe('isSafeModelName — validacao de nome de modelo (anti path-traversal)', () => {
+  it('rejeita nomes com separadores, ".." ou vazios', () => {
+    for (const bad of ['../../etc/x', '..\\x', 'a/b', 'a\\b', '/abs', '', '..', '.']) {
+      expect(isSafeModelName(bad)).toBe(false);
+    }
+  });
+
+  it('aceita nomes reais (letras/digitos/_/-, sem separadores)', () => {
+    for (const good of ['en_US-amy-medium', 'pt_BR-cadu-medium', 'pt_PT-tugao-medium', 'pt_PT-test']) {
+      expect(isSafeModelName(good)).toBe(true);
+    }
+  });
+});
+
+describe('PiperEngine.synth — guard de nome inseguro (rejeita antes de spawn)', () => {
+  let dir: string;
+  let modelsDir: string;
+  let cache: AudioCache;
+  let engine: PiperEngine;
+
+  beforeEach(() => {
+    spawnMock.mockReset();
+    dir = mkdtempSync(join(tmpdir(), 'pipercache-'));
+    modelsDir = mkdtempSync(join(tmpdir(), 'pipermodels-'));
+    cache = new AudioCache(dir);
+    engine = new PiperEngine('piper', modelsDir, cache);
+  });
+
+  afterEach(() => {
+    rmSync(dir, { recursive: true, force: true });
+    rmSync(modelsDir, { recursive: true, force: true });
+  });
+
+  it('nome com path-traversal -> rejeita com "Nome de modelo invalido" e nunca faz spawn', async () => {
+    const badReq: SynthRequest = { text: 'ola', model: '../../etc/passwd', speed: 1 };
+    await expect(engine.synth(badReq)).rejects.toThrow(/Nome de modelo invalido/);
+    expect(spawnMock).not.toHaveBeenCalled();
   });
 });
