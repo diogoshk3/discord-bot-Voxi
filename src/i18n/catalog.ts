@@ -261,7 +261,7 @@ export const catalog: Record<string, Entry> = {
   // Sucesso do /config tts-channel: confirma o canal e da o PROXIMO PASSO — garantir
   // que a auto-leitura esta ligada (/config autoread on) para as mensagens serem lidas.
   'config.channelSet': {
-    en: 'Auto-read channel set to {channel}. Next: make sure auto-read is on with `/config autoread ativo:true`.',
+    en: 'Auto-read channel set to {channel}. Next: make sure auto-read is on with `/config autoread active:true`.',
     pt: 'Canal de auto-leitura: {channel}. A seguir: confirma que a auto-leitura está ligada com `/config autoread ativo:true`.',
   },
   'config.autoreadOn': {
@@ -390,11 +390,11 @@ export const catalog: Record<string, Entry> = {
 
   // ── /setup ────────────────────────────────────────────────────────────────
   'setup.noChannel': {
-    en: "I couldn't tell which channel to use. Pass a text channel in the \"canal\" option.",
+    en: "I couldn't tell which channel to use. Pass a text channel in the \"channel\" option.",
     pt: 'Nao consegui identificar o canal. Indica um canal de texto na opcao "canal".',
   },
   'setup.channelWrongType': {
-    en: 'The auto-read channel has to be a text channel (not a voice channel or a category). Pass one in the "canal" option.',
+    en: 'The auto-read channel has to be a text channel (not a voice channel or a category). Pass one in the "channel" option.',
     pt: 'O canal de auto-leitura tem de ser um canal de texto do servidor (nao voz nem categoria). Indica um na opcao "canal".',
   },
   'setup.done': {

@@ -89,7 +89,7 @@ describe('/config max-chars — validacao de range', () => {
   });
 
   it('rejeita valor 0 com mensagem clara e nao aplica', async () => {
-    const i = makeConfigInteraction({ sub: 'max-chars', optionsMap: { valor: 0 } });
+    const i = makeConfigInteraction({ sub: 'max-chars', optionsMap: { value: 0 } });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
     expect(i.replies.some((r) => /max-chars|entre|1.*2000|2000.*1/i.test(r))).toBe(true);
@@ -97,7 +97,7 @@ describe('/config max-chars — validacao de range', () => {
   });
 
   it('rejeita valor 2001 com mensagem clara e nao aplica', async () => {
-    const i = makeConfigInteraction({ sub: 'max-chars', optionsMap: { valor: 2001 } });
+    const i = makeConfigInteraction({ sub: 'max-chars', optionsMap: { value: 2001 } });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
     expect(i.replies.some((r) => /max-chars|entre|1.*2000|2000.*1/i.test(r))).toBe(true);
@@ -105,7 +105,7 @@ describe('/config max-chars — validacao de range', () => {
   });
 
   it('rejeita valor 9999 (muito acima do maximo) e nao persiste', async () => {
-    const i = makeConfigInteraction({ sub: 'max-chars', optionsMap: { valor: 9999 } });
+    const i = makeConfigInteraction({ sub: 'max-chars', optionsMap: { value: 9999 } });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
     expect(i.replies.some((r) => /max-chars|entre|1.*2000|2000.*1/i.test(r))).toBe(true);
@@ -113,7 +113,7 @@ describe('/config max-chars — validacao de range', () => {
   });
 
   it('aceita valor 500 e persiste', async () => {
-    const i = makeConfigInteraction({ sub: 'max-chars', optionsMap: { valor: 500 } });
+    const i = makeConfigInteraction({ sub: 'max-chars', optionsMap: { value: 500 } });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
     expect(i.replies.some((r) => /500/i.test(r))).toBe(true);
@@ -121,14 +121,14 @@ describe('/config max-chars — validacao de range', () => {
   });
 
   it('aceita valor limite 1 e persiste', async () => {
-    const i = makeConfigInteraction({ sub: 'max-chars', optionsMap: { valor: 1 } });
+    const i = makeConfigInteraction({ sub: 'max-chars', optionsMap: { value: 1 } });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
     expect(getGuildConfig(db, GUILD).maxChars).toBe(1);
   });
 
   it('aceita valor limite 2000 e persiste', async () => {
-    const i = makeConfigInteraction({ sub: 'max-chars', optionsMap: { valor: 2000 } });
+    const i = makeConfigInteraction({ sub: 'max-chars', optionsMap: { value: 2000 } });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
     expect(getGuildConfig(db, GUILD).maxChars).toBe(2000);
@@ -148,7 +148,7 @@ describe('/config rate-limit — validacao de range', () => {
   });
 
   it('rejeita valor 0 com mensagem clara e nao aplica', async () => {
-    const i = makeConfigInteraction({ sub: 'rate-limit', optionsMap: { valor: 0 } });
+    const i = makeConfigInteraction({ sub: 'rate-limit', optionsMap: { value: 0 } });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
     expect(i.replies.some((r) => /rate-limit|entre|1.*120|120.*1/i.test(r))).toBe(true);
@@ -156,7 +156,7 @@ describe('/config rate-limit — validacao de range', () => {
   });
 
   it('rejeita valor 121 com mensagem clara e nao aplica', async () => {
-    const i = makeConfigInteraction({ sub: 'rate-limit', optionsMap: { valor: 121 } });
+    const i = makeConfigInteraction({ sub: 'rate-limit', optionsMap: { value: 121 } });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
     expect(i.replies.some((r) => /rate-limit|entre|1.*120|120.*1/i.test(r))).toBe(true);
@@ -164,7 +164,7 @@ describe('/config rate-limit — validacao de range', () => {
   });
 
   it('rejeita valor 9999 (muito acima do maximo) e nao persiste', async () => {
-    const i = makeConfigInteraction({ sub: 'rate-limit', optionsMap: { valor: 9999 } });
+    const i = makeConfigInteraction({ sub: 'rate-limit', optionsMap: { value: 9999 } });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
     expect(i.replies.some((r) => /rate-limit|entre|1.*120|120.*1/i.test(r))).toBe(true);
@@ -172,7 +172,7 @@ describe('/config rate-limit — validacao de range', () => {
   });
 
   it('aceita valor 10 e persiste', async () => {
-    const i = makeConfigInteraction({ sub: 'rate-limit', optionsMap: { valor: 10 } });
+    const i = makeConfigInteraction({ sub: 'rate-limit', optionsMap: { value: 10 } });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
     expect(i.replies.some((r) => /10/i.test(r))).toBe(true);
@@ -180,14 +180,14 @@ describe('/config rate-limit — validacao de range', () => {
   });
 
   it('aceita valor limite 1 e persiste', async () => {
-    const i = makeConfigInteraction({ sub: 'rate-limit', optionsMap: { valor: 1 } });
+    const i = makeConfigInteraction({ sub: 'rate-limit', optionsMap: { value: 1 } });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
     expect(getGuildConfig(db, GUILD).ratePerMin).toBe(1);
   });
 
   it('aceita valor limite 120 e persiste', async () => {
-    const i = makeConfigInteraction({ sub: 'rate-limit', optionsMap: { valor: 120 } });
+    const i = makeConfigInteraction({ sub: 'rate-limit', optionsMap: { value: 120 } });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
     expect(getGuildConfig(db, GUILD).ratePerMin).toBe(120);
@@ -210,7 +210,7 @@ describe('/config tts-channel — validacao de tipo e acesso', () => {
     const fakeChannel = { id: 'ch-voice', type: ChannelType.GuildVoice };
     const i = makeConfigInteraction({
       sub: 'tts-channel',
-      optionsMap: { canal: fakeChannel },
+      optionsMap: { channel: fakeChannel },
     });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
@@ -232,7 +232,7 @@ describe('/config tts-channel — validacao de tipo e acesso', () => {
     };
     const i = makeConfigInteraction({
       sub: 'tts-channel',
-      optionsMap: { canal: fakeChannel },
+      optionsMap: { channel: fakeChannel },
       guild,
     });
     const deps = makeConfigDeps(db);
@@ -254,7 +254,7 @@ describe('/config tts-channel — validacao de tipo e acesso', () => {
     };
     const i = makeConfigInteraction({
       sub: 'tts-channel',
-      optionsMap: { canal: fakeChannel },
+      optionsMap: { channel: fakeChannel },
       guild,
     });
     const deps = makeConfigDeps(db);
@@ -312,7 +312,7 @@ describe('/config blockword — validacao de palavra vazia', () => {
     const i = makeConfigInteraction({
       group: 'blockword',
       sub: 'add',
-      optionsMap: { palavra: '' },
+      optionsMap: { word: '' },
     });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
@@ -325,7 +325,7 @@ describe('/config blockword — validacao de palavra vazia', () => {
     const i = makeConfigInteraction({
       group: 'blockword',
       sub: 'add',
-      optionsMap: { palavra: '   ' },
+      optionsMap: { word: '   ' },
     });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
@@ -338,7 +338,7 @@ describe('/config blockword — validacao de palavra vazia', () => {
     const i = makeConfigInteraction({
       group: 'blockword',
       sub: 'add',
-      optionsMap: { palavra: '  spam  ' },
+      optionsMap: { word: '  spam  ' },
     });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
@@ -352,7 +352,7 @@ describe('/config blockword — validacao de palavra vazia', () => {
     const i = makeConfigInteraction({
       group: 'blockword',
       sub: 'remove',
-      optionsMap: { palavra: '' },
+      optionsMap: { word: '' },
     });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
@@ -368,7 +368,7 @@ describe('/config blockword — validacao de palavra vazia', () => {
     const i = makeConfigInteraction({
       group: 'blockword',
       sub: 'remove',
-      optionsMap: { palavra: 'spam' },
+      optionsMap: { word: 'spam' },
     });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
@@ -394,7 +394,7 @@ describe('/config pronunciation — add/remove/list', () => {
     const i = makeConfigInteraction({
       group: 'pronunciation',
       sub: 'add',
-      optionsMap: { termo: '   ', pronuncia: 'good game' },
+      optionsMap: { term: '   ', pronunciation: 'good game' },
     });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
@@ -407,7 +407,7 @@ describe('/config pronunciation — add/remove/list', () => {
     const i = makeConfigInteraction({
       group: 'pronunciation',
       sub: 'add',
-      optionsMap: { termo: 'gg', pronuncia: '   ' },
+      optionsMap: { term: 'gg', pronunciation: '   ' },
     });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
@@ -420,7 +420,7 @@ describe('/config pronunciation — add/remove/list', () => {
     const i = makeConfigInteraction({
       group: 'pronunciation',
       sub: 'add',
-      optionsMap: { termo: '  gg  ', pronuncia: '  good game  ' },
+      optionsMap: { term: '  gg  ', pronunciation: '  good game  ' },
     });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
@@ -433,7 +433,7 @@ describe('/config pronunciation — add/remove/list', () => {
     const i = makeConfigInteraction({
       group: 'pronunciation',
       sub: 'remove',
-      optionsMap: { termo: 'gg' },
+      optionsMap: { term: 'gg' },
     });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
@@ -445,7 +445,7 @@ describe('/config pronunciation — add/remove/list', () => {
     const i = makeConfigInteraction({
       group: 'pronunciation',
       sub: 'remove',
-      optionsMap: { termo: '' },
+      optionsMap: { term: '' },
     });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
@@ -485,7 +485,7 @@ describe('/config enabled — kill-switch do servidor', () => {
   });
 
   it('desliga o TTS (enabled=false) e persiste', async () => {
-    const i = makeConfigInteraction({ sub: 'enabled', optionsMap: { ativo: false } });
+    const i = makeConfigInteraction({ sub: 'enabled', optionsMap: { active: false } });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
     // Migrado PT->EN (P16.2): "TTS is now **off** for this server."
@@ -496,7 +496,7 @@ describe('/config enabled — kill-switch do servidor', () => {
   it('liga o TTS (enabled=true) e persiste', async () => {
     // Primeiro desligar para confirmar que volta a ligar.
     setGuildConfig(db, GUILD, { enabled: false });
-    const i = makeConfigInteraction({ sub: 'enabled', optionsMap: { ativo: true } });
+    const i = makeConfigInteraction({ sub: 'enabled', optionsMap: { active: true } });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
     // Migrado PT->EN (P16.2): "TTS is now **on** for this server."

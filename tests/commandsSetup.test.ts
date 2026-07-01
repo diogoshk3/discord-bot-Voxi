@@ -477,10 +477,14 @@ describe('/setup — definicao do comando', () => {
     );
   });
 
-  it('tem uma opcao "canal" opcional do tipo text channel', () => {
+  it('tem uma opcao "channel" (ingles) opcional do tipo text channel', () => {
     const def = commandDefs.find((c) => c.name === 'setup');
-    const opt = def?.options?.find((o) => o.name === 'canal');
+    const opt = def?.options?.find((o) => o.name === 'channel');
     expect(opt).toBeDefined();
     expect(opt?.required ?? false).toBe(false);
+    // O nome primario e INGLES (default beginner-friendly), mas o PORTUGUES fica
+    // preservado via name_localizations: um cliente pt-BR ve "canal". (O Discord
+    // so suporta pt-BR como locale de portugues — nao ha pt-PT no enum de locales.)
+    expect(opt?.name_localizations).toEqual({ 'pt-BR': 'canal' });
   });
 });

@@ -53,7 +53,7 @@ function makeTtsInteraction(text: string) {
     },
     options: {
       getString: (name: string, _required?: boolean) => {
-        if (name === 'texto') return text;
+        if (name === 'text') return text;
         return null;
       },
       getNumber: () => null,

@@ -36,8 +36,8 @@ function makeAbbrevInteraction(opts: {
 }) {
   const replies: string[] = [];
   const optionsMap: Record<string, string> = {};
-  if (opts.termo !== undefined) optionsMap.termo = opts.termo;
-  if (opts.leitura !== undefined) optionsMap.leitura = opts.leitura;
+  if (opts.termo !== undefined) optionsMap.term = opts.termo;
+  if (opts.leitura !== undefined) optionsMap.reading = opts.leitura;
   return {
     commandName: 'voice',
     guildId: GUILD,

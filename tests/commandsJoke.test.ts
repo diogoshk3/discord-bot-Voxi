@@ -55,8 +55,8 @@ function makeJokeInteraction(opts: { idioma: string | null; risos: boolean | nul
     },
     options: {
       getSubcommandGroup: (_r = false) => null,
-      getString: (name: string, _req?: boolean) => (name === 'idioma' ? opts.idioma : null),
-      getBoolean: (name: string, _req?: boolean) => (name === 'risos' ? opts.risos : null),
+      getString: (name: string, _req?: boolean) => (name === 'language' ? opts.idioma : null),
+      getBoolean: (name: string, _req?: boolean) => (name === 'laughter' ? opts.risos : null),
       getNumber: () => null,
     },
   };
@@ -192,13 +192,13 @@ describe('filterJokeLanguages (autocomplete idioma)', () => {
   });
 });
 
-describe('handleAutocomplete — idioma', () => {
+describe('handleAutocomplete — language', () => {
   const deps = { availableModels: ['en_US-amy-medium'] } as any;
 
-  it('opcao focada "idioma": responde com as linguas filtradas', async () => {
+  it('opcao focada "language": responde com as linguas filtradas', async () => {
     const respond = vi.fn();
     const i = {
-      options: { getFocused: () => ({ name: 'idioma', value: 'french' }) },
+      options: { getFocused: () => ({ name: 'language', value: 'french' }) },
       respond,
     } as any;
     await handleAutocomplete(i, deps);

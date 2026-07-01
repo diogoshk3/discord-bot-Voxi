@@ -114,7 +114,13 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
   new SlashCommandBuilder()
     .setName('tts')
     .setDescription('Voxi reads a text out loud')
-    .addStringOption((o) => o.setName('texto').setDescription('What to read').setRequired(true))
+    .addStringOption((o) =>
+      o
+        .setName('text')
+        .setNameLocalizations({ 'pt-BR': 'texto' })
+        .setDescription('What to read')
+        .setRequired(true),
+    )
     .toJSON(),
   new SlashCommandBuilder().setName('skip').setDescription('Skip the current audio').toJSON(),
   // /laugh — diversao por-utilizador (como /tts): o Voxi ri na voz ATUAL do user.
@@ -131,13 +137,18 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
     .setDescription('Voxi tells a short joke in the language you pick')
     .addStringOption((o) =>
       o
-        .setName('idioma')
+        .setName('language')
+        .setNameLocalizations({ 'pt-BR': 'idioma' })
         .setDescription('Language of the joke')
         .setRequired(true)
         .setAutocomplete(true),
     )
     .addBooleanOption((o) =>
-      o.setName('risos').setDescription('Add laughter at the end?').setRequired(true),
+      o
+        .setName('laughter')
+        .setNameLocalizations({ 'pt-BR': 'risos' })
+        .setDescription('Add laughter at the end?')
+        .setRequired(true),
     )
     .toJSON(),
   new SlashCommandBuilder()
@@ -178,16 +189,32 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
           s
             .setName('add')
             .setDescription('Create a personal abbreviation')
-            .addStringOption((o) => o.setName('termo').setDescription('Short word to replace').setRequired(true))
             .addStringOption((o) =>
-              o.setName('leitura').setDescription('How it should be read out').setRequired(true),
+              o
+                .setName('term')
+                .setNameLocalizations({ 'pt-BR': 'termo' })
+                .setDescription('Short word to replace')
+                .setRequired(true),
+            )
+            .addStringOption((o) =>
+              o
+                .setName('reading')
+                .setNameLocalizations({ 'pt-BR': 'leitura' })
+                .setDescription('How it should be read out')
+                .setRequired(true),
             ),
         )
         .addSubcommand((s) =>
           s
             .setName('remove')
             .setDescription('Remove a personal abbreviation')
-            .addStringOption((o) => o.setName('termo').setDescription('Short word to remove').setRequired(true)),
+            .addStringOption((o) =>
+              o
+                .setName('term')
+                .setNameLocalizations({ 'pt-BR': 'termo' })
+                .setDescription('Short word to remove')
+                .setRequired(true),
+            ),
         )
         .addSubcommand((s) => s.setName('list').setDescription('List your personal abbreviations')),
     )
@@ -201,21 +228,38 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
         .setName('tts-channel')
         .setDescription('Set the auto-read channel')
         .addChannelOption((o) =>
-          o.setName('canal').setDescription('Text channel').addChannelTypes(ChannelType.GuildText).setRequired(true),
+          o
+            .setName('channel')
+            .setNameLocalizations({ 'pt-BR': 'canal' })
+            .setDescription('Text channel')
+            .addChannelTypes(ChannelType.GuildText)
+            .setRequired(true),
         ),
     )
     .addSubcommand((s) =>
       s
         .setName('autoread')
         .setDescription('Turn auto-read on/off')
-        .addBooleanOption((o) => o.setName('ativo').setDescription('on/off').setRequired(true)),
+        .addBooleanOption((o) =>
+          o
+            .setName('active')
+            .setNameLocalizations({ 'pt-BR': 'ativo' })
+            .setDescription('on/off')
+            .setRequired(true),
+        ),
     )
     .addSubcommand((s) =>
       s
         .setName('max-chars')
         .setDescription('Maximum characters per message')
         .addIntegerOption((o) =>
-          o.setName('valor').setDescription('1-2000').setRequired(true).setMinValue(1).setMaxValue(2000),
+          o
+            .setName('value')
+            .setNameLocalizations({ 'pt-BR': 'valor' })
+            .setDescription('1-2000')
+            .setRequired(true)
+            .setMinValue(1)
+            .setMaxValue(2000),
         ),
     )
     .addSubcommand((s) =>
@@ -223,7 +267,13 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
         .setName('rate-limit')
         .setDescription('Messages per minute per user')
         .addIntegerOption((o) =>
-          o.setName('valor').setDescription('1-120').setRequired(true).setMinValue(1).setMaxValue(120),
+          o
+            .setName('value')
+            .setNameLocalizations({ 'pt-BR': 'valor' })
+            .setDescription('1-120')
+            .setRequired(true)
+            .setMinValue(1)
+            .setMaxValue(120),
         ),
     )
     .addSubcommand((s) =>
@@ -238,7 +288,13 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
       s
         .setName('enabled')
         .setDescription('Turn TTS on/off on this server (kill-switch)')
-        .addBooleanOption((o) => o.setName('ativo').setDescription('on/off').setRequired(true)),
+        .addBooleanOption((o) =>
+          o
+            .setName('active')
+            .setNameLocalizations({ 'pt-BR': 'ativo' })
+            .setDescription('on/off')
+            .setRequired(true),
+        ),
     )
     .addSubcommand((s) =>
       s
@@ -273,13 +329,25 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
           s
             .setName('add')
             .setDescription('Add a word')
-            .addStringOption((o) => o.setName('palavra').setDescription('Word to block').setRequired(true)),
+            .addStringOption((o) =>
+              o
+                .setName('word')
+                .setNameLocalizations({ 'pt-BR': 'palavra' })
+                .setDescription('Word to block')
+                .setRequired(true),
+            ),
         )
         .addSubcommand((s) =>
           s
             .setName('remove')
             .setDescription('Remove a word')
-            .addStringOption((o) => o.setName('palavra').setDescription('Word to unblock').setRequired(true)),
+            .addStringOption((o) =>
+              o
+                .setName('word')
+                .setNameLocalizations({ 'pt-BR': 'palavra' })
+                .setDescription('Word to unblock')
+                .setRequired(true),
+            ),
         ),
     )
     .addSubcommandGroup((g) =>
@@ -290,16 +358,32 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
           s
             .setName('add')
             .setDescription('Add/edit a term')
-            .addStringOption((o) => o.setName('termo').setDescription('Term to replace').setRequired(true))
             .addStringOption((o) =>
-              o.setName('pronuncia').setDescription('How it should be read').setRequired(true),
+              o
+                .setName('term')
+                .setNameLocalizations({ 'pt-BR': 'termo' })
+                .setDescription('Term to replace')
+                .setRequired(true),
+            )
+            .addStringOption((o) =>
+              o
+                .setName('pronunciation')
+                .setNameLocalizations({ 'pt-BR': 'pronuncia' })
+                .setDescription('How it should be read')
+                .setRequired(true),
             ),
         )
         .addSubcommand((s) =>
           s
             .setName('remove')
             .setDescription('Remove a term')
-            .addStringOption((o) => o.setName('termo').setDescription('Term to remove').setRequired(true)),
+            .addStringOption((o) =>
+              o
+                .setName('term')
+                .setNameLocalizations({ 'pt-BR': 'termo' })
+                .setDescription('Term to remove')
+                .setRequired(true),
+            ),
         )
         .addSubcommand((s) => s.setName('list').setDescription('List the defined terms')),
     )
@@ -310,7 +394,8 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addChannelOption((o) =>
       o
-        .setName('canal')
+        .setName('channel')
+        .setNameLocalizations({ 'pt-BR': 'canal' })
         .setDescription('Auto-read channel (omit = use the current channel)')
         .addChannelTypes(ChannelType.GuildText)
         .setRequired(false),
@@ -414,7 +499,7 @@ async function handleTts(i: ChatInputCommandInteraction, deps: BotDeps): Promise
     await i.editReply(t('tts.notInVoice', locale));
     return;
   }
-  const raw = i.options.getString('texto', true).trim();
+  const raw = i.options.getString('text', true).trim();
   if (!raw) {
     await i.editReply(t('tts.nothingToRead', locale));
     return;
@@ -579,13 +664,13 @@ async function handleJoke(i: ChatInputCommandInteraction, deps: BotDeps): Promis
     await i.editReply(t('tts.notInVoice', locale));
     return;
   }
-  const langKey = i.options.getString('idioma', true);
+  const langKey = i.options.getString('language', true);
   const lang = jokeLangByKey(langKey);
   if (!lang) {
     await i.editReply(t('joke.unknownLang', locale));
     return;
   }
-  const risos = i.options.getBoolean('risos', true);
+  const risos = i.options.getBoolean('laughter', true);
 
   // Voz para a lingua escolhida: 1.º modelo instalado com o prefixo; se nao houver
   // (a lingua nao tem modelo instalado), cai no default da guild / .env / amy.
@@ -644,14 +729,14 @@ async function handleVoiceAbbrev(
     return;
   }
 
-  const term = i.options.getString('termo', true).trim();
+  const term = i.options.getString('term', true).trim();
   if (!term) {
     await reply(i, t('voice.abbrev.invalidTerm', locale));
     return;
   }
 
   if (sub === 'add') {
-    const replacement = i.options.getString('leitura', true).trim();
+    const replacement = i.options.getString('reading', true).trim();
     const res = addUserAbbrev(deps.db, userId, term, replacement);
     if (res.ok) {
       await reply(i, t('voice.abbrev.added', locale, { term: term.toLowerCase(), replacement }));
@@ -783,7 +868,7 @@ async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps): Prom
   const group = i.options.getSubcommandGroup(false);
   if (group === 'blockword') {
     const sub = i.options.getSubcommand();
-    const word = i.options.getString('palavra', true).trim();
+    const word = i.options.getString('word', true).trim();
     if (!word) {
       await reply(i, t('config.wordEmpty', locale));
       return;
@@ -810,13 +895,13 @@ async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps): Prom
       await reply(i, `${t('config.pronListHeader', locale)}\n${out}`);
       return;
     }
-    const term = i.options.getString('termo', true).trim();
+    const term = i.options.getString('term', true).trim();
     if (!term) {
       await reply(i, t('config.termEmpty', locale));
       return;
     }
     if (sub === 'add') {
-      const replacement = i.options.getString('pronuncia', true).trim();
+      const replacement = i.options.getString('pronunciation', true).trim();
       if (!replacement) {
         await reply(i, t('config.pronEmpty', locale));
         return;
@@ -831,7 +916,7 @@ async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps): Prom
   }
   const sub = i.options.getSubcommand();
   if (sub === 'tts-channel') {
-    const ch = i.options.getChannel('canal', true);
+    const ch = i.options.getChannel('channel', true);
     if (ch.type !== ChannelType.GuildText) {
       await reply(i, t('config.channelWrongType', locale));
       return;
@@ -847,11 +932,11 @@ async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps): Prom
     setGuildConfig(deps.db, i.guildId!, { ttsChannelId: ch.id });
     await reply(i, t('config.channelSet', locale, { channel: `<#${ch.id}>` }));
   } else if (sub === 'autoread') {
-    const on = i.options.getBoolean('ativo', true);
+    const on = i.options.getBoolean('active', true);
     setGuildConfig(deps.db, i.guildId!, { autoread: on });
     await reply(i, on ? t('config.autoreadOn', locale) : t('config.autoreadOff', locale));
   } else if (sub === 'max-chars') {
-    const v = i.options.getInteger('valor', true);
+    const v = i.options.getInteger('value', true);
     if (v < 1 || v > 2000) {
       await reply(i, t('config.maxCharsRange', locale));
       return;
@@ -859,7 +944,7 @@ async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps): Prom
     setGuildConfig(deps.db, i.guildId!, { maxChars: v });
     await reply(i, t('config.maxCharsSet', locale, { value: v }));
   } else if (sub === 'rate-limit') {
-    const v = i.options.getInteger('valor', true);
+    const v = i.options.getInteger('value', true);
     if (v < 1 || v > 120) {
       await reply(i, t('config.rateLimitRange', locale));
       return;
@@ -878,7 +963,7 @@ async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps): Prom
     }
   } else if (sub === 'enabled') {
     // Kill-switch do servidor: o messageHandler ja ignora tudo quando enabled=false.
-    const on = i.options.getBoolean('ativo', true);
+    const on = i.options.getBoolean('active', true);
     setGuildConfig(deps.db, i.guildId!, { enabled: on });
     await reply(i, on ? t('config.enabledOn', locale) : t('config.enabledOff', locale));
   } else if (sub === 'default-voice') {
@@ -975,8 +1060,8 @@ async function handleSetup(i: ChatInputCommandInteraction, deps: BotDeps): Promi
     return;
   }
 
-  // (a) Resolver o canal alvo: opcao `canal` ou, se omitida, o canal da interacao.
-  const ref = (i.options.getChannel('canal', false) as { id: string; type?: number } | null) ?? i.channel;
+  // (a) Resolver o canal alvo: opcao `channel` ou, se omitida, o canal da interacao.
+  const ref = (i.options.getChannel('channel', false) as { id: string; type?: number } | null) ?? i.channel;
   if (!ref || !('id' in ref)) {
     await reply(i, t('setup.noChannel', locale));
     return;
@@ -1267,7 +1352,7 @@ export async function handleAutocomplete(
       await i.respond(filterModelChoices(deps.availableModels, focused.value));
       return;
     }
-    if (focused.name === 'idioma') {
+    if (focused.name === 'language') {
       await i.respond(filterJokeLanguages(focused.value));
       return;
     }
