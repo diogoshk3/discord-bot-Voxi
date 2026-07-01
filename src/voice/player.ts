@@ -45,9 +45,17 @@ export class GuildVoicePlayer {
     });
 
     this.player.on('error', (err) => {
+      // So loga. NAO drena a fila aqui: no @discordjs/voice um erro de stream do
+      // recurso a tocar emite 'error' E DEPOIS transiciona para idle (o setter
+      // emite Idle) — sincrono, para o MESMO recurso. Ter playNext() aqui E no
+      // Idle drenava a fila 2x (double-fire), colapsando a flag `playing` (quebra
+      // single-worker/FIFO) e podendo disparar onIdle() a meio da fala. O Idle
+      // faz o unico drain. Tambem NAO se poe current=null aqui: num erro de
+      // recurso ja substituido (stale) nao ha Idle a seguir (guard resource ===
+      // this.state.resource no onStreamError), logo current aponta para o recurso
+      // NOVO e anula-lo aqui quebraria a reproducao; o reset de current fica so no
+      // Idle, que so ocorre para o recurso corrente.
       log.error('[player] erro no AudioPlayer:', err);
-      this.current = null;
-      void this.playNext();
     });
 
     this.connection.on(VoiceConnectionStatus.Disconnected, () => {
