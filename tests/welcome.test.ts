@@ -110,4 +110,21 @@ describe('buildWelcomeEmbed', () => {
     expect(text).toContain('Voxi');
     expect(text).toContain('/setup');
   });
+
+  // Posicionamento: o welcome tem de reforcar o diferenciador (voz neural gratis,
+  // sem paywall) — e o que separa o Voxi do lider pago do mercado. Afirmamos
+  // substrings distintivas (nao a frase inteira) para tolerar ajustes de wording.
+  it('reforca o diferenciador "voz neural gratis, sem paywall" (en)', () => {
+    const json = buildWelcomeEmbed('en').toJSON();
+    const desc = json.description ?? '';
+    expect(desc).toContain('neural');
+    expect(desc).toContain('paywall');
+  });
+
+  it('reforca o diferenciador tambem em pt', () => {
+    const json = buildWelcomeEmbed('pt').toJSON();
+    const desc = json.description ?? '';
+    expect(desc).toContain('neural');
+    expect(desc).toContain('paywall');
+  });
 });
