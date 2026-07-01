@@ -26,7 +26,8 @@ export function initDb(path: string): Database.Database {
         max_chars      INTEGER NOT NULL DEFAULT 300,
         rate_per_min   INTEGER NOT NULL DEFAULT 5,
         enabled        INTEGER NOT NULL DEFAULT 1,
-        tts_role_id    TEXT
+        tts_role_id    TEXT,
+        locale         TEXT NOT NULL DEFAULT 'en'
       );
 
       CREATE TABLE IF NOT EXISTS blocklist (
@@ -55,6 +56,13 @@ export function initDb(path: string): Database.Database {
     const cols = db.pragma('table_info(guild_config)') as Array<{ name: string }>;
     if (!cols.some((c) => c.name === 'tts_role_id')) {
       db.exec('ALTER TABLE guild_config ADD COLUMN tts_role_id TEXT');
+    }
+    // Migracao idempotente da coluna `locale` (P16.1): idioma da INTERFACE por
+    // guild. DEFAULT 'en' faz as linhas antigas lerem 'en' (ingles como base),
+    // nao NULL — ao contrario da migracao tts_role_id (que quer NULL). No-op em
+    // DBs novas (o CREATE TABLE ja inclui a coluna).
+    if (!cols.some((c) => c.name === 'locale')) {
+      db.exec("ALTER TABLE guild_config ADD COLUMN locale TEXT NOT NULL DEFAULT 'en'");
     }
 
     return db;
