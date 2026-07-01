@@ -20,8 +20,10 @@ O wedge (o cruzamento que os bots dominantes não servem bem) é:
   num erro de síntese.
 - **Auto-leitura** — lê automaticamente um canal de texto configurado (além de `/tts`
   e menções/replies ao bot).
-- **Deteção de língua por mensagem** — escolhe a voz por mensagem a partir da língua
-  detetada, com a voz guardada do utilizador a ter prioridade.
+- **Deteção de língua por mensagem** — a língua da mensagem decide a voz: a voz preferida
+  (guardada do utilizador > default da guild > .env) é honrada quando já está na língua
+  detetada, senão escolhe-se uma voz correta dessa língua (evita ler texto com o sotaque
+  errado).
 
 Estado por servidor (guild): cada guild tem a sua sessão de voz (ligação + player +
 fila FIFO) e a sua configuração persistida.
@@ -39,14 +41,16 @@ Cada pasta de `src/` e a sua responsabilidade (o que está realmente no código)
 | `store/blocklist.ts` | Blocklist de palavras por-guild: add/remove/get. | `db` |
 | `store/pronunciation.ts` | Dicionário de pronúncia por-guild (termo → substituição): add/remove/get. | `db` |
 | `store/optout.ts` | Opt-out de auto-leitura por-utilizador: is/set/clear. | `db` |
+| `store/userAbbrev.ts` | Abreviaturas pessoais por-utilizador, **GLOBAIS** (chave = só `user_id`, seguem o utilizador entre servidores): get/add/remove, cap de **10** por utilizador (`USER_ABBREV_CAP`), tabela `user_abbreviation`. | `db` |
 | `store/guildConfig.ts` (locale) | Além dos campos acima, `guild_config.locale` (idioma da **interface**; default `'en'`). | `db`, `i18n` |
 | `i18n/index.ts` | `t(key, locale, params)` — tradução pura da UI com fallback (`locale` pedido → `en` → própria `key`) e interpolação de `{param}`. `DEFAULT_LOCALE='en'`, `SUPPORTED_LOCALES=['en','pt']`, `LOCALE_DISPLAY_NAMES` (endónimos das choices de `/config language`). | `i18n/catalog` |
 | `i18n/catalog.ts` | Catálogo de strings da UI por chave, com `en` (base) e `pt`. | — |
 | `textCleaning/clean.ts` | Funções puras de limpeza: URL→"link", menções `@id`/`#id`→nome, remover code blocks, colapsar repetições, truncar a `maxChars`. **Strip de emoji alargado**: pictograma base + componentes zero-width (ZWJ `U+200D`, VS16 `U+FE0F`, keycap `U+20E3`) + regional indicators (bandeiras). Nomes resolvidos via callbacks. | — |
-| `textCleaning/abbreviations.ts` | `expandAbbreviations(text, lang)`: expande gírias/abreviaturas de chat por língua (ex. `btw`→"by the way") para o TTS soar natural. Dicionários curados por código franc (ISO 639-3) para 11 línguas + `VARIANT_ALIASES` (mesmo dict sob variantes de código). Match por fronteira de palavra `\p{L}\p{N}`. Língua desconhecida → texto intacto. | — |
+| `textCleaning/abbreviations.ts` | `expandAbbreviations(text)`: expande gírias/abreviaturas de chat **só inglesas** (ex. `btw`→"by the way") para o TTS soar natural. Dicionário **EN-only, auditado anti-colisão** (cada chave re-vetada contra palavras comuns das línguas latinas suportadas), aplicado em **QUALQUER** língua (um "brb" é "brb" em qualquer chat — sem argumento de língua). Match por fronteira de palavra `\p{L}\p{N}`. `isAllEnglishAbbrev(text)`: true se todos os tokens (ignorando pontuação envolvente) forem chaves do dict — usado para `forceLang='eng'`. | — |
+| `textCleaning/userAbbrev.ts` | `applyUserAbbrev(text, entries)`: aplica as abreviaturas **pessoais** do utilizador (termo → substituição). **Passagem única** (uma alternação sobre todos os termos, um só `replace` com replacer-função): corta cascata/re-expansão (anti billion-laughs DoS) e insere o replacement **literalmente** (sem interpretar `$&`/`$$`). Teto de saída (`MAX_ABBREV_OUTPUT`). | `store/userAbbrev` |
 | `textCleaning/pronunciation.ts` | `applyPronunciation(texto, dict)`: aplica o dicionário de pronúncia da guild ao texto limpo. | — |
 | `language/detect.ts` | `detectLang(texto)` → código ISO 639-3 (ex. `por`, `eng`) ou `''` se desconhecido/curto. | `franc` |
-| `language/voiceMap.ts` | `pickVoice(lang, available, fallback)`: mapeia a língua ao modelo Piper disponível por prefixo de locale; senão devolve o fallback. `LANG_TO_PREFIX` cobre todos os modelos Piper. `modelDisplayName`/`LOCALE_NAMES`: nome amigável (endónimo) por locale de modelo, para os dropdowns. | — |
+| `language/voiceMap.ts` | `pickVoiceForLang(lang, available, preferred)` (usado pelo `resolveSynth`): honra a voz **preferida** se já estiver na língua, senão escolhe um modelo dessa língua por prefixo de locale (fallback à preferida). `pickVoice(lang, available, fallback)`: variante que mapeia a língua ao modelo por prefixo, senão devolve o fallback. `LANG_TO_PREFIX` cobre todos os modelos Piper. `modelDisplayName`/`LOCALE_NAMES`: nome amigável (endónimo) por locale de modelo, para os dropdowns. | — |
 | `tts/engine.ts` | Interface `TTSEngine { synth(req): Promise<audioPath> }` e tipo `SynthRequest`. | — |
 | `tts/factory.ts` | `createEngine(config, cache)` seleciona o motor (Piper default; Neural atrás de flag). `selectEngine(base, config, models, cache)` (puro) embrulha o base num `MultiSegmentEngine` **só** se a flag `multilingualSegments` estiver ON; senão devolve o `base` por identidade (`===`). | `config`, `cache`, `piper`, `neural`, `multiSegment` |
 | `tts/piper.ts` | `PiperEngine`: faz `spawn` do Piper → WAV, com timeout e tratamento de erro/EPIPE. Cache-first. | `cache`, `node:child_process` |
@@ -60,9 +64,11 @@ Cada pasta de `src/` e a sua responsabilidade (o que está realmente no código)
 | `health/ffmpeg.ts` | `checkFfmpeg(getInfo?)`: health-check do binário ffmpeg no boot (via `prism-media`), com veredicto `{ok,version}`/`{ok:false,error}` e mensagem acionável (comando de correção no Windows). Injetável para testes. | `prism-media` |
 | `moderation/filter.ts` | `isBlocked(texto, blocklist)`: verifica a blocklist (pré-síntese). | — |
 | `moderation/rateLimiter.ts` | `RateLimiter` (token bucket) por-utilizador; poda preguiçosa de buckets cheios+inativos acima de `MAX_BUCKETS` (5000). | — |
-| `commands/index.ts` | Definições dos slash commands (`commandDefs`) e `handleInteraction` (join, leave, tts, skip, voice, config, stats, **help**, **setup**). Toda a UI passa por `t()`/`localeFor(deps, guildId)`. | tudo acima |
+| `commands/index.ts` | Definições dos slash commands (`commandDefs`) e `handleInteraction` (join, leave, tts, skip, **laugh**, **joke**, voice, config, stats, **help**, **setup**). Toda a UI passa por `t()`/`localeFor(deps, guildId)`. | tudo acima |
 | `commands/messageHandler.ts` | `handleMessage`: pipeline de auto-leitura/menção/reply em `messageCreate`. | store, textCleaning, moderation, resolveSynth |
-| `commands/resolveSynth.ts` | `resolveSynth`: resolve `SynthRequest` (precedência de voz + deteção de língua). | `language` |
+| `commands/resolveSynth.ts` | `resolveSynth`: resolve `SynthRequest` — a **língua da mensagem decide a voz** (`lang = forceLang \|\| detectLang(text)` + `pickVoiceForLang`). `ResolveSynthInput` inclui `forceLang` (código franc que força a língua da voz, ignorando `detectLang`; usado quando a mensagem é só gírias EN). | `language` |
+| `content/jokes.ts` | Catálogo de piadas curtas multilingue (~34 línguas) + `JOKE_LANGUAGES` (autocomplete `idioma`), `jokeLangByKey`, `pickJoke(langKey, seed)` (puro/seeded). Usado pelo `/joke`. | — |
+| `content/laughter.ts` | `laughterFor(prefix)`: riso localizado pela língua da voz (ex. cirílico para `ru_`), com fallback "hahaha". Usado pelo `/laugh` e pelo `/joke` (opção `risos`). | — |
 | `bot/welcome.ts` | `pickWelcomeChannel(guild)` + `buildWelcomeEmbed(locale)` (puros): escolha do canal e embed de boas-vindas no `guildCreate` (onboarding). | `i18n`, `discord.js` |
 | `bot/client.ts` | `createClient` (intents + partials) e `bindEvents` (eventos do gateway + handlers globais `unhandledRejection`/`uncaughtException`; `guildCreate`→welcome; `guildDelete`→`handleGuildDelete`). | `discord.js`, `commands`, `welcome` |
 | `bot/deps.ts` | Tipo `BotDeps` (injeção de dependências) e helpers `getPlayer`/`removePlayer`/`getLimiter`/`handleGuildDelete` (liberta limiter **e** player ao sair de uma guild). | — |
@@ -77,7 +83,12 @@ Cada pasta de `src/` e a sua responsabilidade (o que está realmente no código)
 `/help` (embed agrupado — Geral / Voz / Admin — derivado de `commandDefs`),
 `/setup` (onboarding guiado, admin; auto-join via `joinUserVoice`),
 `/join`, `/leave`, `/tts <texto>`, `/skip`,
+`/laugh` (o Voxi ri na voz atual do utilizador; `content/laughter.ts`),
+`/joke <idioma> <risos>` (piada curta na língua escolhida — `idioma` por autocomplete
+sobre ~34 línguas; `risos` acrescenta o riso da língua no fim; `content/jokes.ts`),
 `/voice set|list|reset|optout|optin|preview`,
+`/voice abbrev add|remove|list` (abreviaturas **pessoais** por-utilizador, **globais**,
+cap 10; `store/userAbbrev.ts` + `textCleaning/userAbbrev.ts`, tabela `user_abbreviation`),
 `/config` (admin: tts-channel, autoread, max-chars, rate-limit, role, enabled,
 default-voice, **language**, show, reset, + subgrupos `blockword` e `pronunciation`),
 `/stats` (admin).
@@ -108,9 +119,13 @@ Pipeline de auto-leitura em `commands/messageHandler.ts` (`handleMessage`), pela
 9. **Guard de legibilidade**: exige pelo menos **uma letra ou número** (`/[\p{L}\p{N}]/u`).
    Cobre o vazio `''` e também texto que ficou só com pontuação, símbolos ou resíduo
    zero-width do strip de emoji (rede de segurança) → nesse caso descarta.
-10. **Gírias/abreviaturas** (`expandAbbreviations(cleaned, detectLang(cleaned))`):
-    aplicada **depois** do `cleanText` (precisa de texto sem URLs/menções para detetar
-    a língua) e **antes** da pronúncia.
+10. **Abreviaturas pessoais + gírias EN**: primeiro `applyUserAbbrev(cleaned, …)`
+    (abreviaturas **pessoais** do utilizador, globais — precedência pessoal > embutido),
+    depois `expandAbbreviations(personal)` — gírias **só inglesas**, aplicadas em qualquer
+    língua (**sem** argumento de língua). Sobre o texto já com as abreviaturas pessoais
+    calcula-se `forceLang = isAllEnglishAbbrev(personal) ? 'eng' : undefined`, que força a
+    voz inglesa quando a mensagem é só gírias EN. Aplicado **depois** do `cleanText` e
+    **antes** da pronúncia.
 11. **Pronúncia** (`applyPronunciation`): aplicada **depois** das gírias e **antes** da
     blocklist, para que o texto realmente falado seja o que é verificado e guardado (a
     pronúncia opera sobre a palavra já expandida).
@@ -124,29 +139,38 @@ Pipeline de auto-leitura em `commands/messageHandler.ts` (`handleMessage`), pela
 16. **Inatividade**: sem fila e sem nada a tocar durante `inactivityMs` (default 5 min)
     → callback `onIdle` remove o player e sai do canal de voz.
 
-`/tts` e `/voice preview` reutilizam o mesmo sub-pipeline
-(rate-limit → cleanText → guard L/N → gírias → pronúncia → blocklist → resolveSynth →
-`say`), **mas não** estão sujeitos a gating por role nem a opt-out: são ações explícitas
-do utilizador (escreve o comando), não leitura passiva. Estes dois comandos **usam** o
-boolean de `say()` para responder com verdade — `tts.queued` se entrou na fila,
-`tts.busy` se a fila estava cheia; a auto-leitura ignora o valor.
+`/tts` reutiliza o mesmo sub-pipeline (rate-limit → cleanText → guard L/N →
+abreviaturas pessoais + gírias EN + `forceLang` → pronúncia → blocklist → resolveSynth →
+`say`), **mas não** está sujeito a gating por role nem a opt-out: é ação explícita do
+utilizador (escreve o comando), não leitura passiva. O `/voice preview` toca **uma voz
+específica** (demo) e por isso constrói o `SynthRequest` diretamente, sem passar por
+`resolveSynth`. `/tts` e `/voice preview` **usam** o boolean de `say()` para responder
+com verdade — `tts.queued` se entrou na fila, `tts.busy` se a fila estava cheia; a
+auto-leitura ignora o valor.
 
-### Precedência de voz (`resolveSynth` + `pickVoice`)
+`/laugh` e `/joke` também têm rate-limit por-utilizador (mesmo limiter do `/tts`) e
+constroem o `SynthRequest` diretamente (a língua é conhecida — a voz atual do user no
+`/laugh`, a língua escolhida no `/joke` — não detetada).
 
-A escolha de voz segue esta ordem (confirmada em `resolveSynth.ts` e `voiceMap.ts`):
+### Precedência de voz (`resolveSynth` + `pickVoiceForLang`)
 
-1. **Voz guardada do utilizador** (`user_voice`): se existir, usa o seu **modelo e
-   velocidade** e a deteção de língua **não** corre.
-2. Sem voz de utilizador: deteta a língua (`detectLang`) e, via `pickVoice`, usa o
-   **modelo da língua detetada se existir** em `availableModels`.
-3. Só quando a língua é desconhecida ou não há modelo correspondente é que cai no
-   **fallback** = `guild default_voice` (se não-vazio) → `.env DEFAULT_VOICE` →
-   `'en_US-amy-medium'`.
+A **língua da mensagem decide a voz.** `resolveSynth` deteta **sempre** a língua
+(`lang = forceLang || detectLang(text)`) e chama `pickVoiceForLang(lang, available,
+preferred)` (confirmado em `resolveSynth.ts` e `voiceMap.ts`):
 
-Subtileza: a deteção de língua pode **sobrepor-se** ao `default_voice` da guild —
-o default só é usado quando nenhuma língua corresponde. A **velocidade** vem da voz
-guardada do utilizador, senão é **sempre** `defaultSpeed` (`DEFAULT_SPEED`); o
-`default_voice` da guild define apenas o modelo, nunca a velocidade.
+1. **Voz preferida** — por precedência: voz guardada do utilizador (`user_voice`) →
+   `guild default_voice` (se não-vazio) → `.env DEFAULT_VOICE` → `'en_US-amy-medium'`.
+2. A voz preferida é **honrada só quando já está na língua detetada**. Caso contrário
+   escolhe-se uma **voz correta da língua detetada**; se não houver modelo para essa
+   língua, cai-se na **preferida**.
+3. **`forceLang`**: quando a mensagem é só gírias EN (`isAllEnglishAbbrev`), passa-se
+   `forceLang='eng'` e a escolha usa essa língua em vez de `detectLang` (que em texto
+   curto pode devolver `''`).
+
+Consequência (design): uma voz fixa (ex. via `/voice set`) **nunca** acaba a ler texto
+de outra língua — que sairia "a comer as palavras". A **velocidade** vem da voz guardada
+do utilizador, senão é **sempre** `defaultSpeed` (`DEFAULT_SPEED`); o `default_voice` da
+guild define apenas o modelo, nunca a velocidade.
 
 ## Decisões de arquitetura
 
@@ -162,10 +186,13 @@ guardada do utilizador, senão é **sempre** `defaultSpeed` (`DEFAULT_SPEED`); o
   (o default seguro), em vez de crashar o arranque por um typo. Toda a app fala com a
   interface abstrata `TTSEngine`, por isso trocar de motor não toca no resto.
 
-- **(c) Precedência de voz.** user-voice (modelo+velocidade) > modelo da língua detetada
-  (se disponível) > `guild default_voice` (se não-vazio) > `.env DEFAULT_VOICE` >
-  `'en_US-amy-medium'`. Ver "Precedência de voz" acima. Mantém a escolha automática por
-  mensagem sem perder a preferência explícita do utilizador.
+- **(c) A língua da mensagem decide a voz.** `resolveSynth` deteta **sempre** a língua
+  (`forceLang || detectLang`) e usa `pickVoiceForLang`: a voz **preferida** (user-voice >
+  `guild default_voice` > `.env DEFAULT_VOICE` > `'en_US-amy-medium'`) é honrada **só
+  quando já está na língua detetada**; senão escolhe-se uma voz correta dessa língua
+  (fallback à preferida). Ver "Precedência de voz" acima. Evita que uma voz fixa leia
+  texto de outra língua (garble), sem perder a preferência explícita quando as línguas
+  coincidem.
 
 - **(d) Gating por canal e por role como checks standalone.** O trigger (canal de
   auto-leitura, menção, reply) e o gating por role são verificações separadas **após** o
@@ -320,9 +347,10 @@ Estes cinco pontos são requisitos de correção do `GuildVoicePlayer`, não oti
   `sha1(texto+modelo+velocidade)` não inclui o motor; se um motor e outro produzissem a
   mesma chave, poderiam servir áudio errado. Isto está mitigado por
   `withNamespace('piper'|'neural')`, que separa fisicamente as caches.
-- **Deteção de língua pode sobrepor-se ao `default_voice` da guild.** Como `pickVoice`
-  prefere o modelo da língua detetada, uma guild que configurou `default_voice` só o vê
-  aplicado quando nenhuma língua corresponde (ver "Precedência de voz").
+- **A língua da mensagem pode sobrepor-se ao `default_voice` da guild.** Como a voz é
+  escolhida pela língua detetada (`pickVoiceForLang`), uma guild que configurou
+  `default_voice` só o vê aplicado quando esse modelo já está na língua da mensagem, ou
+  quando não há modelo para a língua detetada (ver "Precedência de voz").
 - **Multi-segmento só separa com confiança texto multi-script.** `detectSegments` parte
   por run de script (Latin/Cyrillic/CJK/Arabic). Duas línguas do **mesmo script** na
   mesma frase (ex. inglês + francês, ambos Latin) não são separadas de forma fiável — o
@@ -332,10 +360,12 @@ Estes cinco pontos são requisitos de correção do `GuildVoicePlayer`, não oti
 - **`cym`/`isl`/`ltz` dormentes na deteção.** `LANG_TO_PREFIX` mapeia galês, islandês e
   luxemburguês, mas o **franc v5** não os emite (sem modelo de trigramas), pelo que hoje
   não são detetados por mensagem. As entradas ficam (corretas e forward-compatible):
-  `pickVoice` é independente do franc, por isso funcionam se a fonte de deteção mudar.
-- **Dicionários de gírias parciais.** `expandAbbreviations` cobre 11 línguas; várias
-  (ex. ucraniano) ficam **vazias de propósito** (curadoria pendente de um falante — uma
-  expansão errada é pior que nenhuma). Chinês/árabe/persa/suaíli não têm dict e os
-  `VARIANT_ALIASES` estão prontos mas sem apontar para nada hoje.
+  `pickVoiceForLang` é independente do franc, por isso funcionam se a fonte de deteção mudar.
+- **Gírias só inglesas.** `expandAbbreviations` usa um dicionário **EN-only** (auditado
+  anti-colisão), aplicado em qualquer língua. Gírias não-inglesas (pt/es/fr/…) **não** são
+  expandidas de propósito: uma expansão errada é pior que nenhuma, e cada chave EN foi
+  re-vetada contra palavras comuns das línguas latinas suportadas para não disparar por
+  engano. Abreviaturas específicas de outra língua ficam a cargo do utilizador via
+  `/voice abbrev` (pessoais) ou do admin via `/config pronunciation` (por-guild).
 - **Mobile.** Limitação estrutural da plataforma Discord (clientes móveis não tocam o
   áudio de bots de voz de forma fiável); fora de âmbito.
