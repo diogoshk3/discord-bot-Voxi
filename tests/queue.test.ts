@@ -50,4 +50,48 @@ describe('PlayQueue', () => {
     expect(q.size()).toBe(0);
     expect(q.dequeue()).toBeUndefined();
   });
+
+  it('cap=0 rejeita sempre o enqueue', () => {
+    const q = new PlayQueue(0);
+    expect(q.enqueue(item('a'))).toBe(false);
+    expect(q.enqueue(item('b'))).toBe(false);
+    expect(q.size()).toBe(0);
+    // Continua a rejeitar mesmo depois de tentativas repetidas
+    expect(q.enqueue(item('c'))).toBe(false);
+    expect(q.size()).toBe(0);
+  });
+
+  it('cap=1 aceita o 1o, rejeita o 2o e volta a aceitar apos dequeue', () => {
+    const q = new PlayQueue(1);
+    expect(q.enqueue(item('a'))).toBe(true);
+    expect(q.enqueue(item('b'))).toBe(false);
+    expect(q.size()).toBe(1);
+    // Liberta a unica vaga
+    expect(q.dequeue()).toEqual(item('a'));
+    expect(q.size()).toBe(0);
+    // Ha espaco de novo
+    expect(q.enqueue(item('b'))).toBe(true);
+    expect(q.size()).toBe(1);
+  });
+
+  it('dequeue numa fila vazia devolve undefined', () => {
+    const q = new PlayQueue(3);
+    expect(q.dequeue()).toBeUndefined();
+    // Continua undefined em chamadas repetidas
+    expect(q.dequeue()).toBeUndefined();
+    expect(q.size()).toBe(0);
+  });
+
+  it('clear a meio esvazia e a fila aceita de novo', () => {
+    const q = new PlayQueue(3);
+    q.enqueue(item('a'));
+    q.enqueue(item('b'));
+    expect(q.size()).toBe(2);
+    q.clear();
+    expect(q.size()).toBe(0);
+    // Depois do clear volta a aceitar itens normalmente
+    expect(q.enqueue(item('c'))).toBe(true);
+    expect(q.size()).toBe(1);
+    expect(q.dequeue()).toEqual(item('c'));
+  });
 });
