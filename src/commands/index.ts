@@ -66,6 +66,37 @@ function localeFor(deps: BotDeps, guildId: string | null | undefined): string {
 }
 
 /**
+ * Locale da INTERFACE para uma resposta PER-UTILIZADOR (ephemeral). O Discord
+ * envia o idioma do CLIENTE de quem clicou em `interaction.locale` (ex. 'pt-BR',
+ * 'en-US', 'es-ES'); assim cada utilizador ve a UI na SUA lingua, sem depender do
+ * locale configurado na guild.
+ *
+ * Resolucao (nunca lanca — como localeFor):
+ *   1. Normaliza `interaction.locale` para o codigo base: parte antes do '-' em
+ *      minusculas ('pt-BR'->'pt', 'en-US'->'en', 'es-419'->'es', 'zh-CN'->'zh',
+ *      'sv-SE'->'sv'; um codigo ja base como 'fr' mapeia para si proprio). Uma
+ *      regra generica cobre TODAS as variantes do Discord — sem casos especiais.
+ *   2. Se o codigo base estiver em SUPPORTED_LOCALES -> usa-o.
+ *   3. Senao (lingua do Discord que ainda nao suportamos, ou locale ausente) ->
+ *      cai no locale configurado da GUILD (localeFor), que por sua vez cai em
+ *      DEFAULT_LOCALE. Assim /config language continua a ser o fallback partilhado.
+ */
+export function localeForUser(
+  deps: BotDeps,
+  interaction: { locale?: string | null; guildId?: string | null },
+): string {
+  const raw = interaction?.locale;
+  if (raw) {
+    const base = raw.split('-')[0].toLowerCase();
+    if ((SUPPORTED_LOCALES as readonly string[]).includes(base)) {
+      return base;
+    }
+  }
+  // Lingua do Discord nao suportada / ausente -> fallback para a guild (e default).
+  return localeFor(deps, interaction?.guildId);
+}
+
+/**
  * Permissoes minimas que o Voxi precisa no servidor onde for convidado, derivadas
  * dos 5 bits nomeados via PermissionsBitField (NAO um numero magico):
  *  - Connect/Speak       -> entrar e falar nos canais de voz (o core do bot)
@@ -306,17 +337,16 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
       s
         .setName('language')
         .setDescription('Set the interface language (English is the default)')
-        // As CHOICES sao DERIVADAS de SUPPORTED_LOCALES (map -> {name,value}): quando
-        // se adiciona um locale ao i18n, este comando acompanha automaticamente, sem
-        // editar aqui. O nome legivel vem de LOCALE_DISPLAY_NAMES (endonimo).
+        // AUTOCOMPLETE (nao choices): suportamos 34 linguas de interface > 25, o cap
+        // do Discord para choices estaticas. O ramo `locale` do handleAutocomplete
+        // filtra SUPPORTED_LOCALES por endonimo/codigo (LOCALE_DISPLAY_NAMES) e
+        // devolve ate 25 sugestoes. O handler valida a escolha contra SUPPORTED_LOCALES.
         .addStringOption((o) =>
           o
             .setName('locale')
             .setDescription('Interface language')
             .setRequired(true)
-            .addChoices(
-              ...SUPPORTED_LOCALES.map((l) => ({ name: LOCALE_DISPLAY_NAMES[l], value: l })),
-            ),
+            .setAutocomplete(true),
         ),
     )
     .addSubcommand((s) => s.setName('show').setDescription("Show the server's current configuration"))
@@ -468,7 +498,7 @@ export function joinUserVoice(i: ChatInputCommandInteraction, deps: BotDeps): Jo
 }
 
 async function handleJoin(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
-  const locale = localeFor(deps, i.guildId);
+  const locale = localeForUser(deps, i);
   const outcome = joinUserVoice(i, deps);
   switch (outcome.status) {
     case 'no-channel':
@@ -486,14 +516,14 @@ async function handleJoin(i: ChatInputCommandInteraction, deps: BotDeps): Promis
 async function handleLeave(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
   removePlayer(deps, i.guildId!);
   getVoiceConnection(i.guildId!)?.destroy();
-  await reply(i, t('leave.left', localeFor(deps, i.guildId)));
+  await reply(i, t('leave.left', localeForUser(deps, i)));
 }
 
 async function handleTts(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
   // A sintese pode demorar ate ~15s; defer imediato para nao perder o token (3s).
   await i.deferReply({ flags: MessageFlags.Ephemeral });
 
-  const locale = localeFor(deps, i.guildId);
+  const locale = localeForUser(deps, i);
   const player = getPlayer(deps, i.guildId!);
   if (!player) {
     await i.editReply(t('tts.notInVoice', locale));
@@ -579,7 +609,7 @@ async function handleTts(i: ChatInputCommandInteraction, deps: BotDeps): Promise
 }
 
 async function handleSkip(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
-  const locale = localeFor(deps, i.guildId);
+  const locale = localeForUser(deps, i);
   const player = getPlayer(deps, i.guildId!);
   if (!player) {
     await reply(i, t('skip.notInVoice', locale));
@@ -620,7 +650,7 @@ export function localePrefixOf(model: string): string {
 async function handleLaugh(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
   // A sintese pode demorar; defer imediato para nao perder o token (3s).
   await i.deferReply({ flags: MessageFlags.Ephemeral });
-  const locale = localeFor(deps, i.guildId);
+  const locale = localeForUser(deps, i);
   const player = getPlayer(deps, i.guildId!);
   if (!player) {
     await i.editReply(t('tts.notInVoice', locale));
@@ -665,7 +695,7 @@ const JOKE_LAUGH_PAUSE_MS = 1000;
  */
 async function handleJoke(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
   await i.deferReply({ flags: MessageFlags.Ephemeral });
-  const locale = localeFor(deps, i.guildId);
+  const locale = localeForUser(deps, i);
   const player = getPlayer(deps, i.guildId!);
   if (!player) {
     await i.editReply(t('tts.notInVoice', locale));
@@ -790,7 +820,7 @@ async function handleVoiceAbbrev(
 }
 
 async function handleVoice(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
-  const locale = localeFor(deps, i.guildId);
+  const locale = localeForUser(deps, i);
   // Grupo `abbrev` PRIMEIRO (mesmo padrao do handleConfig): sem isto, o subcomando
   // `/voice abbrev list` daria getSubcommand()==='list' e cairia no ramo da lista de
   // modelos. As abreviaturas pessoais sao POR-UTILIZADOR e GLOBAIS (sem gate de
@@ -883,7 +913,7 @@ async function handleVoice(i: ChatInputCommandInteraction, deps: BotDeps): Promi
 }
 
 async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
-  const locale = localeFor(deps, i.guildId);
+  const locale = localeForUser(deps, i);
   const member = i.member as GuildMember;
   if (!member?.permissions?.has(PermissionFlagsBits.ManageGuild)) {
     await reply(i, t('error.needManageGuild', locale));
@@ -1077,7 +1107,7 @@ function permLine(label: string, state: PermState, locale: string): string {
  *    garante que esse caminho funciona mesmo sem hit na cache.
  */
 async function handleSetup(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
-  const locale = localeFor(deps, i.guildId);
+  const locale = localeForUser(deps, i);
   const member = i.member as GuildMember;
   if (!member?.permissions?.has(PermissionFlagsBits.ManageGuild)) {
     await reply(i, t('error.needManageGuild', locale));
@@ -1228,7 +1258,7 @@ async function handleStats(i: ChatInputCommandInteraction, deps: BotDeps): Promi
  *    apanhar tanto undefined como string vazia.
  */
 async function handleInvite(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
-  const locale = localeFor(deps, i.guildId);
+  const locale = localeForUser(deps, i);
   const clientId = deps.config.clientId;
   if (!clientId) {
     await reply(i, t('invite.noClientId', locale));
@@ -1259,7 +1289,7 @@ async function handleInvite(i: ChatInputCommandInteraction, deps: BotDeps): Prom
  *    string vazia), tal como o /invite.
  */
 async function handleVote(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
-  const locale = localeFor(deps, i.guildId);
+  const locale = localeForUser(deps, i);
   const clientId = deps.config.clientId;
   if (!clientId) {
     await reply(i, t('vote.noClientId', locale));
@@ -1291,9 +1321,10 @@ async function handleVote(i: ChatInputCommandInteraction, deps: BotDeps): Promis
  *  - Reply ephemeral para nao poluir o canal.
  */
 async function handleHelp(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
-  // Locale da INTERFACE por guild (default 'en'). Em DMs (guildId null) usamos o
-  // default via localeFor, que nunca lanca.
-  const locale = localeFor(deps, i.guildId);
+  // Locale da INTERFACE do UTILIZADOR que pediu ajuda (o /help e ephemeral, so ele
+  // o ve): usa o Discord locale do cliente dele (localeForUser), com fallback para o
+  // locale da guild e depois DEFAULT_LOCALE. Nunca lanca.
+  const locale = localeForUser(deps, i);
 
   // Cada FIELD tem um nome (cabecalho traduzido) e um value (corpo traduzido). O
   // quick-start vem primeiro para o principiante arrancar sem ler tudo.
@@ -1361,6 +1392,24 @@ export function filterJokeLanguages(query: string): { name: string; value: strin
 }
 
 /**
+ * Filtra os locales da INTERFACE suportados pelo que o utilizador escreve na opcao
+ * `locale` do /config language (case-insensitive, por substring do endonimo OU do
+ * codigo), limitado a 25 (maximo do Discord para autocomplete). Suportamos 34
+ * linguas > 25, por isso o cap e mesmo necessario (uma query vazia excederia o
+ * limite) — foi por isto que este comando passou de choices estaticas a
+ * autocomplete. Pura e testavel. name = endonimo (LOCALE_DISPLAY_NAMES), value =
+ * codigo (o que se grava em guild_config.locale).
+ */
+export function filterLocaleChoices(query: string): { name: string; value: string }[] {
+  const q = query.trim().toLowerCase();
+  return SUPPORTED_LOCALES.filter(
+    (code) => LOCALE_DISPLAY_NAMES[code].toLowerCase().includes(q) || code.toLowerCase().includes(q),
+  )
+    .map((code) => ({ name: LOCALE_DISPLAY_NAMES[code], value: code }))
+    .slice(0, 25);
+}
+
+/**
  * Autocomplete das opções `model` (/voice set, /voice preview, /config
  * default-voice) e `idioma` (/joke): mostra as vozes REALMENTE instaladas / as
  * linguas suportadas para o utilizador escolher de uma lista, em vez de escrever o
@@ -1378,6 +1427,12 @@ export async function handleAutocomplete(
     }
     if (focused.name === 'language') {
       await i.respond(filterJokeLanguages(focused.value));
+      return;
+    }
+    // /config language: a opcao chama-se `locale` (NAO `language` — essa e do /joke).
+    // 34 linguas > 25 choices estaticas do Discord, por isso e autocomplete.
+    if (focused.name === 'locale') {
+      await i.respond(filterLocaleChoices(focused.value));
       return;
     }
     await i.respond([]);

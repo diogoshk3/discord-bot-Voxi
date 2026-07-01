@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { t, SUPPORTED_LOCALES, DEFAULT_LOCALE } from '../src/i18n/index';
+import {
+  t,
+  SUPPORTED_LOCALES,
+  DEFAULT_LOCALE,
+  LOCALE_DISPLAY_NAMES,
+} from '../src/i18n/index';
+import { locales } from '../src/i18n/locales/index';
 
 describe('i18n — t(key, locale, params)', () => {
   it('DEFAULT_LOCALE e "en" e "en" e um locale suportado', () => {
@@ -40,5 +46,71 @@ describe('i18n — t(key, locale, params)', () => {
 
   it('locale nao suportado cai no fallback EN', () => {
     expect(t('help.groupStarted', 'xx')).toBe('Getting started');
+  });
+
+  // Phase A: locale SUPORTADO mas ainda SEM traducao (registry vazio) -> cai no EN.
+  // 'es' esta em SUPPORTED_LOCALES mas nao tem ficheiro locales/es.ts nem valor
+  // inline no catalogo, por isso t('help.title','es') === o valor EN de hoje. Isto
+  // prova que a cadeia do registry esta ligada sem regressao.
+  it('locale suportado mas sem traducao (es) cai no fallback EN', () => {
+    expect(t('help.title', 'es')).toBe(t('help.title', 'en'));
+    expect(t('help.groupStarted', 'es')).toBe('Getting started');
+  });
+
+  // Prova a arquitetura da FASE B: quando existe um ficheiro locales/<code>.ts com a
+  // chave, t() serve essa traducao (branch 1 da cadeia). Em Fase A o registry esta
+  // vazio, por isso NENHUM outro teste exercita este ramo — sem isto, um bug em
+  // `locales[locale]?.[key]` so aparecia em Fase B. Registamos/limpamos in-line.
+  it('usa a traducao do registry por-locale quando presente (branch 1)', () => {
+    locales['zz'] = { 'help.groupStarted': 'REG-WIN' };
+    try {
+      expect(t('help.groupStarted', 'zz')).toBe('REG-WIN');
+    } finally {
+      delete locales['zz'];
+    }
+  });
+
+  it('o registry por-locale tem precedencia sobre o valor inline do catalogo (pt)', () => {
+    // 'help.groupStarted' tem `pt` inline ("Primeiros passos"); um override no
+    // registry para pt deve GANHAR a esse inline (branch 1 > branch 2).
+    locales['pt'] = { 'help.groupStarted': 'OVERRIDE-PT' };
+    try {
+      expect(t('help.groupStarted', 'pt')).toBe('OVERRIDE-PT');
+    } finally {
+      delete locales['pt'];
+    }
+  });
+});
+
+describe('i18n — SUPPORTED_LOCALES + endonimos (34 linguas de voz)', () => {
+  const EXPECTED = [
+    'en', 'pt', 'es', 'fr', 'de', 'nl', 'pl', 'tr', 'cs', 'sv', 'fi', 'da',
+    'ro', 'hu', 'cy', 'is', 'lb', 'lv', 'sk', 'sl', 'sw', 'vi', 'ca', 'it',
+    'el', 'ru', 'uk', 'kk', 'sr', 'ar', 'fa', 'ka', 'ne', 'zh',
+  ];
+
+  it('SUPPORTED_LOCALES tem exatamente as 34 linguas de voz', () => {
+    expect([...SUPPORTED_LOCALES]).toEqual(EXPECTED);
+    expect(SUPPORTED_LOCALES.length).toBe(34);
+  });
+
+  it('LOCALE_DISPLAY_NAMES tem um endonimo (nome na propria lingua) para CADA locale', () => {
+    for (const code of EXPECTED) {
+      const name = (LOCALE_DISPLAY_NAMES as Record<string, string>)[code];
+      expect(name, `falta endonimo para ${code}`).toBeTruthy();
+      expect(typeof name).toBe('string');
+    }
+  });
+
+  it('endonimos-chave estao na PROPRIA lingua (autonimo, nao em ingles)', () => {
+    const N = LOCALE_DISPLAY_NAMES as Record<string, string>;
+    expect(N.en).toBe('English');
+    expect(N.pt).toBe('Português');
+    expect(N.de).toBe('Deutsch');
+    expect(N.zh).toBe('中文');
+    expect(N.ru).toBe('Русский');
+    expect(N.ar).toBe('العربية');
+    expect(N.el).toBe('Ελληνικά');
+    expect(N.uk).toBe('Українська');
   });
 });
