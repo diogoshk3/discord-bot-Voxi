@@ -127,4 +127,31 @@ describe('buildWelcomeEmbed', () => {
     expect(desc).toContain('neural');
     expect(desc).toContain('paywall');
   });
+
+  // Onboarding beginner-friendly: alem de /setup+/help, o welcome tem de mostrar o
+  // FLUXO em 3 passos para os membros (join voz -> /join -> escrever/tts) num FIELD
+  // (a descricao continua a ser o posicionamento). Field mantem-nos dentro do cap
+  // de 1024 e nao mexe nos asserts da descricao.
+  it('inclui um field com o fluxo em 3 passos (join voz -> /join -> escrever) em en', () => {
+    const json = buildWelcomeEmbed('en').toJSON();
+    const fields = json.fields ?? [];
+    expect(fields.length).toBeGreaterThan(0);
+    const body = fields.map((f) => `${f.name}\n${f.value}`).join('\n');
+    expect(body).toMatch(/\/join/);
+    expect(body).toMatch(/voice/i); // passo 1: entrar num canal de voz
+    expect(body).toMatch(/type|\/tts/i); // passo 3: escrever ou /tts
+    // cada field respeita os limites do Discord (name<=256, value<=1024)
+    for (const f of fields) {
+      expect(f.name.length).toBeLessThanOrEqual(256);
+      expect(f.value.length).toBeLessThanOrEqual(1024);
+    }
+  });
+
+  it('o field do fluxo em 3 passos tambem existe em pt', () => {
+    const json = buildWelcomeEmbed('pt').toJSON();
+    const fields = json.fields ?? [];
+    const body = fields.map((f) => `${f.name}\n${f.value}`).join('\n');
+    expect(body).toMatch(/\/join/);
+    expect(body).toMatch(/voz/i); // passo 1 em pt
+  });
 });

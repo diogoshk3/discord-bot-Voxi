@@ -654,6 +654,25 @@ export const catalog: Record<string, Entry> = {
     en: "Voxi reads your chat out loud in voice channels — type it, hear it.\n\n**Get started in one step:** run {setup} and I'll set up auto-read and join your voice channel.\n\nNeed the full command list? Run {help}.",
     pt: 'O Voxi le o teu chat em voz alta nos canais de voz — escreve e ouve.\n\n**Comeca num passo:** corre {setup} e eu configuro a auto-leitura e entro no teu canal de voz.\n\nQueres a lista completa de comandos? Corre {help}.',
   },
+  // Field do welcome: o fluxo em 3 passos para os MEMBROS arrancarem. Curto e
+  // concreto (join voz -> /join -> escrever/tts), a apontar para /help para a lista
+  // completa — teaser, NAO a referencia de comandos. Cabe no cap de 1024 do field.
+  'welcome.stepsTitle': {
+    en: 'How members use it (3 steps)',
+    pt: 'Como os membros usam (3 passos)',
+  },
+  'welcome.stepsBody': {
+    en:
+      '1) Join a voice channel\n' +
+      '2) Run /join so I join you\n' +
+      '3) Type in the text channel (or use /tts) and I read it out loud\n' +
+      'Full command list: /help',
+    pt:
+      '1) Entra num canal de voz\n' +
+      '2) Corre /join para eu entrar contigo\n' +
+      '3) Escreve no canal de texto (ou usa /tts) e eu leio em voz alta\n' +
+      'Lista completa de comandos: /help',
+  },
   'welcome.footer': {
     en: 'Voxi — type it, hear it.',
     // Sem `pt`: a tagline e a mesma em qualquer idioma (fallback a en).
