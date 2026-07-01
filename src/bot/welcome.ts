@@ -74,9 +74,13 @@ export function pickWelcomeChannel(guild: WelcomeGuildLike): WelcomeChannelLike 
  * Menciona o que o Voxi faz, /setup como 1.º passo e /help para a lista completa.
  */
 export function buildWelcomeEmbed(locale: string = DEFAULT_LOCALE): EmbedBuilder {
+  // Reforca o diferenciador (voz neural gratis, sem paywall) logo no welcome: e o
+  // que separa o Voxi do lider pago do mercado. Anexado a descricao para nao
+  // colidir com o footer da marca ('welcome.footer').
+  const description = `${t('welcome.description', locale, { setup: '`/setup`', help: '`/help`' })}\n\n${t('welcome.tagline', locale)}`;
   return new EmbedBuilder()
     .setColor(0x5865f2) // blurple — coerente com o embed do /help
     .setTitle(t('welcome.title', locale))
-    .setDescription(t('welcome.description', locale, { setup: '`/setup`', help: '`/help`' }))
+    .setDescription(description)
     .setFooter({ text: t('welcome.footer', locale) });
 }

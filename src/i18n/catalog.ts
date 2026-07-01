@@ -508,4 +508,11 @@ export const catalog: Record<string, Entry> = {
     en: 'Voxi — type it, hear it.',
     // Sem `pt`: a tagline e a mesma em qualquer idioma (fallback a en).
   },
+  // Diferenciador vs. o lider pago do mercado ("TTS Bot", ~€5/mes): a voz neural do
+  // Voxi e gratuita e sem paywall. SO texto de posicionamento — NAO promete "mais
+  // facil"/"invite-and-go" (o projeto e self-host; os docs avisam para nao o dizer).
+  'welcome.tagline': {
+    en: 'Natural neural voice — free forever, no paywall.',
+    pt: 'Voz neural natural — grátis para sempre, sem paywall.',
+  },
 };

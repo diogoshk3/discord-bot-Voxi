@@ -964,7 +964,10 @@ async function handleHelp(i: ChatInputCommandInteraction, deps: BotDeps): Promis
   const embed = new EmbedBuilder()
     .setColor(0x5865f2) // blurple — parece intencional, nao o cinzento default
     .setTitle(t('help.embedTitle', locale))
-    .setDescription(`${t('help.title', locale)}\n${t('help.intro', locale)}`)
+    // Reforca o diferenciador (voz neural gratis, sem paywall) na descricao — a
+    // mesma chave do welcome embed. Fica no fim da descricao para nao alterar o
+    // numero de fields (o embed mantem exatamente 3 grupos).
+    .setDescription(`${t('help.title', locale)}\n${t('help.intro', locale)}\n\n${t('welcome.tagline', locale)}`)
     .addFields(
       { name: t('help.groupGeneral', locale), value: generalValue },
       { name: t('help.groupVoice', locale), value: voiceValue },
