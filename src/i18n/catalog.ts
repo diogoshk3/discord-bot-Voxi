@@ -441,6 +441,25 @@ export const catalog: Record<string, Entry> = {
     en: "Everything's ready. Type in the auto-read channel and I'll read it out loud.",
     pt: 'Esta tudo pronto. Escreve no canal de auto-leitura e eu leio em voz alta.',
   },
+  // Guia para MEMBROS (nao-admin): o passo seguinte que o admin partilha com o
+  // servidor. E o fluxo em 3 passos — curto e concreto, NAO a referencia completa
+  // de comandos (essa e o /help). Header + corpo numerado.
+  'setup.membersHeader': {
+    en: '**Tell your members (the 3-step flow):**',
+    pt: '**Diz aos teus membros (o fluxo em 3 passos):**',
+  },
+  'setup.membersBody': {
+    en:
+      '1) Join a voice channel\n' +
+      '2) Run /join so I hop in with you\n' +
+      '3) Type in this channel (or use /tts) and I read it out loud\n' +
+      'Full command list: /help',
+    pt:
+      '1) Entra num canal de voz\n' +
+      '2) Corre /join para eu entrar contigo\n' +
+      '3) Escreve neste canal (ou usa /tts) e eu leio em voz alta\n' +
+      'Lista completa de comandos: /help',
+  },
 
   // ── /stats ────────────────────────────────────────────────────────────────
   'stats.title': {

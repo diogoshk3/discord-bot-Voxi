@@ -191,6 +191,15 @@ describe('/setup — caminho feliz (todas as perms + em VC)', () => {
     // /join): confirma que se juntou e limpa o player para nao deixar timers.
     expect(joinVoiceChannel).toHaveBeenCalledTimes(1);
     expect(text).toMatch(/Sala/); // menciona o canal de voz onde entrou
+
+    // ONBOARDING (beginner-friendly): o /setup tem de dizer aos MEMBROS o passo
+    // seguinte (nao so ao admin) — o fluxo em 3 passos join voz -> /join -> escrever.
+    // Afirmamos os marcadores distintivos desse "guia para membros".
+    expect(text).toMatch(/members|membros/i); // seccao dedicada aos membros
+    expect(text).toMatch(/\/join/i);
+    // menciona "type"/"escrever" como o passo final para os membros
+    expect(text).toMatch(/type|escrev/i);
+
     deps.players.get(GUILD)?.destroy();
   });
 });

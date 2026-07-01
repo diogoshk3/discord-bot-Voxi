@@ -1047,6 +1047,12 @@ async function handleSetup(i: ChatInputCommandInteraction, deps: BotDeps): Promi
     lines.push('', joinedChannelName !== null ? t('setup.readyTalk', locale) : t('setup.allGood', locale));
   }
 
+  // Guia para MEMBROS: o admin acabou de configurar o servidor, mas os MEMBROS
+  // precisam de saber o passo seguinte. Fechamos SEMPRE o /setup com o fluxo em 3
+  // passos (join voz -> /join -> escrever) para o admin partilhar. Curto e a
+  // apontar para /help (a referencia completa) — nao a duplica.
+  lines.push('', t('setup.membersHeader', locale), t('setup.membersBody', locale));
+
   await reply(i, lines.join('\n'));
 }
 
