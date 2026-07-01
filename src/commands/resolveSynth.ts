@@ -11,6 +11,13 @@ export interface ResolveSynthInput {
   /** Voz default global do .env (DEFAULT_VOICE). */
   defaultVoice: string;
   defaultSpeed: number;
+  /**
+   * Codigo franc (ISO 639-3) que FORCA a lingua para a escolha de voz, ignorando o
+   * `detectLang` do texto. Usado quando a mensagem e SO girias EN ("brb", "omg lol"):
+   * o texto expandido pode nao detetar como 'eng' de forma fiavel, mas sabemos que e
+   * ingles. Vazio/undefined = comportamento normal (detetar a lingua do texto).
+   */
+  forceLang?: string;
 }
 
 /**
@@ -27,7 +34,10 @@ export interface ResolveSynthInput {
  * Velocidade: quando ha voz de user usa-se `userVoice.speed`; senao `defaultSpeed`.
  */
 export function resolveSynth(input: ResolveSynthInput): SynthRequest {
-  const lang = detectLang(input.text);
+  // forceLang (quando presente) sobrepoe-se a deteccao: o texto e SO girias EN e
+  // sabemos a lingua com certeza, por isso nao dependemos do `detectLang` (que em
+  // texto curto pode devolver '').
+  const lang = input.forceLang || detectLang(input.text);
   const speed = input.userVoice ? input.userVoice.speed : input.defaultSpeed;
   const preferred =
     (input.userVoice && input.userVoice.model) ||

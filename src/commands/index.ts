@@ -26,8 +26,7 @@ import {
 } from '../store/pronunciation';
 import { cleanText } from '../textCleaning/clean';
 import { applyPronunciation } from '../textCleaning/pronunciation';
-import { expandAbbreviations } from '../textCleaning/abbreviations';
-import { detectLang } from '../language/detect';
+import { expandAbbreviations, isAllEnglishAbbrev } from '../textCleaning/abbreviations';
 import { isBlocked } from '../moderation/filter';
 import { resolveSynth } from './resolveSynth';
 import type { SynthRequest } from '../tts/engine';
@@ -397,11 +396,15 @@ async function handleTts(i: ChatInputCommandInteraction, deps: BotDeps): Promise
     return;
   }
 
-  // expansao de girias/abreviaturas por lingua: aplicada DEPOIS do cleanText e
-  // ANTES da pronuncia — mesma ordem do messageHandler. Expandir primeiro faz a
-  // pronuncia operar sobre a palavra ja expandida (tradeoff: nao da para forcar a
-  // leitura literal de uma giria via pronuncia).
-  const expanded = expandAbbreviations(cleaned, detectLang(cleaned));
+  // Stretch P18: mensagem SO com girias EN -> forca voz inglesa (mesma logica do
+  // messageHandler). Calculado ANTES da expansao.
+  const forceLang = isAllEnglishAbbrev(cleaned) ? 'eng' : undefined;
+
+  // expansao de girias INGLESAS: aplicada DEPOIS do cleanText e ANTES da pronuncia
+  // — mesma ordem do messageHandler. Expandir primeiro faz a pronuncia operar sobre
+  // a palavra ja expandida (tradeoff: nao da para forcar a leitura literal de uma
+  // giria via pronuncia). As girias sao SO EN e aplicam-se em qualquer lingua.
+  const expanded = expandAbbreviations(cleaned);
 
   // dicionario de pronuncia por servidor: aplicado DEPOIS do cleanText e ANTES do
   // synth. Aplicado antes da blocklist para que o texto realmente falado seja o que
@@ -423,6 +426,7 @@ async function handleTts(i: ChatInputCommandInteraction, deps: BotDeps): Promise
     guildDefaultVoice: cfg.defaultVoice,
     defaultVoice: deps.config.defaultVoice,
     defaultSpeed: deps.config.defaultSpeed,
+    forceLang,
   });
   // say() devolve false quando a fila esta no cap (nada foi enfileirado): nesse caso
   // NAO mentir "queued" — responder que estamos ocupados. So o sinal SINCRONO de

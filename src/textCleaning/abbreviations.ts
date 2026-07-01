@@ -1,280 +1,81 @@
 /**
- * Expansao de girias/abreviaturas por lingua, para o TTS soar natural (dizer
+ * Expansao de girias/abreviaturas INGLESAS, para o TTS soar natural (dizer
  * "by the way" em vez de soletrar "B-T-W").
  *
- * Funcao PURA e deterministica: depende so do input (texto + codigo de lingua),
- * sem efeitos secundarios nem estado.
+ * Funcao PURA e deterministica: depende so do input (texto), sem efeitos
+ * secundarios nem estado.
  *
  * Match por FRONTEIRA DE PALAVRA, case-insensitive, usando lookarounds zero-width
  * (mesmo estilo que `applyPronunciation`): a fronteira NAO e consumida, por isso
  * abreviaturas adjacentes ("btw btw") expandem ambas e nunca se expande dentro de
  * uma palavra ("btwx" fica intacto).
  *
- * Seguranca de lingua: o dicionario e escolhido pelo codigo franc (ISO 639-3,
- * ex. 'eng'/'por'). Qualquer outra lingua — incluindo '' (desconhecida) e 'und' —
- * devolve o texto INALTERADO. Assim o passo nunca dispara fora da lingua certa.
+ * Contrato de lingua (P18): as girias sao SO inglesas e aplicam-se em QUALQUER
+ * lingua. Nao ha mais deteccao/argumento de lingua — as girias EN sao universais
+ * (um "brb" e "brb" em qualquer chat). Por isso o dicionario foi auditado contra
+ * COLISOES CRUZADAS com palavras comuns das outras linguas suportadas (ver abaixo).
  */
 
 /**
- * Dicionarios por lingua. Apenas tokens que NAO disparam em palavras normais.
+ * Dicionario INGLES. Apenas tokens que NAO disparam em palavras normais.
  *
- * REGRA DE CURADORIA (qualidade > cobertura): uma expansao errada e PIOR que
- * nenhuma. So entra uma chave se (1) for gíria/abreviatura de chat REAL e comum
- * na lingua, e (2) NAO colidir com uma palavra normal dessa lingua em NENHUMA
- * capitalizacao (o match e case-insensitive). Na duvida, EXCLUI. Chaves so com
- * letras (sem digitos, sem pontos), guardadas em minusculas.
+ * REGRA DE OURO (qualidade > cobertura): uma expansao errada e PIOR que nenhuma.
+ * So entra uma chave se (1) for gíria/abreviatura de chat REAL e comum, e (2) NAO
+ * colidir com uma palavra normal em NENHUMA capitalizacao (o match e
+ * case-insensitive) — nem em ingles NEM em nenhuma das outras linguas suportadas.
+ * Na duvida, EXCLUI. Chaves so com letras (sem digitos, sem pontos), em minusculas.
  *
- * Indexado pelo codigo franc (ISO 639-3) EXATO que `detectLang` devolve — os
- * mesmos codigos de LANG_TO_PREFIX (voiceMap.ts), confirmados com franc v5.
- * Para linguas com variantes de codigo franc, o MESMO objeto e registado sob
- * todas as variantes (ver aliases no fim do ficheiro).
+ * AUDITORIA ANTI-COLISAO CRUZADA (P18): como agora aplicamos os tokens EN a
+ * mensagens de QUALQUER lingua, cada token foi re-vetado contra palavras/abreviaturas
+ * COMUNS das linguas de script latino suportadas (pt, es, fr, de, it, nl, pl, tr).
+ * As de script cirilico/arabe/CJK sao seguras (estes tokens sao todos latinos).
+ * Tokens dropados por colisao estao listados no bloco "Excluidos" no fim.
  */
-const DICTS: Record<string, Record<string, string>> = {
-  // ── EN (eng) ──────────────────────────────────────────────────────────────
-  eng: {
-    btw: 'by the way',
-    idk: "I don't know",
-    idc: "I don't care",
-    imo: 'in my opinion',
-    imho: 'in my humble opinion',
-    tbh: 'to be honest',
-    brb: 'be right back',
-    omg: 'oh my god',
-    omw: 'on my way',
-    rn: 'right now',
-    fyi: 'for your information',
-    asap: 'as soon as possible',
-    aka: 'also known as',
-    np: 'no problem',
-    ty: 'thank you',
-    tysm: 'thank you so much',
-    yw: "you're welcome",
-    nvm: 'never mind',
-    ttyl: 'talk to you later',
-    gtg: 'got to go',
-    wyd: 'what are you doing',
-    ikr: 'I know right',
-    smh: 'shaking my head',
-    tldr: "too long didn't read",
-    irl: 'in real life',
-    // Refino P17:
-    afaik: 'as far as I know',
-    lmk: 'let me know',
-    nbd: 'no big deal',
-    tba: 'to be announced',
-    tbd: 'to be determined',
-    ppl: 'people',
-    pls: 'please',
-    plz: 'please',
-    thx: 'thanks',
-    // Excluidos por colisao/ambiguidade:
-    //   'bc'  -> dispara em "500 BC" ("500 because"),
-    //   'dm'  -> colide com o verbo/inicio de nomes; ambiguo,
-    //   'gg'/'wp' -> gaming, arriscado fora de contexto,
-    //   'u'/'r'/'ur' -> chaves de 1 letra, colidem demasiado.
-  },
-
-  // ── PT (por) ──────────────────────────────────────────────────────────────
-  por: {
-    pf: 'por favor',
-    pfv: 'por favor',
-    pfvr: 'por favor',
-    vc: 'você',
-    vcs: 'vocês',
-    tb: 'também',
-    tbm: 'também',
-    tmb: 'também',
-    pq: 'porque',
-    obg: 'obrigado',
-    obgd: 'obrigado',
-    hj: 'hoje',
-    blz: 'beleza',
-    vlw: 'valeu',
-    mto: 'muito',
-    qnd: 'quando',
-    qdo: 'quando',
-    msg: 'mensagem',
-    agr: 'agora',
-    dnd: 'de nada',
-    flw: 'falou',
-    cmg: 'comigo',
-    ngm: 'ninguém',
-    // Refino P17:
-    bjs: 'beijos',
-    abs: 'abraços',
-    fds: 'fim de semana',
-    // Excluidos: 'td' (colide com "tédio"? nao, mas 'td'->'tudo' e arriscado;
-    //   'kd'/'kdê' regional; 'slc' ambiguo) -> deixados de fora por prudencia.
-  },
-
-  // ── DE (deu) ──────────────────────────────────────────────────────────────
-  deu: {
-    vllt: 'vielleicht',
-    hdl: 'hab dich lieb',
-    hdgdl: 'hab dich ganz doll lieb',
-    mfg: 'mit freundlichen Grüßen',
-    lg: 'liebe Grüße',
-    vg: 'viele Grüße',
-    ka: 'keine Ahnung',
-    kp: 'kein Plan',
-    wmd: 'was machst du',
-    sry: 'sorry',
-    // Excluidos por colisao com palavra normal (em qualquer caso):
-    //   'da', 'so', 'am', 'im', 'nen', 'bb' (colide), 'bd' (ambiguo).
-  },
-
-  // ── FR (fra) ──────────────────────────────────────────────────────────────
-  fra: {
-    mdr: 'mort de rire',
-    ptdr: 'pété de rire',
-    bcp: 'beaucoup',
-    pk: 'pourquoi',
-    stp: "s'il te plaît",
-    svp: "s'il vous plaît",
-    dsl: 'désolé',
-    jsp: 'je sais pas',
-    tjrs: 'toujours',
-    tkt: "t'inquiète",
-    cad: "c'est-à-dire",
-    slt: 'salut',
-    bjr: 'bonjour',
-    bsr: 'bonsoir',
-    qqch: 'quelque chose',
-    qqn: "quelqu'un",
-    rdv: 'rendez-vous',
-    // Excluidos por colisao: 'car', 'or', 'ou', 'on', 'ma', 'si', 'ce', 'ta',
-    //   'auj' evitado (ambiguo com "aujourd'hui" mas raro isolado — deixado fora).
-  },
-
-  // ── ES (spa) ──────────────────────────────────────────────────────────────
-  spa: {
-    pq: 'porque',
-    xq: 'porque',
-    tb: 'también',
-    tbn: 'también',
-    porfa: 'por favor',
-    porfi: 'por favor',
-    tqm: 'te quiero mucho',
-    finde: 'fin de semana',
-    dnd: 'dónde',
-    xfa: 'por favor',
-    grax: 'gracias',
-    bss: 'besos',
-    // Excluidos por colisao / 1 letra: 'q'(que), 'k'(que), 'd'(de), 'x'(por),
-    //   'tq' (colide com "te quiero" mas tambem "tal que"? ambiguo -> fora),
-    //   'salu2' (digito, viola regra so-letras).
-  },
-
-  // ── IT (ita) ──────────────────────────────────────────────────────────────
-  ita: {
-    cmq: 'comunque',
-    tvb: 'ti voglio bene',
-    tvtb: 'ti voglio tanto bene',
-    nn: 'non',
-    qlcn: 'qualcuno',
-    qlcs: 'qualcosa',
-    msg: 'messaggio',
-    cvd: 'come volevasi dimostrare',
-    nnt: 'niente',
-    grz: 'grazie',
-    prg: 'prego',
-    // Excluidos por colisao: 'ho', 'da', 'se', 'sa', 'te', 'ci', 'ne', 'no',
-    //   'tt'(->tutto) e 'dv'(->dove) deixados fora por serem curtos/ambiguos,
-    //   'xké' evitado (acento no 'é' + variantes ortograficas inconsistentes).
-  },
-
-  // ── NL (nld) ──────────────────────────────────────────────────────────────
-  nld: {
-    idd: 'inderdaad',
-    ff: 'even',
-    gwn: 'gewoon',
-    wrm: 'waarom',
-    aub: 'alsjeblieft',
-    mss: 'misschien',
-    msch: 'misschien',
-    iwni: 'ik weet niet',
-    tnx: 'bedankt',
-    thx: 'bedankt',
-    // Excluidos por colisao: 'en', 'je', 'ik', 'me', 'we', 'zo', 'nu', 'al',
-    //   'idk'/'dm'/'ofc' evitados (sao ingleses, ambiguos em texto NL).
-  },
-
-  // ── RU (rus) ──────────────────────────────────────────────────────────────
-  rus: {
-    спс: 'спасибо',
-    пжлст: 'пожалуйста',
-    плз: 'пожалуйста',
-    прив: 'привет',
-    норм: 'нормально',
-    оч: 'очень',
-    пасибо: 'спасибо',
-    хз: 'хрен знает',
-    нзч: 'не за что',
-    // Excluidos por ambiguidade/curteza: 'др' (silaba comum), 'нг', 'сб'.
-  },
-
-  // ── PL (pol) ──────────────────────────────────────────────────────────────
-  pol: {
-    nwm: 'nie wiem',
-    nara: 'na razie',
-    pzdr: 'pozdrawiam',
-    zw: 'zaraz wracam',
-    // Excluidos: 'thx'(->dzięki) ambiguo (ingles), 'spoko' e palavra lexicalizada,
-    //   'dzięki' identico a si mesmo, 'jj' ambiguo.
-  },
-
-  // ── UK (ukr) ──────────────────────────────────────────────────────────────
-  ukr: {
-    // VAZIO de proposito (no-op seguro). Ver relatorio.
-    //   'дяки'(->дякує) EXCLUIDO: colide com 'дяки' (plural/genitivo de 'дяк',
-    //   escrivao — arcaico mas real) E nao e claramente a forma dominante de
-    //   "obrigado" em chat (спс/дяк/дякую competem). Duvida nos dois eixos da
-    //   regra de ouro -> fora. UK precisa de curadoria de um falante.
-  },
-
-  // ── TR (tur) ──────────────────────────────────────────────────────────────
-  tur: {
-    slm: 'selam',
-    nbr: 'ne haber',
-    mrb: 'merhaba',
-    cnm: 'canım',
-    eyw: 'eyvallah',
-    tşk: 'teşekkürler',
-    tsk: 'teşekkürler',
-    tskler: 'teşekkürler',
-    tmm: 'tamam',
-    knk: 'kanka',
-    // Excluidos: 'bkm'(ambiguo), palavras normais 'sen'/'ben'/'onu'.
-  },
+const DICT: Record<string, string> = {
+  btw: 'by the way',
+  idk: "I don't know",
+  idc: "I don't care",
+  imo: 'in my opinion',
+  imho: 'in my humble opinion',
+  tbh: 'to be honest',
+  brb: 'be right back',
+  omg: 'oh my god',
+  omw: 'on my way',
+  rn: 'right now',
+  fyi: 'for your information',
+  asap: 'as soon as possible',
+  aka: 'also known as',
+  tysm: 'thank you so much',
+  yw: "you're welcome",
+  nvm: 'never mind',
+  ttyl: 'talk to you later',
+  gtg: 'got to go',
+  wyd: 'what are you doing',
+  ikr: 'I know right',
+  smh: 'shaking my head',
+  tldr: "too long didn't read",
+  irl: 'in real life',
+  afaik: 'as far as I know',
+  lmk: 'let me know',
+  nbd: 'no big deal',
+  tba: 'to be announced',
+  tbd: 'to be determined',
+  ppl: 'people',
+  pls: 'please',
+  plz: 'please',
+  thx: 'thanks',
+  // Excluidos por COLISAO CRUZADA com palavras comuns de outras linguas suportadas:
+  //   'ty' -> em POLACO "ty" e a palavra "tu/você" (pronome 2.a pessoa). DROPADO.
+  //   'np' -> em POLACO "np." e "na przykład" (= "por exemplo"/"e.g."). DROPADO.
+  // Excluidos ainda (colisao/ambiguidade em ingles, herdados da curadoria original):
+  //   'bc'  -> dispara em "500 BC" ("500 because"),
+  //   'dm'  -> colide com o verbo/inicio de nomes; ambiguo,
+  //   'gg'/'wp' -> gaming, arriscado fora de contexto,
+  //   'u'/'r'/'ur' -> chaves de 1 letra, colidem demasiado.
+  // Nota da auditoria: 'thx' em polaco tambem se usa como "dzięki" (=thanks) — MESMO
+  //   sentido, colisao inofensiva -> mantido. Os restantes tokens (aka/imo/rn/…) sao
+  //   grupos consonanticos ou nao sao palavras nas 8 linguas latinas -> mantidos.
 };
-
-/**
- * Aliases de codigo franc -> codigo canonico ja em DICTS.
- *
- * O franc pode devolver mais do que um codigo ISO 639-3 para a mesma lingua
- * (arabe arb/ara, persa fas/pes, suaili swh/swa, chines cmn/zho). Para que o
- * dict funcione seja qual for a variante detetada, registamos o MESMO objeto
- * sob todas as variantes.
- *
- * Estado atual: nenhuma destas linguas tem dict curado (arabe/persa/suaili/
- * chines ficaram VAZIAS — ver relatorio; chines nem tem fronteira de palavra
- * util). Por isso os aliases nao apontam para nada hoje e o no-op cobre. Mas o
- * mecanismo fica pronto: para adicionar estas linguas, cria o dict sob o codigo
- * CANONICO (`arb`/`fas`/`swh`/`cmn`) em DICTS; o loop abaixo replica-o para a
- * variante (`ara`/`pes`/`swa`/`zho`) automaticamente, sem esquecer nenhuma.
- */
-const VARIANT_ALIASES: Record<string, string> = {
-  ara: 'arb', // arabe
-  pes: 'fas', // persa
-  swa: 'swh', // suaili
-  zho: 'cmn', // chines
-};
-for (const [alias, canonical] of Object.entries(VARIANT_ALIASES)) {
-  const canonicalDict = DICTS[canonical];
-  if (canonicalDict && !DICTS[alias]) {
-    DICTS[alias] = canonicalDict; // partilham a MESMA referencia
-  }
-}
 
 function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -287,18 +88,15 @@ function capitalizeFirst(s: string): string {
 }
 
 /**
- * Expande as abreviaturas conhecidas da lingua `lang` no `text`.
+ * Expande as girias inglesas conhecidas no `text`, em QUALQUER lingua.
  * Regra de capitalizacao (unica): se o token casado comeca por letra maiuscula
  * (ex. "Btw" ou "BTW"), a 1.a letra da expansao e capitalizada — para frases
  * naturais. Token em minusculas -> expansao tal e qual.
  */
-export function expandAbbreviations(text: string, lang: string): string {
-  const dict = DICTS[lang];
-  if (!dict) return text;
-
+export function expandAbbreviations(text: string): string {
   let out = text;
-  for (const token of Object.keys(dict)) {
-    const expansion = dict[token];
+  for (const token of Object.keys(DICT)) {
+    const expansion = DICT[token];
     const pattern = new RegExp(
       `(?<=^|[^\\p{L}\\p{N}])${escapeRegExp(token)}(?=[^\\p{L}\\p{N}]|$)`,
       'giu',
@@ -310,4 +108,19 @@ export function expandAbbreviations(text: string, lang: string): string {
     });
   }
   return out;
+}
+
+/**
+ * True se o `text` for composto ENTEIRAMENTE de girias EN conhecidas: cada token
+ * separado por whitespace tem de ser uma chave do dicionario (case-insensitive).
+ * Texto vazio/so-espacos -> false (nao ha nada para forcar).
+ *
+ * Usado (stretch P18) para forcar uma voz inglesa em mensagens que sao SO girias
+ * ("brb", "omg lol"): sem isto, uma voz fixada noutra lingua leria as girias com
+ * o sotaque errado. Funcao PURA.
+ */
+export function isAllEnglishAbbrev(text: string): boolean {
+  const tokens = text.trim().split(/\s+/).filter((t) => t.length > 0);
+  if (tokens.length === 0) return false;
+  return tokens.every((tok) => Object.prototype.hasOwnProperty.call(DICT, tok.toLowerCase()));
 }
