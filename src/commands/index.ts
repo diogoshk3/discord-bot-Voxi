@@ -30,6 +30,7 @@ import { expandAbbreviations } from '../textCleaning/abbreviations';
 import { detectLang } from '../language/detect';
 import { isBlocked } from '../moderation/filter';
 import { resolveSynth } from './resolveSynth';
+import type { SynthRequest } from '../tts/engine';
 import { modelDisplayName } from '../language/voiceMap';
 import { log } from '../logging/logger';
 import {
@@ -495,21 +496,19 @@ async function handleVoice(i: ChatInputCommandInteraction, deps: BotDeps): Promi
 
     const cfg = getGuildConfig(deps.db, i.guildId!);
     const stored = getUserVoice(deps.db, i.guildId!, i.user.id);
-    // Se foi dado um model explícito, constrói um userVoice sintético para que
-    // resolveSynth o use directamente (sem deteção de língua). A velocidade
-    // vem da voz guardada do utilizador, senão do default global.
-    const userVoice =
-      explicitModel !== null
-        ? { model: explicitModel, speed: stored?.speed ?? deps.config.defaultSpeed }
-        : stored;
-    const req = resolveSynth({
-      text: SAMPLE,
-      userVoice,
-      available: deps.availableModels,
-      guildDefaultVoice: cfg.defaultVoice,
-      defaultVoice: deps.config.defaultVoice,
-      defaultSpeed: deps.config.defaultSpeed,
-    });
+    // Preview NAO passa por resolveSynth de proposito: resolveSynth agora deixa a
+    // LINGUA da mensagem decidir a voz, mas o /voice preview e um DEMO de UMA voz
+    // especifica — tem de tocar exatamente o model pedido (ou o guardado/default),
+    // independentemente da lingua da frase-amostra. Por isso construimos o
+    // SynthRequest diretamente. Precedencia: model explicito > voz guardada do
+    // user > default_voice da guild > .env > amy. Velocidade: a do user, senao a default.
+    const model =
+      (explicitModel ?? stored?.model) ||
+      cfg.defaultVoice ||
+      deps.config.defaultVoice ||
+      'en_US-amy-medium';
+    const speed = stored?.speed ?? deps.config.defaultSpeed;
+    const req: SynthRequest = { text: SAMPLE, model, speed };
     // say() devolve false quando a fila esta no cap: nesse caso NAO mentir "a
     // reproduzir" — reutilizamos a mesma chave tts.busy do /tts (consistencia).
     const queued = await player.say(req);

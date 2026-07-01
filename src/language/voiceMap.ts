@@ -75,6 +75,29 @@ export function pickVoice(lang: string, available: string[], fallback: string): 
 }
 
 /**
+ * Escolhe a voz para a lingua `lang`, HONRANDO a voz `preferred` quando esta ja
+ * esta na lingua detetada. Diferenca vs `pickVoice`: aqui `preferred` nao e um
+ * fallback anonimo — e a voz que o utilizador/guild/.env querem, por isso, se ela
+ * pertencer a lingua do texto, e ela que vence (mesmo que nao seja a 1.ª voz do
+ * prefixo por ordem alfabetica; ex. 'en_GB-alan' para ingles, nao a 1.ª 'en_').
+ *
+ * - `lang` desconhecida/'' (deteccao falhou) => devolve `preferred` (nao da para
+ *   decidir pela lingua, honra a preferida).
+ * - `preferred` ja comeca pelo prefixo da lingua => devolve `preferred`.
+ * - senao => 1.ª voz de `available` com o prefixo da lingua; se nao houver
+ *   nenhuma, fallback a `preferred`.
+ * PURO: sem efeitos secundarios.
+ */
+export function pickVoiceForLang(lang: string, available: string[], preferred: string): string {
+  const prefix = LANG_TO_PREFIX[lang];
+  if (!prefix) return preferred;
+  if (preferred.startsWith(prefix)) return preferred;
+
+  const match = available.find((model) => model.startsWith(prefix));
+  return match ?? preferred;
+}
+
+/**
  * Nome de apresentação de cada locale Piper, escrito NA PRÓPRIA LÍNGUA (autónimo).
  * Usado no dropdown de escolha de voz para ser beginner-friendly (o utilizador vê
  * "Português", "English", "Français"… em vez do id técnico do modelo).

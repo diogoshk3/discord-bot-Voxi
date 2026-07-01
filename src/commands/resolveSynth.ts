@@ -1,5 +1,5 @@
 import { detectLang } from '../language/detect';
-import { pickVoice } from '../language/voiceMap';
+import { pickVoiceForLang } from '../language/voiceMap';
 import type { SynthRequest } from '../tts/engine';
 
 export interface ResolveSynthInput {
@@ -14,18 +14,26 @@ export interface ResolveSynthInput {
 }
 
 /**
- * Precedencia de voz (sem voz de user):
+ * A LINGUA DA MENSAGEM DECIDE A VOZ.
+ *
+ * Deteta-se SEMPRE a lingua do texto. A voz PREFERIDA — por precedencia:
  *   voz guardada do user > default_voice da guild (se nao-vazio) >
- *   config.defaultVoice (.env) > 'en_US-amy-medium'.
- * A voz resultante entra como `fallback` da deteccao de lingua: se a lingua
- * tiver modelo correspondente em `available`, esse vence; senao usa-se o fallback.
+ *   config.defaultVoice (.env) > 'en_US-amy-medium'
+ * — e honrada quando ja esta na lingua detetada; caso contrario escolhe-se uma
+ * voz correta da lingua detetada (e se nao houver modelo para essa lingua,
+ * cai-se na preferida). Assim uma voz fixa (ex. via /voice set) nunca acaba a
+ * ler texto de outra lingua (que sairia "a comer as palavras").
+ *
+ * Velocidade: quando ha voz de user usa-se `userVoice.speed`; senao `defaultSpeed`.
  */
 export function resolveSynth(input: ResolveSynthInput): SynthRequest {
-  if (input.userVoice) {
-    return { text: input.text, model: input.userVoice.model, speed: input.userVoice.speed };
-  }
-  const fallback = input.guildDefaultVoice || input.defaultVoice || 'en_US-amy-medium';
   const lang = detectLang(input.text);
-  const model = pickVoice(lang, input.available, fallback);
-  return { text: input.text, model, speed: input.defaultSpeed };
+  const speed = input.userVoice ? input.userVoice.speed : input.defaultSpeed;
+  const preferred =
+    (input.userVoice && input.userVoice.model) ||
+    input.guildDefaultVoice ||
+    input.defaultVoice ||
+    'en_US-amy-medium';
+  const model = pickVoiceForLang(lang, input.available, preferred);
+  return { text: input.text, model, speed };
 }

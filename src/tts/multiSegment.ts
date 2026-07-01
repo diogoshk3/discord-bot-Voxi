@@ -42,10 +42,10 @@ export class MultiSegmentEngine implements TTSEngine {
 
     // 0 ou 1 segmento (o caso COMUM: texto monolingue) -> nada a combinar.
     // Delega no motor base com o req INTACTO — respeita o req.model, que ja vem
-    // resolvido por resolveSynth (voz do user > default_voice da guild > deteccao
-    // de lingua). NAO re-escolhemos a voz aqui: senao a voz que o utilizador
-    // definiu via /voice seria silenciosamente substituida pela deteccao em cada
-    // mensagem monolingue. So partimos por segmento quando ha MESMO >1 lingua.
+    // resolvido por resolveSynth (a lingua da mensagem decide; a voz preferida
+    // [user > guild > .env] e honrada quando bate a lingua). NAO re-escolhemos a
+    // voz aqui: para texto monolingue o req.model ja e a voz certa para essa
+    // lingua. So partimos por segmento quando ha MESMO >1 lingua.
     if (segments.length <= 1) {
       return this.base.synth(req);
     }

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { detectLang } from '../src/language/detect';
-import { pickVoice, modelDisplayName } from '../src/language/voiceMap';
+import { pickVoice, pickVoiceForLang, modelDisplayName } from '../src/language/voiceMap';
 
 // Catalogo estavel dos 38 modelos Piper (hardcoded de proposito — e o catalogo
 // fixo do projeto, nao deve depender de runtime/descoberta para os testes).
@@ -197,6 +197,45 @@ describe('pickVoice', () => {
     expect(pickVoice('spa', ['es_ES-davefx-medium', 'en_US-amy-medium'], fallback)).toBe(
       'es_ES-davefx-medium',
     );
+  });
+});
+
+// ------------------------------------------------------------------
+// pickVoiceForLang — "a lingua decide, mas honra a voz preferida quando bate".
+// Diferenca vs pickVoice: aqui a 3.ª posicao e a voz PREFERIDA (user/guild/.env),
+// nao um fallback anonimo. Se a preferida ja esta na lingua detetada, e ela que
+// vence (mesmo que nao seja a 1.ª voz alfabetica do prefixo).
+// ------------------------------------------------------------------
+
+describe('pickVoiceForLang', () => {
+  const available = ['en_GB-alan-medium', 'en_US-amy-medium', 'pt_PT-tugao-medium', 'es_ES-davefx-medium'];
+
+  it('lingua desconhecida no mapa => devolve a voz preferida (nao da para detetar)', () => {
+    expect(pickVoiceForLang('xyz', available, 'en_US-amy-medium')).toBe('en_US-amy-medium');
+  });
+
+  it('lang "" (deteccao falhou) => devolve a voz preferida', () => {
+    expect(pickVoiceForLang('', available, 'pt_PT-tugao-medium')).toBe('pt_PT-tugao-medium');
+  });
+
+  it('preferida JA na lingua detetada => honra a preferida especifica (nao a 1.ª alfabetica)', () => {
+    // eng detetado; preferida en_GB-alan comeca por 'en_' => fica alan, NAO amy.
+    expect(pickVoiceForLang('eng', available, 'en_GB-alan-medium')).toBe('en_GB-alan-medium');
+  });
+
+  it('preferida noutra lingua => troca para uma voz da lingua detetada', () => {
+    // preferida e inglesa mas o texto e portugues => escolhe pt_.
+    expect(pickVoiceForLang('por', available, 'en_US-amy-medium')).toBe('pt_PT-tugao-medium');
+  });
+
+  it('lingua detetada sem modelo disponivel => fallback a preferida', () => {
+    // 'deu' mapeia para 'de_', mas nao ha modelo de_ em `available`.
+    expect(pickVoiceForLang('deu', available, 'en_US-amy-medium')).toBe('en_US-amy-medium');
+  });
+
+  it('sem preferida na lingua e com modelo disponivel => 1.ª voz do prefixo por ordem', () => {
+    // preferida es_ (nao bate com eng); escolhe a 1.ª en_ por ordem de `available`.
+    expect(pickVoiceForLang('eng', available, 'es_ES-davefx-medium')).toBe('en_GB-alan-medium');
   });
 });
 

@@ -98,7 +98,8 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     const blocklist = getBlocklist(deps.db, message.guildId);
     if (isBlocked(spoken, blocklist)) return;
 
-    // escolha de voz: voz do user vence, senao deteta lingua
+    // escolha de voz: a LINGUA da mensagem decide; a voz preferida (user > guild >
+    // .env) e honrada quando esta na lingua do texto, senao troca para uma voz correta.
     const userVoice = getUserVoice(deps.db, message.guildId, message.author.id);
     const req = resolveSynth({
       text: spoken,
