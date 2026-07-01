@@ -126,6 +126,8 @@ describe('handleJoin — permissoes Connect/Speak', () => {
     const joinedText = i.replies.join(' ');
     expect(joinedText).toContain('/setup');
     expect(joinedText).toContain('/tts');
+    // Next-step beginner-friendly: convida a experimentar JA (mencao a "type"/"say").
+    expect(/type|say/i.test(joinedText)).toBe(true);
 
     // Limpeza: destruir o player criado para nao deixar timers pendurados.
     const player = deps.players.get('g1');

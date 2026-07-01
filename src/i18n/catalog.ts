@@ -43,9 +43,13 @@ export const catalog: Record<string, Entry> = {
     en: 'I need the **Connect** and **Speak** permissions in {channel}.',
     pt: 'Preciso das permissoes **Ligar** e **Falar** em {channel}.',
   },
+  // Sucesso do /join: confirma a entrada e da o PROXIMO PASSO ao iniciante. NOTA: um
+  // /join simples NAO liga a auto-leitura (so o /setup a liga), por isso o passo
+  // "sempre funciona" e /tts (dizer algo JA); /setup fica como pointer para depois
+  // poder escrever no canal. Nao promete "escreve e sou lido" sem /setup (seria falso).
   'join.joined': {
-    en: "I'm in {channel}! Use /tts <text> to make me speak, or run /setup to auto-read a text channel.",
-    pt: 'Entrei em {channel}! Usa /tts <texto> para eu falar, ou corre /setup para ler um canal automaticamente.',
+    en: "✅ I'm in {channel}! Next step: say `/tts hello` and I'll read it out loud. Want me to auto-read a channel? Run /setup.",
+    pt: '✅ Entrei em {channel}! Próximo passo: diz `/tts olá` e eu leio em voz alta. Queres que leia um canal automaticamente? Corre /setup.',
   },
   'leave.left': {
     en: 'Left the voice channel. See you next time!',
@@ -102,9 +106,12 @@ export const catalog: Record<string, Entry> = {
     en: "I don't know that voice — check /voice list.",
     pt: 'Nao conheco essa voz — usa /voice list.',
   },
+  // Sucesso do /voice set: lidera com o NOME AMIGAVEL ({name}, ex. "English (US) —
+  // Amy"), mantem o id cru ({model}) subtil e copy-pasteavel, e da o PROXIMO PASSO
+  // (ouvir a voz JA via /tts — sempre funciona, sem depender de auto-read).
   'voice.set': {
-    en: 'Voice set to {model} at {speed}×.',
-    pt: 'Voz definida: {model} a {speed}×.',
+    en: '✅ Your voice is now **{name}** at {speed}×. Try `/tts hello` to hear it. (id: `{model}`)',
+    pt: '✅ A tua voz agora é **{name}** a {speed}×. Experimenta `/tts olá` para a ouvir. (id: `{model}`)',
   },
   'voice.listHeader': {
     en: 'Available voices:',
@@ -114,9 +121,11 @@ export const catalog: Record<string, Entry> = {
     en: '(none installed)',
     pt: '(nenhuma instalada)',
   },
+  // Sucesso do /voice reset: confirma o reset e aponta o PROXIMO PASSO (escolher
+  // outra voz) — /voice list para ver as opcoes, /voice set para escolher.
   'voice.reset': {
-    en: 'Your voice is back to the default.',
-    pt: 'A tua voz voltou ao valor por defeito.',
+    en: '✅ Your voice is back to the default. Pick another anytime with `/voice list` and `/voice set`.',
+    pt: '✅ A tua voz voltou ao valor por defeito. Escolhe outra quando quiseres com `/voice list` e `/voice set`.',
   },
   'voice.optout': {
     en: "You won't be read automatically anymore. Run /voice optin to turn it back on.",
@@ -241,9 +250,11 @@ export const catalog: Record<string, Entry> = {
     en: "I can't see {channel} — please check my permissions there.",
     pt: 'Nao tenho acesso a {channel} — verifica as minhas permissoes.',
   },
+  // Sucesso do /config tts-channel: confirma o canal e da o PROXIMO PASSO — garantir
+  // que a auto-leitura esta ligada (/config autoread on) para as mensagens serem lidas.
   'config.channelSet': {
-    en: 'Auto-read channel set to {channel}.',
-    pt: 'Canal de auto-leitura: {channel}.',
+    en: 'Auto-read channel set to {channel}. Next: make sure auto-read is on with `/config autoread ativo:true`.',
+    pt: 'Canal de auto-leitura: {channel}. A seguir: confirma que a auto-leitura está ligada com `/config autoread ativo:true`.',
   },
   'config.autoreadOn': {
     en: 'Auto-read is now **on**.',
@@ -285,9 +296,12 @@ export const catalog: Record<string, Entry> = {
     en: 'TTS is now **off** for this server.',
     pt: 'TTS **desativado** neste servidor.',
   },
+  // Sucesso do /config default-voice: lidera com o NOME AMIGAVEL ({name}) e mantem o
+  // id cru ({model}) subtil/copy-pasteavel. Usada quando o utilizador nao tem voz
+  // propria, por isso e a voz que os membros vao ouvir por defeito.
   'config.defaultVoiceSet': {
-    en: "Server default voice set to {model}.",
-    pt: 'Voz default do servidor: {model}.',
+    en: "✅ Server default voice set to **{name}**. Members without their own voice will hear this one. (id: `{model}`)",
+    pt: '✅ Voz default do servidor: **{name}**. Os membros sem voz própria vão ouvir esta. (id: `{model}`)',
   },
   'config.reset': {
     en: 'Config reset to defaults. Your blocklist and pronunciations were kept.',

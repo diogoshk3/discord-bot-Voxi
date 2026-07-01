@@ -524,7 +524,10 @@ describe('/config default-voice — valida modelo disponivel', () => {
     });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
+    // Mantem o id cru copy-pasteavel na resposta...
     expect(i.replies.some((r) => /pt_PT-tugão-medium/.test(r))).toBe(true);
+    // ...e lidera com o nome amigavel da voz escolhida (beginner-friendly).
+    expect(i.replies.some((r) => /Português \(Portugal\) — Tugão/.test(r))).toBe(true);
     expect(getGuildConfig(db, GUILD).defaultVoice).toBe('pt_PT-tugão-medium');
   });
 
