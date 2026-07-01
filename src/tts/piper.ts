@@ -9,6 +9,21 @@ import { lengthScaleFor } from './calibration';
 
 const PIPER_TIMEOUT_MS = 15000;
 
+/**
+ * Valida que `model` e um nome de modelo seguro para compor o caminho do .onnx.
+ * Rejeita separadores de caminho (`/` ou `\`), componentes `.`/`..` e strings
+ * vazias — cross-platform (nao depende de path.basename, que trata `\` como
+ * caractere normal em POSIX). Nomes reais (ex. `en_US-amy-medium`,
+ * `pt_PT-tugao-medium`) passam. Defense-in-depth no boundary do Piper: impede
+ * que um nome nao-validado leia um .onnx fora do modelsDir.
+ */
+export function isSafeModelName(model: string): boolean {
+  if (typeof model !== 'string' || model.length === 0) return false;
+  if (model.includes('/') || model.includes('\\')) return false;
+  if (model === '.' || model === '..') return false;
+  return true;
+}
+
 export class PiperEngine implements TTSEngine {
   private readonly piperPath: string;
   private readonly modelsDir: string;
@@ -21,6 +36,10 @@ export class PiperEngine implements TTSEngine {
   }
 
   async synth(req: SynthRequest): Promise<string> {
+    if (!isSafeModelName(req.model)) {
+      throw new Error(`Nome de modelo invalido: ${req.model}`);
+    }
+
     const key = cacheKey(req);
     const cached = this.cache.get(key);
     if (cached) return cached;
