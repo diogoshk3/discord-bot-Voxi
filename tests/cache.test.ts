@@ -1,10 +1,32 @@
 // tests/cache.test.ts
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdtempSync, rmSync, writeFileSync, existsSync, readFileSync, readdirSync, utimesSync } from 'node:fs';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { mkdtempSync, rmSync, writeFileSync, existsSync, readFileSync, readdirSync, utimesSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { cacheKey, AudioCache } from '../src/tts/cache';
 import type { SynthRequest } from '../src/tts/engine';
+
+// Guarda as implementacoes REAIS de statSync/readdirSync para as poder repor no
+// afterEach (mockReset limpa tambem a impl default). `vi.hoisted` corre antes do
+// factory de vi.mock, por isso as refs estao disponiveis dentro dele.
+const realFs = vi.hoisted(() => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const actual = require('node:fs') as typeof import('node:fs');
+  return { statSync: actual.statSync, readdirSync: actual.readdirSync };
+});
+
+// Mock de node:fs que MANTEM as implementacoes reais (spread `...actual`) e apenas
+// envolve `statSync`/`readdirSync` em spies. Assim os restantes testes com fs REAL
+// deste ficheiro continuam verdes; so os testes de ramos defensivos abaixo forcam
+// (via mockImplementationOnce, scoped a UMA chamada) essas duas funcoes a lancar.
+vi.mock('node:fs', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:fs')>();
+  return {
+    ...actual,
+    statSync: vi.fn(actual.statSync),
+    readdirSync: vi.fn(actual.readdirSync),
+  };
+});
 
 describe('cacheKey', () => {
   const base: SynthRequest = { text: 'ola mundo', model: 'pt_PT', speed: 1 };
@@ -292,5 +314,93 @@ describe('AudioCache eviction (maxFiles)', () => {
     }
     const files = readdirSync(dir).filter((f) => f.endsWith('.wav'));
     expect(files.length).toBe(10);
+  });
+});
+
+// ── ramos defensivos do evict ─────────────────────────────────────────────────
+// Estes testes forcam `statSync`/`readdirSync` (mockados no topo) a lancar, para
+// cobrir os catch de dentro/fora do map em `evict`. `mockImplementationOnce` limita
+// o throw a UMA chamada; as restantes voltam a delegar na implementacao real.
+describe('AudioCache.evict — ramos defensivos', () => {
+  let dir: string;
+  let srcDir: string;
+
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), 'ttscache-def-'));
+    srcDir = mkdtempSync(join(tmpdir(), 'ttssrc-def-'));
+  });
+
+  afterEach(() => {
+    // Repoe as implementacoes REAIS (limpa qualquer mockImplementation/Once pendente)
+    // para nao contaminar testes seguintes.
+    vi.mocked(statSync).mockReset();
+    vi.mocked(statSync).mockImplementation(realFs.statSync as never);
+    vi.mocked(readdirSync).mockReset();
+    vi.mocked(readdirSync).mockImplementation(realFs.readdirSync as never);
+    rmSync(dir, { recursive: true, force: true });
+    rmSync(srcDir, { recursive: true, force: true });
+  });
+
+  function makeSrc(name: string, content = 'wav'): string {
+    const p = join(srcDir, name);
+    writeFileSync(p, Buffer.from(content));
+    return p;
+  }
+
+  it('statSync a falhar num ficheiro: entrada vira null, e filtrada, evict nao crasha', () => {
+    // cap=1 para forcar eviccao no 2o put. No evict o statSync do ficheiro antigo
+    // lanca -> essa entrada vira null e e removida do array (o map apanha o erro).
+    const cache = new AudioCache(dir, 1);
+
+    const old = cache.put('old', makeSrc('old.wav'));
+
+    // No proximo evict, a PRIMEIRA chamada a statSync lanca (ficheiro "sumiu").
+    vi.mocked(statSync).mockImplementationOnce(() => {
+      throw new Error('ENOENT: statSync falhou');
+    });
+
+    // Nao deve crashar mesmo com uma entrada a falhar.
+    expect(() => cache.put('new', makeSrc('new.wav'))).not.toThrow();
+
+    // O recem-escrito continua la (nunca e alvo de eviccao).
+    expect(existsSync(join(dir, 'new.wav'))).toBe(true);
+    // `old` nao pode ser removido porque a sua entrada foi filtrada (statSync lancou),
+    // por isso, apesar de exceder o cap, nao havia candidato valido para remover.
+    expect(existsSync(old)).toBe(true);
+  });
+
+  it('readdirSync a lancar (dir sumiu): evict sai sem crashar e sem remover nada', () => {
+    const cache = new AudioCache(dir, 1);
+
+    const old = cache.put('old', makeSrc('old.wav'));
+
+    // O readdirSync do proximo evict lanca (dir desapareceu entre o put e o evict).
+    vi.mocked(readdirSync).mockImplementationOnce(() => {
+      throw new Error('ENOENT: readdirSync falhou');
+    });
+
+    // O catch exterior apanha e faz `return` — sem crash.
+    expect(() => cache.put('new', makeSrc('new.wav'))).not.toThrow();
+
+    // Nada foi removido: o put copiou o ficheiro novo e o evict saiu cedo.
+    expect(existsSync(join(dir, 'new.wav'))).toBe(true);
+    expect(existsSync(old)).toBe(true);
+  });
+
+  it('mtime empatado: o recem-escrito NUNCA e removido (excluido antes do sort)', () => {
+    // cap=1 e mtimes todos iguais. Como `justWritten` e filtrado ANTES do sort, o
+    // recem-escrito nunca e candidato — mesmo com empate perfeito de mtime.
+    const cache = new AudioCache(dir, 1);
+
+    const old = cache.put('old', makeSrc('old.wav'));
+
+    // Todos os ficheiros passam a ter EXATAMENTE o mesmo mtimeMs no proximo evict.
+    vi.mocked(statSync).mockImplementation((() => ({ mtimeMs: 1000 })) as never);
+
+    const newest = cache.put('new', makeSrc('new.wav'));
+
+    // O recem-escrito sobrevive ao empate; o antigo (unico candidato) e removido.
+    expect(existsSync(newest)).toBe(true);
+    expect(existsSync(old)).toBe(false);
   });
 });
