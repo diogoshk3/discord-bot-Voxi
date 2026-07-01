@@ -9,6 +9,8 @@ import { getPronunciations } from '../store/pronunciation';
 import { getUserVoice } from '../store/userVoice';
 import { isOptedOut } from '../store/optout';
 import { applyPronunciation } from '../textCleaning/pronunciation';
+import { expandAbbreviations } from '../textCleaning/abbreviations';
+import { detectLang } from '../language/detect';
 import { resolveSynth } from './resolveSynth';
 import { log } from '../logging/logger';
 
@@ -76,9 +78,16 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     });
     if (!cleaned) return;
 
+    // expansao de girias/abreviaturas por lingua: aplicada DEPOIS do cleanText
+    // (precisa de texto sem URLs/mencoes para detetar a lingua) e ANTES da
+    // pronuncia — assim as entradas de pronuncia operam sobre a palavra ja
+    // expandida (o tradeoff e que o utilizador nao consegue forcar a leitura
+    // literal de uma giria via pronuncia). Mesma ordem no handleTts.
+    const expanded = expandAbbreviations(cleaned, detectLang(cleaned));
+
     // dicionario de pronuncia por servidor: aplicado DEPOIS do cleanText e ANTES do
     // synth (e antes da blocklist, para que o texto realmente falado seja guardado).
-    const spoken = applyPronunciation(cleaned, getPronunciations(deps.db, message.guildId));
+    const spoken = applyPronunciation(expanded, getPronunciations(deps.db, message.guildId));
 
     // blocklist antes de sintetizar
     const blocklist = getBlocklist(deps.db, message.guildId);
