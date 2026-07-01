@@ -12,6 +12,18 @@ export const SUPPORTED_LOCALES = ['en', 'pt'] as const;
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
 
 /**
+ * Nome legivel de cada locale, na PROPRIA lingua (endonimo). Usado nas CHOICES do
+ * `/config language` e na confirmacao. Tipado como `Record<SupportedLocale, string>`
+ * (a uniao finita, nao `Record<string, string>`): assim, adicionar um locale a
+ * `SUPPORTED_LOCALES` sem lhe dar um nome aqui e um ERRO de compilacao — o mapa
+ * nunca fica dessincronizado do array em silencio.
+ */
+export const LOCALE_DISPLAY_NAMES: Record<SupportedLocale, string> = {
+  en: 'English',
+  pt: 'Português',
+};
+
+/**
  * Interpola placeholders `{param}` numa string. Params ausentes ficam intactos
  * (nao rebenta): so substitui as chaves fornecidas.
  */

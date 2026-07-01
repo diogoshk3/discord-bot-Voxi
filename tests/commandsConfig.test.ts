@@ -666,6 +666,57 @@ describe('/config reset — repoe config aos defaults', () => {
   });
 });
 
+// ── /config language — troca do idioma da interface ──────────────────────────
+
+describe('/config language — troca do idioma da interface', () => {
+  let db: Database.Database;
+
+  beforeEach(() => {
+    db = initDb(':memory:');
+  });
+  afterEach(() => {
+    db.close();
+  });
+
+  it('set pt: persiste locale="pt" e confirma JA em portugues', async () => {
+    // Guild comeca no default 'en'; uma confirmacao em PT prova que a resposta sai
+    // na NOVA lingua (o handler passa `chosen`, nao o locale atual, ao t()).
+    const i = makeConfigInteraction({ sub: 'language', optionsMap: { locale: 'pt' } });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(getGuildConfig(db, GUILD).locale).toBe('pt');
+    // t('config.language.set', 'pt') = "Idioma da interface definido para Português."
+    expect(i.replies.join('\n')).toMatch(/idioma da interface/i);
+    expect(i.replies.join('\n')).toMatch(/Português/);
+    // e NAO a versao inglesa
+    expect(i.replies.join('\n')).not.toMatch(/interface language set/i);
+  });
+
+  it('set en: partindo de pt, volta a en, persiste e confirma em ingles', async () => {
+    // Pre-definir pt para provar a troca nos DOIS sentidos.
+    setGuildConfig(db, GUILD, { locale: 'pt' });
+    const i = makeConfigInteraction({ sub: 'language', optionsMap: { locale: 'en' } });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    expect(getGuildConfig(db, GUILD).locale).toBe('en');
+    // t('config.language.set', 'en') = "Interface language set to English."
+    expect(i.replies.join('\n')).toMatch(/interface language set to english/i);
+    expect(i.replies.join('\n')).not.toMatch(/idioma da interface/i);
+  });
+
+  it('locale invalido: erro amigavel e NAO persiste (fica no default en)', async () => {
+    // 'xx' nao esta em SUPPORTED_LOCALES — as choices impediriam isto no Discord,
+    // mas a validacao defensiva do handler tem de o apanhar na mesma.
+    const i = makeConfigInteraction({ sub: 'language', optionsMap: { locale: 'xx' } });
+    const deps = makeConfigDeps(db);
+    await handleInteraction(i as any, deps);
+    // t('config.language.unsupported', 'en') = "That language isn't supported yet."
+    expect(i.replies.join('\n')).toMatch(/isn't supported|not supported|nao e suportado/i);
+    // Nada persistido: continua no default 'en'.
+    expect(getGuildConfig(db, GUILD).locale).toBe('en');
+  });
+});
+
 // ── wiring do locale: a MESMA resposta sai em PT quando a guild tem locale='pt' ──
 
 describe('/config — wiring do locale (PT quando locale="pt")', () => {
