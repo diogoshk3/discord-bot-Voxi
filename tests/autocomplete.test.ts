@@ -1,5 +1,10 @@
 import { describe, it, expect, vi } from 'vitest';
-import { filterModelChoices, handleAutocomplete } from '../src/commands/index';
+import {
+  filterModelChoices,
+  filterLocaleChoices,
+  handleAutocomplete,
+  commandDefs,
+} from '../src/commands/index';
 import { modelDisplayName } from '../src/language/voiceMap';
 
 describe('modelDisplayName', () => {
@@ -89,5 +94,43 @@ describe('handleAutocomplete', () => {
     await handleAutocomplete(i, deps);
     expect(respond).toHaveBeenCalledTimes(1);
     expect(respond).toHaveBeenCalledWith([]);
+  });
+
+  it('opcao focada e "locale" (/config language): responde com locales filtrados (<=25)', async () => {
+    const respond = vi.fn();
+    const i = {
+      options: { getFocused: () => ({ name: 'locale', value: 'portu' }) },
+      respond,
+    } as any;
+    await handleAutocomplete(i, deps);
+    expect(respond).toHaveBeenCalledTimes(1);
+    const arg = respond.mock.calls[0][0] as { name: string; value: string }[];
+    expect(arg.length).toBeLessThanOrEqual(25);
+    expect(arg).toContainEqual({ name: 'Português', value: 'pt' });
+  });
+
+  it('opcao focada e "locale" com query vazia: corta a 25 (34 > 25)', async () => {
+    const respond = vi.fn();
+    const i = {
+      options: { getFocused: () => ({ name: 'locale', value: '' }) },
+      respond,
+    } as any;
+    await handleAutocomplete(i, deps);
+    const arg = respond.mock.calls[0][0] as unknown[];
+    expect(arg.length).toBe(25);
+  });
+});
+
+describe('/config language — option locale usa autocomplete (34 > 25 choices)', () => {
+  it('o option `locale` do /config language e autocomplete e SEM choices estaticas', () => {
+    const config = commandDefs.find((c) => c.name === 'config') as any;
+    const langSub = config.options.find((o: any) => o.name === 'language');
+    expect(langSub, 'subcomando language nao encontrado').toBeDefined();
+    const localeOpt = langSub.options.find((o: any) => o.name === 'locale');
+    expect(localeOpt, 'option locale nao encontrado').toBeDefined();
+    expect(localeOpt.autocomplete).toBe(true);
+    // Com autocomplete NAO pode ter choices estaticas (Discord rejeita ambos e o
+    // limite de 25 seria excedido pelas 34 linguas).
+    expect(localeOpt.choices ?? []).toHaveLength(0);
   });
 });
