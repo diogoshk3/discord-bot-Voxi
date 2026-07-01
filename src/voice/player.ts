@@ -14,6 +14,11 @@ import { PlayQueue } from './queue';
 import { log } from '../logging/logger';
 import { metrics } from '../metrics';
 
+// Tempo maximo a esperar que a VoiceConnection fique Ready antes de tocar. Numa
+// ligacao lenta / 1a fala a conexao pode estar em signalling/connecting; tocar
+// nesse instante manda o audio para o vazio (sem som e sem erro).
+const CONNECTION_READY_TIMEOUT_MS = 10_000;
+
 export class GuildVoicePlayer {
   private readonly player: AudioPlayer;
   private readonly queue: PlayQueue;
@@ -119,6 +124,33 @@ export class GuildVoicePlayer {
     }
 
     // A sintese pode ter demorado; o player pode ter sido destruido entretanto.
+    if (this.destroyed) return;
+
+    // Garantir que a ligacao esta Ready ANTES de tocar. Se estiver em
+    // signalling/connecting (ligacao lenta / 1a fala), tocar agora mandaria o
+    // audio para o vazio. entersState resolve logo se ja estiver Ready. Feito
+    // DEPOIS da sintese de proposito: a ligacao estabelece EM PARALELO com a
+    // sintese, portanto esperar aqui aproxima-se de max(ready, synth) em vez de
+    // os somar.
+    try {
+      await entersState(
+        this.connection,
+        VoiceConnectionStatus.Ready,
+        CONNECTION_READY_TIMEOUT_MS,
+      );
+    } catch (err) {
+      // A rejeicao pode ter sido causada por destroy() (que destroi a ligacao).
+      if (this.destroyed) return;
+      log.warn('[player] ligacao de voz nao ficou Ready, fala saltada:', err);
+      // Mesmo tratamento do skip de sintese: nao tocamos para o vazio; saltamos
+      // este item e continuamos a fila (sem crescimento de stack — estamos
+      // depois de um await; sem loop apertado — cada iteracao e gated pelo
+      // timeout). Preserva o single-worker de drain e o FIFO.
+      void this.playNext();
+      return;
+    }
+
+    // entersState e mais um await; re-verificar destroyed antes de tocar.
     if (this.destroyed) return;
 
     const resource = createAudioResource(audioPath, {
