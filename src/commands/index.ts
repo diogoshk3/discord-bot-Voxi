@@ -37,7 +37,7 @@ import { expandAbbreviations, isAllEnglishAbbrev } from '../textCleaning/abbrevi
 import { isBlocked } from '../moderation/filter';
 import { resolveSynth } from './resolveSynth';
 import type { SynthRequest } from '../tts/engine';
-import { modelDisplayName, formatVoiceList } from '../language/voiceMap';
+import { modelDisplayName, voiceDisplayName, formatVoiceList } from '../language/voiceMap';
 import { laughterFor } from '../content/laughter';
 import { JOKE_LANGUAGES, jokeLangByKey, pickJoke } from '../content/jokes';
 import { log } from '../logging/logger';
@@ -701,7 +701,9 @@ async function handleVoice(i: ChatInputCommandInteraction, deps: BotDeps): Promi
     const speed = i.options.getNumber('speed') ?? deps.config.defaultSpeed;
     const clamped = Math.min(2.0, Math.max(0.5, speed));
     setUserVoice(deps.db, i.guildId!, i.user.id, model, clamped);
-    await reply(i, t('voice.set', locale, { model, speed: clamped }));
+    // Copy beginner-friendly: lidera com o nome amigavel (voiceDisplayName) e mantem
+    // o id cru copy-pasteavel. Comportamento inalterado (so params de apresentacao).
+    await reply(i, t('voice.set', locale, { name: voiceDisplayName(model), model, speed: clamped }));
   } else if (sub === 'list') {
     // Beginner-friendly: em vez de uma lista plana de ids Piper, agrupa por lingua
     // com nomes humanos (formatVoiceList). O id cru fica entre parenteses para
@@ -874,7 +876,9 @@ async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps): Prom
       return;
     }
     setGuildConfig(deps.db, i.guildId!, { defaultVoice: model });
-    await reply(i, t('config.defaultVoiceSet', locale, { model }));
+    // Copy beginner-friendly: lidera com o nome amigavel (voiceDisplayName) e mantem
+    // o id cru copy-pasteavel. Comportamento inalterado (so params de apresentacao).
+    await reply(i, t('config.defaultVoiceSet', locale, { name: voiceDisplayName(model), model }));
   } else if (sub === 'language') {
     // Troca do idioma da INTERFACE. As choices ja limitam a SUPPORTED_LOCALES, mas
     // validamos de novo (defensivo) — includes() precisa do cast porque o array e

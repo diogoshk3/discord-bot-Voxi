@@ -171,6 +171,23 @@ function voiceLabel(model: string): string {
 }
 
 /**
+ * Nome amigável COMPLETO de uma voz para as respostas de sucesso (ex. /voice set,
+ * /config default-voice): junta o autónimo da língua (`modelDisplayName`) com o
+ * nome humano da voz (`voiceLabel`), no formato "English (US) — Amy". É o que
+ * distingue duas vozes da MESMA língua (que o `modelDisplayName` sozinho colapsava
+ * no mesmo autónimo) e evita mostrar o id técnico ao iniciante. Guards preservados:
+ *  - locale não mapeado -> `modelDisplayName` cai no id cru (nunca esconde a voz);
+ *  - id sem 2.º segmento (sem '-') -> não há nome de voz para juntar, devolve só o
+ *    nome da língua (nunca "… — " com sufixo vazio).
+ * PURO: sem efeitos secundários.
+ */
+export function voiceDisplayName(model: string): string {
+  const lang = modelDisplayName(model);
+  if (model.indexOf('-') === -1) return lang;
+  return `${lang} — ${voiceLabel(model)}`;
+}
+
+/**
  * Renderiza a lista de vozes disponíveis AGRUPADA POR LÍNGUA, para o /voice list
  * ser beginner-friendly: em vez de uma lista plana de ids técnicos, mostra um
  * cabeçalho com o autónimo da língua (via LOCALE_NAMES / modelDisplayName) e, por

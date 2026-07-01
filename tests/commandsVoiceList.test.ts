@@ -8,7 +8,7 @@ vi.mock('@discordjs/voice', () => ({
 }));
 
 import { handleInteraction } from '../src/commands/index';
-import { formatVoiceList } from '../src/language/voiceMap';
+import { formatVoiceList, voiceDisplayName } from '../src/language/voiceMap';
 import type { BotDeps } from '../src/bot/deps';
 import { initDb } from '../src/store/db';
 import type Database from 'better-sqlite3';
@@ -78,6 +78,31 @@ describe('formatVoiceList (agrupamento por lingua)', () => {
     const out = formatVoiceList(['en_US']);
     expect(out).toContain('English (US)');
     expect(out).toContain('en_US');
+  });
+});
+
+describe('voiceDisplayName (nome amigavel lingua + voz)', () => {
+  it('combina o autonimo da lingua com o nome humano da voz', () => {
+    expect(voiceDisplayName('en_US-amy-medium')).toBe('English (US) — Amy');
+    expect(voiceDisplayName('pt_PT-tugao-medium')).toBe('Português (Portugal) — Tugao');
+  });
+
+  it('distingue duas vozes da MESMA lingua (nao colapsa no autonimo)', () => {
+    expect(voiceDisplayName('en_US-amy-medium')).not.toBe(
+      voiceDisplayName('en_US-ryan-medium'),
+    );
+  });
+
+  it('locale nao mapeado -> cai no id cru como lingua (nunca esconde a voz)', () => {
+    const out = voiceDisplayName('xx_YY-foo-medium');
+    expect(out).toContain('xx_YY');
+    expect(out).toContain('Foo');
+  });
+
+  it('modelo sem voz (sem "-") -> cai so no nome da lingua (guard, sem sufixo vazio)', () => {
+    // Sem 2.º segmento nao ha nome de voz para acrescentar: devolve so o autonimo
+    // da lingua (nunca "English (US) — " com sufixo vazio).
+    expect(voiceDisplayName('en_US')).toBe('English (US)');
   });
 });
 
