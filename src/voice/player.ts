@@ -25,6 +25,10 @@ export class GuildVoicePlayer {
   private current: AudioResource | null = null;
   private playing = false;
   private destroyed = false;
+  // /skip disparado DURANTE a janela de sintese (synth + entersState Ready), quando
+  // o AudioPlayer real ainda esta Idle e player.stop() e no-op. Sinaliza que o item
+  // in-flight deve ser DESCARTADO antes de tocar. Ver skip()/playNext().
+  private pendingSkip = false;
   private idleTimer: NodeJS.Timeout | null = null;
   private reconnecting = false;
 
@@ -96,8 +100,23 @@ export class GuildVoicePlayer {
 
   skip(): void {
     if (this.destroyed) return;
-    // stop() emite Idle -> o handler chama playNext() e avanca para o proximo item.
+    // Caso normal (a tocar): stop() emite Idle -> o handler chama playNext() e
+    // avanca para o proximo item.
+    //
+    // Caso da JANELA DE SINTESE: quando o /skip chega durante synth()/entersState
+    // (playing=true mas play() ainda nao correu), o AudioPlayer REAL esta Idle e
+    // stop() e no-op (no @discordjs/voice, stop() faz `if (idle) return false` —
+    // nao emite Idle). O skip seria PERDIDO e a fala tocava na integra. Detetamos
+    // isso: so esta REALMENTE a tocar se o estado do player e Playing ou Buffering.
+    // Se nao esta -> estamos na janela -> marcamos pendingSkip para que playNext()
+    // descarte o item in-flight antes de o tocar.
+    const wasPlaying =
+      this.player.state.status === AudioPlayerStatus.Playing ||
+      this.player.state.status === AudioPlayerStatus.Buffering;
     this.player.stop(true);
+    if (!wasPlaying) {
+      this.pendingSkip = true;
+    }
   }
 
   destroy(): void {
@@ -128,6 +147,12 @@ export class GuildVoicePlayer {
       return;
     }
     this.clearIdleTimer();
+    // RESET do pendingSkip no INICIO de cada iteracao (logo apos o dequeue, ANTES
+    // dos awaits). Garante que um /skip so afeta o item ATUAL e nunca vaza para o
+    // seguinte: se a janela de sintese de B foi saltada (ou a sintese de B falhou e
+    // drenou C), a iteracao de C limpa a flag e C toca normalmente. INVARIANTE
+    // anti-leak.
+    this.pendingSkip = false;
     // IMPORTANTE: marcar `playing` ANTES do await da sintese. Isto impede que um
     // `say()` concorrente (que ve `!this.playing`) arranque um segundo worker de
     // drain durante a sintese, o que quebraria a ordem FIFO.
@@ -174,6 +199,18 @@ export class GuildVoicePlayer {
 
     // entersState e mais um await; re-verificar destroyed antes de tocar.
     if (this.destroyed) return;
+
+    // /skip disparado DURANTE a sintese/entersState deste item (janela em que o
+    // AudioPlayer estava Idle e stop() foi no-op): descartar o item in-flight SEM
+    // tocar e drenar o proximo. Feito ANTES de createAudioResource/messagesSpoken
+    // para que um item saltado nunca conte como falado. O pendingSkip foi setado por
+    // skip() e sera reposto a false no inicio da proxima iteracao (anti-leak).
+    if (this.pendingSkip) {
+      this.pendingSkip = false;
+      this.current = null;
+      void this.playNext();
+      return;
+    }
 
     const resource = createAudioResource(audioPath, {
       inputType: StreamType.Arbitrary,
