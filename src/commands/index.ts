@@ -31,6 +31,7 @@ import { isBlocked } from '../moderation/filter';
 import { resolveSynth } from './resolveSynth';
 import { modelDisplayName } from '../language/voiceMap';
 import { log } from '../logging/logger';
+import { t } from '../i18n/index';
 
 /**
  * Permissoes minimas que o Voxi precisa no servidor onde for convidado, derivadas
@@ -58,7 +59,7 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
   // admin-only), para que quem ouve o Voxi numa call o possa adicionar.
   new SlashCommandBuilder()
     .setName('invite')
-    .setDescription('Mostra o link para adicionar o Voxi ao teu servidor')
+    .setDescription('Show the link to add Voxi to your server')
     .toJSON(),
   // /vote — link para a pagina de voto do Voxi no top.gg (P11.5). Top-level e SEM
   // setDefaultMemberPermissions (NAO admin-only): qualquer utilizador pode votar.
@@ -66,7 +67,7 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
   // sobe a visibilidade do bot no top.gg.
   new SlashCommandBuilder()
     .setName('vote')
-    .setDescription('Mostra o link para votar no Voxi no top.gg')
+    .setDescription('Show the link to vote for Voxi on top.gg')
     .toJSON(),
   // /help — discovery de comandos em-app, para donos de servidor nao-tecnicos.
   // Top-level e SEM setDefaultMemberPermissions (NAO admin-only): qualquer
@@ -74,42 +75,42 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
   // handleHelp), por isso este comando inclui-se a si proprio no grupo "Geral".
   new SlashCommandBuilder()
     .setName('help')
-    .setDescription('Mostra a lista de comandos do Voxi')
+    .setDescription("Show Voxi's command list")
     .toJSON(),
-  new SlashCommandBuilder().setName('join').setDescription('Entra no teu canal de voz').toJSON(),
-  new SlashCommandBuilder().setName('leave').setDescription('Sai do canal de voz').toJSON(),
+  new SlashCommandBuilder().setName('join').setDescription('Join your voice channel').toJSON(),
+  new SlashCommandBuilder().setName('leave').setDescription('Leave the voice channel').toJSON(),
   new SlashCommandBuilder()
     .setName('tts')
-    .setDescription('Voxi le um texto em voz alta')
-    .addStringOption((o) => o.setName('texto').setDescription('O que ler').setRequired(true))
+    .setDescription('Voxi reads a text out loud')
+    .addStringOption((o) => o.setName('texto').setDescription('What to read').setRequired(true))
     .toJSON(),
-  new SlashCommandBuilder().setName('skip').setDescription('Salta o audio atual').toJSON(),
+  new SlashCommandBuilder().setName('skip').setDescription('Skip the current audio').toJSON(),
   new SlashCommandBuilder()
     .setName('voice')
-    .setDescription('Gere a tua voz')
+    .setDescription('Manage your voice')
     .addSubcommand((s) =>
       s
         .setName('set')
-        .setDescription('Define a tua voz')
-        .addStringOption((o) => o.setName('model').setDescription('Modelo Piper').setRequired(true).setAutocomplete(true))
-        .addNumberOption((o) => o.setName('speed').setDescription('Velocidade (0.5-2.0)').setRequired(false)),
+        .setDescription('Set your voice')
+        .addStringOption((o) => o.setName('model').setDescription('Piper model').setRequired(true).setAutocomplete(true))
+        .addNumberOption((o) => o.setName('speed').setDescription('Speed (0.5-2.0)').setRequired(false)),
     )
-    .addSubcommand((s) => s.setName('list').setDescription('Lista os modelos disponiveis'))
-    .addSubcommand((s) => s.setName('reset').setDescription('Repoe a tua voz por defeito'))
+    .addSubcommand((s) => s.setName('list').setDescription('List the available models'))
+    .addSubcommand((s) => s.setName('reset').setDescription('Reset your voice to the default'))
     .addSubcommand((s) =>
-      s.setName('optout').setDescription('Deixa de ser lido automaticamente no canal de auto-leitura'),
+      s.setName('optout').setDescription('Stop being read automatically in the auto-read channel'),
     )
     .addSubcommand((s) =>
-      s.setName('optin').setDescription('Volta a ser lido automaticamente no canal de auto-leitura'),
+      s.setName('optin').setDescription('Be read automatically again in the auto-read channel'),
     )
     .addSubcommand((s) =>
       s
         .setName('preview')
-        .setDescription('Toca uma frase de amostra na tua voz atual (ou num modelo especifico)')
+        .setDescription('Play a sample sentence in your current voice (or a specific model)')
         .addStringOption((o) =>
           o
             .setName('model')
-            .setDescription('Modelo Piper (opcional)')
+            .setDescription('Piper model (optional)')
             .setRequired(false)
             .setAutocomplete(true),
         ),
@@ -117,26 +118,26 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
     .toJSON(),
   new SlashCommandBuilder()
     .setName('config')
-    .setDescription('Configuracao do servidor (admin)')
+    .setDescription('Server configuration (admin)')
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addSubcommand((s) =>
       s
         .setName('tts-channel')
-        .setDescription('Define o canal de auto-leitura')
+        .setDescription('Set the auto-read channel')
         .addChannelOption((o) =>
-          o.setName('canal').setDescription('Canal de texto').addChannelTypes(ChannelType.GuildText).setRequired(true),
+          o.setName('canal').setDescription('Text channel').addChannelTypes(ChannelType.GuildText).setRequired(true),
         ),
     )
     .addSubcommand((s) =>
       s
         .setName('autoread')
-        .setDescription('Liga/desliga auto-leitura')
+        .setDescription('Turn auto-read on/off')
         .addBooleanOption((o) => o.setName('ativo').setDescription('on/off').setRequired(true)),
     )
     .addSubcommand((s) =>
       s
         .setName('max-chars')
-        .setDescription('Maximo de caracteres por mensagem')
+        .setDescription('Maximum characters per message')
         .addIntegerOption((o) =>
           o.setName('valor').setDescription('1-2000').setRequired(true).setMinValue(1).setMaxValue(2000),
         ),
@@ -144,7 +145,7 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
     .addSubcommand((s) =>
       s
         .setName('rate-limit')
-        .setDescription('Mensagens por minuto por user')
+        .setDescription('Messages per minute per user')
         .addIntegerOption((o) =>
           o.setName('valor').setDescription('1-120').setRequired(true).setMinValue(1).setMaxValue(120),
         ),
@@ -152,79 +153,79 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
     .addSubcommand((s) =>
       s
         .setName('role')
-        .setDescription('Restringe a auto-leitura a um role (omitir o role limpa a restricao)')
+        .setDescription('Restrict auto-read to a role (omit the role to clear the restriction)')
         .addRoleOption((o) =>
-          o.setName('role').setDescription('Role permitido (vazio = sem restricao)').setRequired(false),
+          o.setName('role').setDescription('Allowed role (empty = no restriction)').setRequired(false),
         ),
     )
     .addSubcommand((s) =>
       s
         .setName('enabled')
-        .setDescription('Liga/desliga o TTS neste servidor (kill-switch)')
+        .setDescription('Turn TTS on/off on this server (kill-switch)')
         .addBooleanOption((o) => o.setName('ativo').setDescription('on/off').setRequired(true)),
     )
     .addSubcommand((s) =>
       s
         .setName('default-voice')
-        .setDescription('Define a voz default do servidor (usada quando o user nao tem voz propria)')
-        .addStringOption((o) => o.setName('model').setDescription('Modelo Piper').setRequired(true).setAutocomplete(true)),
+        .setDescription("Set the server's default voice (used when the user has no voice of their own)")
+        .addStringOption((o) => o.setName('model').setDescription('Piper model').setRequired(true).setAutocomplete(true)),
     )
-    .addSubcommand((s) => s.setName('show').setDescription('Mostra a configuracao atual do servidor'))
-    .addSubcommand((s) => s.setName('reset').setDescription('Repoe a configuracao do servidor aos valores por defeito'))
+    .addSubcommand((s) => s.setName('show').setDescription("Show the server's current configuration"))
+    .addSubcommand((s) => s.setName('reset').setDescription("Reset the server's configuration to defaults"))
     .addSubcommandGroup((g) =>
       g
         .setName('blockword')
-        .setDescription('Gere a blocklist')
+        .setDescription('Manage the blocklist')
         .addSubcommand((s) =>
           s
             .setName('add')
-            .setDescription('Adiciona palavra')
-            .addStringOption((o) => o.setName('palavra').setDescription('Palavra a bloquear').setRequired(true)),
+            .setDescription('Add a word')
+            .addStringOption((o) => o.setName('palavra').setDescription('Word to block').setRequired(true)),
         )
         .addSubcommand((s) =>
           s
             .setName('remove')
-            .setDescription('Remove palavra')
-            .addStringOption((o) => o.setName('palavra').setDescription('Palavra a desbloquear').setRequired(true)),
+            .setDescription('Remove a word')
+            .addStringOption((o) => o.setName('palavra').setDescription('Word to unblock').setRequired(true)),
         ),
     )
     .addSubcommandGroup((g) =>
       g
         .setName('pronunciation')
-        .setDescription('Gere o dicionario de pronuncia')
+        .setDescription('Manage the pronunciation dictionary')
         .addSubcommand((s) =>
           s
             .setName('add')
-            .setDescription('Adiciona/edita um termo')
-            .addStringOption((o) => o.setName('termo').setDescription('Termo a substituir').setRequired(true))
+            .setDescription('Add/edit a term')
+            .addStringOption((o) => o.setName('termo').setDescription('Term to replace').setRequired(true))
             .addStringOption((o) =>
-              o.setName('pronuncia').setDescription('Como deve ser lido').setRequired(true),
+              o.setName('pronuncia').setDescription('How it should be read').setRequired(true),
             ),
         )
         .addSubcommand((s) =>
           s
             .setName('remove')
-            .setDescription('Remove um termo')
-            .addStringOption((o) => o.setName('termo').setDescription('Termo a remover').setRequired(true)),
+            .setDescription('Remove a term')
+            .addStringOption((o) => o.setName('termo').setDescription('Term to remove').setRequired(true)),
         )
-        .addSubcommand((s) => s.setName('list').setDescription('Lista os termos definidos')),
+        .addSubcommand((s) => s.setName('list').setDescription('List the defined terms')),
     )
     .toJSON(),
   new SlashCommandBuilder()
     .setName('setup')
-    .setDescription('Configuracao guiada num so passo (admin)')
+    .setDescription('Guided one-step configuration (admin)')
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addChannelOption((o) =>
       o
         .setName('canal')
-        .setDescription('Canal de auto-leitura (omitir = usa o canal atual)')
+        .setDescription('Auto-read channel (omit = use the current channel)')
         .addChannelTypes(ChannelType.GuildText)
         .setRequired(false),
     )
     .toJSON(),
   new SlashCommandBuilder()
     .setName('stats')
-    .setDescription('Estatísticas do bot (admin)')
+    .setDescription('Bot statistics (admin)')
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .toJSON(),
 ];
@@ -766,14 +767,19 @@ async function handleVote(i: ChatInputCommandInteraction, deps: BotDeps): Promis
 
 /**
  * /help — discovery de comandos em-app, pensado para donos de servidor
- * nao-tecnicos. Responde com uma lista AGRUPADA dos comandos com descricoes
- * curtas em PT.
+ * nao-tecnicos. Responde com uma lista AGRUPADA dos comandos.
  *
  * Decisoes de design:
- *  - O texto e DERIVADO de `commandDefs` (nome + descricao), NAO hardcoded: assim
- *    nunca diverge dos comandos reais e o teste-guard (cada comando top-level tem
- *    de aparecer no /help) e genuinamente protetor. Se alguem adicionar um comando
- *    a commandDefs e nao o cobrir aqui, o guard parte.
+ *  - O CHROME (titulo, intro, cabecalhos de grupo, nota do /config, rodape) e
+ *    renderizado via t(key, locale) no locale da guild (getGuildConfig.locale).
+ *    Por defeito (locale 'en') sai em INGLES. P16.1: so o chrome e traduzido — as
+ *    descricoes dos comandos vem de commandDefs (ja em ingles) e ficam em ingles
+ *    tambem sob 'pt' (as respostas/erros/embeds sao P16.2).
+ *  - A LISTA de comandos e DERIVADA de `commandDefs` (nome + descricao), NAO
+ *    hardcoded nem no catalogo: assim nunca diverge dos comandos reais e o
+ *    teste-guard (cada comando top-level tem de aparecer no /help) continua
+ *    genuinamente protetor. Se alguem adicionar um comando a commandDefs e nao o
+ *    cobrir aqui, o guard parte.
  *  - Os grupos (Geral / Voz / Admin) sao uma divisao semantica que NAO existe nos
  *    dados, por isso resolvemo-la por uma regra de particao aplicada por FILTRO do
  *    array (nao por listar nomes a mao):
@@ -798,7 +804,11 @@ function helpSubcommands(def: RESTPostAPIChatInputApplicationCommandsJSONBody): 
     .map((o) => (o as { name: string }).name);
 }
 
-async function handleHelp(i: ChatInputCommandInteraction): Promise<void> {
+async function handleHelp(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
+  // Locale da INTERFACE por guild (default 'en'). Em DMs (guildId null) usamos o
+  // default via getGuildConfig, que devolve DEFAULTS quando nao ha linha.
+  const locale = i.guildId ? getGuildConfig(deps.db, i.guildId).locale : 'en';
+
   const isAdmin = (d: RESTPostAPIChatInputApplicationCommandsJSONBody): boolean =>
     d.default_member_permissions != null;
 
@@ -806,28 +816,29 @@ async function handleHelp(i: ChatInputCommandInteraction): Promise<void> {
   const voz = commandDefs.filter((d) => d.name === 'voice');
   const admin = commandDefs.filter((d) => isAdmin(d));
 
-  const lines: string[] = ['**Voxi — type it, hear it.**', 'Aqui ficam os comandos do bot.', ''];
+  const lines: string[] = [t('help.title', locale), t('help.intro', locale), ''];
 
-  lines.push('**Geral**');
+  lines.push(`**${t('help.groupGeneral', locale)}**`);
   for (const d of geral) lines.push(`• /${d.name} — ${d.description}`);
   lines.push('');
 
-  lines.push('**Voz (por utilizador)**');
+  lines.push(`**${t('help.groupVoice', locale)}**`);
   for (const d of voz) {
     lines.push(`• /${d.name} — ${d.description}`);
     const subs = helpSubcommands(d);
-    if (subs.length) lines.push(`   subcomandos: ${subs.map((s) => `/${d.name} ${s}`).join(', ')}`);
+    if (subs.length)
+      lines.push(`   ${t('help.subcommands', locale)}: ${subs.map((s) => `/${d.name} ${s}`).join(', ')}`);
   }
   lines.push('');
 
-  lines.push('**Admin** (precisa de Gerir Servidor)');
+  lines.push(`**${t('help.groupAdmin', locale)}**`);
   for (const d of admin) lines.push(`• /${d.name} — ${d.description}`);
   // /config tem muitos subcomandos; em vez de os listar todos (poluiria a
   // mensagem) apontamos para /config show, que imprime a config atual.
-  lines.push('   (/config tem varios subcomandos — usa /config show para veres a config atual)');
+  lines.push(t('help.configNote', locale));
   lines.push('');
 
-  lines.push('Primeiro passo recomendado: corre /setup no teu servidor.');
+  lines.push(t('help.footer', locale, { command: '/setup' }));
 
   await reply(i, lines.join('\n'));
 }
@@ -893,7 +904,7 @@ export async function handleInteraction(i: ChatInputCommandInteraction, deps: Bo
       case 'vote':
         return await handleVote(i, deps);
       case 'help':
-        return await handleHelp(i);
+        return await handleHelp(i, deps);
     }
   } catch (err) {
     log.error('[command] erro em', i.commandName, err);

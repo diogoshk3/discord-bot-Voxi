@@ -67,6 +67,7 @@ describe('store', () => {
         ratePerMin: 5,
         enabled: true,
         ttsRoleId: null,
+        locale: 'en', // default: ingles como idioma da interface
       });
     });
 
@@ -104,7 +105,26 @@ describe('store', () => {
         ratePerMin: 5,
         enabled: true,
         ttsRoleId: null,
+        locale: 'en', // default: ingles como idioma da interface
       });
+    });
+
+    it('locale default e "en"', () => {
+      expect(getGuildConfig(db, G).locale).toBe('en');
+    });
+
+    it('persiste e le locale (pt)', () => {
+      setGuildConfig(db, G, { locale: 'pt' });
+      expect(getGuildConfig(db, G).locale).toBe('pt');
+    });
+
+    it('um patch de locale nao perde outros campos', () => {
+      setGuildConfig(db, G, { maxChars: 500, autoread: true });
+      setGuildConfig(db, G, { locale: 'pt' });
+      const cfg = getGuildConfig(db, G);
+      expect(cfg.locale).toBe('pt');
+      expect(cfg.maxChars).toBe(500);
+      expect(cfg.autoread).toBe(true);
     });
 
     it('merges successive patches without losing earlier values', () => {
@@ -355,6 +375,62 @@ describe('initDb — migracao tts_role_id em DB de esquema antigo', () => {
       const db2 = initDb(file);
       const cols2 = db2.pragma('table_info(guild_config)') as Array<{ name: string }>;
       expect(cols2.filter((c) => c.name === 'tts_role_id')).toHaveLength(1);
+      db2.close();
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('initDb — migracao locale em DB de esquema antigo', () => {
+  it('adiciona a coluna locale a uma DB sem ela e o get devolve "en"', () => {
+    // Mesmo padrao do teste de tts_role_id: DB com esquema ANTIGO (sem locale),
+    // uma linha inserida, fechada; depois initDb corre a migracao idempotente e
+    // as linhas antigas passam a ler locale='en' (nao null).
+    const dir = mkdtempSync(join(tmpdir(), 'migloc-'));
+    const file = join(dir, 'old-schema.sqlite');
+    try {
+      const old = new BetterSqlite3(file);
+      old.exec(`
+        CREATE TABLE guild_config (
+          guild_id       TEXT PRIMARY KEY,
+          tts_channel_id TEXT,
+          autoread       INTEGER NOT NULL DEFAULT 0,
+          default_voice  TEXT NOT NULL DEFAULT 'en_US-amy-medium',
+          max_chars      INTEGER NOT NULL DEFAULT 300,
+          rate_per_min   INTEGER NOT NULL DEFAULT 5,
+          enabled        INTEGER NOT NULL DEFAULT 1,
+          tts_role_id    TEXT
+        );
+      `);
+      old
+        .prepare(
+          `INSERT INTO guild_config (guild_id, tts_channel_id, autoread, default_voice, max_chars, rate_per_min, enabled, tts_role_id)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        )
+        .run('g-old', 'chan-old', 1, 'en_US-amy-medium', 300, 5, 1, null);
+      old.close();
+
+      // Antes da migracao a coluna nao existe.
+      const before = new BetterSqlite3(file);
+      const colsBefore = before.pragma('table_info(guild_config)') as Array<{ name: string }>;
+      expect(colsBefore.some((c) => c.name === 'locale')).toBe(false);
+      before.close();
+
+      // initDb corre a migracao idempotente.
+      const db = initDb(file);
+      const colsAfter = db.pragma('table_info(guild_config)') as Array<{ name: string }>;
+      expect(colsAfter.some((c) => c.name === 'locale')).toBe(true);
+
+      // A linha antiga continua la e locale vem como 'en' (default da coluna nova).
+      expect(getGuildConfig(db, 'g-old').locale).toBe('en');
+      expect(getGuildConfig(db, 'g-old').ttsChannelId).toBe('chan-old');
+
+      // Idempotente: correr initDb de novo no mesmo ficheiro nao rebenta.
+      db.close();
+      const db2 = initDb(file);
+      const cols2 = db2.pragma('table_info(guild_config)') as Array<{ name: string }>;
+      expect(cols2.filter((c) => c.name === 'locale')).toHaveLength(1);
       db2.close();
     } finally {
       rmSync(dir, { recursive: true, force: true });

@@ -11,6 +11,8 @@ vi.mock('@discordjs/voice', () => ({
 
 import { handleInteraction, commandDefs } from '../src/commands/index';
 import type { BotDeps } from '../src/bot/deps';
+import { initDb } from '../src/store/db';
+import { setGuildConfig } from '../src/store/guildConfig';
 
 const GUILD = 'g-help-test';
 
@@ -43,14 +45,15 @@ function makeHelpInteraction(): FakeInteraction {
   };
 }
 
-// O /help nao usa deps, mas handleInteraction passa-os na mesma — um stub minimo
-// chega para o switch despachar.
+// O /help agora renderiza via t() no locale da guild, por isso precisa de
+// deps.db para ler getGuildConfig(guildId).locale. Usamos uma DB in-memory real.
 function makeDeps(): BotDeps {
   return {
     client: { user: { id: 'bot-1' } },
     players: new Map(),
     config: {},
     availableModels: [],
+    db: initDb(':memory:'),
   } as unknown as BotDeps;
 }
 
@@ -79,13 +82,28 @@ describe('/help — discovery de comandos em-app', () => {
     }
   });
 
-  it('mostra os cabecalhos dos tres grupos', async () => {
+  it('mostra os cabecalhos dos tres grupos em INGLES por defeito', async () => {
     const i = makeHelpInteraction();
     await handleInteraction(i as any, makeDeps());
     const text = i.replies.join('\n');
+    // locale default 'en' -> cabecalhos em ingles
+    expect(text).toContain('General');
+    expect(text).toMatch(/Voice/);
+    expect(text).toContain('Admin');
+  });
+
+  it('renderiza o chrome do /help em PT quando a guild tem locale="pt"', async () => {
+    const deps = makeDeps();
+    setGuildConfig((deps as any).db, GUILD, { locale: 'pt' });
+    const i = makeHelpInteraction();
+    await handleInteraction(i as any, deps);
+    const text = i.replies.join('\n');
+    // O chrome (cabecalhos de grupo) e o que discrimina EN vs PT — as descricoes
+    // dos comandos vem de commandDefs (ingles) e ficam em ingles (P16.2).
     expect(text).toContain('Geral');
     expect(text).toMatch(/Voz/);
-    expect(text).toContain('Admin');
+    // e NAO deve conter o cabecalho ingles neste locale
+    expect(text).not.toContain('**General**');
   });
 
   it('(b) inclui a marca/tagline Voxi', async () => {
