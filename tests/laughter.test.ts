@@ -22,9 +22,12 @@ describe('laughterFor', () => {
     expect(laughterFor('en_')).toBe('ha ha ha ha ha ha');
   });
 
-  it('português usa "rá" (o \'h\' é mudo em PT) com riso longo', () => {
-    // 'h' mudo no phonemizer PT -> "ha" quase não soa; "rá" é vocalizado.
-    expect(laughterFor('pt_')).toBe('rá rá rá rá rá rá rá rá rá');
+  it('português usa "he" (o \'h\' é mudo em PT, "ha" não voca) com riso longo', () => {
+    expect(laughterFor('pt_')).toBe('he he he he he he');
+  });
+
+  it('italiano usa "he" (também tem \'h\' mudo)', () => {
+    expect(laughterFor('it_')).toBe('he he he he he');
   });
 
   it('fallback (riso longo) para prefixo desconhecido', () => {
