@@ -173,6 +173,37 @@ describe('resolveSynth — precedencia da voz PREFERIDA (user > guild > .env > a
   });
 });
 
+describe('resolveSynth — forceLang (stretch: girias EM SO ingles forcam voz EN)', () => {
+  const available = ['pt_PT-tugao-medium', 'en_US-amy-medium'];
+
+  it('forceLang="eng" ignora o detectLang e escolhe voz EN mesmo com texto curto', () => {
+    // 'be right back' e curto -> detectLang devolveria '' e cairia na preferida (pt).
+    // Com forceLang='eng', escolhe uma voz en_ na mesma.
+    const r = resolveSynth({
+      text: 'be right back',
+      userVoice: { model: 'pt_PT-tugao-medium', speed: 1.0 },
+      available,
+      defaultVoice: 'en_US-amy-medium',
+      defaultSpeed: 1.0,
+      forceLang: 'eng',
+    });
+    expect(r.model.startsWith('en_')).toBe(true);
+    expect(r.model).toBe('en_US-amy-medium');
+  });
+
+  it('forceLang vazio/undefined mantem o comportamento normal (detecta a lingua)', () => {
+    const r = resolveSynth({
+      text: PT_LONG,
+      userVoice: null,
+      available,
+      defaultVoice: 'en_US-amy-medium',
+      defaultSpeed: 1.0,
+      forceLang: undefined,
+    });
+    expect(r.model.startsWith('pt_')).toBe(true);
+  });
+});
+
 describe('resolveSynth — velocidade', () => {
   const available = ['en_US-amy-medium', 'pt_PT-tugao-medium'];
 

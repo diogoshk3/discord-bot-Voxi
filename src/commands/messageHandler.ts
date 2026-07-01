@@ -9,8 +9,7 @@ import { getPronunciations } from '../store/pronunciation';
 import { getUserVoice } from '../store/userVoice';
 import { isOptedOut } from '../store/optout';
 import { applyPronunciation } from '../textCleaning/pronunciation';
-import { expandAbbreviations } from '../textCleaning/abbreviations';
-import { detectLang } from '../language/detect';
+import { expandAbbreviations, isAllEnglishAbbrev } from '../textCleaning/abbreviations';
 import { resolveSynth } from './resolveSynth';
 import { log } from '../logging/logger';
 
@@ -83,12 +82,18 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     // vazio/inutil). Nota: isto passa a ignorar tambem "!!!" (so-pontuacao).
     if (!/[\p{L}\p{N}]/u.test(cleaned)) return;
 
-    // expansao de girias/abreviaturas por lingua: aplicada DEPOIS do cleanText
-    // (precisa de texto sem URLs/mencoes para detetar a lingua) e ANTES da
-    // pronuncia — assim as entradas de pronuncia operam sobre a palavra ja
-    // expandida (o tradeoff e que o utilizador nao consegue forcar a leitura
-    // literal de uma giria via pronuncia). Mesma ordem no handleTts.
-    const expanded = expandAbbreviations(cleaned, detectLang(cleaned));
+    // Stretch P18: se a mensagem limpa e SO girias EN ("brb", "omg lol"), forcamos
+    // uma voz inglesa para elas soarem com o sotaque certo mesmo que o user tenha
+    // uma voz fixada noutra lingua. Calculado ANTES da expansao (a expansao ja nao
+    // deteta 'eng' de forma fiavel em texto curto).
+    const forceLang = isAllEnglishAbbrev(cleaned) ? 'eng' : undefined;
+
+    // expansao de girias INGLESAS: aplicada DEPOIS do cleanText e ANTES da pronuncia
+    // — assim as entradas de pronuncia operam sobre a palavra ja expandida (o
+    // tradeoff e que o utilizador nao consegue forcar a leitura literal de uma giria
+    // via pronuncia). As girias sao SO EN e aplicam-se em qualquer lingua. Mesma
+    // ordem no handleTts.
+    const expanded = expandAbbreviations(cleaned);
 
     // dicionario de pronuncia por servidor: aplicado DEPOIS do cleanText e ANTES do
     // synth (e antes da blocklist, para que o texto realmente falado seja guardado).
@@ -108,6 +113,7 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
       guildDefaultVoice: cfg.defaultVoice,
       defaultVoice: deps.config.defaultVoice,
       defaultSpeed: deps.config.defaultSpeed,
+      forceLang,
     });
 
     await player.say(req);
