@@ -79,6 +79,13 @@ export class GuildVoicePlayer {
     return true;
   }
 
+  // Predicado LEVE: ha algo a decorrer? Esta a tocar (playing) OU tem itens na
+  // fila. O /skip le isto ANTES de skip() para distinguir "nada a tocar" de
+  // "saltei" — em vez de fingir sempre que saltou. NAO altera estado.
+  isActive(): boolean {
+    return this.playing || this.queue.size() > 0;
+  }
+
   skip(): void {
     if (this.destroyed) return;
     // stop() emite Idle -> o handler chama playNext() e avanca para o proximo item.

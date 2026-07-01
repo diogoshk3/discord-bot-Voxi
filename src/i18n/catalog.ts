@@ -59,6 +59,11 @@ export const catalog: Record<string, Entry> = {
     en: 'Skipped.',
     pt: 'Saltado.',
   },
+  // Ha player na voz mas nada a tocar nem na fila: /skip nao finge que saltou.
+  'skip.nothing': {
+    en: 'Nothing is playing right now.',
+    pt: 'Não está nada a tocar de momento.',
+  },
   'tts.notInVoice': {
     en: "I'm not in a voice channel yet — run /join first.",
     pt: 'Ainda nao estou num canal de voz — usa /join primeiro.',

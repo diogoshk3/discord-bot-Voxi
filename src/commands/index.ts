@@ -428,6 +428,14 @@ async function handleSkip(i: ChatInputCommandInteraction, deps: BotDeps): Promis
     await reply(i, t('skip.notInVoice', locale));
     return;
   }
+  // Ha player, mas pode estar parado (nada a tocar nem na fila). Ler isActive()
+  // ANTES de skip() — skip() faria stop()/emit(Idle) e distorceria o estado — para
+  // nao fingir que saltou algo quando nao havia nada. skip.notInVoice cobre o
+  // "sem player de todo"; skip.nothing cobre "ha player mas esta parado".
+  if (!player.isActive()) {
+    await reply(i, t('skip.nothing', locale));
+    return;
+  }
   player.skip();
   await reply(i, t('skip.skipped', locale));
 }
