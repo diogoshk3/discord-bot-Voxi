@@ -230,6 +230,15 @@ export class GuildVoicePlayer {
       // Nao recuperou via soft — tentar rejoin manual algumas vezes.
       const recovered = await this.tryRejoin(3);
       if (!recovered) {
+        // Se ja fomos destruidos EXTERNAMENTE durante a janela de rejoin (ex.:
+        // removePlayer via /join ou /leave, que substitui este player por um novo
+        // no mesmo slot da guild), NAO chamar destroy()/onIdle(): o onIdle e keyed
+        // por guild e derrubaria o SUBSTITUTO + mataria a sessao acabada de criar.
+        // Sair em silencio — o novo player e que manda agora. Guard ANTES de
+        // destroy() (destroy() poe destroyed=true; um guard a seguir romperia
+        // sempre a desistencia legitima). tryRejoin->check->destroy->onIdle e
+        // sincrono, logo o /join nao se pode interpor depois deste guard.
+        if (this.destroyed) return;
         this.destroy();
         this.onIdle();
         return;

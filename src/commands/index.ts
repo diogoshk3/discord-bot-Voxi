@@ -317,6 +317,11 @@ export function joinUserVoice(i: ChatInputCommandInteraction, deps: BotDeps): Jo
     selfMute: false,
   });
   const player = new GuildVoicePlayer(connection, deps.engine, deps.config.queueCap, deps.config.inactivityMs, () => {
+    // Identity-aware (defesa extra, cobre QUALQUER caller de onIdle): so agir se
+    // este player ainda for o registado na guild. Se ja foi substituido (ex.: um
+    // /join durante a reconexao instalou um player NOVO no mesmo slot), esta closure
+    // e stale — remove-la iria derrubar o SUBSTITUTO e matar a sessao nova. No-op.
+    if (deps.players.get(i.guildId!) !== player) return;
     removePlayer(deps, i.guildId!);
     getVoiceConnection(i.guildId!)?.destroy();
   });
