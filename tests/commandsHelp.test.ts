@@ -118,14 +118,16 @@ describe('/help — discovery de comandos em-app', () => {
     }
   });
 
-  it('mostra os cabecalhos dos tres grupos em INGLES por defeito', async () => {
+  it('mostra os cabecalhos dos grupos em INGLES por defeito', async () => {
     const i = makeHelpInteraction();
     await handleInteraction(i as any, makeDeps());
     const text = i.replies.join('\n');
-    // locale default 'en' -> cabecalhos em ingles
-    expect(text).toContain('General');
-    expect(text).toMatch(/Voice/);
-    expect(text).toContain('Admin');
+    // locale default 'en' -> cabecalhos em ingles (5 grupos beginner-friendly)
+    expect(text).toContain('Getting started');
+    expect(text).toMatch(/Your voice/);
+    expect(text).toContain('Fun');
+    expect(text).toContain('Server admin');
+    expect(text).toContain('More');
   });
 
   it('renderiza o chrome do /help em PT quando a guild tem locale="pt"', async () => {
@@ -134,12 +136,11 @@ describe('/help — discovery de comandos em-app', () => {
     const i = makeHelpInteraction();
     await handleInteraction(i as any, deps);
     const text = i.replies.join('\n');
-    // O chrome (cabecalhos de grupo) e o que discrimina EN vs PT — as descricoes
-    // dos comandos vem de commandDefs (ingles) e ficam em ingles (P16.2).
-    expect(text).toContain('Geral');
-    expect(text).toMatch(/Voz/);
+    // O chrome (cabecalhos de grupo) e o que discrimina EN vs PT.
+    expect(text).toContain('Primeiros passos');
+    expect(text).toMatch(/A tua voz/);
     // e NAO deve conter o cabecalho ingles neste locale
-    expect(text).not.toContain('**General**');
+    expect(text).not.toContain('Getting started');
   });
 
   it('(b) inclui a marca/tagline Voxi', async () => {
@@ -178,8 +179,8 @@ describe('/help — discovery de comandos em-app', () => {
     const embed = i.rawEmbeds[0] as { toJSON: () => { fields?: unknown[] } };
     expect(() => embed.toJSON()).not.toThrow();
     const json = embed.toJSON();
-    // tres grupos -> tres fields
-    expect(json.fields?.length).toBe(3);
+    // quick-start + cinco grupos -> seis fields
+    expect(json.fields?.length).toBe(6);
   });
 
   // GUARD: derivado dos commandDefs reais — cada comando top-level REGISTADO tem
@@ -193,6 +194,41 @@ describe('/help — discovery de comandos em-app', () => {
     for (const def of commandDefs) {
       expect(text, `/${def.name} em falta no /help`).toContain('/' + def.name);
     }
+  });
+
+  // ── beginner-friendly: quick-start + comandos antes undiscoverable ─────────
+  it('inclui um quick-start de 3 passos', async () => {
+    const i = makeHelpInteraction();
+    await handleInteraction(i as any, makeDeps());
+    const text = i.replies.join('\n');
+    // titulo do quick-start (EN default) + os tres numeros dos passos
+    expect(text).toMatch(/quick start/i);
+    expect(text).toContain('1)');
+    expect(text).toContain('2)');
+    expect(text).toContain('3)');
+    // o primeiro passo tem de mandar juntar-se a voz e correr /join
+    expect(text).toMatch(/\/join/);
+  });
+
+  it('refere os comandos novos antes undiscoverable: /joke, /laugh, /voice abbrev', async () => {
+    const i = makeHelpInteraction();
+    await handleInteraction(i as any, makeDeps());
+    const text = i.replies.join('\n');
+    expect(text).toContain('/joke');
+    expect(text).toContain('/laugh');
+    // /voice abbrev e um grupo de subcomandos (type 2); helpSubcommands filtra
+    // type 1, por isso NAO aparecia antes — o /help beginner-friendly tem de o citar.
+    expect(text).toContain('/voice abbrev');
+  });
+
+  it('da pelo menos um exemplo concreto por seccao', async () => {
+    const i = makeHelpInteraction();
+    await handleInteraction(i as any, makeDeps());
+    const text = i.replies.join('\n');
+    // exemplos concretos hand-authored (nao derivaveis das descricoes)
+    expect(text).toMatch(/\/tts Hello/i);
+    expect(text).toMatch(/\/voice set/i);
+    expect(text).toMatch(/\/joke /i);
   });
 });
 

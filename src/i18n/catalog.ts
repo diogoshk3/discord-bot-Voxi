@@ -516,28 +516,105 @@ export const catalog: Record<string, Entry> = {
     pt: 'Voxi — Comandos',
   },
   'help.intro': {
-    en: "Here are the bot's commands.",
-    pt: 'Aqui ficam os comandos do bot.',
+    en: 'Voxi reads your text aloud in voice channels — free neural voices, dozens of languages.',
+    pt: 'O Voxi le o teu texto em voz alta nos canais de voz — vozes neurais gratis, dezenas de linguas.',
   },
-  'help.groupGeneral': {
-    en: 'General',
-    pt: 'Geral',
+
+  // Quick start (3 passos): o primeiro FIELD do embed. Curto, numerado, para um
+  // principiante arrancar em 30 segundos. Mantido dentro do cap de 1024 chars.
+  'help.quickStartTitle': {
+    en: 'Quick start (3 steps)',
+    pt: 'Inicio rapido (3 passos)',
+  },
+  'help.quickStartBody': {
+    en:
+      '1) Join a voice channel, then run /join\n' +
+      '2) Type in the text channel (or use /tts Hello everyone!)\n' +
+      '3) (optional) Pick a voice with /voice set',
+    pt:
+      '1) Entra num canal de voz e corre /join\n' +
+      '2) Escreve no canal de texto (ou usa /tts Ola a todos!)\n' +
+      '3) (opcional) Escolhe uma voz com /voice set',
+  },
+
+  // ── grupos beginner-friendly (5): cada um e um FIELD do embed ─────────────
+  'help.groupStarted': {
+    en: 'Getting started',
+    pt: 'Primeiros passos',
+  },
+  'help.groupStartedBody': {
+    en:
+      '• /join — I join your voice channel\n' +
+      '• /leave — I leave the voice channel\n' +
+      '• /tts <text> — I read text out loud · e.g. /tts Hello everyone!\n' +
+      '• /skip — skip whatever I am reading right now',
+    pt:
+      '• /join — entro no teu canal de voz\n' +
+      '• /leave — saio do canal de voz\n' +
+      '• /tts <texto> — leio texto em voz alta · ex. /tts Ola a todos!\n' +
+      '• /skip — salto o que estou a ler agora',
   },
   'help.groupVoice': {
-    en: 'Voice (per user)',
-    pt: 'Voz (por utilizador)',
+    en: 'Your voice',
+    pt: 'A tua voz',
+  },
+  'help.groupVoiceBody': {
+    en:
+      '• /voice set <model> — choose your voice · e.g. /voice set en_US-amy-medium\n' +
+      '• /voice list — see the available voices\n' +
+      '• /voice preview — hear a sample of your voice\n' +
+      '• /voice reset — go back to the default voice\n' +
+      '• /voice optout · /voice optin — turn auto-read off / on for you\n' +
+      '• /voice abbrev add|remove|list — personal slang, read your way (up to 10)',
+    pt:
+      '• /voice set <model> — escolhe a tua voz · ex. /voice set pt_PT-tugao-medium\n' +
+      '• /voice list — ve as vozes disponiveis\n' +
+      '• /voice preview — ouve uma amostra da tua voz\n' +
+      '• /voice reset — volta a voz por defeito\n' +
+      '• /voice optout · /voice optin — desliga / liga a leitura automatica para ti\n' +
+      '• /voice abbrev add|remove|list — girias pessoais, lidas a tua maneira (ate 10)',
+  },
+  'help.groupFun': {
+    en: 'Fun',
+    pt: 'Diversao',
+  },
+  'help.groupFunBody': {
+    en:
+      '• /joke — I tell a short joke (pick a language + optional laughter) · e.g. /joke English\n' +
+      '• /laugh — I laugh out loud in your current voice',
+    pt:
+      '• /joke — conto uma piada curta (escolhe a lingua + risos opcionais) · ex. /joke Portuguese\n' +
+      '• /laugh — rio-me em voz alta na tua voz atual',
   },
   'help.groupAdmin': {
-    en: 'Admin (needs Manage Server)',
-    pt: 'Admin (precisa de Gerir Servidor)',
+    en: 'Server admin (needs Manage Server)',
+    pt: 'Admin do servidor (precisa de Gerir Servidor)',
   },
-  'help.subcommands': {
-    en: 'subcommands',
-    pt: 'subcomandos',
+  'help.groupAdminBody': {
+    en:
+      '• /setup — guided one-step configuration · run this first\n' +
+      '• /config — autoread, tts-channel, language, default-voice, blockword, pronunciation,\n' +
+      '  rate-limit, role, max-chars, enabled · e.g. /config tts-channel #general\n' +
+      '• /stats — bot statistics',
+    pt:
+      '• /setup — configuracao guiada num passo · corre isto primeiro\n' +
+      '• /config — autoread, tts-channel, language, default-voice, blockword, pronunciation,\n' +
+      '  rate-limit, role, max-chars, enabled · ex. /config tts-channel #geral\n' +
+      '• /stats — estatisticas do bot',
   },
-  'help.configNote': {
-    en: '/config has several subcommands — use /config show to see the current config.',
-    pt: '/config tem varios subcomandos — usa /config show para veres a config atual.',
+  'help.groupMore': {
+    en: 'More',
+    pt: 'Mais',
+  },
+  'help.groupMoreBody': {
+    en:
+      '• /invite — add Voxi to another server\n' +
+      '• /vote — vote for Voxi on top.gg\n' +
+      '• /help — show this help',
+    pt:
+      '• /invite — adiciona o Voxi a outro servidor\n' +
+      '• /vote — vota no Voxi no top.gg\n' +
+      '• /help — mostra esta ajuda',
   },
   'help.footer': {
     en: 'New here? Run {command} to get started.',

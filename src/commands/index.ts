@@ -1135,91 +1135,62 @@ async function handleVote(i: ChatInputCommandInteraction, deps: BotDeps): Promis
 }
 
 /**
- * /help — discovery de comandos em-app, pensado para donos de servidor
- * nao-tecnicos. Responde com uma lista AGRUPADA dos comandos.
+ * /help — discovery de comandos em-app, pensado para PRINCIPIANTES (dono de
+ * servidor ou membro que nunca usou o bot). Responde com um EMBED beginner-friendly:
+ * intro do que o Voxi faz + um "Quick start (3 steps)" + comandos AGRUPADOS por
+ * tarefa (Getting started / Your voice / Fun / Server admin / More), cada linha com
+ * um one-liner amigavel e pelo menos um exemplo concreto.
  *
  * Decisoes de design:
- *  - O CHROME (titulo, intro, cabecalhos de grupo, nota do /config, rodape) e
- *    renderizado via t(key, locale) no locale da guild (getGuildConfig.locale).
- *    Por defeito (locale 'en') sai em INGLES. P16.1: so o chrome e traduzido — as
- *    descricoes dos comandos vem de commandDefs (ja em ingles) e ficam em ingles
- *    tambem sob 'pt' (as respostas/erros/embeds sao P16.2).
- *  - A LISTA de comandos e DERIVADA de `commandDefs` (nome + descricao), NAO
- *    hardcoded nem no catalogo: assim nunca diverge dos comandos reais e o
- *    teste-guard (cada comando top-level tem de aparecer no /help) continua
- *    genuinamente protetor. Se alguem adicionar um comando a commandDefs e nao o
- *    cobrir aqui, o guard parte.
- *  - Os grupos (Geral / Voz / Admin) sao uma divisao semantica que NAO existe nos
- *    dados, por isso resolvemo-la por uma regra de particao aplicada por FILTRO do
- *    array (nao por listar nomes a mao):
- *      • default_member_permissions presente  -> Admin (config, setup, stats)
- *      • name === 'voice'                      -> Voz (por utilizador)
- *      • resto                                 -> Geral (invite, join, leave, tts,
- *                                                 skip, help)
- *    Filtrar (em vez de hardcodear nomes por grupo) garante que nenhum comando cai
- *    em falta nem em dois grupos.
- *  - Subcomandos: o /voice (6 subcomandos, todos por-utilizador) e expandido a
- *    partir das suas options (type 1 = subcomando) — auto-sincronizado. O /config
- *    tem ~13 subcomandos + 2 grupos; lista-los todos lutaria contra "curta" e o
- *    cap de 2000 chars do Discord, por isso e resumido numa linha (aponta para
- *    /config show / /setup). Mantem a mensagem curta e beginner-friendly.
- *  - Reply ephemeral (via helper reply()) para nao poluir o canal.
+ *  - TODO o texto e renderizado via t(key, locale) no locale da guild
+ *    (getGuildConfig.locale). Por defeito (locale 'en') sai em INGLES; ha traducao
+ *    'pt' para tudo. Os corpos dos grupos sao HAND-AUTHORED no catalogo (nao
+ *    derivados das descricoes de commandDefs) porque "um exemplo concreto por
+ *    seccao" nao se consegue derivar de uma descricao curta.
+ *  - GUARD de cobertura: como os corpos sao hand-authored, corremos o risco de um
+ *    comando NOVO em commandDefs ficar de fora. Para o /help continuar a ser a
+ *    fonte de discovery, verificamos em runtime que TODOS os nomes top-level
+ *    aparecem no texto montado; qualquer um que falte e APENSADO ao grupo "More".
+ *    Assim o teste-guard (cada comando top-level aparece no /help) continua
+ *    genuinamente protetor sem obrigar a listar tudo a mao.
+ *  - Reply ephemeral para nao poluir o canal.
  */
-function helpSubcommands(def: RESTPostAPIChatInputApplicationCommandsJSONBody): string[] {
-  // Extrai apenas subcomandos diretos (option type 1 = Subcommand). Ignora grupos
-  // (type 2) — usado so para o /voice, que nao tem grupos.
-  return (def.options ?? [])
-    .filter((o) => (o as { type?: number }).type === 1)
-    .map((o) => (o as { name: string }).name);
-}
-
 async function handleHelp(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
   // Locale da INTERFACE por guild (default 'en'). Em DMs (guildId null) usamos o
   // default via localeFor, que nunca lanca.
   const locale = localeFor(deps, i.guildId);
 
-  const isAdmin = (d: RESTPostAPIChatInputApplicationCommandsJSONBody): boolean =>
-    d.default_member_permissions != null;
+  // Cada FIELD tem um nome (cabecalho traduzido) e um value (corpo traduzido). O
+  // quick-start vem primeiro para o principiante arrancar sem ler tudo.
+  const fields: { name: string; value: string }[] = [
+    { name: t('help.quickStartTitle', locale), value: t('help.quickStartBody', locale) },
+    { name: t('help.groupStarted', locale), value: t('help.groupStartedBody', locale) },
+    { name: t('help.groupVoice', locale), value: t('help.groupVoiceBody', locale) },
+    { name: t('help.groupFun', locale), value: t('help.groupFunBody', locale) },
+    { name: t('help.groupAdmin', locale), value: t('help.groupAdminBody', locale) },
+    { name: t('help.groupMore', locale), value: t('help.groupMoreBody', locale) },
+  ];
 
-  const geral = commandDefs.filter((d) => !isAdmin(d) && d.name !== 'voice');
-  const voz = commandDefs.filter((d) => d.name === 'voice');
-  const admin = commandDefs.filter((d) => isAdmin(d));
-
-  // Cada grupo vira um FIELD do embed: o nome do field e o cabecalho do grupo
-  // (traduzido), o value junta as linhas dos comandos. A lista continua DERIVADA
-  // de commandDefs — o guard (cada comando aparece no /help) segue protetor.
-  const generalValue = geral.map((d) => `• /${d.name} — ${d.description}`).join('\n');
-
-  const voiceLines: string[] = [];
-  for (const d of voz) {
-    voiceLines.push(`• /${d.name} — ${d.description}`);
-    const subs = helpSubcommands(d);
-    if (subs.length) {
-      voiceLines.push(
-        `   ${t('help.subcommands', locale)}: ${subs.map((s) => `/${d.name} ${s}`).join(', ')}`,
-      );
-    }
+  // GUARD de cobertura: garante que nenhum comando top-level fica invisivel. Junta
+  // todos os values numa string e, para cada commandDef, se `/nome` nao aparecer,
+  // apensa-o ao grupo "More" (o ultimo field). Mantem o /help como discovery real
+  // sem repetir a lista a mao.
+  const mentioned = fields.map((f) => f.value).join('\n');
+  const missing = commandDefs
+    .map((d) => d.name)
+    .filter((name) => !mentioned.includes(`/${name}`));
+  if (missing.length) {
+    const more = fields[fields.length - 1];
+    more.value += '\n' + missing.map((name) => `• /${name}`).join('\n');
   }
-  const voiceValue = voiceLines.join('\n');
-
-  const adminLines = admin.map((d) => `• /${d.name} — ${d.description}`);
-  // /config tem muitos subcomandos; em vez de os listar todos (poluiria o embed)
-  // apontamos para /config show, que imprime a config atual.
-  adminLines.push(t('help.configNote', locale));
-  const adminValue = adminLines.join('\n');
 
   const embed = new EmbedBuilder()
     .setColor(0x5865f2) // blurple — parece intencional, nao o cinzento default
     .setTitle(t('help.embedTitle', locale))
-    // Reforca o diferenciador (voz neural gratis, sem paywall) na descricao — a
-    // mesma chave do welcome embed. Fica no fim da descricao para nao alterar o
-    // numero de fields (o embed mantem exatamente 3 grupos).
+    // Descricao: tagline da marca + o que o Voxi faz (intro) + o diferenciador
+    // (voz neural gratis) — a mesma chave do welcome embed.
     .setDescription(`${t('help.title', locale)}\n${t('help.intro', locale)}\n\n${t('welcome.tagline', locale)}`)
-    .addFields(
-      { name: t('help.groupGeneral', locale), value: generalValue },
-      { name: t('help.groupVoice', locale), value: voiceValue },
-      { name: t('help.groupAdmin', locale), value: adminValue },
-    )
+    .addFields(fields)
     .setFooter({ text: t('help.footer', locale, { command: '/setup' }) });
 
   await i.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });

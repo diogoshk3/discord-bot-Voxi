@@ -14,11 +14,11 @@ describe('i18n — t(key, locale, params)', () => {
   });
 
   it('devolve a string PT quando locale="pt"', () => {
-    // help.groupGeneral tem traducoes distintas EN vs PT.
-    const en = t('help.groupGeneral', 'en');
-    const pt = t('help.groupGeneral', 'pt');
-    expect(en).toBe('General');
-    expect(pt).toBe('Geral');
+    // help.groupStarted tem traducoes distintas EN vs PT.
+    const en = t('help.groupStarted', 'en');
+    const pt = t('help.groupStarted', 'pt');
+    expect(en).toBe('Getting started');
+    expect(pt).toBe('Primeiros passos');
   });
 
   it('faz fallback para EN quando a chave falta no locale pedido', () => {
@@ -39,6 +39,6 @@ describe('i18n — t(key, locale, params)', () => {
   });
 
   it('locale nao suportado cai no fallback EN', () => {
-    expect(t('help.groupGeneral', 'xx')).toBe('General');
+    expect(t('help.groupStarted', 'xx')).toBe('Getting started');
   });
 });
