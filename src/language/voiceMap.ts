@@ -156,3 +156,52 @@ export function modelDisplayName(model: string): string {
   const locale = dash === -1 ? model : model.slice(0, dash);
   return LOCALE_NAMES[locale] ?? model;
 }
+
+/**
+ * Nome curto/humano da VOZ dentro de uma língua: o 2.º segmento do id do modelo
+ * Piper (ex. 'en_US-amy-medium' -> 'Amy'), capitalizado. É o que distingue duas
+ * vozes da MESMA língua (que o `modelDisplayName` colapsa no mesmo autónimo). Se
+ * o id não tiver 2.º segmento, devolve o id cru (guard: nunca esconde uma voz).
+ */
+function voiceLabel(model: string): string {
+  const parts = model.split('-');
+  const raw = parts[1];
+  if (!raw) return model;
+  return raw.charAt(0).toUpperCase() + raw.slice(1);
+}
+
+/**
+ * Renderiza a lista de vozes disponíveis AGRUPADA POR LÍNGUA, para o /voice list
+ * ser beginner-friendly: em vez de uma lista plana de ids técnicos, mostra um
+ * cabeçalho com o autónimo da língua (via LOCALE_NAMES / modelDisplayName) e, por
+ * baixo, uma linha por voz com o nome humano e o id cru entre parênteses (para
+ * `/voice set` continuar copy-pasteável). Línguas e vozes ordenadas por nome, para
+ * uma leitura estável (e testável). PURO: sem efeitos secundários.
+ */
+export function formatVoiceList(models: string[]): string {
+  // Agrupa por locale (a parte antes do 1.º '-', mesma fatia do modelDisplayName).
+  const groups = new Map<string, string[]>();
+  for (const model of models) {
+    const dash = model.indexOf('-');
+    const locale = dash === -1 ? model : model.slice(0, dash);
+    const bucket = groups.get(locale);
+    if (bucket) bucket.push(model);
+    else groups.set(locale, [model]);
+  }
+
+  const lines: string[] = [];
+  // Ordena os grupos pelo cabeçalho (autónimo) para uma saída estável.
+  const sortedLocales = [...groups.keys()].sort((a, b) =>
+    modelDisplayName(a).localeCompare(modelDisplayName(b)),
+  );
+  for (const locale of sortedLocales) {
+    // Cabeçalho = autónimo da língua; se o locale não estiver mapeado, cai no próprio
+    // locale (modelDisplayName devolve o id cru, mas aqui só temos o locale nu).
+    lines.push(LOCALE_NAMES[locale] ?? locale);
+    const voices = groups.get(locale)!;
+    for (const model of [...voices].sort((a, b) => voiceLabel(a).localeCompare(voiceLabel(b)))) {
+      lines.push(`• ${voiceLabel(model)} (${model})`);
+    }
+  }
+  return lines.join('\n');
+}
