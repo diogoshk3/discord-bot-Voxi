@@ -2,6 +2,7 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
   AutocompleteInteraction,
+  EmbedBuilder,
   PermissionFlagsBits,
   PermissionsBitField,
   GuildMember,
@@ -31,7 +32,23 @@ import { isBlocked } from '../moderation/filter';
 import { resolveSynth } from './resolveSynth';
 import { modelDisplayName } from '../language/voiceMap';
 import { log } from '../logging/logger';
-import { t } from '../i18n/index';
+import { t, DEFAULT_LOCALE } from '../i18n/index';
+
+/**
+ * Locale da INTERFACE para uma interacao. Le `guild_config.locale` da guild; em
+ * DMs (guildId null) ou se a leitura falhar por qualquer motivo, devolve
+ * DEFAULT_LOCALE ('en'). NUNCA lanca — uma falha a ler a config nunca deve partir
+ * a resposta/erro que o utilizador recebe (isto e chamado inclusive no catch de
+ * handleInteraction). Colapsa o padrao repetido `i.guildId ? ...locale : 'en'`.
+ */
+function localeFor(deps: BotDeps, guildId: string | null | undefined): string {
+  if (!guildId) return DEFAULT_LOCALE;
+  try {
+    return getGuildConfig(deps.db, guildId).locale;
+  } catch {
+    return DEFAULT_LOCALE;
+  }
+}
 
 /**
  * Permissoes minimas que o Voxi precisa no servidor onde for convidado, derivadas
@@ -235,10 +252,11 @@ async function reply(i: ChatInputCommandInteraction, content: string): Promise<v
 }
 
 async function handleJoin(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
+  const locale = localeFor(deps, i.guildId);
   const member = i.member as GuildMember;
   const channel = member?.voice?.channel;
   if (!channel) {
-    await reply(i, 'Tens de estar num canal de voz.');
+    await reply(i, t('join.needVoiceChannel', locale));
     return;
   }
   // Verificar permissoes Connect/Speak ANTES de tocar no player existente: um
@@ -246,7 +264,7 @@ async function handleJoin(i: ChatInputCommandInteraction, deps: BotDeps): Promis
   const me = deps.client.user;
   const perms = me ? channel.permissionsFor(me) : null;
   if (!perms || !perms.has(PermissionFlagsBits.Connect) || !perms.has(PermissionFlagsBits.Speak)) {
-    await reply(i, `Nao tenho permissao para Ligar/Falar em ${channel.name}.`);
+    await reply(i, t('join.missingPerms', locale, { channel: channel.name }));
     return;
   }
   removePlayer(deps, i.guildId!);
@@ -262,27 +280,28 @@ async function handleJoin(i: ChatInputCommandInteraction, deps: BotDeps): Promis
     getVoiceConnection(i.guildId!)?.destroy();
   });
   deps.players.set(i.guildId!, player);
-  await reply(i, `Entrei em ${channel.name}.`);
+  await reply(i, t('join.joined', locale, { channel: channel.name }));
 }
 
 async function handleLeave(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
   removePlayer(deps, i.guildId!);
   getVoiceConnection(i.guildId!)?.destroy();
-  await reply(i, 'Sai do canal de voz.');
+  await reply(i, t('leave.left', localeFor(deps, i.guildId)));
 }
 
 async function handleTts(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
   // A sintese pode demorar ate ~15s; defer imediato para nao perder o token (3s).
   await i.deferReply({ flags: MessageFlags.Ephemeral });
 
+  const locale = localeFor(deps, i.guildId);
   const player = getPlayer(deps, i.guildId!);
   if (!player) {
-    await i.editReply('Nao estou num canal de voz. Usa /join primeiro.');
+    await i.editReply(t('tts.notInVoice', locale));
     return;
   }
   const raw = i.options.getString('texto', true).trim();
   if (!raw) {
-    await i.editReply('Nada para ler.');
+    await i.editReply(t('tts.nothingToRead', locale));
     return;
   }
   const cfg = getGuildConfig(deps.db, i.guildId!);
@@ -290,7 +309,7 @@ async function handleTts(i: ChatInputCommandInteraction, deps: BotDeps): Promise
   // rate-limit por user (mesmo pipeline do messageHandler)
   const rl = getLimiter(deps, i.guildId!, cfg.ratePerMin);
   if (!rl.allow(i.user.id, Date.now())) {
-    await i.editReply('Estas a ir rapido demais. Espera um pouco.');
+    await i.editReply(t('tts.tooFast', locale));
     return;
   }
 
@@ -307,7 +326,7 @@ async function handleTts(i: ChatInputCommandInteraction, deps: BotDeps): Promise
     },
   });
   if (!cleaned) {
-    await i.editReply('Nada para ler depois da limpeza.');
+    await i.editReply(t('tts.nothingAfterClean', locale));
     return;
   }
 
@@ -325,7 +344,7 @@ async function handleTts(i: ChatInputCommandInteraction, deps: BotDeps): Promise
   // blocklist antes de sintetizar
   const blocklist = getBlocklist(deps.db, i.guildId!);
   if (isBlocked(spoken, blocklist)) {
-    await i.editReply('Esse texto contem uma palavra bloqueada.');
+    await i.editReply(t('tts.blocked', locale));
     return;
   }
 
@@ -339,57 +358,61 @@ async function handleTts(i: ChatInputCommandInteraction, deps: BotDeps): Promise
     defaultSpeed: deps.config.defaultSpeed,
   });
   await player.say(req);
-  await i.editReply('Na fila.');
+  await i.editReply(t('tts.queued', locale));
 }
 
 async function handleSkip(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
+  const locale = localeFor(deps, i.guildId);
   const player = getPlayer(deps, i.guildId!);
   if (!player) {
-    await reply(i, 'Nao estou num canal de voz.');
+    await reply(i, t('skip.notInVoice', locale));
     return;
   }
   player.skip();
-  await reply(i, 'Saltado.');
+  await reply(i, t('skip.skipped', locale));
 }
 
 async function handleVoice(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
+  const locale = localeFor(deps, i.guildId);
   const sub = i.options.getSubcommand();
   if (sub === 'set') {
     const model = i.options.getString('model', true);
     if (!deps.availableModels.includes(model)) {
-      await reply(i, `Modelo desconhecido. Usa /voice list.`);
+      await reply(i, t('voice.unknownModel', locale));
       return;
     }
     const speed = i.options.getNumber('speed') ?? deps.config.defaultSpeed;
     const clamped = Math.min(2.0, Math.max(0.5, speed));
     setUserVoice(deps.db, i.guildId!, i.user.id, model, clamped);
-    await reply(i, `Voz definida: ${model} @ ${clamped}x.`);
+    await reply(i, t('voice.set', locale, { model, speed: clamped }));
   } else if (sub === 'list') {
-    const list = deps.availableModels.length ? deps.availableModels.map((m) => `- ${m}`).join('\n') : '(nenhum)';
-    await reply(i, `Modelos disponiveis:\n${list}`);
+    const list = deps.availableModels.length
+      ? deps.availableModels.map((m) => `- ${m}`).join('\n')
+      : t('voice.listEmpty', locale);
+    await reply(i, `${t('voice.listHeader', locale)}\n${list}`);
   } else if (sub === 'reset') {
     resetUserVoice(deps.db, i.guildId!, i.user.id);
-    await reply(i, 'Voz reposta por defeito.');
+    await reply(i, t('voice.reset', locale));
   } else if (sub === 'optout') {
     // Por-utilizador (sem gate de admin): cada um gere o seu opt-out da auto-leitura.
     setOptOut(deps.db, i.guildId!, i.user.id);
-    await reply(i, 'Ja nao seras lido automaticamente. Usa /voice optin para voltar.');
+    await reply(i, t('voice.optout', locale));
   } else if (sub === 'optin') {
     setOptIn(deps.db, i.guildId!, i.user.id);
-    await reply(i, 'Voltas a ser lido automaticamente.');
+    await reply(i, t('voice.optin', locale));
   } else if (sub === 'preview') {
-    const SAMPLE = 'Ola, eu sou o Voxi. type it, hear it.';
+    const SAMPLE = t('preview.sample', locale);
     const explicitModel = i.options.getString('model');
 
     // Valida o model explícito ANTES de verificar o player.
     if (explicitModel !== null && !deps.availableModels.includes(explicitModel)) {
-      await reply(i, 'Modelo desconhecido. Usa /voice list.');
+      await reply(i, t('voice.unknownModel', locale));
       return;
     }
 
     const player = getPlayer(deps, i.guildId!);
     if (!player) {
-      await reply(i, 'Nao estou num canal de voz. Usa /join primeiro.');
+      await reply(i, t('voice.notInVoice', locale));
       return;
     }
 
@@ -411,14 +434,15 @@ async function handleVoice(i: ChatInputCommandInteraction, deps: BotDeps): Promi
       defaultSpeed: deps.config.defaultSpeed,
     });
     await player.say(req);
-    await reply(i, 'A reproduzir uma amostra…');
+    await reply(i, t('voice.previewPlaying', locale));
   }
 }
 
 async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
+  const locale = localeFor(deps, i.guildId);
   const member = i.member as GuildMember;
   if (!member?.permissions?.has(PermissionFlagsBits.ManageGuild)) {
-    await reply(i, 'Precisas da permissao Gerir Servidor.');
+    await reply(i, t('error.needManageGuild', locale));
     return;
   }
   const group = i.options.getSubcommandGroup(false);
@@ -426,15 +450,15 @@ async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps): Prom
     const sub = i.options.getSubcommand();
     const word = i.options.getString('palavra', true).trim();
     if (!word) {
-      await reply(i, 'A palavra nao pode ser vazia.');
+      await reply(i, t('config.wordEmpty', locale));
       return;
     }
     if (sub === 'add') {
       addBlockword(deps.db, i.guildId!, word);
-      await reply(i, `Bloqueado: ${word}.`);
+      await reply(i, t('config.blocked', locale, { word }));
     } else {
       removeBlockword(deps.db, i.guildId!, word);
-      await reply(i, `Desbloqueado: ${word}.`);
+      await reply(i, t('config.unblocked', locale, { word }));
     }
     return;
   }
@@ -444,27 +468,29 @@ async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps): Prom
     if (sub === 'list') {
       const dict = getPronunciations(deps.db, i.guildId!);
       const out = dict.length
-        ? dict.map((e) => `- ${e.term} -> ${e.replacement || '(vazio)'}`).join('\n')
-        : '(nenhum)';
-      await reply(i, `Dicionario de pronuncia:\n${out}`);
+        ? dict
+            .map((e) => `- ${e.term} -> ${e.replacement || t('config.pronEmptyValue', locale)}`)
+            .join('\n')
+        : t('config.listEmpty', locale);
+      await reply(i, `${t('config.pronListHeader', locale)}\n${out}`);
       return;
     }
     const term = i.options.getString('termo', true).trim();
     if (!term) {
-      await reply(i, 'O termo nao pode ser vazio.');
+      await reply(i, t('config.termEmpty', locale));
       return;
     }
     if (sub === 'add') {
       const replacement = i.options.getString('pronuncia', true).trim();
       if (!replacement) {
-        await reply(i, 'A pronuncia nao pode ser vazia.');
+        await reply(i, t('config.pronEmpty', locale));
         return;
       }
       addPronunciation(deps.db, i.guildId!, term, replacement);
-      await reply(i, `Pronuncia definida: ${term} -> ${replacement}.`);
+      await reply(i, t('config.pronSet', locale, { term, replacement }));
     } else {
       removePronunciation(deps.db, i.guildId!, term);
-      await reply(i, `Pronuncia removida: ${term}.`);
+      await reply(i, t('config.pronRemoved', locale, { term }));
     }
     return;
   }
@@ -472,7 +498,7 @@ async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps): Prom
   if (sub === 'tts-channel') {
     const ch = i.options.getChannel('canal', true);
     if (ch.type !== ChannelType.GuildText) {
-      await reply(i, 'Tens de escolher um canal de texto (nao voz nem categoria).');
+      await reply(i, t('config.channelWrongType', locale));
       return;
     }
     const me = deps.client.user;
@@ -480,81 +506,80 @@ async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps): Prom
     const fullCh = i.guild?.channels.cache.get(ch.id);
     const perms = me && fullCh ? fullCh.permissionsFor(me) : null;
     if (!perms || !perms.has(PermissionFlagsBits.ViewChannel)) {
-      await reply(i, `Nao tenho acesso ao canal <#${ch.id}>. Verifica as permissoes.`);
+      await reply(i, t('config.channelNoAccess', locale, { channel: `<#${ch.id}>` }));
       return;
     }
     setGuildConfig(deps.db, i.guildId!, { ttsChannelId: ch.id });
-    await reply(i, `Canal de auto-leitura: <#${ch.id}>.`);
+    await reply(i, t('config.channelSet', locale, { channel: `<#${ch.id}>` }));
   } else if (sub === 'autoread') {
     const on = i.options.getBoolean('ativo', true);
     setGuildConfig(deps.db, i.guildId!, { autoread: on });
-    await reply(i, `Auto-leitura: ${on ? 'ligada' : 'desligada'}.`);
+    await reply(i, on ? t('config.autoreadOn', locale) : t('config.autoreadOff', locale));
   } else if (sub === 'max-chars') {
     const v = i.options.getInteger('valor', true);
     if (v < 1 || v > 2000) {
-      await reply(i, 'O valor de max-chars tem de estar entre 1 e 2000.');
+      await reply(i, t('config.maxCharsRange', locale));
       return;
     }
     setGuildConfig(deps.db, i.guildId!, { maxChars: v });
-    await reply(i, `Max chars: ${v}.`);
+    await reply(i, t('config.maxCharsSet', locale, { value: v }));
   } else if (sub === 'rate-limit') {
     const v = i.options.getInteger('valor', true);
     if (v < 1 || v > 120) {
-      await reply(i, 'O valor de rate-limit tem de estar entre 1 e 120.');
+      await reply(i, t('config.rateLimitRange', locale));
       return;
     }
     setGuildConfig(deps.db, i.guildId!, { ratePerMin: v });
-    await reply(i, `Rate-limit: ${v}/min.`);
+    await reply(i, t('config.rateLimitSet', locale, { value: v }));
   } else if (sub === 'role') {
     // Opcao de role e opcional: omiti-la (getRole devolve null) limpa a restricao.
     const role = i.options.getRole('role', false);
     if (role) {
       setGuildConfig(deps.db, i.guildId!, { ttsRoleId: role.id });
-      await reply(i, `Auto-leitura restrita ao role <@&${role.id}>.`);
+      await reply(i, t('config.roleSet', locale, { role: `<@&${role.id}>` }));
     } else {
       setGuildConfig(deps.db, i.guildId!, { ttsRoleId: null });
-      await reply(i, 'Restricao de role removida: todos podem ser lidos.');
+      await reply(i, t('config.roleCleared', locale));
     }
   } else if (sub === 'enabled') {
     // Kill-switch do servidor: o messageHandler ja ignora tudo quando enabled=false.
     const on = i.options.getBoolean('ativo', true);
     setGuildConfig(deps.db, i.guildId!, { enabled: on });
-    await reply(i, on ? 'TTS ativado neste servidor.' : 'TTS desativado neste servidor.');
+    await reply(i, on ? t('config.enabledOn', locale) : t('config.enabledOff', locale));
   } else if (sub === 'default-voice') {
     // Valida contra os modelos disponiveis, tal como /voice set.
     const model = i.options.getString('model', true);
     if (!deps.availableModels.includes(model)) {
-      await reply(i, 'Modelo desconhecido. Usa /voice list.');
+      await reply(i, t('voice.unknownModel', locale));
       return;
     }
     setGuildConfig(deps.db, i.guildId!, { defaultVoice: model });
-    await reply(i, `Voz default do servidor: ${model}.`);
+    await reply(i, t('config.defaultVoiceSet', locale, { model }));
   } else if (sub === 'show') {
     const cfg = getGuildConfig(deps.db, i.guildId!);
     const blocklistCount = getBlocklist(deps.db, i.guildId!).length;
     const pronunciationCount = getPronunciations(deps.db, i.guildId!).length;
-    const channelStr = cfg.ttsChannelId ? `<#${cfg.ttsChannelId}>` : '(nenhum)';
-    const roleStr = cfg.ttsRoleId ? `<@&${cfg.ttsRoleId}>` : 'qualquer';
-    const voiceStr = cfg.defaultVoice || '(deteção automática)';
+    const on = t('config.on', locale);
+    const off = t('config.off', locale);
+    const channelStr = cfg.ttsChannelId ? `<#${cfg.ttsChannelId}>` : t('config.valueNone', locale);
+    const roleStr = cfg.ttsRoleId ? `<@&${cfg.ttsRoleId}>` : t('config.valueAny', locale);
+    const voiceStr = cfg.defaultVoice || t('config.valueAutoDetect', locale);
     const lines = [
-      '**Configuracao do servidor:**',
-      `Canal TTS: ${channelStr}`,
-      `Autoread: ${cfg.autoread ? 'on' : 'off'}`,
-      `Role: ${roleStr}`,
-      `Enabled: ${cfg.enabled ? 'on' : 'off'}`,
-      `Voz default: ${voiceStr}`,
-      `Max chars: ${cfg.maxChars}`,
-      `Rate-limit: ${cfg.ratePerMin}/min`,
-      `Blocklist: ${blocklistCount} palavras`,
-      `Pronuncia: ${pronunciationCount} entradas`,
+      t('config.showTitle', locale),
+      t('config.showChannel', locale, { value: channelStr }),
+      t('config.showAutoread', locale, { value: cfg.autoread ? on : off }),
+      t('config.showRole', locale, { value: roleStr }),
+      t('config.showEnabled', locale, { value: cfg.enabled ? on : off }),
+      t('config.showVoice', locale, { value: voiceStr }),
+      t('config.showMaxChars', locale, { value: cfg.maxChars }),
+      t('config.showRateLimit', locale, { value: cfg.ratePerMin }),
+      t('config.showBlocklist', locale, { count: blocklistCount }),
+      t('config.showPronunciation', locale, { count: pronunciationCount }),
     ];
     await reply(i, lines.join('\n'));
   } else if (sub === 'reset') {
     resetGuildConfig(deps.db, i.guildId!);
-    await reply(
-      i,
-      'Config reposta aos valores por defeito. Blocklist e pronuncia mantidas.',
-    );
+    await reply(i, t('config.reset', locale));
   }
 }
 
@@ -565,10 +590,10 @@ async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps): Prom
 //                    o invocador nao esta num canal de voz) — sera validada no /join
 type PermState = 'ok' | 'missing' | 'unchecked';
 
-function permLine(label: string, state: PermState): string {
-  if (state === 'ok') return `✅ ${label}`;
-  if (state === 'missing') return `❌ ${label} — falta`;
-  return `⏳ ${label} — nao verificado (sera validado no /join)`;
+function permLine(label: string, state: PermState, locale: string): string {
+  if (state === 'ok') return t('setup.permOk', locale, { label });
+  if (state === 'missing') return t('setup.permMissing', locale, { label });
+  return t('setup.permUnchecked', locale, { label });
 }
 
 /**
@@ -588,16 +613,17 @@ function permLine(label: string, state: PermState): string {
  *    garante que esse caminho funciona mesmo sem hit na cache.
  */
 async function handleSetup(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
+  const locale = localeFor(deps, i.guildId);
   const member = i.member as GuildMember;
   if (!member?.permissions?.has(PermissionFlagsBits.ManageGuild)) {
-    await reply(i, 'Precisas da permissao Gerir Servidor.');
+    await reply(i, t('error.needManageGuild', locale));
     return;
   }
 
   // (a) Resolver o canal alvo: opcao `canal` ou, se omitida, o canal da interacao.
   const ref = (i.options.getChannel('canal', false) as { id: string; type?: number } | null) ?? i.channel;
   if (!ref || !('id' in ref)) {
-    await reply(i, 'Nao consegui identificar o canal. Indica um canal de texto na opcao "canal".');
+    await reply(i, t('setup.noChannel', locale));
     return;
   }
   // Resolve o canal completo (com permissionsFor) a partir da cache; o canal da
@@ -609,10 +635,7 @@ async function handleSetup(i: ChatInputCommandInteraction, deps: BotDeps): Promi
   };
 
   if (fullCh.type !== ChannelType.GuildText) {
-    await reply(
-      i,
-      'O canal de auto-leitura tem de ser um canal de texto do servidor (nao voz nem categoria). Indica um na opcao "canal".',
-    );
+    await reply(i, t('setup.channelWrongType', locale));
     return;
   }
 
@@ -645,57 +668,52 @@ async function handleSetup(i: ChatInputCommandInteraction, deps: BotDeps): Promi
 
   // (d) Resumo beginner-friendly.
   const lines: string[] = [
-    '**Setup do Voxi concluido.**',
-    `Canal de auto-leitura: <#${fullCh.id}>`,
-    'Auto-leitura: ligada',
+    t('setup.done', locale),
+    t('setup.channelLine', locale, { channel: `<#${fullCh.id}>` }),
+    t('setup.autoreadOn', locale),
     '',
-    '**Permissoes:**',
-    permLine('ViewChannel (ver o canal de texto)', viewState),
-    permLine('SendMessages (escrever no canal de texto)', sendState),
-    permLine('Connect (ligar ao canal de voz)', connectState),
-    permLine('Speak (falar no canal de voz)', speakState),
+    t('setup.permsHeader', locale),
+    permLine(t('setup.permView', locale), viewState, locale),
+    permLine(t('setup.permSend', locale), sendState, locale),
+    permLine(t('setup.permConnect', locale), connectState, locale),
+    permLine(t('setup.permSpeak', locale), speakState, locale),
   ];
 
   const anyMissing = [viewState, sendState, connectState, speakState].includes('missing');
   if (anyMissing) {
-    lines.push(
-      '',
-      'Para corrigir o que falta: nas definicoes do servidor abre o role do Voxi (ou as permissoes do canal) e ativa as permissoes marcadas com ❌.',
-    );
+    lines.push('', t('setup.fixHint', locale));
   }
   if (connectState === 'unchecked' || speakState === 'unchecked') {
-    lines.push(
-      '',
-      'Nao estas num canal de voz, por isso nao deu para verificar Connect/Speak agora — serao validados quando correres /join.',
-    );
+    lines.push('', t('setup.voiceUncheckedNote', locale));
   }
   if (!anyMissing && connectState === 'ok' && speakState === 'ok') {
-    lines.push('', 'Esta tudo pronto. Entra num canal de voz e usa /join.');
+    lines.push('', t('setup.allGood', locale));
   }
 
   await reply(i, lines.join('\n'));
 }
 
 async function handleStats(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
+  const locale = localeFor(deps, i.guildId);
   const member = i.member as GuildMember;
   if (!member?.permissions?.has(PermissionFlagsBits.ManageGuild)) {
-    await reply(i, 'Precisas da permissao Gerir Servidor.');
+    await reply(i, t('error.needManageGuild', locale));
     return;
   }
   const snap = metrics.snapshot();
   const uptimeSec = Math.floor(process.uptime());
   const lines = [
-    '**Estatisticas do Voxi:**',
-    `Mensagens faladas: ${snap.messagesSpoken}`,
-    `Cache hits: ${snap.cacheHits}`,
-    `Cache misses: ${snap.cacheMisses}`,
-    `Erros de sintese: ${snap.synthErrors}`,
-    `Quedas de voz: ${snap.voiceDrops}`,
-    `Reconexoes: ${snap.voiceReconnects}`,
-    `Votos top.gg: ${snap.votes}`,
-    `Players ativos: ${deps.players.size}`,
-    `Servidores: ${deps.client.guilds.cache.size}`,
-    `Uptime: ${uptimeSec}s`,
+    t('stats.title', locale),
+    t('stats.messagesSpoken', locale, { value: snap.messagesSpoken }),
+    t('stats.cacheHits', locale, { value: snap.cacheHits }),
+    t('stats.cacheMisses', locale, { value: snap.cacheMisses }),
+    t('stats.synthErrors', locale, { value: snap.synthErrors }),
+    t('stats.voiceDrops', locale, { value: snap.voiceDrops }),
+    t('stats.voiceReconnects', locale, { value: snap.voiceReconnects }),
+    t('stats.votes', locale, { value: snap.votes }),
+    t('stats.activePlayers', locale, { value: deps.players.size }),
+    t('stats.servers', locale, { value: deps.client.guilds.cache.size }),
+    t('stats.uptime', locale, { value: uptimeSec }),
   ];
   await reply(i, lines.join('\n'));
 }
@@ -718,12 +736,10 @@ async function handleStats(i: ChatInputCommandInteraction, deps: BotDeps): Promi
  *    apanhar tanto undefined como string vazia.
  */
 async function handleInvite(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
+  const locale = localeFor(deps, i.guildId);
   const clientId = deps.config.clientId;
   if (!clientId) {
-    await reply(
-      i,
-      'O Voxi ainda nao tem o link de convite configurado (CLIENT_ID em falta). Avisa o admin do bot.',
-    );
+    await reply(i, t('invite.noClientId', locale));
     return;
   }
   const params = new URLSearchParams({
@@ -732,7 +748,7 @@ async function handleInvite(i: ChatInputCommandInteraction, deps: BotDeps): Prom
     permissions: INVITE_PERMISSIONS,
   });
   const url = `https://discord.com/oauth2/authorize?${params.toString()}`;
-  await i.reply({ content: `Adiciona o Voxi ao teu servidor:\n${url}` });
+  await i.reply({ content: t('invite.link', locale, { url }) });
 }
 
 /**
@@ -751,18 +767,14 @@ async function handleInvite(i: ChatInputCommandInteraction, deps: BotDeps): Prom
  *    string vazia), tal como o /invite.
  */
 async function handleVote(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
+  const locale = localeFor(deps, i.guildId);
   const clientId = deps.config.clientId;
   if (!clientId) {
-    await reply(
-      i,
-      'O Voxi ainda nao tem o link de voto configurado (CLIENT_ID em falta). Avisa o admin do bot.',
-    );
+    await reply(i, t('vote.noClientId', locale));
     return;
   }
   const url = `https://top.gg/bot/${clientId}/vote`;
-  await i.reply({
-    content: `Vota no Voxi (grátis, a cada 12h) e ajuda mais gente a encontrá-lo:\n${url}`,
-  });
+  await i.reply({ content: t('vote.link', locale, { url }) });
 }
 
 /**
@@ -806,8 +818,8 @@ function helpSubcommands(def: RESTPostAPIChatInputApplicationCommandsJSONBody): 
 
 async function handleHelp(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
   // Locale da INTERFACE por guild (default 'en'). Em DMs (guildId null) usamos o
-  // default via getGuildConfig, que devolve DEFAULTS quando nao ha linha.
-  const locale = i.guildId ? getGuildConfig(deps.db, i.guildId).locale : 'en';
+  // default via localeFor, que nunca lanca.
+  const locale = localeFor(deps, i.guildId);
 
   const isAdmin = (d: RESTPostAPIChatInputApplicationCommandsJSONBody): boolean =>
     d.default_member_permissions != null;
@@ -816,31 +828,41 @@ async function handleHelp(i: ChatInputCommandInteraction, deps: BotDeps): Promis
   const voz = commandDefs.filter((d) => d.name === 'voice');
   const admin = commandDefs.filter((d) => isAdmin(d));
 
-  const lines: string[] = [t('help.title', locale), t('help.intro', locale), ''];
+  // Cada grupo vira um FIELD do embed: o nome do field e o cabecalho do grupo
+  // (traduzido), o value junta as linhas dos comandos. A lista continua DERIVADA
+  // de commandDefs — o guard (cada comando aparece no /help) segue protetor.
+  const generalValue = geral.map((d) => `• /${d.name} — ${d.description}`).join('\n');
 
-  lines.push(`**${t('help.groupGeneral', locale)}**`);
-  for (const d of geral) lines.push(`• /${d.name} — ${d.description}`);
-  lines.push('');
-
-  lines.push(`**${t('help.groupVoice', locale)}**`);
+  const voiceLines: string[] = [];
   for (const d of voz) {
-    lines.push(`• /${d.name} — ${d.description}`);
+    voiceLines.push(`• /${d.name} — ${d.description}`);
     const subs = helpSubcommands(d);
-    if (subs.length)
-      lines.push(`   ${t('help.subcommands', locale)}: ${subs.map((s) => `/${d.name} ${s}`).join(', ')}`);
+    if (subs.length) {
+      voiceLines.push(
+        `   ${t('help.subcommands', locale)}: ${subs.map((s) => `/${d.name} ${s}`).join(', ')}`,
+      );
+    }
   }
-  lines.push('');
+  const voiceValue = voiceLines.join('\n');
 
-  lines.push(`**${t('help.groupAdmin', locale)}**`);
-  for (const d of admin) lines.push(`• /${d.name} — ${d.description}`);
-  // /config tem muitos subcomandos; em vez de os listar todos (poluiria a
-  // mensagem) apontamos para /config show, que imprime a config atual.
-  lines.push(t('help.configNote', locale));
-  lines.push('');
+  const adminLines = admin.map((d) => `• /${d.name} — ${d.description}`);
+  // /config tem muitos subcomandos; em vez de os listar todos (poluiria o embed)
+  // apontamos para /config show, que imprime a config atual.
+  adminLines.push(t('help.configNote', locale));
+  const adminValue = adminLines.join('\n');
 
-  lines.push(t('help.footer', locale, { command: '/setup' }));
+  const embed = new EmbedBuilder()
+    .setColor(0x5865f2) // blurple — parece intencional, nao o cinzento default
+    .setTitle(t('help.embedTitle', locale))
+    .setDescription(`${t('help.title', locale)}\n${t('help.intro', locale)}`)
+    .addFields(
+      { name: t('help.groupGeneral', locale), value: generalValue },
+      { name: t('help.groupVoice', locale), value: voiceValue },
+      { name: t('help.groupAdmin', locale), value: adminValue },
+    )
+    .setFooter({ text: t('help.footer', locale, { command: '/setup' }) });
 
-  await reply(i, lines.join('\n'));
+  await i.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 }
 
 /**
@@ -909,12 +931,16 @@ export async function handleInteraction(i: ChatInputCommandInteraction, deps: Bo
   } catch (err) {
     log.error('[command] erro em', i.commandName, err);
     if (!i.isRepliable()) return;
+    // localeFor nunca lanca (fallback DEFAULT_LOCALE em falha/db ausente), por isso
+    // e seguro no catch — a mensagem de erro nunca fica presa por uma leitura de config.
+    const locale = localeFor(deps, i.guildId);
+    const msg = t('error.generic', locale);
     if (i.deferred && !i.replied) {
       // Ja foi deferido (caso do /tts): editReply para o utilizador receber o erro
       // em vez de ficar preso em "a pensar...".
-      await i.editReply({ content: 'Ocorreu um erro.' }).catch(() => {});
+      await i.editReply({ content: msg }).catch(() => {});
     } else if (!i.replied) {
-      await i.reply({ content: 'Ocorreu um erro.', flags: MessageFlags.Ephemeral }).catch(() => {});
+      await i.reply({ content: msg, flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }
 }

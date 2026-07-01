@@ -198,7 +198,8 @@ describe('/config tts-channel — validacao de tipo e acesso', () => {
     });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
-    expect(i.replies.some((r) => /texto|voz|categoria/i.test(r))).toBe(true);
+    // Migrado PT->EN (P16.2): "Pick a text channel (not a voice channel or a category)."
+    expect(i.replies.some((r) => /text channel|voice channel|category|texto|voz|categoria/i.test(r))).toBe(true);
     expect(getGuildConfig(db, GUILD).ttsChannelId).toBeNull();
   });
 
@@ -299,7 +300,8 @@ describe('/config blockword — validacao de palavra vazia', () => {
     });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
-    expect(i.replies.some((r) => /vazia|vazio|palavra/i.test(r))).toBe(true);
+    // Migrado PT->EN (P16.2): "The word can't be empty."
+    expect(i.replies.some((r) => /empty|word|vazia|vazio|palavra/i.test(r))).toBe(true);
     expect(getBlocklist(db, GUILD)).toHaveLength(0);
   });
 
@@ -311,7 +313,8 @@ describe('/config blockword — validacao de palavra vazia', () => {
     });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
-    expect(i.replies.some((r) => /vazia|vazio|palavra/i.test(r))).toBe(true);
+    // Migrado PT->EN (P16.2): "The word can't be empty."
+    expect(i.replies.some((r) => /empty|word|vazia|vazio|palavra/i.test(r))).toBe(true);
     expect(getBlocklist(db, GUILD)).toHaveLength(0);
   });
 
@@ -337,7 +340,8 @@ describe('/config blockword — validacao de palavra vazia', () => {
     });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
-    expect(i.replies.some((r) => /vazia|vazio|palavra/i.test(r))).toBe(true);
+    // Migrado PT->EN (P16.2): "The word can't be empty."
+    expect(i.replies.some((r) => /empty|word|vazia|vazio|palavra/i.test(r))).toBe(true);
   });
 
   it('blockword remove: aceita palavra valida', async () => {
@@ -352,7 +356,8 @@ describe('/config blockword — validacao de palavra vazia', () => {
     });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
-    expect(i.replies.some((r) => /[Dd]esbloqueado/i.test(r))).toBe(true);
+    // Migrado PT->EN (P16.2): "Unblocked: spam."
+    expect(i.replies.some((r) => /unblocked/i.test(r))).toBe(true);
     expect(getBlocklist(db, GUILD)).not.toContain('spam');
   });
 });
@@ -377,7 +382,8 @@ describe('/config pronunciation — add/remove/list', () => {
     });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
-    expect(i.replies.some((r) => /termo|vazio|vazia/i.test(r))).toBe(true);
+    // Migrado PT->EN (P16.2): "The term can't be empty."
+    expect(i.replies.some((r) => /term|empty|termo|vazio|vazia/i.test(r))).toBe(true);
     expect(getPronunciations(db, GUILD)).toHaveLength(0);
   });
 
@@ -389,7 +395,8 @@ describe('/config pronunciation — add/remove/list', () => {
     });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
-    expect(i.replies.some((r) => /pronuncia|vazio|vazia/i.test(r))).toBe(true);
+    // Migrado PT->EN (P16.2): "The pronunciation can't be empty."
+    expect(i.replies.some((r) => /pronunciation|empty|pronuncia|vazio|vazia/i.test(r))).toBe(true);
     expect(getPronunciations(db, GUILD)).toHaveLength(0);
   });
 
@@ -426,7 +433,8 @@ describe('/config pronunciation — add/remove/list', () => {
     });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
-    expect(i.replies.some((r) => /termo|vazio|vazia/i.test(r))).toBe(true);
+    // Migrado PT->EN (P16.2): "The term can't be empty."
+    expect(i.replies.some((r) => /term|empty|termo|vazio|vazia/i.test(r))).toBe(true);
   });
 
   it('list: mostra os termos definidos', async () => {
@@ -443,7 +451,8 @@ describe('/config pronunciation — add/remove/list', () => {
     const i = makeConfigInteraction({ group: 'pronunciation', sub: 'list' });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
-    expect(i.replies.some((r) => /nenhum/i.test(r))).toBe(true);
+    // Migrado PT->EN (P16.2): dicionario vazio -> "(none)"
+    expect(i.replies.some((r) => /\(none\)|nenhum/i.test(r))).toBe(true);
   });
 });
 
@@ -463,7 +472,8 @@ describe('/config enabled — kill-switch do servidor', () => {
     const i = makeConfigInteraction({ sub: 'enabled', optionsMap: { ativo: false } });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
-    expect(i.replies.some((r) => /desativ|deslig/i.test(r))).toBe(true);
+    // Migrado PT->EN (P16.2): "TTS is now **off** for this server."
+    expect(i.replies.some((r) => /off|disabled|desativ|deslig/i.test(r))).toBe(true);
     expect(getGuildConfig(db, GUILD).enabled).toBe(false);
   });
 
@@ -473,7 +483,8 @@ describe('/config enabled — kill-switch do servidor', () => {
     const i = makeConfigInteraction({ sub: 'enabled', optionsMap: { ativo: true } });
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
-    expect(i.replies.some((r) => /ativ|lig/i.test(r))).toBe(true);
+    // Migrado PT->EN (P16.2): "TTS is now **on** for this server."
+    expect(i.replies.some((r) => /\bon\b|enabled|ativ|lig/i.test(r))).toBe(true);
     expect(getGuildConfig(db, GUILD).enabled).toBe(true);
   });
 });
@@ -547,7 +558,8 @@ describe('/config show — mostra config atual do servidor', () => {
 
     const text = i.replies.join('\n');
     expect(text).toMatch(/ch-show-test/);
-    expect(text).toMatch(/autoread.*on|on.*autoread/i);
+    // Migrado PT->EN (P16.2): "Auto-read: on" / "Enabled: off"
+    expect(text).toMatch(/auto-?read.*on|on.*auto-?read/i);
     expect(text).toMatch(/role-show-test/);
     expect(text).toMatch(/enabled.*off|off.*enabled/i);
     expect(text).toMatch(/pt_PT-tugão-medium/);
@@ -564,9 +576,10 @@ describe('/config show — mostra config atual do servidor', () => {
     await handleInteraction(i as any, deps);
 
     const text = i.replies.join('\n');
-    expect(text).toMatch(/nenhum/i);
-    expect(text).toMatch(/qualquer/i);
-    expect(text).toMatch(/dete/i); // "(deteção automática)"
+    // Migrado PT->EN (P16.2): canal "(none)", role "anyone", voz "(auto-detect)"
+    expect(text).toMatch(/\(none\)|nenhum/i);
+    expect(text).toMatch(/anyone|qualquer/i);
+    expect(text).toMatch(/auto-?detect|dete/i);
   });
 
   it('mostra deteção automática para defaultVoice vazio', async () => {
@@ -576,7 +589,8 @@ describe('/config show — mostra config atual do servidor', () => {
     await handleInteraction(i as any, deps);
 
     const text = i.replies.join('\n');
-    expect(text).toMatch(/dete/i);
+    // Migrado PT->EN (P16.2): "(auto-detect)"
+    expect(text).toMatch(/auto-?detect|dete/i);
   });
 });
 
@@ -649,5 +663,38 @@ describe('/config reset — repoe config aos defaults', () => {
     expect(i.replies.some((r) => /reposta|defeito|default/i.test(r))).toBe(true);
     // Getconfig ainda devolve defaults
     expect(getGuildConfig(db, GUILD).maxChars).toBe(300);
+  });
+});
+
+// ── wiring do locale: a MESMA resposta sai em PT quando a guild tem locale='pt' ──
+
+describe('/config — wiring do locale (PT quando locale="pt")', () => {
+  let db: Database.Database;
+
+  beforeEach(() => {
+    db = initDb(':memory:');
+  });
+  afterEach(() => {
+    db.close();
+  });
+
+  it('EN por defeito: "reset" responde em ingles', async () => {
+    const i = makeConfigInteraction({ sub: 'reset' });
+    await handleInteraction(i as any, makeConfigDeps(db));
+    // t('config.reset', 'en') = "Config reset to defaults. …"
+    expect(i.replies.join('\n')).toMatch(/reset to defaults/i);
+  });
+
+  it('PT: com locale="pt" a mesma resposta sai em portugues', async () => {
+    // Prova o wiring: o handler le getGuildConfig(guildId).locale e passa-o a t().
+    // 'config.reset' tem valor `pt`, por isso o fallback a `en` NAO se aplica —
+    // se o wiring do locale estivesse partido, sairia o `en` e o assert falhava.
+    setGuildConfig(db, GUILD, { locale: 'pt' });
+    const i = makeConfigInteraction({ sub: 'reset' });
+    await handleInteraction(i as any, makeConfigDeps(db));
+    // t('config.reset', 'pt') = "Config reposta aos valores por defeito. …"
+    expect(i.replies.join('\n')).toMatch(/reposta aos valores por defeito/i);
+    // e NAO a versao inglesa
+    expect(i.replies.join('\n')).not.toMatch(/reset to defaults/i);
   });
 });

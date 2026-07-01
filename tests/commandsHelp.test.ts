@@ -16,30 +16,66 @@ import { setGuildConfig } from '../src/store/guildConfig';
 
 const GUILD = 'g-help-test';
 
+// O /help agora responde com um EMBED ({ embeds: [embed] }), nao com { content }.
+// Este helper achata o embed.data (title + description + nome/valor de cada field
+// + footer) numa unica string pesquisavel, para que todas as afirmacoes de texto
+// (lista de comandos, cabecalhos de grupo, tagline, GUARD) continuem a correr
+// sobre `i.replies.join('\n')` como antes. Se o handler voltar a { content },
+// tambem e capturado.
 interface FakeInteraction {
   commandName: string;
   guildId: string;
   replies: string[];
   flags: (number | undefined)[];
-  reply: (opts: { content: string; flags?: number }) => Promise<void>;
+  reply: (opts: { content?: string; embeds?: unknown[]; flags?: number }) => Promise<void>;
   isRepliable: () => boolean;
   replied: boolean;
   deferred: boolean;
+  // Embeds crus (EmbedBuilder), para exercitar o caminho real de serializacao
+  // (embed.toJSON(), que valida os limites do Discord) num teste.
+  rawEmbeds: unknown[];
+}
+
+// Achata o `.data` de um EmbedBuilder (ou um embed cru) numa string pesquisavel.
+function flattenEmbed(embed: unknown): string {
+  // EmbedBuilder expoe os dados em `.data`; um embed cru ja e o proprio objeto.
+  const data = (embed as { data?: unknown }).data ?? embed;
+  const d = data as {
+    title?: string;
+    description?: string;
+    fields?: { name?: string; value?: string }[];
+    footer?: { text?: string };
+  };
+  const parts: string[] = [];
+  if (d.title) parts.push(d.title);
+  if (d.description) parts.push(d.description);
+  for (const f of d.fields ?? []) {
+    if (f.name) parts.push(f.name);
+    if (f.value) parts.push(f.value);
+  }
+  if (d.footer?.text) parts.push(d.footer.text);
+  return parts.join('\n');
 }
 
 function makeHelpInteraction(): FakeInteraction {
   const replies: string[] = [];
   const flags: (number | undefined)[] = [];
+  const rawEmbeds: unknown[] = [];
   return {
     commandName: 'help',
     guildId: GUILD,
     replies,
     flags,
+    rawEmbeds,
     replied: false,
     deferred: false,
     isRepliable: () => true,
-    reply: async (o: { content: string; flags?: number }) => {
-      replies.push(o.content);
+    reply: async (o: { content?: string; embeds?: unknown[]; flags?: number }) => {
+      if (o.content) replies.push(o.content);
+      for (const e of o.embeds ?? []) {
+        rawEmbeds.push(e);
+        replies.push(flattenEmbed(e));
+      }
       flags.push(o.flags);
     },
   };
@@ -129,6 +165,21 @@ describe('/help — discovery de comandos em-app', () => {
     for (const f of i.flags) {
       expect(f).toBe(MessageFlags.Ephemeral);
     }
+  });
+
+  it('(d) responde com um embed que serializa sem violar limites do Discord', async () => {
+    const i = makeHelpInteraction();
+    await handleInteraction(i as any, makeDeps());
+    // O /help responde com um EmbedBuilder. embed.toJSON() e o caminho REAL de
+    // envio no discord.js e valida os limites (field name/value nao-vazios,
+    // value <=1024, total <=6000). Se algum grupo ficasse vazio ou gigante, isto
+    // lancava — guarda o contrato do embed, nao so o texto achatado.
+    expect(i.rawEmbeds.length).toBe(1);
+    const embed = i.rawEmbeds[0] as { toJSON: () => { fields?: unknown[] } };
+    expect(() => embed.toJSON()).not.toThrow();
+    const json = embed.toJSON();
+    // tres grupos -> tres fields
+    expect(json.fields?.length).toBe(3);
   });
 
   // GUARD: derivado dos commandDefs reais — cada comando top-level REGISTADO tem

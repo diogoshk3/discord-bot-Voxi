@@ -119,7 +119,8 @@ describe('handleJoin — permissoes Connect/Speak', () => {
     await handleInteraction(i as any, deps);
 
     expect(joinVoiceChannel).toHaveBeenCalledTimes(1);
-    expect(i.replies.some((r) => /Entrei/i.test(r))).toBe(true);
+    // Migrado PT->EN (P16.2): confirmacao de entrada menciona o canal.
+    expect(i.replies.some((r) => /Geral/.test(r))).toBe(true);
 
     // Limpeza: destruir o player criado para nao deixar timers pendurados.
     const player = deps.players.get('g1');
@@ -134,6 +135,7 @@ describe('handleJoin — permissoes Connect/Speak', () => {
     await handleInteraction(i as any, deps);
 
     expect(joinVoiceChannel).not.toHaveBeenCalled();
-    expect(i.replies.some((r) => /canal de voz/i.test(r))).toBe(true);
+    // Migrado PT->EN (P16.2): "Hop into a voice channel first, then run /join."
+    expect(i.replies.some((r) => /voice channel/i.test(r))).toBe(true);
   });
 });

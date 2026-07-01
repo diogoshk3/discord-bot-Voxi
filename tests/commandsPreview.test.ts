@@ -15,7 +15,9 @@ import type Database from 'better-sqlite3';
 
 const GUILD = 'g-preview';
 const USER = 'u-preview';
-const SAMPLE = 'Ola, eu sou o Voxi. type it, hear it.';
+// Migrado PT->EN (P16.2): a frase-amostra falada pelo /voice preview passou a
+// ingles por defeito (t('preview.sample', 'en')).
+const SAMPLE = "Hi, I'm Voxi. type it, hear it.";
 
 function makeDeps(db: Database.Database, player?: { say: ReturnType<typeof vi.fn> }): BotDeps {
   const deps = {
@@ -81,7 +83,8 @@ describe('/voice preview', () => {
     const req = say.mock.calls[0][0];
     expect(req.text).toBe(SAMPLE);
     expect(req.model).toBe('pt_PT-tugão-medium');
-    expect(i.replies.some((r) => /amostra/i.test(r))).toBe(true);
+    // Migrado PT->EN: "Playing a sample…"
+    expect(i.replies.some((r) => /sample/i.test(r))).toBe(true);
   });
 
   it('model inválido responde com mensagem de erro e NÃO chama say', async () => {
