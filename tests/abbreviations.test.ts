@@ -142,4 +142,24 @@ describe('isAllEnglishAbbrev', () => {
     expect(isAllEnglishAbbrev('ty')).toBe(false);
     expect(isAllEnglishAbbrev('brb np')).toBe(false);
   });
+
+  // ── pontuacao a volta do token: tem de ser IGNORADA ─────────────────────────
+  // O `expandAbbreviations` JA expande "omg!"/"wyd?"/"brb..." (a fronteira trata a
+  // pontuacao como limite). Sem strip, o isAllEnglishAbbrev falhava a lookup do
+  // token cru e devolvia false — derrotando o forceLang='eng' na forma MAIS natural
+  // de escrever giria (com !/?/...). Espelhamos a semantica de fronteira.
+  it('ignora pontuacao a volta do token (omg! wyd? brb...)', () => {
+    expect(isAllEnglishAbbrev('omg!')).toBe(true);
+    expect(isAllEnglishAbbrev('wyd?')).toBe(true);
+    expect(isAllEnglishAbbrev('brb...')).toBe(true);
+    expect(isAllEnglishAbbrev('OMG! BRB')).toBe(true);
+  });
+
+  it('token que reduz a vazio (so pontuacao) -> false', () => {
+    expect(isAllEnglishAbbrev('!!!')).toBe(false);
+  });
+
+  it('misto giria+palavra normal (mesmo com pontuacao) -> false', () => {
+    expect(isAllEnglishAbbrev('omg carro')).toBe(false);
+  });
 });

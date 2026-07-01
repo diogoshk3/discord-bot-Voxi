@@ -122,5 +122,14 @@ export function expandAbbreviations(text: string): string {
 export function isAllEnglishAbbrev(text: string): boolean {
   const tokens = text.trim().split(/\s+/).filter((t) => t.length > 0);
   if (tokens.length === 0) return false;
-  return tokens.every((tok) => Object.prototype.hasOwnProperty.call(DICT, tok.toLowerCase()));
+  // Antes da lookup, retira a pontuacao envolvente (nao-\p{L}\p{N} no inicio/fim),
+  // espelhando a semantica de FRONTEIRA do expandAbbreviations: este expande "omg!"/
+  // "wyd?"/"brb..." (a pontuacao e fronteira), por isso o all-check tem de casar o
+  // MESMO nucleo. Um token que reduza a vazio (so pontuacao, ex. "!!!") nao esta no
+  // DICT (hasOwnProperty(DICT, '') e false) -> every() devolve false. Assim mantem-se
+  // o contrato "todos os tokens sao chaves" e ''/whitespace continua a dar false.
+  return tokens.every((tok) => {
+    const core = tok.toLowerCase().replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '');
+    return Object.prototype.hasOwnProperty.call(DICT, core);
+  });
 }
