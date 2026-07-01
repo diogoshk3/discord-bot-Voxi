@@ -12,6 +12,17 @@ const RE_USER = /<@!?(\d+)>/g;
 const RE_CHANNEL = /<#(\d+)>/g;
 const RE_CUSTOM_EMOJI = /<a?:\w+:\d+>/g;
 const RE_UNICODE_EMOJI = /\p{Extended_Pictographic}/gu;
+// Componentes zero-width de emoji modernos + regional indicators (bandeiras). O
+// strip de \p{Extended_Pictographic} remove o pictograma BASE mas NAO estes:
+//   U+200D  ZWJ            (junta as partes de sequencias como 👨‍💻)
+//   U+FE0F  VS16           (torna o char anterior "emoji", ex.: ❤️, 1️⃣)
+//   U+20E3  keycap combining (o quadrado do 1️⃣)
+//   U+1F1E6..U+1F1FF        regional indicators -> \p{Regional_Indicator} (bandeiras)
+// Nenhum e \s, por isso sobreviviam ao colapso de whitespace e ao trim, deixando
+// residuo invisivel *truthy* que ia parar ao synth. Escrito com \u (nao os chars
+// literais, que seriam invisiveis no diff). IMPORTANTE: so componentes/RI — o
+// DIGITO/LETRA base fica, por isso "1️⃣" -> "1" (so VS16+keycap sao removidos).
+const RE_EMOJI_EXTRA = /[\u200D\uFE0F\u20E3]|\p{Regional_Indicator}/gu;
 const RE_REPEAT_LOWER = /([a-z])\1{2,}/g;
 const RE_REPEAT_UPPER = /([A-Z])\1{1,}/g;
 const RE_WS = /\s+/g;
@@ -33,9 +44,11 @@ export function cleanText(raw: string, opts: CleanOptions): string {
   t = t.replace(RE_USER, (_m, id: string) => opts.resolveUser(id));
   t = t.replace(RE_CHANNEL, (_m, id: string) => opts.resolveChannel(id));
 
-  // 5. emojis: custom e unicode
+  // 5. emojis: custom, unicode base, e os componentes zero-width/bandeiras que o
+  // strip de \p{Extended_Pictographic} deixava para tras.
   t = t.replace(RE_CUSTOM_EMOJI, ' ');
   t = t.replace(RE_UNICODE_EMOJI, ' ');
+  t = t.replace(RE_EMOJI_EXTRA, '');
 
   // 6. colapsar repeticoes (minusculas cap 3, maiusculas cap 2)
   t = t.replace(RE_REPEAT_LOWER, '$1$1$1');

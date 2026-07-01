@@ -387,7 +387,11 @@ async function handleTts(i: ChatInputCommandInteraction, deps: BotDeps): Promise
       return ch && 'name' in ch ? (ch.name as string) : 'canal';
     },
   });
-  if (!cleaned) {
+  // Guard de vazio endurecido (mesma regra do messageHandler): exige >=1 letra ou
+  // numero (\p{L}\p{N}). Cobre '' e tambem texto so com pontuacao/simbolos/residuo
+  // zero-width (rede de seguranca do strip de emoji) — nada legivel, nao vale
+  // sintetizar. Nota: "!!!" (so-pontuacao) passa a responder nothingAfterClean.
+  if (!/[\p{L}\p{N}]/u.test(cleaned)) {
     await i.editReply(t('tts.nothingAfterClean', locale));
     return;
   }

@@ -117,6 +117,32 @@ describe('cleanText', () => {
     });
   });
 
+  describe('emojis com componentes zero-width / bandeiras (ZWJ/VS16/keycap/RI)', () => {
+    // O strip de \p{Extended_Pictographic} removia o pictograma base mas deixava
+    // os componentes zero-width (U+200D ZWJ, U+FE0F VS16, U+20E3 keycap) e os
+    // regional indicators (bandeiras) — resíduo invisível mas TRUTHY que sobrevivia
+    // ao trim e passava o guard de vazio. Agora tem de sair também.
+    it('coracao ❤️ (U+2764 U+FE0F) -> "" (VS16 removido)', () => {
+      expect(cleanText('❤️', opts)).toBe('');
+    });
+
+    it('sequencia ZWJ 👨‍💻 -> "" (base + ZWJ removidos, sem residuo)', () => {
+      expect(cleanText('👨‍💻', opts)).toBe('');
+    });
+
+    it('keycap 1️⃣ -> "1" (VS16+keycap removidos, o DIGITO base sobrevive)', () => {
+      expect(cleanText('1️⃣', opts)).toBe('1');
+    });
+
+    it('bandeira 🇦🇩 (regional indicators) -> "" (RI removidos)', () => {
+      expect(cleanText('🇦🇩', opts)).toBe('');
+    });
+
+    it('emoji com componentes no meio de texto -> so o texto sobra', () => {
+      expect(cleanText('ola ❤️ mundo', opts)).toBe('ola mundo');
+    });
+  });
+
   describe('vazio', () => {
     it('devolve "" se so houver emoji', () => {
       expect(cleanText('😀', opts)).toBe('');

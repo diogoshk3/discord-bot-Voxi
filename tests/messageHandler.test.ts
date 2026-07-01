@@ -207,6 +207,37 @@ describe('handleMessage — ramos não cobertos pelos testes existentes', () => 
     expect(say).not.toHaveBeenCalled();
   });
 
+  // ── 10b. Emoji com componentes zero-width / bandeiras → não fala ──────────
+  // Antes do fix, ❤️ (U+2764 U+FE0F) e as bandeiras deixavam resíduo zero-width
+  // truthy que passava o guard `if (!cleaned)` → Piper sintetizava clipe vazio.
+  it('conteúdo só com ❤️ (VS16) → não fala', async () => {
+    const deps = makeDeps(db, say);
+    await handleMessage(makeMessage({ content: '❤️' }), deps);
+    expect(say).not.toHaveBeenCalled();
+  });
+
+  it('conteúdo só com bandeira 🇦🇩 → não fala', async () => {
+    const deps = makeDeps(db, say);
+    await handleMessage(makeMessage({ content: '🇦🇩' }), deps);
+    expect(say).not.toHaveBeenCalled();
+  });
+
+  // ── 10c. Só pontuação → não fala (guard exige letra/número) ───────────────
+  // Isola a mudança do guard: cleanText('!!!') = '!!!' (truthy), logo o antigo
+  // guard `if (!cleaned)` deixava passar. O novo guard exige \p{L}\p{N}.
+  it('conteúdo só com pontuação ("!!!") → não fala', async () => {
+    const deps = makeDeps(db, say);
+    await handleMessage(makeMessage({ content: '!!!' }), deps);
+    expect(say).not.toHaveBeenCalled();
+  });
+
+  // ── 10d. Texto com dígitos ("$100") → fala (contém \p{N}) ─────────────────
+  it('conteúdo com dígitos ("$100") → fala (passa o guard)', async () => {
+    const deps = makeDeps(db, say);
+    await handleMessage(makeMessage({ content: '$100' }), deps);
+    expect(say).toHaveBeenCalledTimes(1);
+  });
+
   // ── 11. Blocklist hit ─────────────────────────────────────────────────────
   it('texto contém palavra da blocklist → não fala', async () => {
     addBlockword(db, GUILD, 'spam');

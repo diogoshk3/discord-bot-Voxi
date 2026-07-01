@@ -97,3 +97,60 @@ describe('/tts — say() cheio nao mente "queued"', () => {
     expect(i.replies.some((r) => /queue/i.test(r))).toBe(false);
   });
 });
+
+describe('/tts — guard de vazio (nada legivel -> nao sintetiza)', () => {
+  let db: Database.Database;
+
+  beforeEach(() => {
+    db = initDb(':memory:');
+  });
+  afterEach(() => {
+    db.close();
+  });
+
+  // ❤️ (U+2764 U+FE0F): antes do fix o VS16 sobrevivia -> resíduo truthy passava
+  // o guard `if (!cleaned)` -> Piper sintetizava clipe vazio. Agora é ignorado.
+  it('só emoji ❤️ (VS16) → nothingAfterClean, NÃO chama say', async () => {
+    const say = vi.fn().mockResolvedValue(true);
+    const deps = makeDeps(db, { say });
+    const i = makeTtsInteraction('❤️');
+
+    await handleInteraction(i as any, deps);
+
+    expect(say).not.toHaveBeenCalled();
+    // t('tts.nothingAfterClean', 'en') fala em "nothing"/"read".
+    expect(i.replies.some((r) => /nothing|read/i.test(r))).toBe(true);
+  });
+
+  it('só bandeira 🇦🇩 (regional indicators) → NÃO chama say', async () => {
+    const say = vi.fn().mockResolvedValue(true);
+    const deps = makeDeps(db, { say });
+    const i = makeTtsInteraction('🇦🇩');
+
+    await handleInteraction(i as any, deps);
+
+    expect(say).not.toHaveBeenCalled();
+  });
+
+  // Isola a mudança do guard: cleanText('!!!') = '!!!' (truthy) -> o antigo guard
+  // deixava passar; o novo exige \p{L}\p{N}.
+  it('só pontuação ("!!!") → NÃO chama say', async () => {
+    const say = vi.fn().mockResolvedValue(true);
+    const deps = makeDeps(db, { say });
+    const i = makeTtsInteraction('!!!');
+
+    await handleInteraction(i as any, deps);
+
+    expect(say).not.toHaveBeenCalled();
+  });
+
+  it('texto com dígitos ("$100") → chama say (contém \\p{N})', async () => {
+    const say = vi.fn().mockResolvedValue(true);
+    const deps = makeDeps(db, { say });
+    const i = makeTtsInteraction('$100');
+
+    await handleInteraction(i as any, deps);
+
+    expect(say).toHaveBeenCalledOnce();
+  });
+});
