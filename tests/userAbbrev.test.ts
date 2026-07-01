@@ -45,4 +45,46 @@ describe('applyUserAbbrev', () => {
     expect(a).toBe(b);
     expect(a).toBe('bora rapaz e JavaScript');
   });
+
+  // ── seguranca: passagem unica corta a cascata (anti billion-laughs DoS) ──────
+  // Cada entry e user-controlada nos DOIS lados (termo + replacement). Numa
+  // implementacao multi-passo, um replacement que contem outro termo seria
+  // re-expandido no passo seguinte -> crescimento exponencial que congela o event
+  // loop de todo o bot. A passagem UNICA garante que um replacement NUNCA e
+  // re-analisado: 'a'->'b b b' e o output final, o 'b' la dentro nao vira 'c'.
+  it('nao re-expande um replacement que contem outro termo (cascata cortada)', () => {
+    const chained = [
+      { term: 'a', replacement: 'b b b' },
+      { term: 'b', replacement: 'c c c' },
+    ];
+    const out = applyUserAbbrev('a', chained);
+    expect(out).toBe('b b b');
+    expect(out).not.toContain('c');
+  });
+
+  // ── correctness: replacement inserido LITERALMENTE (sem interpretacao de `$`) ──
+  // Um replacer-string faz `$&`, `$\``, `$'`, `$n` e `$$` serem interpretados pelo
+  // motor de regex. Com um replacer-FUNCAO a string entra tal e qual.
+  it('insere o replacement literalmente (nao interpreta $& / $$)', () => {
+    expect(applyUserAbbrev('hello js world', [{ term: 'js', replacement: '$&' }])).toBe(
+      'hello $& world',
+    );
+    expect(applyUserAbbrev('x', [{ term: 'x', replacement: 'a$$b' }])).toBe('a$$b');
+  });
+
+  // ── seguranca (tempo/tamanho): muitas entries encadeadas de 1 char + 1 char de
+  // input devolve rapido e pequeno (sem blow-up exponencial). Bounded-time check.
+  it('input minusculo com muitas entries encadeadas devolve rapido e pequeno', () => {
+    // a->'b b b b', b->'c c c c', ... : em multi-passo isto explodia.
+    const chars = 'abcdefghijklmnop'.split('');
+    const many = chars.map((c, idx) => ({
+      term: c,
+      replacement: (chars[idx + 1] ?? 'z').repeat(4).split('').join(' '),
+    }));
+    const start = Date.now();
+    const out = applyUserAbbrev('a', many);
+    expect(Date.now() - start).toBeLessThan(1000);
+    // 1 passo: 'a' -> replacement de 'a' (contem 'b's, que NAO sao re-expandidos).
+    expect(out.length).toBeLessThan(100);
+  });
 });
