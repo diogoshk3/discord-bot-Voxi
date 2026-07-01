@@ -651,9 +651,9 @@ async function handleLaugh(i: ChatInputCommandInteraction, deps: BotDeps): Promi
 /**
  * Pausa (ms) entre a piada e o riso no /joke. O riso e uma fala SEPARADA que leva
  * este valor em `leadSilenceMs` (silencio PREPENDido), criando um intervalo real —
- * o Voxi fala a piada, espera ~2s, e SO DEPOIS ri.
+ * o Voxi fala a piada, espera ~1s, e SO DEPOIS ri.
  */
-const JOKE_LAUGH_PAUSE_MS = 2000;
+const JOKE_LAUGH_PAUSE_MS = 1000;
 
 /**
  * /joke — conta uma piada curta na LINGUA escolhida (`idioma`, autocomplete). A voz
