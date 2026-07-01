@@ -48,13 +48,10 @@ describe('i18n — t(key, locale, params)', () => {
     expect(t('help.groupStarted', 'xx')).toBe('Getting started');
   });
 
-  // Phase A: locale SUPORTADO mas ainda SEM traducao (registry vazio) -> cai no EN.
-  // 'es' esta em SUPPORTED_LOCALES mas nao tem ficheiro locales/es.ts nem valor
-  // inline no catalogo, por isso t('help.title','es') === o valor EN de hoje. Isto
-  // prova que a cadeia do registry esta ligada sem regressao.
-  it('locale suportado mas sem traducao (es) cai no fallback EN', () => {
-    expect(t('help.title', 'es')).toBe(t('help.title', 'en'));
-    expect(t('help.groupStarted', 'es')).toBe('Getting started');
+  // Fase B: 'es' JA tem traducao (locales/es.ts) -> t() serve o espanhol, nao o EN.
+  it('locale traduzido (es) serve a traducao, nao o fallback EN', () => {
+    expect(t('help.groupStarted', 'es')).not.toBe('Getting started');
+    expect(t('help.title', 'es')).not.toBe('');
   });
 
   // Prova a arquitetura da FASE B: quando existe um ficheiro locales/<code>.ts com a
