@@ -106,6 +106,14 @@ export const catalog: Record<string, Entry> = {
     en: "I don't know that voice — check /voice list.",
     pt: 'Nao conheco essa voz — usa /voice list.',
   },
+  // speed fora do intervalo permitido: o builder do `speed` NAO tem min/max, por isso
+  // o Discord NAO rejeita client-side. Antes o handler fazia silent-clamp (ex. 5 -> 2×)
+  // e respondia "sucesso" — uma surpresa silenciosa. Agora damos um erro amigavel com
+  // o intervalo permitido e NAO gravamos nada. Boundaries 0.5 e 2.0 continuam validos.
+  'voice.badSpeed': {
+    en: 'Speed has to be between 0.5 and 2.0 (1.0 is normal). Try `/voice set model:… speed:1.0`.',
+    pt: 'A velocidade tem de estar entre 0.5 e 2.0 (1.0 é o normal). Tenta `/voice set model:… speed:1.0`.',
+  },
   // Sucesso do /voice set: lidera com o NOME AMIGAVEL ({name}, ex. "English (US) —
   // Amy"), mantem o id cru ({model}) subtil e copy-pasteavel, e da o PROXIMO PASSO
   // (ouvir a voz JA via /tts — sempre funciona, sem depender de auto-read).

@@ -86,6 +86,59 @@ describe('/voice set — copy beginner-friendly', () => {
   });
 });
 
+// Gap fechado (P: erros amigaveis): o builder do `speed` NAO tem min/max, por isso
+// o Discord NAO rejeita client-side um valor fora de 0.5–2.0. Antes o handler fazia
+// silent-clamp (5.0 -> 2.0) e respondia "sucesso" a 2× — uma surpresa silenciosa. O
+// principiante deve receber um erro amigavel com o intervalo permitido e NADA e
+// gravado (nao clamp-com-aviso: rejeicao). Boundaries 0.5 e 2.0 continuam validos.
+describe('/voice set — speed fora do intervalo (0.5–2.0)', () => {
+  let db: Database.Database;
+  beforeEach(() => {
+    db = initDb(':memory:');
+  });
+  afterEach(() => {
+    db.close();
+  });
+
+  it('speed acima de 2.0 responde erro com o intervalo e NAO grava a voz', async () => {
+    const i = makeVoiceInteraction({ sub: 'set', model: 'en_US-amy-medium', speed: 5 });
+    await handleInteraction(i as any, makeDeps(db));
+
+    expect(i.replies).toHaveLength(1);
+    const out = i.replies[0];
+    // Mensagem amigavel indica o intervalo permitido.
+    expect(out).toContain('0.5');
+    expect(out).toContain('2.0');
+    // Nenhum estado invalido gravado (nao clamp-com-aviso: rejeicao).
+    expect(getUserVoice(db, GUILD, USER)).toBeNull();
+  });
+
+  it('speed abaixo de 0.5 responde erro e NAO grava a voz', async () => {
+    const i = makeVoiceInteraction({ sub: 'set', model: 'en_US-amy-medium', speed: 0.1 });
+    await handleInteraction(i as any, makeDeps(db));
+
+    expect(i.replies).toHaveLength(1);
+    expect(getUserVoice(db, GUILD, USER)).toBeNull();
+  });
+
+  it('boundaries 0.5 e 2.0 continuam validos (gravam a voz)', async () => {
+    const lo = makeVoiceInteraction({ sub: 'set', model: 'en_US-amy-medium', speed: 0.5 });
+    await handleInteraction(lo as any, makeDeps(db));
+    expect(getUserVoice(db, GUILD, USER)?.speed).toBe(0.5);
+
+    const hi = makeVoiceInteraction({ sub: 'set', model: 'en_US-amy-medium', speed: 2.0 });
+    await handleInteraction(hi as any, makeDeps(db));
+    expect(getUserVoice(db, GUILD, USER)?.speed).toBe(2.0);
+  });
+
+  it('sem speed (omitido) grava com o defaultSpeed — caminho valido inalterado', async () => {
+    const i = makeVoiceInteraction({ sub: 'set', model: 'en_US-amy-medium', speed: null });
+    await handleInteraction(i as any, makeDeps(db));
+
+    expect(getUserVoice(db, GUILD, USER)?.speed).toBe(1.0);
+  });
+});
+
 describe('/voice reset — copy beginner-friendly', () => {
   let db: Database.Database;
   beforeEach(() => {

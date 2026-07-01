@@ -698,7 +698,20 @@ async function handleVoice(i: ChatInputCommandInteraction, deps: BotDeps): Promi
       await reply(i, t('voice.unknownModel', locale));
       return;
     }
-    const speed = i.options.getNumber('speed') ?? deps.config.defaultSpeed;
+    // Guard beginner-friendly de intervalo: o builder do `speed` NAO tem min/max, por
+    // isso o Discord NAO rejeita client-side (ex. speed:5). Antes fazia-se silent-clamp
+    // (5 -> 2×) e respondia-se "sucesso" — uma surpresa silenciosa. So valida quando o
+    // valor FOI fornecido (getNumber devolve null se omitido) E cai FORA de 0.5–2.0;
+    // nesse caso erro amigavel com o intervalo e NADA gravado (rejeicao, nao clamp).
+    // Boundaries 0.5 e 2.0 continuam validos. Omitido -> cai no defaultSpeed (inalterado).
+    const rawSpeed = i.options.getNumber('speed');
+    if (rawSpeed !== null && (rawSpeed < 0.5 || rawSpeed > 2.0)) {
+      await reply(i, t('voice.badSpeed', locale));
+      return;
+    }
+    const speed = rawSpeed ?? deps.config.defaultSpeed;
+    // Clamp preservado: no-op para valores fornecidos validos (ja em [0.5,2.0]); mantem
+    // o comportamento antigo para o caminho omitido->defaultSpeed.
     const clamped = Math.min(2.0, Math.max(0.5, speed));
     setUserVoice(deps.db, i.guildId!, i.user.id, model, clamped);
     // Copy beginner-friendly: lidera com o nome amigavel (voiceDisplayName) e mantem
