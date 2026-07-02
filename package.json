@@ -8,6 +8,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
+    "start:prod": "npm run build && node scripts/start-prod.mjs",
     "start:sharded": "node dist/shard.js",
     "test": "vitest run",
     "register": "tsx src/bot/registerCommands.ts"
