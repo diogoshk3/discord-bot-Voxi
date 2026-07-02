@@ -1,5 +1,6 @@
 import type { BotDeps } from './deps';
 import { log } from '../logging/logger';
+import { shutdownPiperPool } from '../tts/piper';
 
 /**
  * Encerramento limpo, testavel e idempotente.
@@ -21,6 +22,14 @@ export function shutdown(deps: Pick<BotDeps, 'players' | 'db'>): void {
     }
   }
   deps.players.clear();
+
+  // Fecha os processos piper PERSISTENTES (spec T2.1). No-op se o pool nunca foi
+  // criado (persistente OFF ou nenhuma sintese ainda) — libertar RAM no encerramento.
+  try {
+    shutdownPiperPool();
+  } catch (err) {
+    log.error('[shutdown] erro ao fechar o pool piper', err);
+  }
 
   try {
     // better-sqlite3 expoe `open`; fica false depois de close(). Guarda contra

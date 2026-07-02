@@ -7,6 +7,8 @@ import type { SynthRequest, TTSEngine } from './engine';
 import { AudioCache, cacheKey } from './cache';
 import { concatWavs, silenceWav } from './wavConcat';
 import { Semaphore } from './semaphore';
+import { PiperPool, type ChildLike } from './piperPool';
+import { log } from '../logging/logger';
 import {
   lengthScaleFor,
   synthParamsFor,
@@ -15,6 +17,63 @@ import {
 } from './calibration';
 
 const PIPER_TIMEOUT_MS = 15000;
+
+/**
+ * Pool PERSISTENTE de processos piper (spec T2.1) — EXPERIMENTAL, default OFF.
+ * Le a env por-chamada (nao congela ao carregar o modulo) para ser facil de
+ * raciocinar/testar. Só ON quando PIPER_PERSISTENT for exatamente '1' ou 'true'.
+ */
+export function isPiperPersistentOn(): boolean {
+  const raw = process.env.PIPER_PERSISTENT?.trim().toLowerCase();
+  return raw === '1' || raw === 'true';
+}
+
+/** maxWarm do pool (nº de vozes quentes). Default 3; override por PIPER_WARM_VOICES. */
+export function resolveWarmVoices(): number {
+  const env = process.env.PIPER_WARM_VOICES;
+  if (env !== undefined && env.trim() !== '') {
+    const n = Number(env);
+    if (Number.isInteger(n) && n > 0) return n;
+  }
+  return 3;
+}
+
+const PIPER_IDLE_MS = 5 * 60 * 1000;
+
+/**
+ * Pool SINGLETON de processos piper quentes. Lazy: nao spawna nada ao importar o
+ * modulo (so no primeiro synth com persistente ON). `piperPath` e resolvido no
+ * primeiro uso via a env PIPER_PATH (fallback 'piper'), para nao depender da
+ * instancia do engine. O wrapper de spawn liga stdout em 'pipe' (o sinal de
+ * conclusao chega por stdout) e ignora stderr (evita backpressure no processo longo).
+ */
+let piperPool: PiperPool | null = null;
+function getPiperPool(): PiperPool {
+  if (!piperPool) {
+    const piperPath = process.env.PIPER_PATH?.trim() || 'piper';
+    piperPool = new PiperPool({
+      maxWarm: resolveWarmVoices(),
+      idleMs: PIPER_IDLE_MS,
+      spawn: (args: string[]): ChildLike => {
+        const child = spawn(piperPath, args, { stdio: ['pipe', 'pipe', 'ignore'] });
+        // Sem este listener, um EPIPE assincrono no stdin (o processo morreu mas
+        // ainda lhe escrevemos uma linha) seria uma excecao NAO tratada que crasha
+        // o bot. A morte real e tratada via 'exit'/timeout -> die() -> fallback, por
+        // isso engolir o erro do stream aqui e correto (nao perde sintese).
+        child.stdin?.on('error', () => {
+          /* EPIPE et al.: morte tratada por 'exit'/timeout */
+        });
+        return child as unknown as ChildLike;
+      },
+    });
+  }
+  return piperPool;
+}
+
+/** Encerra o pool persistente (chamar no shutdown central). No-op se nunca criado. */
+export function shutdownPiperPool(): void {
+  if (piperPool) piperPool.shutdown();
+}
 
 /**
  * Cap de CONCORRENCIA de spawns do piper.exe. Cada sintese (cache MISS) arranca um
@@ -108,7 +167,38 @@ export class PiperEngine implements TTSEngine {
       // limitado; a cache foi consultada acima sem consumir permit.
       const release = this.semaphore.tryAcquire() ?? (await this.semaphore.acquire());
       try {
-        await this.runPiper(modelPath, outPath, lengthScale, params, req.text);
+        if (isPiperPersistentOn()) {
+          // Caminho PERSISTENTE (spec T2.1): reutiliza um processo quente. A chave e
+          // `model|lengthScale` porque os params de qualidade (noise/silence) sao
+          // FIXOS no spawn e HOJE globalmente uniformes (VOICE_PARAM_OVERRIDES vazio);
+          // se um dia houver overrides de noise por-voz, incluir params na key.
+          const key = `${req.model}|${lengthScale}`;
+          const poolArgs = [
+            '--model',
+            modelPath,
+            '--json-input',
+            '--length_scale',
+            String(lengthScale),
+            '--noise_scale',
+            String(params.noiseScale),
+            '--noise_w',
+            String(params.noiseW),
+            '--sentence_silence',
+            String(params.sentenceSilence),
+          ];
+          try {
+            await getPiperPool().synth(key, poolArgs, req.text, outPath, PIPER_TIMEOUT_MS);
+          } catch (err) {
+            // Fallback: NUNCA perder uma sintese. Se o pool falha (processo encravado,
+            // spawn falhou, etc.), cai no spawn one-shot de sempre.
+            log.warn(
+              `[piper] pool persistente falhou (${(err as Error).message}) — fallback one-shot`,
+            );
+            await this.runPiper(modelPath, outPath, lengthScale, params, req.text);
+          }
+        } else {
+          await this.runPiper(modelPath, outPath, lengthScale, params, req.text);
+        }
       } finally {
         release();
       }
