@@ -1,6 +1,7 @@
 import { detectLangDetailed } from '../language/detect';
 import { pickVoiceForLang } from '../language/voiceMap';
 import { expandAbbreviations, splitEnglishSlang } from '../textCleaning/abbreviations';
+import { restoreAccents, accentLangOfModel } from '../textCleaning/accents';
 import { applyPronunciation, type PronunciationEntry } from '../textCleaning/pronunciation';
 import type { SynthRequest } from '../tts/engine';
 
@@ -61,26 +62,37 @@ export function prepareSpeech(input: PrepareSpeechInput): PreparedSpeech {
   // Deteccao DESLIGADA: voz FIXA preferida verbatim, singleVoice, sem detetar a
   // lingua nem partir por segmento. Identico ao resolveSynth (autoDetect:false).
   if (input.autoDetect === false) {
-    const spoken = applyPronunciation(expandAbbreviations(input.personal), input.pronunciations);
+    // Voz FIXA: a língua vem da voz escolhida (não do texto) — restaura os acentos
+    // dessa língua ("nao"->"não" se a voz for PT).
+    const spokenRaw = applyPronunciation(expandAbbreviations(input.personal), input.pronunciations);
+    const spoken = restoreAccents(spokenRaw, accentLangOfModel(preferred));
     return { spoken, req: { text: spoken, model: preferred, speed, singleVoice: true }, learnedLang: '' };
   }
 
   // Deteccao LIGADA: parte por girias EN e processa cada parte (expansao + pronuncia).
   const rawSegs = splitEnglishSlang(input.personal);
-  const procSegs = rawSegs.map((seg) => ({
+  const proc0 = rawSegs.map((seg) => ({
     isEnglish: seg.isEnglish,
     text: applyPronunciation(expandAbbreviations(seg.text), input.pronunciations),
   }));
-  const spoken = procSegs.map((s) => s.text).join(' ');
 
-  // Lingua-base = deteccao SO da parte non-slang (as girias EN nao poluem).
-  const baseText = procSegs.filter((s) => !s.isEnglish).map((s) => s.text).join(' ');
+  // Lingua-base = deteccao SO da parte non-slang (as girias EN nao poluem). Deteta-se
+  // sobre o texto SEM acentos restaurados (e o que temos); restauram-se DEPOIS.
+  const baseText = proc0.filter((s) => !s.isEnglish).map((s) => s.text).join(' ');
   const { lang: detectedBase, confident } = detectLangDetailed(baseText);
   // Memoria adaptativa (T3.2): se a deteccao e AMBIGUA e ha uma lingua recente do user,
   // usa a recente (resolve "isto ta a funcionar" -> por depois de um "olá" confiante).
   // Se e confiante, e ELA que memorizamos (learnedLang) para as proximas curtas.
   const baseLang = !confident && input.recentLang ? input.recentLang : detectedBase;
   const learnedLang = confident ? detectedBase : '';
+
+  // Restauro de acentos POR-SEGMENTO, na lingua de cada um (base p/ non-slang; as
+  // girias EN nao tem dicionario -> no-op). Ex.: PT "nao"->"não", "amanha"->"amanhã".
+  const procSegs = proc0.map((s) => ({
+    isEnglish: s.isEnglish,
+    text: restoreAccents(s.text, s.isEnglish ? 'eng' : baseLang),
+  }));
+  const spoken = procSegs.map((s) => s.text).join(' ');
 
   const hasEng = procSegs.some((s) => s.isEnglish);
   const hasOther = procSegs.some((s) => !s.isEnglish);
