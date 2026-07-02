@@ -110,6 +110,41 @@ export function expandAbbreviations(text: string): string {
   return out;
 }
 
+/** Um segmento contiguo do texto, classificado como giria EN ou nao. */
+export interface SlangSegment {
+  text: string;
+  isEnglish: boolean;
+}
+
+/**
+ * Parte o `text` em segmentos contiguos por classe (giria EN conhecida vs resto),
+ * para a sintese MISTURADA: a parte na lingua-base e detetada por si, e cada giria
+ * EN e falada numa voz inglesa como segmento SEPARADO (em vez de "btw"->"by the way"
+ * poluir a deteccao e ler a mensagem toda numa voz [muitas vezes errada]).
+ *
+ * - Parte o texto por whitespace em palavras (descarta vazios).
+ * - Para cada palavra, `core` = nucleo sem pontuacao envolvente (MESMO idiom do
+ *   `isAllEnglishAbbrev`); `isEnglish = core esta no DICT` (hasOwnProperty).
+ * - Funde palavras CONSECUTIVAS com o mesmo `isEnglish` num segmento (join por 1 espaco).
+ * - Texto vazio/so-espacos -> [].
+ * PURA e deterministica.
+ */
+export function splitEnglishSlang(text: string): SlangSegment[] {
+  const words = text.split(/\s+/).filter((w) => w.length > 0);
+  const segments: SlangSegment[] = [];
+  for (const word of words) {
+    const core = word.toLowerCase().replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '');
+    const isEnglish = Object.prototype.hasOwnProperty.call(DICT, core);
+    const last = segments[segments.length - 1];
+    if (last && last.isEnglish === isEnglish) {
+      last.text += ` ${word}`;
+    } else {
+      segments.push({ text: word, isEnglish });
+    }
+  }
+  return segments;
+}
+
 /**
  * True se o `text` for composto ENTEIRAMENTE de girias EN conhecidas: cada token
  * separado por whitespace tem de ser uma chave do dicionario (case-insensitive).

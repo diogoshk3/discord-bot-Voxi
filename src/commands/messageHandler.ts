@@ -10,10 +10,8 @@ import { getUserAbbrev } from '../store/userAbbrev';
 import { getUserVoice } from '../store/userVoice';
 import { isOptedOut } from '../store/optout';
 import { isDetectionOn } from '../store/langDetect';
-import { applyPronunciation } from '../textCleaning/pronunciation';
 import { applyUserAbbrev } from '../textCleaning/userAbbrev';
-import { expandAbbreviations, isAllEnglishAbbrev } from '../textCleaning/abbreviations';
-import { resolveSynth } from './resolveSynth';
+import { prepareSpeech } from './prepareSpeech';
 import { log } from '../logging/logger';
 
 export async function handleMessage(message: Message, deps: BotDeps): Promise<void> {
@@ -90,43 +88,26 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     // nao tiver nenhuma.
     const personal = applyUserAbbrev(cleaned, getUserAbbrev(deps.db, message.author.id));
 
-    // Stretch P18: se a mensagem e SO girias EN ("brb", "omg lol"), forcamos uma voz
-    // inglesa para soarem com o sotaque certo mesmo que o user tenha uma voz fixada
-    // noutra lingua. Calculado sobre o texto JA com as abreviaturas pessoais, para que
-    // um atalho pessoal que sombreie uma giria nao force ingles indevidamente.
-    const forceLang = isAllEnglishAbbrev(personal) ? 'eng' : undefined;
-
-    // expansao de girias INGLESAS embutidas: DEPOIS das pessoais e ANTES da pronuncia
-    // — assim as entradas de pronuncia operam sobre a palavra ja expandida (o tradeoff
-    // e que o utilizador nao consegue forcar a leitura literal de uma giria via
-    // pronuncia). As girias sao SO EN e aplicam-se em qualquer lingua. Mesma ordem no
-    // handleTts.
-    const expanded = expandAbbreviations(personal);
-
-    // dicionario de pronuncia por servidor: aplicado DEPOIS do cleanText e ANTES do
-    // synth (e antes da blocklist, para que o texto realmente falado seja guardado).
-    const spoken = applyPronunciation(expanded, getPronunciations(deps.db, message.guildId));
-
-    // blocklist antes de sintetizar
-    const blocklist = getBlocklist(deps.db, message.guildId);
-    if (isBlocked(spoken, blocklist)) return;
-
-    // escolha de voz: a LINGUA da mensagem decide; a voz preferida (user > guild >
-    // .env) e honrada quando esta na lingua do texto, senao troca para uma voz correta.
-    // Toggle por-user: se o user desligou a deteccao (auto=false), usa-se sempre a
-    // voz fixa dele (singleVoice), sem detetar a lingua do texto.
+    // Expansao de girias EN, pronuncia da guild e escolha de voz(es) — incl. a
+    // sintese MISTURADA quando a mensagem junta lingua-base + girias EN conhecidas
+    // (a parte non-slang e detetada por si; as girias EN saem em voz inglesa como
+    // segmento separado). O `spoken` (falado) e usado para a blocklist.
     const userVoice = getUserVoice(deps.db, message.guildId, message.author.id);
     const auto = isDetectionOn(deps.db, message.guildId, message.author.id);
-    const req = resolveSynth({
-      text: spoken,
+    const { spoken, req } = prepareSpeech({
+      personal,
+      pronunciations: getPronunciations(deps.db, message.guildId),
       userVoice,
       available: deps.availableModels,
       guildDefaultVoice: cfg.defaultVoice,
       defaultVoice: deps.config.defaultVoice,
       defaultSpeed: deps.config.defaultSpeed,
-      forceLang,
       autoDetect: auto,
     });
+
+    // blocklist antes de sintetizar (sobre o texto REALMENTE falado)
+    const blocklist = getBlocklist(deps.db, message.guildId);
+    if (isBlocked(spoken, blocklist)) return;
 
     await player.say(req);
   } catch (err) {

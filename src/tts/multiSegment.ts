@@ -9,6 +9,7 @@
 import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { createHash } from 'node:crypto';
 import type { TTSEngine, SynthRequest } from './engine';
 import { AudioCache, cacheKey } from './cache';
 import { detectSegments } from './segments';
@@ -44,6 +45,13 @@ export class MultiSegmentEngine implements TTSEngine {
     // o req INTACTO (honra `model` e `leadSilenceMs`). Verificado ANTES do split.
     if (req.singleVoice) {
       return this.base.synth(req);
+    }
+
+    // Segmentos EXPLICITOS (texto, voz ja resolvidos por prepareSpeech) tomam
+    // precedencia sobre a deteccao por-script: e a sintese MISTURADA (base + girias
+    // EN). Verificado ANTES do detectSegments para nao re-partir por script.
+    if (req.segments && req.segments.length > 0) {
+      return this.synthExplicitSegments(req);
     }
 
     const segments = detectSegments(req.text);
@@ -85,6 +93,51 @@ export class MultiSegmentEngine implements TTSEngine {
         (err as Error).message,
       );
       return this.base.synth(req);
+    }
+  }
+
+  /**
+   * Caminho de segmentos EXPLICITOS: as partes (texto, voz) ja vêm resolvidas em
+   * `req.segments` (sintese MISTURADA — base numa lingua + girias EN em voz inglesa).
+   * NAO re-deteta nem re-parte: sintetiza cada parte com o SEU model e concatena.
+   */
+  private async synthExplicitSegments(req: SynthRequest): Promise<string> {
+    const segs = req.segments!;
+
+    // Um so segmento -> delega no base com o {text,model} desse segmento (sem
+    // combinar nem cachear no namespace 'multiseg'; a cache single-voice do base chega).
+    if (segs.length === 1) {
+      const seg = segs[0];
+      return this.base.synth({ text: seg.text, model: seg.model, speed: req.speed });
+    }
+
+    // Chave da cache do resultado COMBINADO. Inclui os PROPRIOS segmentos (texto+voz)
+    // para NUNCA colidir com o caminho por-script (chave = cacheKey(req)) nem com uma
+    // mensagem literal igual ao texto juntado. Separadores de unidade (U+241F entre
+    // texto e voz, U+2426 entre segmentos) que nao aparecem em texto normal.
+    const SEP_FIELD = '␟';
+    const SEP_SEG = '␦';
+    const payload = segs.map((s) => `${s.text}${SEP_FIELD}${s.model}`).join(SEP_SEG);
+    const key = createHash('sha1').update(`${payload} ${req.speed}`, 'utf8').digest('hex');
+    const cached = this.cache.get(key);
+    if (cached) return cached;
+
+    try {
+      const wavs: Buffer[] = [];
+      for (const seg of segs) {
+        const path = await this.base.synth({ text: seg.text, model: seg.model, speed: req.speed });
+        wavs.push(readFileSync(path));
+      }
+      const combined = concatWavs(wavs, { silenceMs: SEGMENT_SILENCE_MS });
+      return this.persist(key, combined);
+    } catch (err) {
+      // Mesma resiliencia do caminho por-script: se qualquer parte (ou a
+      // concatenacao) falha, cai no single-voice de TODO o texto com a voz-base.
+      log.warn(
+        '[multiSegment] falha no caminho de segmentos explicitos, fallback single-voice:',
+        (err as Error).message,
+      );
+      return this.base.synth({ text: req.text, model: req.model, speed: req.speed });
     }
   }
 

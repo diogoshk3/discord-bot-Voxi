@@ -32,11 +32,9 @@ import {
   USER_ABBREV_CAP,
 } from '../store/userAbbrev';
 import { cleanText } from '../textCleaning/clean';
-import { applyPronunciation } from '../textCleaning/pronunciation';
 import { applyUserAbbrev } from '../textCleaning/userAbbrev';
-import { expandAbbreviations, isAllEnglishAbbrev } from '../textCleaning/abbreviations';
 import { isBlocked } from '../moderation/filter';
-import { resolveSynth } from './resolveSynth';
+import { prepareSpeech } from './prepareSpeech';
 import type { SynthRequest } from '../tts/engine';
 import { modelDisplayName, voiceDisplayName, formatVoiceList } from '../language/voiceMap';
 import { laughterFor } from '../content/laughter';
@@ -582,20 +580,24 @@ async function handleTts(i: ChatInputCommandInteraction, deps: BotDeps): Promise
   // nao tiver nenhuma.
   const personal = applyUserAbbrev(cleaned, getUserAbbrev(deps.db, i.user.id));
 
-  // Stretch P18: mensagem SO com girias EN -> forca voz inglesa. Calculado sobre o
-  // texto JA com as abreviaturas pessoais aplicadas, para que um atalho pessoal que
-  // sombreie uma giria (ex. "brb"->"bora rapaz") nao force ingles indevidamente.
-  const forceLang = isAllEnglishAbbrev(personal) ? 'eng' : undefined;
-
-  // expansao de girias INGLESAS embutidas: DEPOIS das pessoais e ANTES da pronuncia
-  // — mesma ordem do messageHandler. As girias sao SO EN e aplicam-se em qualquer
-  // lingua. Expandir antes da pronuncia faz esta operar sobre a palavra ja expandida.
-  const expanded = expandAbbreviations(personal);
-
-  // dicionario de pronuncia por servidor: aplicado DEPOIS do cleanText e ANTES do
-  // synth. Aplicado antes da blocklist para que o texto realmente falado seja o que
-  // a blocklist guarda (uma pronuncia que produza uma palavra bloqueada e apanhada).
-  const spoken = applyPronunciation(expanded, getPronunciations(deps.db, i.guildId!));
+  // Expansao de girias EN, pronuncia da guild e escolha de voz(es) — incl. a sintese
+  // MISTURADA quando a mensagem junta lingua-base + girias EN conhecidas (a parte
+  // non-slang e detetada por si; as girias EN saem em voz inglesa como segmento
+  // separado). O `spoken` (falado) e o que a blocklist guarda — a pronuncia acontece
+  // ANTES da blocklist, por isso uma pronuncia que produza palavra bloqueada e apanhada.
+  const userVoice = getUserVoice(deps.db, i.guildId!, i.user.id);
+  // Toggle por-user: deteccao OFF => usa sempre a voz fixa do user (singleVoice).
+  const auto = isDetectionOn(deps.db, i.guildId!, i.user.id);
+  const { spoken, req } = prepareSpeech({
+    personal,
+    pronunciations: getPronunciations(deps.db, i.guildId!),
+    userVoice,
+    available: deps.availableModels,
+    guildDefaultVoice: cfg.defaultVoice,
+    defaultVoice: deps.config.defaultVoice,
+    defaultSpeed: deps.config.defaultSpeed,
+    autoDetect: auto,
+  });
 
   // blocklist antes de sintetizar
   const blocklist = getBlocklist(deps.db, i.guildId!);
@@ -603,20 +605,6 @@ async function handleTts(i: ChatInputCommandInteraction, deps: BotDeps): Promise
     await i.editReply(t('tts.blocked', locale));
     return;
   }
-
-  const userVoice = getUserVoice(deps.db, i.guildId!, i.user.id);
-  // Toggle por-user: deteccao OFF => usa sempre a voz fixa do user (singleVoice).
-  const auto = isDetectionOn(deps.db, i.guildId!, i.user.id);
-  const req = resolveSynth({
-    text: spoken,
-    userVoice,
-    available: deps.availableModels,
-    guildDefaultVoice: cfg.defaultVoice,
-    defaultVoice: deps.config.defaultVoice,
-    defaultSpeed: deps.config.defaultSpeed,
-    forceLang,
-    autoDetect: auto,
-  });
   // say() devolve false quando a fila esta no cap (nada foi enfileirado): nesse caso
   // NAO mentir "queued" — responder que estamos ocupados. So o sinal SINCRONO de
   // fila-cheia; nao esperamos pela reproducao real (fora de escopo).

@@ -13,6 +13,12 @@ export interface SynthRequest {
   // toggle de deteccao por-user desligado) e a deteccao NAO deve sobrepor-se.
   // Ausente/false => comportamento normal (parte por segmento quando ha >1 lingua).
   singleVoice?: boolean;
+  // Partes (texto, voz) JA RESOLVIDAS por-segmento para a sintese MISTURADA de
+  // linguas (ex. base numa lingua + girias EN numa voz inglesa). Quando presente e
+  // o MultiSegmentEngine esta ativo, cada parte e sintetizada com o seu proprio
+  // `model` e os WAVs sao concatenados. O `text`/`model` de topo continuam a ser o
+  // fallback single-voice (flag do motor OFF) e a base da chave de cache.
+  segments?: { text: string; model: string }[];
 }
 
 export interface TTSEngine {
