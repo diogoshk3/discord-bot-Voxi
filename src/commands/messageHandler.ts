@@ -9,6 +9,7 @@ import { getPronunciations } from '../store/pronunciation';
 import { getUserAbbrev } from '../store/userAbbrev';
 import { getUserVoice } from '../store/userVoice';
 import { isOptedOut } from '../store/optout';
+import { isDetectionOn } from '../store/langDetect';
 import { applyPronunciation } from '../textCleaning/pronunciation';
 import { applyUserAbbrev } from '../textCleaning/userAbbrev';
 import { expandAbbreviations, isAllEnglishAbbrev } from '../textCleaning/abbreviations';
@@ -112,7 +113,10 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
 
     // escolha de voz: a LINGUA da mensagem decide; a voz preferida (user > guild >
     // .env) e honrada quando esta na lingua do texto, senao troca para uma voz correta.
+    // Toggle por-user: se o user desligou a deteccao (auto=false), usa-se sempre a
+    // voz fixa dele (singleVoice), sem detetar a lingua do texto.
     const userVoice = getUserVoice(deps.db, message.guildId, message.author.id);
+    const auto = isDetectionOn(deps.db, message.guildId, message.author.id);
     const req = resolveSynth({
       text: spoken,
       userVoice,
@@ -121,6 +125,7 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
       defaultVoice: deps.config.defaultVoice,
       defaultSpeed: deps.config.defaultSpeed,
       forceLang,
+      autoDetect: auto,
     });
 
     await player.say(req);

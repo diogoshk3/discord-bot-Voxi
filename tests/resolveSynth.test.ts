@@ -204,6 +204,84 @@ describe('resolveSynth — forceLang (stretch: girias EM SO ingles forcam voz EN
   });
 });
 
+describe('resolveSynth — autoDetect (toggle de deteccao por-utilizador)', () => {
+  const available = ['en_US-amy-medium', 'pt_PT-tugao-medium', 'es_ES-davefx-medium'];
+
+  it('autoDetect:false => usa a voz FIXA preferida (nao depende da lingua do texto) + singleVoice:true', () => {
+    // Texto claramente PORTUGUES, mas com a deteccao DESLIGADA a voz fixa inglesa
+    // do user tem de ser honrada verbatim (nao troca para pt_).
+    const r = resolveSynth({
+      text: PT_LONG,
+      userVoice: { model: 'en_US-amy-medium', speed: 1.4 },
+      available,
+      defaultVoice: 'en_US-amy-medium',
+      defaultSpeed: 1.0,
+      autoDetect: false,
+    });
+    expect(r.model).toBe('en_US-amy-medium');
+    expect(r.speed).toBe(1.4);
+    expect(r.singleVoice).toBe(true);
+    expect(r.text).toBe(PT_LONG);
+  });
+
+  it('autoDetect:false segue a precedencia preferida (user > guild > .env) sem detetar', () => {
+    // Sem userVoice: cai no guild default; texto EN nao muda nada (deteccao OFF).
+    const r = resolveSynth({
+      text: EN_LONG,
+      userVoice: null,
+      available,
+      guildDefaultVoice: 'pt_PT-tugao-medium',
+      defaultVoice: 'en_US-amy-medium',
+      defaultSpeed: 1.1,
+      autoDetect: false,
+    });
+    expect(r.model).toBe('pt_PT-tugao-medium');
+    expect(r.speed).toBe(1.1);
+    expect(r.singleVoice).toBe(true);
+  });
+
+  it('autoDetect:false IGNORA forceLang (voz fixa manda, mesmo com girias EN)', () => {
+    // forceLang='eng' faria a deteccao escolher voz EN; com autoDetect OFF a voz
+    // fixa portuguesa do user tem de ganhar (nao depende do texto).
+    const r = resolveSynth({
+      text: 'brb omg lol',
+      userVoice: { model: 'pt_PT-tugao-medium', speed: 1.0 },
+      available,
+      defaultVoice: 'en_US-amy-medium',
+      defaultSpeed: 1.0,
+      forceLang: 'eng',
+      autoDetect: false,
+    });
+    expect(r.model).toBe('pt_PT-tugao-medium');
+    expect(r.singleVoice).toBe(true);
+  });
+
+  it('autoDetect:true mantem o comportamento de deteccao (troca voz pela lingua) sem singleVoice', () => {
+    const r = resolveSynth({
+      text: PT_LONG,
+      userVoice: { model: 'en_US-amy-medium', speed: 1.0 },
+      available,
+      defaultVoice: 'en_US-amy-medium',
+      defaultSpeed: 1.0,
+      autoDetect: true,
+    });
+    expect(r.model.startsWith('pt_')).toBe(true);
+    expect(r.singleVoice).toBeUndefined();
+  });
+
+  it('autoDetect omitido (default) => comportamento de deteccao inalterado', () => {
+    const r = resolveSynth({
+      text: PT_LONG,
+      userVoice: null,
+      available,
+      defaultVoice: 'en_US-amy-medium',
+      defaultSpeed: 1.0,
+    });
+    expect(r.model.startsWith('pt_')).toBe(true);
+    expect(r.singleVoice).toBeUndefined();
+  });
+});
+
 describe('resolveSynth — velocidade', () => {
   const available = ['en_US-amy-medium', 'pt_PT-tugao-medium'];
 

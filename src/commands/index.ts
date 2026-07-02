@@ -19,6 +19,7 @@ import { getUserVoice, setUserVoice, resetUserVoice } from '../store/userVoice';
 import { getGuildConfig, setGuildConfig, resetGuildConfig } from '../store/guildConfig';
 import { addBlockword, removeBlockword, getBlocklist } from '../store/blocklist';
 import { setOptOut, setOptIn } from '../store/optout';
+import { isDetectionOn } from '../store/langDetect';
 import {
   getPronunciations,
   addPronunciation,
@@ -592,6 +593,8 @@ async function handleTts(i: ChatInputCommandInteraction, deps: BotDeps): Promise
   }
 
   const userVoice = getUserVoice(deps.db, i.guildId!, i.user.id);
+  // Toggle por-user: deteccao OFF => usa sempre a voz fixa do user (singleVoice).
+  const auto = isDetectionOn(deps.db, i.guildId!, i.user.id);
   const req = resolveSynth({
     text: spoken,
     userVoice,
@@ -600,6 +603,7 @@ async function handleTts(i: ChatInputCommandInteraction, deps: BotDeps): Promise
     defaultVoice: deps.config.defaultVoice,
     defaultSpeed: deps.config.defaultSpeed,
     forceLang,
+    autoDetect: auto,
   });
   // say() devolve false quando a fila esta no cap (nada foi enfileirado): nesse caso
   // NAO mentir "queued" — responder que estamos ocupados. So o sinal SINCRONO de
@@ -672,7 +676,9 @@ async function handleLaugh(i: ChatInputCommandInteraction, deps: BotDeps): Promi
   const model =
     stored?.model || cfg.defaultVoice || deps.config.defaultVoice || 'en_US-amy-medium';
   const speed = stored?.speed ?? deps.config.defaultSpeed;
-  const req: SynthRequest = { text: laughterFor(localePrefixOf(model)), model, speed };
+  // singleVoice: a voz e DELIBERADAMENTE escolhida (a voz atual do user); a deteccao
+  // nunca deve sobrepor-se nem partir o riso por lingua.
+  const req: SynthRequest = { text: laughterFor(localePrefixOf(model)), model, speed, singleVoice: true };
   // say() devolve false quando a fila esta no cap: nesse caso reutilizamos tts.busy.
   const queued = await player.say(req);
   await i.editReply(queued ? t('laugh.playing', locale) : t('tts.busy', locale));
@@ -735,7 +741,8 @@ async function handleJoke(i: ChatInputCommandInteraction, deps: BotDeps): Promis
 
   // Enfileira SEMPRE a piada sozinha primeiro. O reply baseia-se NESTA fala: se a
   // fila estiver cheia (say false), respondemos busy e nao enfileiramos o riso.
-  const queued = await player.say({ text: joke, model, speed });
+  // singleVoice: a lingua da piada e CONHECIDA (escolhida), a deteccao nao manda.
+  const queued = await player.say({ text: joke, model, speed, singleVoice: true });
 
   // Se `risos` E a piada entrou na fila, enfileira o RISO como fala SEPARADA com uma
   // pausa real de 2s A FRENTE (leadSilenceMs). Assim o Voxi fala a piada, PAUSA ~2s,
@@ -748,6 +755,9 @@ async function handleJoke(i: ChatInputCommandInteraction, deps: BotDeps): Promis
       model,
       speed,
       leadSilenceMs: JOKE_LAUGH_PAUSE_MS,
+      // singleVoice: sem isto, um edge-case multi-script perderia o leadSilenceMs
+      // (o caminho por-segmento chama base.synth sem ele). A lingua e conhecida.
+      singleVoice: true,
     });
   }
 
@@ -904,7 +914,9 @@ async function handleVoice(i: ChatInputCommandInteraction, deps: BotDeps): Promi
       deps.config.defaultVoice ||
       'en_US-amy-medium';
     const speed = stored?.speed ?? deps.config.defaultSpeed;
-    const req: SynthRequest = { text: SAMPLE, model, speed };
+    // singleVoice: o preview e um DEMO de UMA voz especifica; a deteccao nunca deve
+    // sobrepor-se nem partir a frase-amostra por lingua.
+    const req: SynthRequest = { text: SAMPLE, model, speed, singleVoice: true };
     // say() devolve false quando a fila esta no cap: nesse caso NAO mentir "a
     // reproduzir" — reutilizamos a mesma chave tts.busy do /tts (consistencia).
     const queued = await player.say(req);

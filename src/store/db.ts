@@ -55,6 +55,15 @@ export function initDb(path: string): Database.Database {
         replacement TEXT NOT NULL,
         PRIMARY KEY (user_id, term)
       );
+
+      -- Toggle da DETECAO AUTOMATICA de lingua por-(guild,user). Espelha tts_optout:
+      -- a deteccao esta LIGADA por defeito, por isso so guardamos os utilizadores que
+      -- a DESLIGARAM (uma linha aqui => deteccao OFF; sem linha => ON).
+      CREATE TABLE IF NOT EXISTS tts_lang_detect_off (
+        guild_id TEXT NOT NULL,
+        user_id  TEXT NOT NULL,
+        PRIMARY KEY (guild_id, user_id)
+      );
     `);
 
     // Migracao idempotente para DBs criadas antes da coluna tts_role_id existir.

@@ -18,6 +18,15 @@ export interface ResolveSynthInput {
    * ingles. Vazio/undefined = comportamento normal (detetar a lingua do texto).
    */
   forceLang?: string;
+  /**
+   * Toggle da DETECAO AUTOMATICA de lingua (default ON quando omitido). Quando
+   * `false`, a deteccao e SALTADA: usa-se a voz FIXA preferida (precedencia
+   * user > guild > .env > amy), a velocidade normal, e o pedido sai com
+   * `singleVoice:true` — a voz escolhida e lida verbatim, sem split por lingua e
+   * SEM depender do texto (nem sequer o `forceLang` conta). Quando `true`/omitido,
+   * comportamento normal (deteta a lingua e escolhe a voz por lingua).
+   */
+  autoDetect?: boolean;
 }
 
 /**
@@ -34,16 +43,24 @@ export interface ResolveSynthInput {
  * Velocidade: quando ha voz de user usa-se `userVoice.speed`; senao `defaultSpeed`.
  */
 export function resolveSynth(input: ResolveSynthInput): SynthRequest {
-  // forceLang (quando presente) sobrepoe-se a deteccao: o texto e SO girias EN e
-  // sabemos a lingua com certeza, por isso nao dependemos do `detectLang` (que em
-  // texto curto pode devolver '').
-  const lang = input.forceLang || detectLang(input.text);
   const speed = input.userVoice ? input.userVoice.speed : input.defaultSpeed;
   const preferred =
     (input.userVoice && input.userVoice.model) ||
     input.guildDefaultVoice ||
     input.defaultVoice ||
     'en_US-amy-medium';
+
+  // Deteccao DESLIGADA (toggle por-user): salta a deteccao por completo. Usa a voz
+  // FIXA preferida verbatim, marca singleVoice para o motor NUNCA partir por lingua,
+  // e NAO olha para a lingua do texto (nem para o forceLang) — a escolha do user manda.
+  if (input.autoDetect === false) {
+    return { text: input.text, model: preferred, speed, singleVoice: true };
+  }
+
+  // forceLang (quando presente) sobrepoe-se a deteccao: o texto e SO girias EN e
+  // sabemos a lingua com certeza, por isso nao dependemos do `detectLang` (que em
+  // texto curto pode devolver '').
+  const lang = input.forceLang || detectLang(input.text);
   const model = pickVoiceForLang(lang, input.available, preferred);
   return { text: input.text, model, speed };
 }
