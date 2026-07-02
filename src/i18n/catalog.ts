@@ -143,6 +143,17 @@ export const catalog: Record<string, Entry> = {
     en: "You'll be read automatically again.",
     pt: 'Voltas a ser lido automaticamente.',
   },
+  // /voice detection — liga/desliga a deteccao AUTOMATICA de lingua para o proprio.
+  // ON (default): deteta a lingua e mistura vozes num texto multi-lingua. OFF: usa
+  // sempre a voz fixa escolhida (a mensagem OFF aponta para /voice set).
+  'voice.detection.on': {
+    en: '✅ Automatic language detection is **on** — I read in the language you speak and mix voices for multi-language messages.',
+    pt: '✅ Deteção automática de língua **ligada** — leio na língua em que escreves e misturo vozes em mensagens multilíngues.',
+  },
+  'voice.detection.off': {
+    en: "✅ Automatic language detection is **off** — I'll always use your chosen voice. Pick it with `/voice set`.",
+    pt: '✅ Deteção automática de língua **desligada** — vou usar sempre a tua voz escolhida. Escolhe-a com `/voice set`.',
+  },
   'voice.notInVoice': {
     en: "I'm not in a voice channel yet — run /join first.",
     pt: 'Ainda nao estou num canal de voz — usa /join primeiro.',
@@ -607,6 +618,7 @@ export const catalog: Record<string, Entry> = {
       '• /voice list — see the available voices\n' +
       '• /voice preview — hear a sample of your voice\n' +
       '• /voice reset — go back to the default voice\n' +
+      '• /voice detection <on/off> — auto-detect language & mix voices (on by default)\n' +
       '• /voice optout · /voice optin — turn auto-read off / on for you\n' +
       '• /voice abbrev add|remove|list — personal slang, read your way (up to 10)',
     pt:
@@ -614,6 +626,7 @@ export const catalog: Record<string, Entry> = {
       '• /voice list — ve as vozes disponiveis\n' +
       '• /voice preview — ouve uma amostra da tua voz\n' +
       '• /voice reset — volta a voz por defeito\n' +
+      '• /voice detection <on/off> — deteta a lingua & mistura vozes (ligado por defeito)\n' +
       '• /voice optout · /voice optin — desliga / liga a leitura automatica para ti\n' +
       '• /voice abbrev add|remove|list — girias pessoais, lidas a tua maneira (ate 10)',
   },

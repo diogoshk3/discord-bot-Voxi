@@ -19,7 +19,7 @@ import { getUserVoice, setUserVoice, resetUserVoice } from '../store/userVoice';
 import { getGuildConfig, setGuildConfig, resetGuildConfig } from '../store/guildConfig';
 import { addBlockword, removeBlockword, getBlocklist } from '../store/blocklist';
 import { setOptOut, setOptIn } from '../store/optout';
-import { isDetectionOn } from '../store/langDetect';
+import { isDetectionOn, setDetection } from '../store/langDetect';
 import {
   getPronunciations,
   addPronunciation,
@@ -211,6 +211,18 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
             .setDescription('Piper model (optional)')
             .setRequired(false)
             .setAutocomplete(true),
+        ),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName('detection')
+        .setDescription('Turn automatic language detection on/off')
+        .addBooleanOption((o) =>
+          o
+            .setName('active')
+            .setNameLocalizations({ 'pt-BR': 'ativo' })
+            .setDescription('Turn automatic language detection on/off')
+            .setRequired(true),
         ),
     )
     .addSubcommandGroup((g) =>
@@ -829,6 +841,23 @@ async function handleVoiceAbbrev(
   await reply(i, t('voice.abbrev.removed', locale, { term: term.toLowerCase() }));
 }
 
+/**
+ * /voice detection active:<bool> — liga/desliga a DETECAO AUTOMATICA de lingua para
+ * o proprio utilizador (por-guild). Por-utilizador (sem gate de admin), sob o /voice.
+ * ON (default): o Voxi deteta a lingua da mensagem e le nessa lingua, misturando
+ * vozes num texto multi-lingua. OFF: usa sempre a voz fixa escolhida (/voice set).
+ * Resposta i18n no locale do proprio (localeForUser).
+ */
+async function handleVoiceDetection(
+  i: ChatInputCommandInteraction,
+  deps: BotDeps,
+  locale: string,
+): Promise<void> {
+  const active = i.options.getBoolean('active', true);
+  setDetection(deps.db, i.guildId!, i.user.id, active);
+  await reply(i, active ? t('voice.detection.on', locale) : t('voice.detection.off', locale));
+}
+
 async function handleVoice(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
   const locale = localeForUser(deps, i);
   // Grupo `abbrev` PRIMEIRO (mesmo padrao do handleConfig): sem isto, o subcomando
@@ -841,6 +870,10 @@ async function handleVoice(i: ChatInputCommandInteraction, deps: BotDeps): Promi
     return;
   }
   const sub = i.options.getSubcommand();
+  if (sub === 'detection') {
+    await handleVoiceDetection(i, deps, locale);
+    return;
+  }
   if (sub === 'set') {
     const model = i.options.getString('model', true);
     if (!deps.availableModels.includes(model)) {
