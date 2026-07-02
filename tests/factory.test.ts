@@ -82,12 +82,12 @@ describe('selectEngine (flag MULTILINGUAL_SEGMENTS)', () => {
     rmSync(dir, { recursive: true, force: true });
   });
 
-  it('flag OFF (default) -> devolve o motor base TAL E QUAL (identidade ===)', () => {
+  it('flag OFF (forcada via env) -> devolve o motor base TAL E QUAL (identidade ===)', () => {
     const engine = selectEngine(base, baseConfig({ multilingualSegments: false }), AVAILABLE, cache);
     expect(engine).toBe(base);
   });
 
-  it('flag ON -> embrulha o base num MultiSegmentEngine', () => {
+  it('flag ON (default) -> embrulha o base num MultiSegmentEngine', () => {
     const engine = selectEngine(base, baseConfig({ multilingualSegments: true }), AVAILABLE, cache);
     expect(engine).toBeInstanceOf(MultiSegmentEngine);
     expect(engine).not.toBe(base);

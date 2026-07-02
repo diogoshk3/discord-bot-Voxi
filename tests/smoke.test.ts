@@ -29,6 +29,7 @@ import { AudioCache } from '../src/tts/cache';
 import { createEngine, selectEngine } from '../src/tts/factory';
 import { buildPresence } from '../src/bot/presence';
 import { commandDefs } from '../src/commands/index';
+import { MultiSegmentEngine } from '../src/tts/multiSegment';
 import type Database from 'better-sqlite3';
 
 // Replica local dos 3 lines de discoverModels (privado em index.ts, nao exportado —
@@ -120,12 +121,14 @@ describe('smoke: boot sem token (monta deps reais sem ligar ao Discord)', () => 
       expect(Array.isArray(availableModels)).toBe(true);
       expect(availableModels).toEqual([]);
 
-      // 4) motor TTS real (piper) + selectEngine (flag OFF -> base tal e qual)
+      // 4) motor TTS real (piper) + selectEngine (flag ON por defeito -> embrulha
+      // o base num MultiSegmentEngine, que mistura vozes por lingua)
       const baseEngine = createEngine(config, cache);
       const engine = selectEngine(baseEngine, config, availableModels, cache);
       expect(typeof engine.synth).toBe('function');
-      // flag OFF (default) -> selectEngine devolve o base intacto
-      expect(engine).toBe(baseEngine);
+      // multilingualSegments ON por defeito -> selectEngine embrulha o base
+      expect(config.multilingualSegments).toBe(true);
+      expect(engine).toBeInstanceOf(MultiSegmentEngine);
 
       // 5) presenca (funcao pura) -> tem atividades
       const presence = buildPresence(config);

@@ -25,9 +25,10 @@ export interface AppConfig {
   // Secret ausente => webhook sem auth (inseguro; recomenda-se sempre defini-lo).
   topggWebhookPort?: number;
   topggWebhookSecret?: string;
-  // P14.4 — flag EXPERIMENTAL (default OFF). Quando ON, textos com mais do que
-  // uma lingua sao sintetizados POR-SEGMENTO (voz certa por lingua) e os WAVs
-  // concatenados. OFF => comportamento inalterado (voz unica por frase).
+  // Sintese multi-lingua por-segmento (default ON). Quando ON, textos com mais do
+  // que uma lingua sao sintetizados POR-SEGMENTO (voz certa por lingua) e os WAVs
+  // concatenados — o Voxi mistura vozes como uma pessoa real. Pode ser FORCADA a
+  // OFF globalmente via env MULTILINGUAL_SEGMENTS=false (voz unica por frase).
   multilingualSegments: boolean;
   // Params de QUALIDADE de sintese do Piper, configuraveis globalmente. Defaults =
   // preset ORGANICO "forte" (0.75 / 0.95 / 0.4s), escolhido em A/B pelo operador
@@ -74,14 +75,16 @@ function numEnvOptional(name: string): number | undefined {
 }
 
 /**
- * Flag booleana OPT-IN: default `false`. So o valor exato 'true' (case-insensitive)
- * liga; qualquer outra coisa (ausente, vazio, '1', 'yes', typo) fica `false`.
- * Escolha conservadora — uma feature experimental so liga com intencao explicita.
+ * Flag booleana OPT-OUT (default `true`): a feature esta LIGADA a menos que a env
+ * a desligue EXPLICITAMENTE. So o valor exato 'false' (case-insensitive) desliga;
+ * qualquer outra coisa (ausente, vazio, 'true', '1', typo) fica ON. E o espelho do
+ * boolEnv para features que sao o comportamento por defeito mas queremos um
+ * kill-switch global via env.
  */
-function boolEnv(name: string): boolean {
+function boolEnvDefaultOn(name: string): boolean {
   const raw = process.env[name];
-  if (raw === undefined) return false;
-  return raw.trim().toLowerCase() === 'true';
+  if (raw === undefined) return true;
+  return raw.trim().toLowerCase() !== 'false';
 }
 
 /**
@@ -141,9 +144,10 @@ export function loadConfig(): AppConfig {
     // dedicada, separada do HEALTH_PORT de proposito.
     topggWebhookPort: numEnvOptional('TOPGG_WEBHOOK_PORT'),
     topggWebhookSecret: strEnv('TOPGG_WEBHOOK_SECRET', '') || undefined,
-    // P14.4 — sintese multi-lingua por-segmento (EXPERIMENTAL). Default OFF: sem
-    // esta env (ou != 'true'), o comportamento e exatamente o de hoje (voz unica).
-    multilingualSegments: boolEnv('MULTILINGUAL_SEGMENTS'),
+    // Sintese multi-lingua por-segmento — LIGADA por defeito: sem esta env (ou com
+    // qualquer valor != 'false'), o Voxi mistura vozes por lingua. Kill-switch
+    // global: MULTILINGUAL_SEGMENTS=false forca voz unica por frase.
+    multilingualSegments: boolEnvDefaultOn('MULTILINGUAL_SEGMENTS'),
     // Params de qualidade Piper. Defaults = preset ORGANICO (fonte unica em
     // PIPER_DEFAULT_SYNTH_PARAMS = 0.75/0.95/0.4). numEnv faz parsing seguro:
     // env ausente/vazia/nao-numerica cai no default; env valida ganha por cima.

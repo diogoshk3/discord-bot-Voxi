@@ -236,17 +236,19 @@ describe('loadConfig', () => {
     expect(loadConfig().shards).toBeUndefined();
   });
 
-  // P14.4 — MULTILINGUAL_SEGMENTS (flag EXPERIMENTAL, default OFF). Ausente/vazio
-  // => false (comportamento inalterado: voz unica por frase). 'true' => true.
-  // Parsing booleano tolerante como as outras flags do modulo.
-  it('multilingualSegments defaults to false when MULTILINGUAL_SEGMENTS missing', () => {
+  // MULTILINGUAL_SEGMENTS — sintese multi-lingua por-segmento. Passou a estar
+  // LIGADA por defeito: sem a env (ou com valor "vazio"/nao-'false'), fica true —
+  // o Voxi mistura vozes por lingua tal como uma pessoa real. A env pode FORCAR o
+  // desligamento GLOBAL com o valor exato 'false' (case-insensitive). So 'false'
+  // desliga; qualquer outra coisa (ausente, vazio, 'true', typo) fica ON.
+  it('multilingualSegments defaults to TRUE when MULTILINGUAL_SEGMENTS missing', () => {
     setEnv(REQUIRED);
-    expect(loadConfig().multilingualSegments).toBe(false);
+    expect(loadConfig().multilingualSegments).toBe(true);
   });
 
-  it('multilingualSegments false when MULTILINGUAL_SEGMENTS empty', () => {
+  it('multilingualSegments TRUE when MULTILINGUAL_SEGMENTS empty', () => {
     setEnv({ ...REQUIRED, MULTILINGUAL_SEGMENTS: '' });
-    expect(loadConfig().multilingualSegments).toBe(false);
+    expect(loadConfig().multilingualSegments).toBe(true);
   });
 
   it('reads MULTILINGUAL_SEGMENTS=true as true', () => {
@@ -254,18 +256,23 @@ describe('loadConfig', () => {
     expect(loadConfig().multilingualSegments).toBe(true);
   });
 
-  it('MULTILINGUAL_SEGMENTS is case-insensitive (TRUE / True -> true)', () => {
-    setEnv({ ...REQUIRED, MULTILINGUAL_SEGMENTS: 'TRUE' });
-    expect(loadConfig().multilingualSegments).toBe(true);
-    setEnv({ ...REQUIRED, MULTILINGUAL_SEGMENTS: 'True' });
-    expect(loadConfig().multilingualSegments).toBe(true);
+  it('MULTILINGUAL_SEGMENTS=false forces it OFF (global kill-switch)', () => {
+    setEnv({ ...REQUIRED, MULTILINGUAL_SEGMENTS: 'false' });
+    expect(loadConfig().multilingualSegments).toBe(false);
   });
 
-  it('MULTILINGUAL_SEGMENTS with a non-true value (e.g. "1"/"yes") stays false (only "true" enables)', () => {
+  it('MULTILINGUAL_SEGMENTS=false is case-insensitive (FALSE / False -> off)', () => {
+    setEnv({ ...REQUIRED, MULTILINGUAL_SEGMENTS: 'FALSE' });
+    expect(loadConfig().multilingualSegments).toBe(false);
+    setEnv({ ...REQUIRED, MULTILINGUAL_SEGMENTS: 'False' });
+    expect(loadConfig().multilingualSegments).toBe(false);
+  });
+
+  it('MULTILINGUAL_SEGMENTS with a non-false value (e.g. "1"/"yes") stays ON (only "false" disables)', () => {
     setEnv({ ...REQUIRED, MULTILINGUAL_SEGMENTS: '1' });
-    expect(loadConfig().multilingualSegments).toBe(false);
+    expect(loadConfig().multilingualSegments).toBe(true);
     setEnv({ ...REQUIRED, MULTILINGUAL_SEGMENTS: 'yes' });
-    expect(loadConfig().multilingualSegments).toBe(false);
+    expect(loadConfig().multilingualSegments).toBe(true);
   });
 
   // Params de qualidade Piper (noiseScale/noiseW/sentenceSilence). Defaults =

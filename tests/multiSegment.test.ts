@@ -96,6 +96,33 @@ describe('MultiSegmentEngine — flag ON (caminho por-segmento)', () => {
     expect(dataSize).toBeGreaterThan(8);
   });
 
+  it('req.singleVoice=true -> delega no base TAL E QUAL mesmo com texto multi-script (nunca parte)', async () => {
+    const { engine: base, calls } = makeBase();
+    const eng = new MultiSegmentEngine(base, AVAILABLE, cache);
+    const en = 'good morning to all the members of this server i hope you are doing well';
+    const ru =
+      'привет всем участникам этого замечательного сервера сегодня прекрасный день друзья';
+    // Texto MULTI-SCRIPT (EN + RU) que normalmente SERIA partido, mas singleVoice
+    // desliga o split: e a voz deliberadamente escolhida (ex. /voice preview, /joke)
+    // que tem de ser honrada verbatim, incl. leadSilenceMs.
+    const req: SynthRequest = {
+      text: `${en}. ${ru}`,
+      model: 'de_DE-thorsten-medium',
+      speed: 1,
+      singleVoice: true,
+      leadSilenceMs: 1000,
+    };
+
+    await eng.synth(req);
+
+    // Uma unica chamada ao base, com o req INTACTO (model, texto completo e
+    // leadSilenceMs preservados). Nao ha sintese por-segmento.
+    expect(calls).toHaveLength(1);
+    expect(calls[0].model).toBe('de_DE-thorsten-medium');
+    expect(calls[0].text).toBe(req.text);
+    expect(calls[0].leadSilenceMs).toBe(1000);
+  });
+
   it('texto monolingue -> 1 unico segmento -> UMA chamada ao base com o req INTACTO (respeita req.model)', async () => {
     const { engine: base, calls } = makeBase();
     const eng = new MultiSegmentEngine(base, AVAILABLE, cache);

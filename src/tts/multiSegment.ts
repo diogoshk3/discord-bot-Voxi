@@ -38,6 +38,14 @@ export class MultiSegmentEngine implements TTSEngine {
   }
 
   async synth(req: SynthRequest): Promise<string> {
+    // Gate single-voice: quando o pedido pede explicitamente UMA voz (voz
+    // deliberadamente escolhida — /voice preview, /joke, /laugh, ou o toggle de
+    // deteccao por-user desligado), NUNCA partimos por segmento. Delega no base com
+    // o req INTACTO (honra `model` e `leadSilenceMs`). Verificado ANTES do split.
+    if (req.singleVoice) {
+      return this.base.synth(req);
+    }
+
     const segments = detectSegments(req.text);
 
     // 0 ou 1 segmento (o caso COMUM: texto monolingue) -> nada a combinar.
