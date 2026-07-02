@@ -144,15 +144,16 @@ export const catalog: Record<string, Entry> = {
     pt: 'Voltas a ser lido automaticamente.',
   },
   // /voice detection — liga/desliga a deteccao AUTOMATICA de lingua para o proprio.
-  // ON (default): deteta a lingua e mistura vozes num texto multi-lingua. OFF: usa
-  // sempre a voz fixa escolhida (a mensagem OFF aponta para /voice set).
+  // DEFAULT = OFF (voz UNICA fixa p/ todas as linguas — parece a mesma pessoa). ON e
+  // opt-in: voz nativa por lingua, MAS pode trocar de locutor. A mensagem OFF aponta
+  // para /voice set (a "definicao" para trocar a voz).
   'voice.detection.on': {
-    en: '✅ Automatic language detection is **on** — I read in the language you speak and mix voices for multi-language messages.',
-    pt: '✅ Deteção automática de língua **ligada** — leio na língua em que escreves e misturo vozes em mensagens multilíngues.',
+    en: '✅ Per-language detection is **on** — each language is read by its native voice, so the speaker may change between languages.',
+    pt: '✅ Deteção por-língua **ligada** — cada língua é lida pela sua voz nativa, por isso o locutor pode mudar entre línguas.',
   },
   'voice.detection.off': {
-    en: "✅ Automatic language detection is **off** — I'll always use your chosen voice. Pick it with `/voice set`.",
-    pt: '✅ Deteção automática de língua **desligada** — vou usar sempre a tua voz escolhida. Escolhe-a com `/voice set`.',
+    en: "✅ Per-language detection is **off** (default) — one single voice reads everything, in every language. Pick it with `/voice set`.",
+    pt: '✅ Deteção por-língua **desligada** (padrão) — uma só voz lê tudo, em qualquer língua. Escolhe-a com `/voice set`.',
   },
   'voice.notInVoice': {
     en: "I'm not in a voice channel yet — run /join first.",
@@ -622,7 +623,7 @@ export const catalog: Record<string, Entry> = {
       '• /voice list — see the available voices\n' +
       '• /voice preview — hear a sample of your voice\n' +
       '• /voice reset — go back to the default voice\n' +
-      '• /voice detection <on/off> — auto-detect language & mix voices (on by default)\n' +
+      '• /voice detection <on/off> — native voice per language, speaker may change (off by default: one fixed voice)\n' +
       '• /voice optout · /voice optin — turn auto-read off / on for you\n' +
       '• /voice abbrev add|remove|list — personal slang, read your way (up to 10)',
     pt:
@@ -630,7 +631,7 @@ export const catalog: Record<string, Entry> = {
       '• /voice list — ve as vozes disponiveis\n' +
       '• /voice preview — ouve uma amostra da tua voz\n' +
       '• /voice reset — volta a voz por defeito\n' +
-      '• /voice detection <on/off> — deteta a lingua & mistura vozes (ligado por defeito)\n' +
+      '• /voice detection <on/off> — voz nativa por lingua, o locutor pode mudar (desligado por defeito: uma voz fixa)\n' +
       '• /voice optout · /voice optin — desliga / liga a leitura automatica para ti\n' +
       '• /voice abbrev add|remove|list — girias pessoais, lidas a tua maneira (ate 10)',
   },

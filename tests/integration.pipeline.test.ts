@@ -39,6 +39,7 @@ import { addBlockword } from '../src/store/blocklist';
 import { setOptOut } from '../src/store/optout';
 import { addPronunciation } from '../src/store/pronunciation';
 import { addUserAbbrev } from '../src/store/userAbbrev';
+import { setDetection } from '../src/store/langDetect';
 
 const GUILD = 'g-integration';
 const CHAN = 'chan-autoread';
@@ -132,6 +133,10 @@ describe('pipeline central — integracao end-to-end (store real + player falso)
       enabled: true,
       defaultVoice: '',
     });
+    // A deteccao de lingua->voz e agora OPT-IN (default OFF = voz unica fixa). Este
+    // teste exercita DELIBERADAMENTE o caminho de deteccao ("voz certa" por lingua),
+    // por isso ligamo-la explicitamente para o USER.
+    setDetection(db, GUILD, USER, true);
   });
 
   afterEach(() => {

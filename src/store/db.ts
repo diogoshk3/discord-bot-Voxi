@@ -56,10 +56,20 @@ export function initDb(path: string): Database.Database {
         PRIMARY KEY (user_id, term)
       );
 
-      -- Toggle da DETECAO AUTOMATICA de lingua por-(guild,user). Espelha tts_optout:
-      -- a deteccao esta LIGADA por defeito, por isso so guardamos os utilizadores que
-      -- a DESLIGARAM (uma linha aqui => deteccao OFF; sem linha => ON).
+      -- (LEGADO) Tabela antiga do toggle de deteccao quando o default era ON: guardava
+      -- quem a DESLIGOU. Ja NAO e lida (ver tts_lang_detect_on abaixo). Mantida so para
+      -- nao falhar em DBs antigas; pode ser removida numa limpeza futura.
       CREATE TABLE IF NOT EXISTS tts_lang_detect_off (
+        guild_id TEXT NOT NULL,
+        user_id  TEXT NOT NULL,
+        PRIMARY KEY (guild_id, user_id)
+      );
+
+      -- Toggle da DETECAO AUTOMATICA de lingua por-(guild,user). O DEFAULT passou a
+      -- OFF (voz UNICA fixa para todas as linguas — a pessoa parece a mesma). Por isso
+      -- guardamos agora quem a LIGOU (opt-in): uma linha aqui => deteccao ON (voz
+      -- nativa por lingua, pode trocar de locutor); sem linha => OFF (voz fixa).
+      CREATE TABLE IF NOT EXISTS tts_lang_detect_on (
         guild_id TEXT NOT NULL,
         user_id  TEXT NOT NULL,
         PRIMARY KEY (guild_id, user_id)

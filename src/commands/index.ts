@@ -215,12 +215,12 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
     .addSubcommand((s) =>
       s
         .setName('detection')
-        .setDescription('Turn automatic language detection on/off')
+        .setDescription('Native voice per language (speaker may change). Off by default: one fixed voice.')
         .addBooleanOption((o) =>
           o
             .setName('active')
             .setNameLocalizations({ 'pt-BR': 'ativo' })
-            .setDescription('Turn automatic language detection on/off')
+            .setDescription('On = native voice per language; Off (default) = your one fixed voice for everything')
             .setRequired(true),
         ),
     )

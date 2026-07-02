@@ -56,25 +56,41 @@ describe('handleMessage — toggle de deteccao de lingua por-utilizador', () => 
     db.close();
   });
 
-  it('deteccao ON (default): texto PT com voz fixa inglesa => troca para voz pt_', async () => {
+  it('deteccao OFF (DEFAULT): texto PT com voz fixa inglesa => mantem a voz fixa (singleVoice)', async () => {
+    // Sem setDetection: o default e agora OFF (voz unica fixa p/ todas as linguas).
     setUserVoice(db, GUILD, USER, 'en_US-amy-medium', 1.0);
+    const say = vi.fn().mockResolvedValue(undefined);
+    await handleMessage(makePtMessage(), makeDeps(db, say));
+    expect(say).toHaveBeenCalledTimes(1);
+    const req = say.mock.calls[0][0];
+    // Voz FIXA do user manda, mesmo em texto de outra lingua. Uma so voz.
+    expect(req.model).toBe('en_US-amy-medium');
+    expect(req.singleVoice).toBe(true);
+  });
+
+  it('deteccao OFF (DEFAULT): frase mista (PT + giria EN "btw") => UMA so voz fixa, sem trocar a meio', async () => {
+    // O cenario exato do Diogo: "btw eu tou a saltar de um lago". Com o default OFF,
+    // NAO ha split por segmento — tudo sai na voz fixa (parece a mesma pessoa).
+    setUserVoice(db, GUILD, USER, 'pt_PT-tugao-medium', 1.0);
+    const msg = makePtMessage();
+    msg.content = 'btw eu tou a saltar de um lago';
+    const say = vi.fn().mockResolvedValue(undefined);
+    await handleMessage(msg, makeDeps(db, say));
+    expect(say).toHaveBeenCalledTimes(1);
+    const req = say.mock.calls[0][0];
+    expect(req.model).toBe('pt_PT-tugao-medium');
+    expect(req.singleVoice).toBe(true);
+    expect(req.segments).toBeUndefined(); // sem segmentos mistos
+  });
+
+  it('deteccao ON (opt-in): texto PT com voz fixa inglesa => troca para voz pt_ nativa', async () => {
+    setUserVoice(db, GUILD, USER, 'en_US-amy-medium', 1.0);
+    setDetection(db, GUILD, USER, true); // opt-in explicito
     const say = vi.fn().mockResolvedValue(undefined);
     await handleMessage(makePtMessage(), makeDeps(db, say));
     expect(say).toHaveBeenCalledTimes(1);
     const req = say.mock.calls[0][0];
     // Deteccao ligada: a lingua da mensagem manda => troca para pt_.
     expect(req.model.startsWith('pt_')).toBe(true);
-  });
-
-  it('deteccao OFF: texto PT com voz fixa inglesa => mantem a voz inglesa (singleVoice)', async () => {
-    setUserVoice(db, GUILD, USER, 'en_US-amy-medium', 1.0);
-    setDetection(db, GUILD, USER, false);
-    const say = vi.fn().mockResolvedValue(undefined);
-    await handleMessage(makePtMessage(), makeDeps(db, say));
-    expect(say).toHaveBeenCalledTimes(1);
-    const req = say.mock.calls[0][0];
-    // Deteccao desligada: usa a voz FIXA do user, mesmo com texto de outra lingua.
-    expect(req.model).toBe('en_US-amy-medium');
-    expect(req.singleVoice).toBe(true);
   });
 });
