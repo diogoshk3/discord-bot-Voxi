@@ -1,11 +1,12 @@
 // src/tts/piper.ts
 import { spawn } from 'node:child_process';
 import { mkdtempSync, existsSync, statSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { tmpdir, cpus } from 'node:os';
 import { join } from 'node:path';
 import type { SynthRequest, TTSEngine } from './engine';
 import { AudioCache, cacheKey } from './cache';
 import { concatWavs, silenceWav } from './wavConcat';
+import { Semaphore } from './semaphore';
 import {
   lengthScaleFor,
   synthParamsFor,
@@ -14,6 +15,28 @@ import {
 } from './calibration';
 
 const PIPER_TIMEOUT_MS = 15000;
+
+/**
+ * Cap de CONCORRENCIA de spawns do piper.exe. Cada sintese (cache MISS) arranca um
+ * processo; sem limite, muitas guilds a falar em simultaneo fariam um "stampede" de
+ * processos (CPU/RAM). Default = `max(1, nucleos-1)`; override por `PIPER_MAX_CONCURRENCY`
+ * (inteiro positivo). Lido UMA vez ao carregar o modulo.
+ */
+export function resolvePiperConcurrency(): number {
+  const env = process.env.PIPER_MAX_CONCURRENCY;
+  if (env !== undefined && env.trim() !== '') {
+    const n = Number(env);
+    if (Number.isInteger(n) && n > 0) return n;
+  }
+  return Math.max(1, cpus().length - 1);
+}
+
+/**
+ * Semaforo GLOBAL de spawns do Piper, partilhado por TODAS as instancias de
+ * PiperEngine (na pratica ha uma so, criada na factory e usada por todas as guilds).
+ * So o SPAWN (cache miss) consome permit; cache hits nunca esperam.
+ */
+const globalPiperSemaphore = new Semaphore(resolvePiperConcurrency());
 
 /**
  * Valida que `model` e um nome de modelo seguro para compor o caminho do .onnx.
@@ -38,17 +61,22 @@ export class PiperEngine implements TTSEngine {
   // opcional: ausente => preset ORGANICO (PIPER_DEFAULT_SYNTH_PARAMS = 0.75/0.95/0.4).
   // A config (factory) injeta aqui os valores globais vindos das envs NOISE_*.
   private readonly synthDefaults: SynthParams;
+  // Semaforo de concorrencia dos spawns. Default = o GLOBAL (partilhado); injetavel
+  // nos testes para exercitar o cap de forma deterministica.
+  private readonly semaphore: Semaphore;
 
   constructor(
     piperPath: string,
     modelsDir: string,
     cache: AudioCache,
     synthDefaults: SynthParams = PIPER_DEFAULT_SYNTH_PARAMS,
+    semaphore: Semaphore = globalPiperSemaphore,
   ) {
     this.piperPath = piperPath;
     this.modelsDir = modelsDir;
     this.cache = cache;
     this.synthDefaults = synthDefaults;
+    this.semaphore = semaphore;
   }
 
   async synth(req: SynthRequest): Promise<string> {
@@ -74,7 +102,16 @@ export class PiperEngine implements TTSEngine {
     const outPath = join(workDir, 'out.wav');
 
     try {
-      await this.runPiper(modelPath, outPath, lengthScale, params, req.text);
+      // Cap global de spawns: adquire um permit (sincrono se houver livre — preserva
+      // o spawn sincrono do caminho sem contencao; espera FIFO se estiverem todos
+      // ocupados) e liberta-o assim que o processo termina (finally). So o SPAWN e
+      // limitado; a cache foi consultada acima sem consumir permit.
+      const release = this.semaphore.tryAcquire() ?? (await this.semaphore.acquire());
+      try {
+        await this.runPiper(modelPath, outPath, lengthScale, params, req.text);
+      } finally {
+        release();
+      }
 
       if (!existsSync(outPath) || statSync(outPath).size === 0) {
         throw new Error('Piper nao gerou WAV (ficheiro vazio ou inexistente)');
