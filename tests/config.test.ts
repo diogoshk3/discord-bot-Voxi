@@ -80,7 +80,7 @@ describe('loadConfig', () => {
     setEnv(REQUIRED);
     const cfg = loadConfig();
     expect(cfg.defaultSpeed).toBe(1);
-    expect(cfg.inactivityMs).toBe(300000);
+    expect(cfg.inactivityMs).toBe(1_500_000); // 25 min
     expect(cfg.queueCap).toBe(20);
     expect(cfg.maxChars).toBe(300);
     expect(cfg.ratePerMin).toBe(5);

@@ -114,7 +114,7 @@ export function loadConfig(): AppConfig {
     dbPath: strEnv('DB_PATH', './tts.db'),
     defaultVoice: strEnv('DEFAULT_VOICE', 'en_US-amy-medium'),
     defaultSpeed: numEnv('DEFAULT_SPEED', 1),
-    inactivityMs: numEnv('INACTIVITY_MS', 300000),
+    inactivityMs: numEnv('INACTIVITY_MS', 1_500_000), // 25 min sem atividade -> sai do canal
     queueCap: numEnv('QUEUE_CAP', 20),
     maxChars: numEnv('MAX_CHARS', 300),
     ratePerMin: numEnv('RATE_PER_MIN', 5),
