@@ -81,7 +81,7 @@ describe('loadConfig', () => {
     const cfg = loadConfig();
     expect(cfg.defaultSpeed).toBe(1);
     expect(cfg.inactivityMs).toBe(1_500_000); // 25 min
-    expect(cfg.messageLeadMs).toBe(1500); // 1.5s de silêncio antes de falar
+    expect(cfg.messageLeadMs).toBe(250); // 0.25s de silêncio antes de falar
     expect(cfg.queueCap).toBe(20);
     expect(cfg.maxChars).toBe(300);
     expect(cfg.ratePerMin).toBe(5);
