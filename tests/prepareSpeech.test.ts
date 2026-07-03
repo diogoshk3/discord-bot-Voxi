@@ -56,6 +56,43 @@ describe('prepareSpeech — MISTURADO (voz por-segmento)', () => {
   });
 });
 
+describe('prepareSpeech — /pronunciation sobrepoe a lista de girias embutida', () => {
+  it('OFF: pronuncia btw->batata GANHA a giria (nao "by the way")', () => {
+    const { spoken, req } = prepareSpeech({
+      ...BASE,
+      personal: 'btw',
+      pronunciations: [{ term: 'btw', replacement: 'batata' }],
+      userVoice: { model: 'es_ES-davefx-medium', speed: 1 },
+      autoDetect: false,
+    });
+    expect(spoken).toBe('batata');
+    expect(req.singleVoice).toBe(true);
+  });
+
+  it('OFF: SEM pronuncia, btw expande normalmente para "by the way"', () => {
+    const { spoken } = prepareSpeech({
+      ...BASE,
+      personal: 'btw',
+      userVoice: { model: 'es_ES-davefx-medium', speed: 1 },
+      autoDetect: false,
+    });
+    expect(spoken).toBe('by the way');
+  });
+
+  it('ON: pronuncia btw->batata evita o split de giria (uma voz base, sem "by the way")', () => {
+    const { req, spoken } = prepareSpeech({
+      ...BASE,
+      personal: 'isto esta a funcionar muito bem hoje btw',
+      pronunciations: [{ term: 'btw', replacement: 'batata' }],
+    });
+    expect(spoken).toContain('batata');
+    expect(spoken).not.toContain('by the way');
+    // Sem giria EN reconhecida -> nao ha split misturado; uma so voz base (pt_).
+    expect(req.segments).toBeUndefined();
+    expect(req.model.startsWith('pt_')).toBe(true);
+  });
+});
+
 describe('prepareSpeech — autoDetect OFF (voz fixa)', () => {
   it('autoDetect:false -> singleVoice:true, model = preferida, sem segments', () => {
     const { req } = prepareSpeech({

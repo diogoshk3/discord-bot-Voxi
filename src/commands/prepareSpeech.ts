@@ -64,16 +64,23 @@ export function prepareSpeech(input: PrepareSpeechInput): PreparedSpeech {
   if (input.autoDetect === false) {
     // Voz FIXA: a língua vem da voz escolhida (não do texto) — restaura os acentos
     // dessa língua ("nao"->"não" se a voz for PT).
-    const spokenRaw = applyPronunciation(expandAbbreviations(input.personal), input.pronunciations);
+    // ORDEM: pronúncia da guild ANTES das gírias embutidas — assim uma /pronunciation
+    // como btw->batata GANHA ao "by the way". Precedência final (o pessoal já foi
+    // aplicado a montante no messageHandler): pessoal > /pronunciation > gírias.
+    const spokenRaw = expandAbbreviations(applyPronunciation(input.personal, input.pronunciations));
     const spoken = restoreAccents(spokenRaw, accentLangOfModel(preferred));
     return { spoken, req: { text: spoken, model: preferred, speed, singleVoice: true }, learnedLang: '' };
   }
 
-  // Deteccao LIGADA: parte por girias EN e processa cada parte (expansao + pronuncia).
-  const rawSegs = splitEnglishSlang(input.personal);
+  // Deteccao LIGADA. Pronúncia da guild PRIMEIRO — ANTES de partir por gíria — para
+  // que uma /pronunciation como btw->batata deixe de ser "gíria" e NÃO gere um
+  // segmento EN separado (sai na voz base). Depois parte por gírias e expande cada
+  // parte. Precedência: pessoal (a montante) > /pronunciation > gírias embutidas.
+  const pronounced = applyPronunciation(input.personal, input.pronunciations);
+  const rawSegs = splitEnglishSlang(pronounced);
   const proc0 = rawSegs.map((seg) => ({
     isEnglish: seg.isEnglish,
-    text: applyPronunciation(expandAbbreviations(seg.text), input.pronunciations),
+    text: expandAbbreviations(seg.text),
   }));
 
   // Lingua-base = deteccao SO da parte non-slang (as girias EN nao poluem). Deteta-se
