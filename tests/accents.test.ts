@@ -36,16 +36,42 @@ describe('restoreAccents — repõe acentos da língua', () => {
     expect(restoreAccents('informacion', 'spa')).toBe('información');
     expect(restoreAccents('francais', 'fra')).toBe('français');
     expect(restoreAccents('nao', 'eng')).toBe('nao'); // inglês não tem dict
-    expect(restoreAccents('nao', 'deu')).toBe('nao'); // alemão não tem dict
+    // alemão TEM dict, mas 'nao' não é chave alemã -> no-op (não toca).
+    expect(restoreAccents('nao', 'deu')).toBe('nao');
     expect(restoreAccents('nao', '')).toBe('nao');
+  });
+
+  it('DE: repõe o Umlaut de palavras seguras (forma sem-trema não é palavra alemã)', () => {
+    expect(restoreAccents('fur', 'deu')).toBe('für');
+    expect(restoreAccents('konnen', 'deu')).toBe('können');
+    expect(restoreAccents('grun', 'deu')).toBe('grün');
+    expect(restoreAccents('ich mochte funf', 'deu')).toBe('ich mochte fünf'); // "mochte" fica (ambíguo)
+    expect(restoreAccents('naturlich', 'deu')).toBe('natürlich');
+  });
+
+  it('DE: preserva capitalização e fronteira', () => {
+    expect(restoreAccents('Tur', 'deu')).toBe('Tür'); // 1.ª maiúscula
+    expect(restoreAccents('FUNF', 'deu')).toBe('FÜNF'); // tudo maiúsculas
+    expect(restoreAccents('fur!', 'deu')).toBe('für!'); // pontuação = fronteira
+    expect(restoreAccents('furcht', 'deu')).toBe('furcht'); // não casa dentro de palavra
+  });
+
+  it('DE: pares MÍNIMOS ambíguos NÃO são tocados (a forma sem-trema é outra palavra)', () => {
+    // Landmines: cada um é uma palavra alemã comum por si só -> tem de ficar intacto.
+    for (const w of [
+      'schon', 'wurde', 'mochte', 'hatte', 'konnte', 'musste', 'durfte',
+      'ware', 'wahlen', 'zahlen', 'lauft', 'uber',
+    ]) {
+      expect(restoreAccents(w, 'deu')).toBe(w);
+    }
   });
 
   it('accentLangOfModel: prefixo do modelo -> ISO (só línguas com dict)', () => {
     expect(accentLangOfModel('pt_PT-tugao-medium')).toBe('por');
     expect(accentLangOfModel('es_ES-davefx-medium')).toBe('spa');
     expect(accentLangOfModel('fr_FR-siwis-medium')).toBe('fra');
+    expect(accentLangOfModel('de_DE-thorsten-medium')).toBe('deu');
     expect(accentLangOfModel('en_US-amy-medium')).toBe('');
-    expect(accentLangOfModel('de_DE-thorsten-medium')).toBe('');
   });
 });
 

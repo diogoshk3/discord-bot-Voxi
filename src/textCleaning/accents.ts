@@ -6,14 +6,17 @@
 // palavras mais comuns da língua DETETADA.
 //
 // REGRA DE CURADORIA (intra-língua, não cross-língua): só entra uma palavra se a
-// forma SEM acento NÃO for, ela própria, uma OUTRA palavra comum da mesma língua.
-// Por isso ficam DE FORA os pares ambíguos (pt: esta/está, e/é, so/só, pais/país,
+// forma SEM acento NÃO for, ela própria, uma OUTRA palavra comum da mesma língua
+// (em QUALQUER flexão e QUALQUER capitalização — o match é case-insensitive). Por
+// isso ficam DE FORA os pares ambíguos (pt: esta/está, e/é, so/só, pais/país,
 // pode/pôde, publico/público, musica/música, pratica/prática, manha/manhã…). Na
 // dúvida, EXCLUI — uma troca errada é pior que um acento em falta. Aplica-se SÓ à
 // língua correspondente (o dicionário `por` só corre quando a lingua é `por`).
 //
-// Chaves em minúsculas, sem acento; valores com acento. `restoreAccents` casa por
-// FRONTEIRA de palavra (mesmo estilo de expandAbbreviations) e preserva a
+// Chaves em minúsculas, sem acento; valores com acento e TAMBÉM em minúsculas (a
+// capitalização do output é reposta por `matchCase` a partir do token casado, e o
+// case é irrelevante para o fonema — o Piper/espeak ignora-o). `restoreAccents` casa
+// por FRONTEIRA de palavra (mesmo estilo de expandAbbreviations) e preserva a
 // capitalização do token (minúsculas / Primeira-maiúscula / TUDO-MAIÚSCULAS).
 
 /** ISO 639-3 (o output de detectLang) -> dicionário sem-acento -> com-acento. */
@@ -48,7 +51,7 @@ const DICTS: Record<string, Record<string, string>> = {
     nivel: 'nível', niveis: 'níveis', util: 'útil', inutil: 'inútil',
     maquina: 'máquina', maquinas: 'máquinas',
     video: 'vídeo', videos: 'vídeos', musculo: 'músculo',
-    obrigado: 'obrigado', ate: 'até',
+    ate: 'até',
   },
   // ── Espanhol (só palavras de conteúdo NÃO-ambíguas; fora que/qué, si/sí, tu/tú…) ─
   spa: {
@@ -66,6 +69,35 @@ const DICTS: Record<string, Record<string, string>> = {
     telephone: 'téléphone', tele: 'télé', fenetre: 'fenêtre', theatre: 'théâtre',
     probleme: 'problème', systeme: 'système', modele: 'modèle', celebre: 'célèbre',
     repondre: 'répondre', prefere: 'préfère', achete: 'achète',
+  },
+  // ── Alemão ───────────────────────────────────────────────────────────────────
+  // O trema (Umlaut ä/ö/ü) MUDA o fonema (ex. "schon"[ʃoːn] vs "schön"[ʃøːn]) e é
+  // muito omitido em chat ("fur", "konnen", "grun"). Repô-lo melhora nitidamente o
+  // áudio. MAS o alemão é um campo minado de pares mínimos distinguidos SÓ pelo
+  // trema — por isso a curadoria aqui é AINDA mais estrita: só entram palavras cuja
+  // forma sem-trema NÃO exista como QUALQUER palavra alemã, em QUALQUER flexão e
+  // QUALQUER capitalização (o match é case-insensitive). Os infinitivos (-en) e as
+  // formas claramente-não-palavra são o terreno seguro; as conjugadas colidem.
+  //
+  // Valores em minúsculas (o case não afeta o fonema; `matchCase` repõe-no do token).
+  // O ß fica DE FORA de propósito: "ss"->"ß" quase não muda o fonema (ganho ~nulo) e
+  // o "ss" é ortografia legítima (suíço), logo trocá-lo seria um risco sem retorno.
+  deu: {
+    fur: 'für', // fur = palavra inglesa, não alemã
+    konnen: 'können', mussen: 'müssen', durfen: 'dürfen',
+    naturlich: 'natürlich', moglich: 'möglich', wahrend: 'während',
+    grun: 'grün', tur: 'tür', kuche: 'küche', madchen: 'mädchen',
+    horen: 'hören', gehoren: 'gehören', wunschen: 'wünschen',
+    fuhlen: 'fühlen', erzahlen: 'erzählen',
+    funf: 'fünf', glucklich: 'glücklich', zuruck: 'zurück',
+    // ── EXCLUÍDOS (a forma sem-trema É outra palavra alemã comum) ──────────────
+    //   schon/schön (schon = "já"), wurde/würde, mochte/möchte, mochten/möchten,
+    //   hatte/hätte, konnte/könnte, musste/müsste, durfte/dürfte, wusste/wüsste,
+    //   ware/wäre (+ Ware = mercadoria), wahlen/wählen (Wahlen = eleições),
+    //   zahlen/zählen (zahlen = pagar), lauft/läuft (ihr lauft), hort/hört (Hort),
+    //   spat/spät (Spat = mineral), gluck/glück (Gluck = apelido do compositor).
+    //   Também EXCLUÍDO über/uber: colide com a marca "Uber" (match case-insensitive)
+    //   — na dúvida, exclui (regra do próprio ficheiro).
   },
 };
 
@@ -117,7 +149,7 @@ export function restoreAccents(text: string, lang: string): string {
  */
 export function accentLangOfModel(model: string): string {
   const us = model.indexOf('_');
-  const prefix = us === -1 ? '' : model.slice(0, us); // 'pt', 'es', 'fr'…
-  const map: Record<string, string> = { pt: 'por', es: 'spa', fr: 'fra' };
+  const prefix = us === -1 ? '' : model.slice(0, us); // 'pt', 'es', 'fr', 'de'…
+  const map: Record<string, string> = { pt: 'por', es: 'spa', fr: 'fra', de: 'deu' };
   return map[prefix.toLowerCase()] ?? '';
 }
