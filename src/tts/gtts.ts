@@ -137,6 +137,25 @@ export function chunkText(text: string, max: number): string[] {
   return chunks;
 }
 
+/**
+ * O Google translate_tts SOLETRA palavras TODO-MAIÚSCULAS (interpreta-as como siglas):
+ * "VOLTEI" -> "V-O-L-T-E-I", em vez de ler a palavra. Confirmado empiricamente em 22
+ * das ~34 línguas do bot (es, en, fr, de, it, nl, pl, ro, tr, ar, sv, el, cs, da, lv,
+ * ne, sk, sr, sw, vi, ca, cy; NÃO acontece em pt, ru, uk, zh, fi, hu, is). Para o Voxi
+ * LER a palavra em vez de a soletrar, baixamos RUNS de 2+ maiúsculas para minúsculas
+ * antes de enviar à Google.
+ *
+ * É gTTS-ESPECÍFICO: o Piper (neural) já lê maiúsculas como palavra, por isso a
+ * transformação vive aqui e não no cleanText (partilhado). Uma ÚNICA maiúscula (início
+ * de frase, "I", "A", ou o "V" de "Voltei") NÃO é tocada — só corridas de 2+. Trade-off
+ * aceite: siglas legítimas ("NASA") passam a ser lidas como palavra, mas em chat o
+ * TODO-MAIÚSCULAS é quase sempre ênfase/gritar, não uma sigla. PURA.
+ */
+const RE_ALLCAPS_RUN = /\p{Lu}[\p{Lu}\p{M}]+/gu;
+export function deCapsForGoogle(text: string): string {
+  return text.replace(RE_ALLCAPS_RUN, (run) => run.toLowerCase());
+}
+
 export interface GttsOptions {
   /** fetch injetável (testes). Default: o `fetch` global. */
   fetchImpl?: typeof fetch;
@@ -165,7 +184,8 @@ export class GTTSEngine implements TTSEngine {
     if (cached) return cached;
 
     const lang = gttsLangOfModel(req.model);
-    const chunks = chunkText(req.text, GTTS_MAX_CHARS);
+    // deCapsForGoogle: evita que a Google SOLETRE palavras todo-maiúsculas (ver função).
+    const chunks = chunkText(deCapsForGoogle(req.text), GTTS_MAX_CHARS);
     if (chunks.length === 0) {
       throw new Error('gTTS: texto vazio');
     }

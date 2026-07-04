@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import {
   gttsLangOfModel,
   chunkText,
+  deCapsForGoogle,
   GTTSEngine,
   retryAsync,
   isRetryableStatus,
@@ -60,6 +61,59 @@ describe('chunkText — parte por palavra respeitando o limite', () => {
     const giant = 'x'.repeat(90);
     const chunks = chunkText(giant, 40);
     expect(chunks).toEqual(['x'.repeat(40), 'x'.repeat(40), 'x'.repeat(10)]);
+  });
+});
+
+// Bug (relatado pelo Diogo, confirmado empíricamente em 22 línguas): o Google
+// translate_tts SOLETRA palavras todo-maiúsculas ("VOLTEI" -> "V O L T E I"). Baixamos
+// runs de 2+ maiúsculas para minúsculas antes de enviar à Google, para as LER.
+describe('deCapsForGoogle — evita que a Google soletre TODO-MAIÚSCULAS', () => {
+  it('baixa palavra todo-maiúsculas para minúsculas', () => {
+    expect(deCapsForGoogle('VOLTEI')).toBe('voltei');
+    expect(deCapsForGoogle('olá VOLTEI aqui')).toBe('olá voltei aqui');
+    expect(deCapsForGoogle('NASA')).toBe('nasa');
+    expect(deCapsForGoogle('OK')).toBe('ok');
+  });
+
+  it('NÃO toca em minúsculas, Title-Case, nem numa única maiúscula', () => {
+    expect(deCapsForGoogle('voltei')).toBe('voltei');
+    expect(deCapsForGoogle('Voltei')).toBe('Voltei'); // só o "V" — 1 maiúscula
+    expect(deCapsForGoogle('I am a Robot')).toBe('I am a Robot'); // "I" fica
+    expect(deCapsForGoogle('iPhone')).toBe('iPhone'); // sem run de 2+
+  });
+
+  it('lida com acentos e dígitos', () => {
+    expect(deCapsForGoogle('ÁGUA')).toBe('água'); // maiúsculas acentuadas
+    expect(deCapsForGoogle('COVID19')).toBe('covid19'); // run de letras + dígitos
+    expect(deCapsForGoogle('GRITO!!!')).toBe('grito!!!'); // pontuação intacta
+  });
+
+  it('vazio -> vazio', () => {
+    expect(deCapsForGoogle('')).toBe('');
+  });
+});
+
+describe('GTTSEngine.synth — envia o texto SEM todo-maiúsculas à Google', () => {
+  let dir: string;
+  afterEach(() => {
+    if (dir) rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('o q= do pedido usa a versão minúscula de uma palavra caps', async () => {
+    dir = mkdtempSync(join(tmpdir(), 'gtts-caps-'));
+    let capturedUrl = '';
+    const fetchImpl = vi.fn(async (url: string | URL) => {
+      capturedUrl = String(url);
+      throw tagged('stop-after-capture', false); // não-retryable: pára após capturar
+    });
+    const engine = new GTTSEngine(new AudioCache(dir), {
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+      sleepImpl: noSleep,
+    });
+    await engine.synth({ text: 'olá VOLTEI', model: 'es_ES-davefx-medium', speed: 1 }).catch(() => {});
+    // O parâmetro q (já descodificado por URLSearchParams) tem a palavra em minúsculas.
+    const q = new URL(capturedUrl).searchParams.get('q');
+    expect(q).toBe('olá voltei');
   });
 });
 
