@@ -132,6 +132,32 @@ describe('AudioCache', () => {
     const stored = cache.put('k', src);
     expect(existsSync(stored)).toBe(true);
   });
+
+  // Bug-hunt 2026-07: put() escrevia com copyFileSync direto para o path final, por
+  // isso um get() concorrente podia servir um .wav truncado a meio da cópia. Agora
+  // escreve via tmp + renameSync (atómico). Verifica que não fica lixo .tmp e que
+  // put sobre uma chave existente é idempotente (não corrompe).
+  it('put é atómico: não deixa ficheiros .tmp no dir', () => {
+    const cache = new AudioCache(dir);
+    const src = join(srcDir, 'a.wav');
+    writeFileSync(src, Buffer.from('RIFFdados'));
+    cache.put('chaveA', src);
+    const leftovers = readdirSync(dir).filter((f) => f.includes('.tmp'));
+    expect(leftovers).toEqual([]);
+    expect(existsSync(join(dir, 'chaveA.wav'))).toBe(true);
+  });
+
+  it('put sobre uma chave já existente é idempotente (devolve o path, conteúdo intacto)', () => {
+    const cache = new AudioCache(dir);
+    const src = join(srcDir, 'b.wav');
+    writeFileSync(src, Buffer.from('RIFFprimeiro'));
+    const first = cache.put('chaveB', src);
+    // segundo put da mesma chave (conteúdo determinístico) — devolve o mesmo path.
+    const second = cache.put('chaveB', src);
+    expect(second).toBe(first);
+    expect(readFileSync(first).toString()).toBe('RIFFprimeiro');
+    expect(readdirSync(dir).filter((f) => f.includes('.tmp'))).toEqual([]);
+  });
 });
 
 describe('AudioCache.withNamespace', () => {

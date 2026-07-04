@@ -25,6 +25,13 @@ import { log } from '../logging/logger';
 
 const GTTS_URL = 'https://translate.google.com/translate_tts';
 const GTTS_TIMEOUT_MS = 15000;
+/**
+ * Tempo máximo para a conversão MP3→WAV via ffmpeg. Uma conversão de um chunk curto
+ * é sub-segundo; este teto (igual ao da rede) garante que um ffmpeg PRESO nunca
+ * deixa a Promise por resolver — o que travaria o worker de reprodução para sempre
+ * (o gTTS é o motor por defeito). Espelha o PIPER_TIMEOUT_MS do motor local.
+ */
+const GTTS_FFMPEG_TIMEOUT_MS = 15000;
 /** Limite prático de caracteres por request do endpoint translate_tts. */
 const GTTS_MAX_CHARS = 200;
 /** Tentativas EXTRA por pedido quando o erro é TRANSITÓRIO (rede/5xx/429). Default 2. */
@@ -249,10 +256,18 @@ function mp3ToWav(mp3: Buffer, speed: number): Promise<Buffer> {
   if (!ff) {
     return Promise.reject(new Error('gTTS: ffmpeg-static não encontrado (corre o install.js)'));
   }
+  // Setup síncrono guardado: se mkdtempSync/writeFileSync lançar (disco cheio,
+  // EACCES), limpamos o workDir já criado antes de propagar — senão vazava um temp
+  // dir por conversão falhada.
   const workDir = mkdtempSync(join(tmpdir(), 'gtts-conv-'));
   const inPath = join(workDir, 'in.mp3');
   const outPath = join(workDir, 'out.wav');
-  writeFileSync(inPath, mp3);
+  try {
+    writeFileSync(inPath, mp3);
+  } catch (err) {
+    rmSync(workDir, { recursive: true, force: true });
+    throw err;
+  }
 
   const args = ['-hide_banner', '-loglevel', 'error', '-i', inPath];
   if (speed > 0 && Math.abs(speed - 1) > 1e-6) {
@@ -264,22 +279,62 @@ function mp3ToWav(mp3: Buffer, speed: number): Promise<Buffer> {
   return new Promise<Buffer>((resolve, reject) => {
     const child = spawn(ff, args, { stdio: ['ignore', 'ignore', 'pipe'] });
     let stderr = '';
+    let settled = false;
+    // Limpeza best-effort que NUNCA lança: uma falha a apagar o tmp (ex.: Windows
+    // EBUSY logo após o SIGKILL, antes de o SO libertar os handles do ffmpeg morto)
+    // não pode impedir a Promise de resolver/rejeitar. CRÍTICO: settle-se SEMPRE ANTES
+    // de chamar cleanup(), senão um throw da limpeza (com o latch `settled` já ligado)
+    // deixaria a Promise PENDENTE para sempre e travava o worker de voz da guild.
+    const cleanup = (): void => {
+      try {
+        rmSync(workDir, { recursive: true, force: true });
+      } catch {
+        // ignora — limpeza best-effort
+      }
+    };
+    // Guarda-tempo: um ffmpeg preso (child bloqueado, pipe entupido) nunca emitiria
+    // 'close' — a Promise ficaria pendente e travaria o worker de reprodução da
+    // guild PARA SEMPRE. Ao expirar, matamos o processo e rejeitamos.
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      try {
+        child.kill('SIGKILL');
+      } catch {
+        // já morto
+      }
+      reject(new Error(`gTTS: ffmpeg excedeu ${GTTS_FFMPEG_TIMEOUT_MS}ms (morto)`));
+      cleanup();
+    }, GTTS_FFMPEG_TIMEOUT_MS);
     child.stderr?.on('data', (d: Buffer) => {
       stderr += d.toString();
     });
     child.on('error', (err) => {
-      rmSync(workDir, { recursive: true, force: true });
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
       reject(new Error(`gTTS: falha ao iniciar ffmpeg: ${err.message}`));
+      cleanup();
     });
     child.on('close', (code) => {
-      try {
-        if (code === 0) {
-          resolve(readFileSync(outPath));
-        } else {
-          reject(new Error(`gTTS: ffmpeg saiu com ${code}: ${stderr.trim()}`));
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      if (code === 0) {
+        let buf: Buffer;
+        try {
+          buf = readFileSync(outPath);
+        } catch (e) {
+          reject(new Error(`gTTS: falha a ler o WAV convertido: ${(e as Error).message}`));
+          cleanup();
+          return;
         }
-      } finally {
-        rmSync(workDir, { recursive: true, force: true });
+        resolve(buf);
+        cleanup();
+      } else {
+        reject(new Error(`gTTS: ffmpeg saiu com ${code}: ${stderr.trim()}`));
+        cleanup();
       }
     });
   });
