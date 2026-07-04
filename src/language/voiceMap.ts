@@ -201,6 +201,85 @@ export function voiceDisplayName(model: string): string {
   return `${lang} — ${voiceLabel(model)}`;
 }
 
+/** Parte um id de modelo no código base e região do locale: 'en_US-amy' -> {base:'en', region:'US'}. */
+function baseAndRegion(model: string): { base: string; region: string } {
+  const locale = model.split('-')[0]; // 'en_US'
+  const us = locale.indexOf('_');
+  if (us === -1) return { base: locale.toLowerCase(), region: '' };
+  return { base: locale.slice(0, us).toLowerCase(), region: locale.slice(us + 1) };
+}
+
+/** Bases de língua com MAIS DO QUE UMA região instalada (ex. 'en' se houver en_US e en_GB). */
+function multiRegionBases(models: string[]): Set<string> {
+  const byBase = new Map<string, Set<string>>();
+  for (const m of models) {
+    const { base, region } = baseAndRegion(m);
+    if (!byBase.has(base)) byBase.set(base, new Set());
+    if (region) byBase.get(base)!.add(region);
+  }
+  const out = new Set<string>();
+  for (const [base, regions] of byBase) if (regions.size > 1) out.add(base);
+  return out;
+}
+
+/** `Intl.DisplayNames.of` seguro: devolve undefined em código desconhecido (of devolve o próprio código) ou erro. */
+function safeOf(dn: Intl.DisplayNames, code: string): string | undefined {
+  try {
+    const r = dn.of(code);
+    return r && r.toLowerCase() !== code.toLowerCase() ? r : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+const capFirst = (s: string): string => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+
+/**
+ * Fábrica de um "namer" que escreve o nome da voz NA LÍNGUA DO UTILIZADOR (o locale do
+ * cliente Discord, `i.locale`) — ex.: a voz alemã aparece "Alemão — Thorsten" para um
+ * user com Discord em PT, "Allemand — Thorsten" em FR, "German — Thorsten" em EN. Usa o
+ * `Intl.DisplayNames` (dados ICU do Node) — sem tabela de tradução à mão, cobre todas as
+ * línguas. A região só é mostrada quando essa base tem >1 região instalada (ex. inglês
+ * US vs UK); senão fica só o nome da língua. Constrói o `Intl.DisplayNames` UMA vez (não
+ * por modelo) por eficiência no autocomplete.
+ *
+ * `locale` ausente/vazio (ex.: contextos sem interação) -> cai no AUTÓNIMO
+ * (`voiceDisplayName`), preservando o comportamento antigo. Código de língua desconhecido
+ * pelo ICU -> também cai no autónimo (nunca esconde uma voz).
+ */
+export function makeLocalizedNamer(
+  locale: string | undefined,
+  models: string[],
+  opts: { voice?: boolean } = {},
+): (model: string) => string {
+  // voice=true (default) -> "Alemão — Thorsten" (confirmações); voice=false -> só a
+  // língua "Alemão" (o picker do /voice set, que sempre foi só a língua).
+  const withVoice = opts.voice !== false;
+  const fallback = (m: string): string => (withVoice ? voiceDisplayName(m) : modelDisplayName(m));
+  if (!locale) return fallback;
+  let langDN: Intl.DisplayNames;
+  let regionDN: Intl.DisplayNames;
+  try {
+    langDN = new Intl.DisplayNames([locale, 'en'], { type: 'language' });
+    regionDN = new Intl.DisplayNames([locale, 'en'], { type: 'region' });
+  } catch {
+    return fallback; // locale inválido -> autónimo
+  }
+  const multi = multiRegionBases(models);
+  return (model) => {
+    const { base, region } = baseAndRegion(model);
+    const langName = safeOf(langDN, base);
+    if (!langName) return fallback(model); // língua desconhecida pelo ICU -> autónimo/id
+    let name = capFirst(langName);
+    if (region && multi.has(base)) {
+      const rn = safeOf(regionDN, region);
+      if (rn) name = `${name} (${rn})`;
+    }
+    if (!withVoice) return name;
+    return model.indexOf('-') === -1 ? name : `${name} — ${voiceLabel(model)}`;
+  };
+}
+
 /**
  * Renderiza a lista de vozes disponíveis AGRUPADA POR LÍNGUA, para o /voice list
  * ser beginner-friendly: em vez de uma lista plana de ids técnicos, mostra um
@@ -209,27 +288,54 @@ export function voiceDisplayName(model: string): string {
  * `/voice set` continuar copy-pasteável). Línguas e vozes ordenadas por nome, para
  * uma leitura estável (e testável). PURO: sem efeitos secundários.
  */
-export function formatVoiceList(models: string[]): string {
+export function formatVoiceList(models: string[], locale?: string): string {
   // Agrupa por locale (a parte antes do 1.º '-', mesma fatia do modelDisplayName).
   const groups = new Map<string, string[]>();
   for (const model of models) {
     const dash = model.indexOf('-');
-    const locale = dash === -1 ? model : model.slice(0, dash);
-    const bucket = groups.get(locale);
+    const loc = dash === -1 ? model : model.slice(0, dash);
+    const bucket = groups.get(loc);
     if (bucket) bucket.push(model);
-    else groups.set(locale, [model]);
+    else groups.set(loc, [model]);
   }
 
+  // Cabeçalho na LÍNGUA DO UTILIZADOR (Intl) quando há `locale`; senão o AUTÓNIMO
+  // (LOCALE_NAMES), preservando o comportamento antigo. A região só aparece quando a
+  // base tem >1 região instalada (mesma regra do makeLocalizedNamer).
+  const multi = multiRegionBases(models);
+  let langDN: Intl.DisplayNames | undefined;
+  let regionDN: Intl.DisplayNames | undefined;
+  if (locale) {
+    try {
+      langDN = new Intl.DisplayNames([locale, 'en'], { type: 'language' });
+      regionDN = new Intl.DisplayNames([locale, 'en'], { type: 'region' });
+    } catch {
+      langDN = undefined;
+      regionDN = undefined;
+    }
+  }
+  const header = (loc: string): string => {
+    if (langDN) {
+      const { base, region } = baseAndRegion(loc);
+      const langName = safeOf(langDN, base);
+      if (langName) {
+        let name = capFirst(langName);
+        if (region && multi.has(base) && regionDN) {
+          const rn = safeOf(regionDN, region);
+          if (rn) name = `${name} (${rn})`;
+        }
+        return name;
+      }
+    }
+    return LOCALE_NAMES[loc] ?? loc;
+  };
+
   const lines: string[] = [];
-  // Ordena os grupos pelo cabeçalho (autónimo) para uma saída estável.
-  const sortedLocales = [...groups.keys()].sort((a, b) =>
-    modelDisplayName(a).localeCompare(modelDisplayName(b)),
-  );
-  for (const locale of sortedLocales) {
-    // Cabeçalho = autónimo da língua; se o locale não estiver mapeado, cai no próprio
-    // locale (modelDisplayName devolve o id cru, mas aqui só temos o locale nu).
-    lines.push(LOCALE_NAMES[locale] ?? locale);
-    const voices = groups.get(locale)!;
+  // Ordena os grupos pelo cabeçalho (localizado ou autónimo) para uma saída estável.
+  const sortedLocales = [...groups.keys()].sort((a, b) => header(a).localeCompare(header(b)));
+  for (const loc of sortedLocales) {
+    lines.push(header(loc));
+    const voices = groups.get(loc)!;
     for (const model of [...voices].sort((a, b) => voiceLabel(a).localeCompare(voiceLabel(b)))) {
       lines.push(`• ${voiceLabel(model)} (${model})`);
     }

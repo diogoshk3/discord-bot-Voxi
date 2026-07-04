@@ -38,7 +38,7 @@ import { isBlocked } from '../moderation/filter';
 import { prepareSpeech } from './prepareSpeech';
 import { recallLang, rememberLang } from '../language/langMemory';
 import type { SynthRequest } from '../tts/engine';
-import { modelDisplayName, voiceDisplayName, formatVoiceList } from '../language/voiceMap';
+import { voiceDisplayName, formatVoiceList, makeLocalizedNamer } from '../language/voiceMap';
 import { laughterFor } from '../content/laughter';
 import { JOKE_LANGUAGES, jokeLangByKey, pickJoke } from '../content/jokes';
 import { log } from '../logging/logger';
@@ -944,12 +944,12 @@ async function handleVoice(i: ChatInputCommandInteraction, deps: BotDeps): Promi
     const currentEngine = getUserVoice(deps.db, i.guildId!, i.user.id)?.engine ?? 'google';
     const engine = engineOpt ?? currentEngine;
     setUserVoice(deps.db, i.guildId!, i.user.id, model, clamped, engine);
-    // Copy beginner-friendly: lidera com o nome amigavel (voiceDisplayName) e mantem
-    // o id cru copy-pasteavel. Inclui o motor escolhido.
+    // Copy beginner-friendly: nome da voz NA LÍNGUA DO UTILIZADOR (i.locale) + id cru
+    // copy-pasteável. Inclui o motor escolhido.
     await reply(
       i,
       t('voice.set', locale, {
-        name: voiceDisplayName(model),
+        name: makeLocalizedNamer(i.locale, deps.availableModels)(model),
         model,
         speed: clamped,
         engine: engine === 'piper' ? 'Piper' : 'Google',
@@ -958,9 +958,10 @@ async function handleVoice(i: ChatInputCommandInteraction, deps: BotDeps): Promi
   } else if (sub === 'list') {
     // Beginner-friendly: em vez de uma lista plana de ids Piper, agrupa por lingua
     // com nomes humanos (formatVoiceList). O id cru fica entre parenteses para
-    // /voice set continuar copy-pasteavel. Cabecalho i18n; vozes/linguas autonimos.
+    // /voice set continuar copy-pasteavel. Cabeçalhos das línguas NA LÍNGUA DO
+    // UTILIZADOR (i.locale); cabeçalho da mensagem i18n.
     const list = deps.availableModels.length
-      ? formatVoiceList(deps.availableModels)
+      ? formatVoiceList(deps.availableModels, i.locale)
       : t('voice.listEmpty', locale);
     await reply(i, `${t('voice.listHeader', locale)}\n${list}`);
   } else if (sub === 'reset') {
@@ -1168,7 +1169,7 @@ async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps): Prom
     setGuildConfig(deps.db, i.guildId!, { defaultVoice: model });
     // Copy beginner-friendly: lidera com o nome amigavel (voiceDisplayName) e mantem
     // o id cru copy-pasteavel. Comportamento inalterado (so params de apresentacao).
-    await reply(i, t('config.defaultVoiceSet', locale, { name: voiceDisplayName(model), model }));
+    await reply(i, t('config.defaultVoiceSet', locale, { name: makeLocalizedNamer(i.locale, deps.availableModels)(model), model }));
   } else if (sub === 'language') {
     // Troca do idioma da INTERFACE. As choices ja limitam a SUPPORTED_LOCALES, mas
     // validamos de novo (defensivo) — includes() precisa do cast porque o array e
@@ -1548,15 +1549,29 @@ async function handleHelp(i: ChatInputCommandInteraction, deps: BotDeps): Promis
 /**
  * Filtra os modelos disponíveis pelo que o utilizador escreveu (case-insensitive),
  * limitado a 25 (máximo do Discord para autocomplete). Função pura e testável.
+ *
+ * `locale` (o locale do cliente Discord de quem escreve, `i.locale`) escreve os nomes
+ * das línguas NA LÍNGUA DO UTILIZADOR (ex.: "Alemão"/"Allemand"/"German") via
+ * makeLocalizedNamer. Sem `locale` -> autónimos (comportamento antigo, usado nos testes).
  */
 export function filterModelChoices(
   models: string[],
   query: string,
+  locale?: string,
 ): { name: string; value: string }[] {
   const q = query.trim().toLowerCase();
+  // voice:false -> o picker mostra só a LÍNGUA (como sempre), agora na língua do user.
+  const namer = makeLocalizedNamer(locale, models, { voice: false });
   return models
-    .map((m) => ({ name: modelDisplayName(m), value: m }))
-    .filter((c) => c.name.toLowerCase().includes(q) || c.value.toLowerCase().includes(q))
+    .map((m) => ({ name: namer(m), value: m }))
+    // Procura pelo nome localizado E pelo id cru (o user pode escrever na sua língua
+    // OU o nome técnico/voz). Também casa o autónimo para não regredir a pesquisa.
+    .filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        c.value.toLowerCase().includes(q) ||
+        voiceDisplayName(c.value).toLowerCase().includes(q),
+    )
     .sort((a, b) => a.name.localeCompare(b.name))
     .slice(0, 25);
 }
@@ -1605,7 +1620,9 @@ export async function handleAutocomplete(
   try {
     const focused = i.options.getFocused(true);
     if (focused.name === 'model') {
-      await i.respond(filterModelChoices(deps.availableModels, focused.value));
+      // i.locale = locale do cliente Discord de quem escreve -> nomes das línguas
+      // escritos NA LÍNGUA DELE (ex.: "Alemão" para PT, "Allemand" para FR).
+      await i.respond(filterModelChoices(deps.availableModels, focused.value, i.locale));
       return;
     }
     if (focused.name === 'language') {

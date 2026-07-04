@@ -70,6 +70,54 @@ describe('filterModelChoices (autocomplete)', () => {
   });
 });
 
+// Pedido do Diogo: os nomes das línguas no picker do /voice set aparecem NA LÍNGUA DO
+// UTILIZADOR (o locale do cliente Discord), via Intl.DisplayNames. Sem locale -> autónimo.
+describe('filterModelChoices — nomes das línguas no locale do utilizador', () => {
+  const models = ['pt_PT-tugao-medium', 'en_US-amy-medium', 'fr_FR-siwis-medium', 'de_DE-thorsten-medium'];
+
+  it('locale pt-BR -> nomes em português', () => {
+    const names = filterModelChoices(models, '', 'pt-BR').map((c) => c.name);
+    expect(names).toContain('Alemão');
+    expect(names).toContain('Francês');
+    expect(names).toContain('Português');
+    expect(names).toContain('Inglês'); // região só aparece se houver >1 região da base
+  });
+
+  it('locale fr -> nomes em francês', () => {
+    const names = filterModelChoices(models, '', 'fr').map((c) => c.name);
+    expect(names).toContain('Allemand');
+    expect(names).toContain('Anglais');
+    expect(names).toContain('Portugais');
+  });
+
+  it('locale de -> nomes em alemão', () => {
+    const names = filterModelChoices(models, '', 'de').map((c) => c.name);
+    expect(names).toContain('Deutsch');
+    expect(names).toContain('Englisch');
+  });
+
+  it('mostra a REGIÃO (localizada) quando a base tem >1 região instalada', () => {
+    const multi = ['en_US-amy-medium', 'en_GB-alan-medium'];
+    const names = filterModelChoices(multi, '', 'pt-BR').map((c) => c.name);
+    expect(names).toContain('Inglês (Estados Unidos)');
+    expect(names).toContain('Inglês (Reino Unido)');
+  });
+
+  it('o utilizador pode PROCURAR na sua própria língua (ex.: "alemão")', () => {
+    expect(filterModelChoices(models, 'alemão', 'pt-BR').map((c) => c.value)).toEqual([
+      'de_DE-thorsten-medium',
+    ]);
+  });
+
+  it('locale estranho -> não rebenta e devolve todas as vozes', () => {
+    // Intl é tolerante (cai em en para tags desconhecidas mas bem-formadas); o que
+    // importa é NUNCA rebentar e nunca esconder uma voz.
+    const out = filterModelChoices(models, '', 'zz-nonsense');
+    expect(out.length).toBe(models.length);
+    expect(out.map((c) => c.value)).toContain('de_DE-thorsten-medium');
+  });
+});
+
 describe('handleAutocomplete', () => {
   // Deps minimo: o handler so le deps.availableModels no ramo 'model'.
   const deps = { availableModels: ['pt_PT-tugao-medium', 'en_US-amy-medium'] } as any;
