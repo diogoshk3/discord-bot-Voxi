@@ -12,6 +12,7 @@ import {
   Guild,
   ChannelType,
   MessageFlags,
+  InteractionContextType,
   type RESTPostAPIApplicationCommandsJSONBody,
 } from 'discord.js';
 import { metrics } from '../metrics';
@@ -116,7 +117,7 @@ export const INVITE_PERMISSIONS: string = new PermissionsBitField([
 ])
   .bitfield.toString();
 
-export const commandDefs: RESTPostAPIApplicationCommandsJSONBody[] = [
+const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
   // /invite — gatilho do loop viral: qualquer utilizador pode pedir o link de
   // convite OAuth2 do bot. Top-level e SEM setDefaultMemberPermissions (nao
   // admin-only), para que quem ouve o Voxi numa call o possa adicionar.
@@ -502,6 +503,22 @@ export const commandDefs: RESTPostAPIApplicationCommandsJSONBody[] = [
     .toJSON(),
 ];
 
+// Comandos utilizáveis em DM: só devolvem TEXTO e não dependem de guild/voz/store.
+const DM_CAPABLE_COMMANDS = new Set(['invite', 'vote', 'help', 'uptime', 'botstats']);
+
+// Todos os OUTROS comandos dependem de uma guild (sessão de voz, config e store
+// por-guild). Por defeito o Discord mostra comandos globais também em DM, onde
+// `guildId` é null → o handler escrevia no store com guildId null (SqliteError:
+// guild_id NOT NULL) ou respondia coisas enganadoras. Restringi-los ao contexto
+// Guild faz o Discord ESCONDÊ-LOS em DM. Centralizado por nome (em vez de repetir
+// .setContexts() em ~10 builders) para não esquecer nenhum comando novo. Cobre
+// também o context-menu "Speak" (precisa de canal de voz).
+export const commandDefs: RESTPostAPIApplicationCommandsJSONBody[] = commandDefsRaw.map((def) =>
+  DM_CAPABLE_COMMANDS.has(def.name)
+    ? def
+    : { ...def, contexts: [InteractionContextType.Guild] },
+);
+
 async function reply(i: ChatInputCommandInteraction, content: string): Promise<void> {
   await i.reply({ content, flags: MessageFlags.Ephemeral });
 }
@@ -679,19 +696,35 @@ export async function handleMessageContextMenu(
   deps: BotDeps,
 ): Promise<void> {
   if (i.commandName !== 'Speak') return;
-  await i.deferReply({ flags: MessageFlags.Ephemeral });
   const locale = localeForUser(deps, i);
-  if (!i.guildId || !i.guild) {
-    await i.editReply(t('error.generic', locale));
-    return;
+  // Ao contrário dos comandos slash (todos protegidos pelo try/catch de
+  // handleInteraction), o context-menu é despachado direto em client.ts com
+  // `void handleMessageContextMenu(...)` — SEM catch. Sem este try/catch, um throw
+  // no speakRawText deixava o utilizador preso em "Voxi is thinking…" para sempre
+  // (o deferReply nunca era editado) + unhandledRejection. Espelha o catch do slash.
+  try {
+    await i.deferReply({ flags: MessageFlags.Ephemeral });
+    if (!i.guildId || !i.guild) {
+      await i.editReply(t('error.generic', locale));
+      return;
+    }
+    const raw = (i.targetMessage.content ?? '').trim();
+    if (!raw) {
+      await i.editReply(t('speak.emptyMessage', locale));
+      return;
+    }
+    const outcome = await speakRawText(deps, i.guildId, i.user.id, i.guild, raw);
+    await i.editReply(speakOutcomeMessage(outcome, locale));
+  } catch (err) {
+    log.error('[speak] erro no context-menu Speak:', err);
+    if (!i.isRepliable()) return;
+    const msg = t('error.generic', locale);
+    if (i.deferred && !i.replied) {
+      await i.editReply({ content: msg }).catch(() => {});
+    } else if (!i.replied) {
+      await i.reply({ content: msg, flags: MessageFlags.Ephemeral }).catch(() => {});
+    }
   }
-  const raw = (i.targetMessage.content ?? '').trim();
-  if (!raw) {
-    await i.editReply(t('speak.emptyMessage', locale));
-    return;
-  }
-  const outcome = await speakRawText(deps, i.guildId, i.user.id, i.guild, raw);
-  await i.editReply(speakOutcomeMessage(outcome, locale));
 }
 
 async function handleSkip(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
@@ -822,6 +855,12 @@ async function handleJoke(i: ChatInputCommandInteraction, deps: BotDeps): Promis
     deps.config.defaultVoice ||
     'en_US-amy-medium';
 
+  // O MODELO (voz) do /joke é escolhido pela LÍNGUA, mas o MOTOR (google/piper) deve
+  // seguir a escolha do utilizador — tal como /laugh e /voice preview. Sem isto, um
+  // user de Piper ouvia as piadas no Google (inconsistente com tudo o resto).
+  const stored = getUserVoice(deps.db, i.guildId!, i.user.id);
+  const engine = stored?.engine;
+
   // pickJoke e PURO/seeded; em runtime usamos Date.now() como seed (variedade sem
   // sacrificar a testabilidade determinista da funcao).
   const joke = pickJoke(langKey, Date.now());
@@ -830,7 +869,7 @@ async function handleJoke(i: ChatInputCommandInteraction, deps: BotDeps): Promis
   // Enfileira SEMPRE a piada sozinha primeiro. O reply baseia-se NESTA fala: se a
   // fila estiver cheia (say false), respondemos busy e nao enfileiramos o riso.
   // singleVoice: a lingua da piada e CONHECIDA (escolhida), a deteccao nao manda.
-  const queued = await player.say({ text: joke, model, speed, singleVoice: true });
+  const queued = await player.say({ text: joke, model, speed, singleVoice: true, engine });
 
   // Se `risos` E a piada entrou na fila, enfileira o RISO como fala SEPARADA com uma
   // pausa real de 2s A FRENTE (leadSilenceMs). Assim o Voxi fala a piada, PAUSA ~2s,
@@ -842,6 +881,7 @@ async function handleJoke(i: ChatInputCommandInteraction, deps: BotDeps): Promis
       text: laughterFor(lang.prefix),
       model,
       speed,
+      engine,
       leadSilenceMs: JOKE_LAUGH_PAUSE_MS,
       // singleVoice: sem isto, um edge-case multi-script perderia o leadSilenceMs
       // (o caminho por-segmento chama base.synth sem ele). A lingua e conhecida.

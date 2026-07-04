@@ -155,4 +155,22 @@ describe('smoke: boot sem token (monta deps reais sem ligar ao Discord)', () => 
       }
     }
   });
+
+  // Bug-hunt 2026-07: comandos que dependem de guild (voz/config/store) NÃO devem ser
+  // invocáveis em DM (lá guildId é null -> SqliteError guild_id NOT NULL / respostas
+  // enganadoras). Os comandos só-de-texto (invite/vote/help/uptime/botstats) FICAM
+  // disponíveis em DM. InteractionContextType.Guild === 0.
+  it('comandos de guild estão restritos ao contexto Guild; os públicos não', () => {
+    const DM_CAPABLE = new Set(['invite', 'vote', 'help', 'uptime', 'botstats']);
+    for (const def of commandDefs) {
+      const contexts = (def as { contexts?: number[] }).contexts;
+      if (DM_CAPABLE.has(def.name)) {
+        // Público: sem restrição de contexto (usável em DM e em guild).
+        expect(contexts ?? null).toBeNull();
+      } else {
+        // Guild-only: exatamente [Guild] (0).
+        expect(contexts).toEqual([0]);
+      }
+    }
+  });
 });

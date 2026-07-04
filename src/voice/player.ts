@@ -215,14 +215,28 @@ export class GuildVoicePlayer {
       return;
     }
 
-    const resource = createAudioResource(audioPath, {
-      inputType: StreamType.Arbitrary,
-    });
-    this.current = resource;
-    // messagesSpoken: incrementa quando o áudio começa efectivamente a tocar
-    // (após síntese com sucesso e sem destroy entretanto).
-    metrics.inc('messagesSpoken');
-    this.player.play(resource);
+    // TAIL guardado: createAudioResource()/play() podem lançar SINCRONAMENTE (ex.:
+    // transcoder/prism a falhar). Sem este try/catch, um throw aqui deixava
+    // `playing=true` PARA SEMPRE (o worker nunca reposto -> guild muda até
+    // reiniciar) e rejeitava o `void playNext()` do call-site (unhandledRejection).
+    // Tratamento idêntico ao erro de síntese: salta o item e continua a fila.
+    try {
+      const resource = createAudioResource(audioPath, {
+        inputType: StreamType.Arbitrary,
+      });
+      this.current = resource;
+      // messagesSpoken: incrementa quando o áudio começa efectivamente a tocar
+      // (após síntese com sucesso e sem destroy entretanto).
+      metrics.inc('messagesSpoken');
+      this.player.play(resource);
+    } catch (err) {
+      log.error('[player] erro ao criar/tocar o recurso, item saltado:', err);
+      metrics.inc('synthErrors');
+      this.current = null;
+      // Sem crescimento de stack (estamos depois de awaits); repõe o worker via
+      // a próxima iteração, que fará playing=false se a fila esvaziar.
+      void this.playNext();
+    }
   }
 
   private armIdleTimer(): void {

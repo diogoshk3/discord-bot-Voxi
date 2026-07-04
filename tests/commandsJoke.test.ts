@@ -9,6 +9,7 @@ import { handleInteraction, handleAutocomplete, filterJokeLanguages } from '../s
 import type { BotDeps } from '../src/bot/deps';
 import { initDb } from '../src/store/db';
 import { setGuildConfig } from '../src/store/guildConfig';
+import { setUserVoice } from '../src/store/userVoice';
 import { laughterFor } from '../src/content/laughter';
 import { JOKE_LANGUAGES } from '../src/content/jokes';
 import type Database from 'better-sqlite3';
@@ -215,6 +216,45 @@ describe('filterJokeLanguages (autocomplete idioma)', () => {
 
   it('query sem match devolve []', () => {
     expect(filterJokeLanguages('zzzz')).toEqual([]);
+  });
+});
+
+// Bug-hunt 2026-07: o /joke construía os SynthRequest SEM `engine`, por isso um user
+// de Piper ouvia as piadas no Google (ao contrário de /laugh e /voice preview, que
+// seguem o motor escolhido). O MODELO segue a língua; o MOTOR tem de seguir o user.
+describe('/joke — segue o MOTOR escolhido pelo utilizador (google/piper)', () => {
+  let db: Database.Database;
+  beforeEach(() => {
+    db = initDb(':memory:');
+  });
+  afterEach(() => {
+    db.close();
+  });
+
+  it('user com engine:piper -> a piada E o riso são sintetizados com engine:piper', async () => {
+    setUserVoice(db, GUILD, USER, 'en_US-amy-medium', 1.0, 'piper');
+    const say = vi.fn().mockResolvedValue(true);
+    const deps = makeDeps(db, { say });
+    const i = makeJokeInteraction({ idioma: 'en', risos: true });
+
+    await handleInteraction(i as any, deps);
+
+    // Duas falas: piada + riso. Ambas com engine:piper.
+    expect(say).toHaveBeenCalledTimes(2);
+    for (const call of say.mock.calls) {
+      expect(call[0].engine).toBe('piper');
+    }
+  });
+
+  it('user default (sem escolha) -> engine undefined (= Google), comportamento inalterado', async () => {
+    const say = vi.fn().mockResolvedValue(true);
+    const deps = makeDeps(db, { say });
+    const i = makeJokeInteraction({ idioma: 'en', risos: false });
+
+    await handleInteraction(i as any, deps);
+
+    expect(say).toHaveBeenCalledTimes(1);
+    expect(say.mock.calls[0][0].engine).toBeUndefined();
   });
 });
 

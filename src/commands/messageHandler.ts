@@ -72,8 +72,13 @@ function maybeAutojoin(
 export async function handleMessage(message: Message, deps: BotDeps): Promise<void> {
   try {
     if (!message.guild || !message.guildId) return;
+    // Client ainda não READY (client.user null): não há identidade nem sessão de voz
+    // — ignora a mensagem. Captura `me` UMA vez (antes usávamos `client.user!` mais
+    // abaixo, que contradizia este guard e lançava se chegasse uma mensagem pré-READY).
+    const me = deps.client.user;
+    if (!me) return;
     // O Voxi NUNCA se lê a si próprio — anti-loop, independentemente do read_bots.
-    if (deps.client.user && message.author.id === deps.client.user.id) return;
+    if (message.author.id === me.id) return;
 
     const cfg = getGuildConfig(deps.db, message.guildId);
     if (!cfg.enabled) return;
@@ -86,14 +91,14 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     if (!message.content && media.length === 0) return;
 
     const isAutoreadChannel = cfg.autoread && cfg.ttsChannelId === message.channelId;
-    const isMention = message.mentions.has(deps.client.user!.id, {
+    const isMention = message.mentions.has(me.id, {
       ignoreEveryone: true,
       ignoreRoles: true,
       ignoreRepliedUser: true,
     });
     const isReplyToBot =
       message.reference?.messageId != null &&
-      message.mentions.repliedUser?.id === deps.client.user!.id;
+      message.mentions.repliedUser?.id === me.id;
     // text-in-voice: mensagem enviada no chat de texto DENTRO do canal de voz onde o
     // Voxi está agora (o texto do canal de voz tem channelId == id do canal de voz).
     const botVoiceChannelId = message.guild.members?.me?.voice?.channelId ?? null;

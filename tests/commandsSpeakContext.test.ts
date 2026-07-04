@@ -91,4 +91,44 @@ describe('context-menu "Speak"', () => {
     expect(def).toBeDefined();
     expect(def?.type).toBe(3); // ApplicationCommandType.Message
   });
+
+  // Bug-hunt 2026-07: o handler do context-menu é despachado com `void ...` SEM catch
+  // e não tinha try/catch próprio. Um throw no speakRawText (ex.: player.say rejeita)
+  // deixava o utilizador preso em "Voxi is thinking…" para sempre + unhandledRejection.
+  // Agora tem que apanhar o erro e responder com a mensagem genérica.
+  it('se a síntese/say lança, responde erro (não fica preso em "thinking…") e não rejeita', async () => {
+    const boom = vi.fn().mockRejectedValue(new Error('synth boom'));
+    // Interação que regista o ciclo defer/reply para exercer o ramo editReply do catch.
+    const replies: string[] = [];
+    const i = {
+      commandName: 'Speak',
+      guildId: GUILD,
+      guild: {
+        members: { cache: { get: () => undefined } },
+        channels: { cache: { get: () => undefined } },
+      },
+      user: { id: 'u-1' },
+      locale: 'pt-BR',
+      targetMessage: { content: 'lê isto por favor' },
+      deferred: false,
+      replied: false,
+      isRepliable: () => true,
+      deferReply: async function (this: { deferred: boolean }) {
+        this.deferred = true;
+      },
+      editReply: async (msg: string | { content?: string }) => {
+        replies.push(typeof msg === 'string' ? msg : (msg.content ?? ''));
+      },
+      reply: async (msg: string | { content?: string }) => {
+        replies.push(typeof msg === 'string' ? msg : (msg.content ?? ''));
+      },
+    };
+
+    // NÃO deve rejeitar (o catch engole o erro e responde).
+    await expect(handleMessageContextMenu(i as any, makeDeps(db, boom))).resolves.toBeUndefined();
+    expect(boom).toHaveBeenCalledTimes(1);
+    // Recebeu uma resposta de erro (em vez de ficar preso).
+    expect(replies.length).toBe(1);
+    expect(replies[0]).toMatch(/erro|wrong|try/i);
+  });
 });
