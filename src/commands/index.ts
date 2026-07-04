@@ -19,7 +19,7 @@ import { joinVoiceChannel, getVoiceConnection } from '@discordjs/voice';
 import type { BotDeps } from '../bot/deps';
 import { getPlayer, removePlayer, getLimiter } from '../bot/deps';
 import { GuildVoicePlayer } from '../voice/player';
-import { createVoiceSession } from '../voice/session';
+import { createVoiceSession, becomeSpeakerIfStage } from '../voice/session';
 import { getUserVoice, setUserVoice, resetUserVoice } from '../store/userVoice';
 import { getGuildConfig, setGuildConfig, resetGuildConfig } from '../store/guildConfig';
 import { addBlockword, removeBlockword, getBlocklist } from '../store/blocklist';
@@ -354,6 +354,19 @@ export const commandDefs: RESTPostAPIApplicationCommandsJSONBody[] = [
     )
     .addSubcommand((s) =>
       s
+        .setName('text-in-voice')
+        .setNameLocalizations({ 'pt-BR': 'texto-em-voz' })
+        .setDescription("Also read the text chat inside the voice channel Voxi is in (off by default)")
+        .addBooleanOption((o) =>
+          o
+            .setName('active')
+            .setNameLocalizations({ 'pt-BR': 'ativo' })
+            .setDescription('on/off')
+            .setRequired(true),
+        ),
+    )
+    .addSubcommand((s) =>
+      s
         .setName('default-voice')
         .setDescription("Set the server's default voice (used when the user has no voice of their own)")
         .addStringOption((o) => o.setName('model').setDescription('Piper model').setRequired(true).setAutocomplete(true)),
@@ -519,6 +532,7 @@ export function joinUserVoice(i: ChatInputCommandInteraction, deps: BotDeps): Jo
   // Cria a sessão via helper partilhado (mesma lógica do autojoin). O guard de
   // identidade no onIdle vive lá.
   createVoiceSession(deps, i.guildId!, channel.id, i.guild!.voiceAdapterCreator);
+  becomeSpeakerIfStage(channel); // no-op se não for um canal de palco
   return { status: 'joined', channelName: channel.name };
 }
 
@@ -1066,6 +1080,11 @@ async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps): Prom
     const on = i.options.getBoolean('active', true);
     setGuildConfig(deps.db, i.guildId!, { readBots: on });
     await reply(i, on ? t('config.readBotsOn', locale) : t('config.readBotsOff', locale));
+  } else if (sub === 'text-in-voice') {
+    // Ler o chat de texto dentro do canal de voz onde o Voxi está. DESLIGADO por defeito.
+    const on = i.options.getBoolean('active', true);
+    setGuildConfig(deps.db, i.guildId!, { textInVoice: on });
+    await reply(i, on ? t('config.textInVoiceOn', locale) : t('config.textInVoiceOff', locale));
   } else if (sub === 'default-voice') {
     // Valida contra os modelos disponiveis, tal como /voice set.
     const model = i.options.getString('model', true);
@@ -1113,6 +1132,7 @@ async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps): Prom
       t('config.showXsaid', locale, { value: cfg.xsaid ? on : off }),
       t('config.showAutojoin', locale, { value: cfg.autojoin ? on : off }),
       t('config.showReadBots', locale, { value: cfg.readBots ? on : off }),
+      t('config.showTextInVoice', locale, { value: cfg.textInVoice ? on : off }),
       t('config.showVoice', locale, { value: voiceStr }),
       t('config.showMaxChars', locale, { value: cfg.maxChars }),
       t('config.showRateLimit', locale, { value: cfg.ratePerMin }),

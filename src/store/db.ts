@@ -30,7 +30,8 @@ export function initDb(path: string): Database.Database {
         locale         TEXT NOT NULL DEFAULT 'en',
         xsaid          INTEGER NOT NULL DEFAULT 1,
         autojoin       INTEGER NOT NULL DEFAULT 0,
-        read_bots      INTEGER NOT NULL DEFAULT 0
+        read_bots      INTEGER NOT NULL DEFAULT 0,
+        text_in_voice  INTEGER NOT NULL DEFAULT 0
       );
 
       CREATE TABLE IF NOT EXISTS blocklist (
@@ -120,6 +121,11 @@ export function initDb(path: string): Database.Database {
     // webhooks. DEFAULT 0 (NAO ler bots — o comportamento historico). No-op em DBs novas.
     if (!cols.some((c) => c.name === 'read_bots')) {
       db.exec('ALTER TABLE guild_config ADD COLUMN read_bots INTEGER NOT NULL DEFAULT 0');
+    }
+    // Migracao idempotente do `text_in_voice` (Vaga 2): ler tambem as mensagens do chat
+    // de texto DENTRO do canal de voz onde o Voxi esta. DEFAULT 0 (desligado). No-op novas.
+    if (!cols.some((c) => c.name === 'text_in_voice')) {
+      db.exec('ALTER TABLE guild_config ADD COLUMN text_in_voice INTEGER NOT NULL DEFAULT 0');
     }
 
     return db;

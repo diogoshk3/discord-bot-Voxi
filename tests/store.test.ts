@@ -72,6 +72,7 @@ describe('store', () => {
         xsaid: true, // anunciar quem falou LIGADO por defeito
         autojoin: false, // entrar sozinho na call DESLIGADO por defeito
         readBots: false, // NÃO ler outros bots por defeito
+        textInVoice: false, // NÃO ler o chat-em-voz por defeito
       });
     });
 
@@ -113,6 +114,7 @@ describe('store', () => {
         xsaid: true, // anunciar quem falou LIGADO por defeito
         autojoin: false, // entrar sozinho na call DESLIGADO por defeito
         readBots: false, // NÃO ler outros bots por defeito
+        textInVoice: false, // NÃO ler o chat-em-voz por defeito
       });
     });
 

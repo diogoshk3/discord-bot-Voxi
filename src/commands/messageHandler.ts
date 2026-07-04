@@ -1,7 +1,7 @@
 import { Message, PermissionFlagsBits } from 'discord.js';
 import type { BotDeps } from '../bot/deps';
 import { getPlayer, getLimiter } from '../bot/deps';
-import { createVoiceSession } from '../voice/session';
+import { createVoiceSession, becomeSpeakerIfStage } from '../voice/session';
 import type { GuildVoicePlayer } from '../voice/player';
 import { isBlocked } from '../moderation/filter';
 import { cleanText, collectUrlMedia, collectMarkdownMedia } from '../textCleaning/clean';
@@ -55,7 +55,14 @@ function maybeAutojoin(
     return undefined;
   }
   try {
-    return createVoiceSession(deps, message.guildId, channel.id, message.guild.voiceAdapterCreator);
+    const player = createVoiceSession(
+      deps,
+      message.guildId,
+      channel.id,
+      message.guild.voiceAdapterCreator,
+    );
+    becomeSpeakerIfStage(channel); // no-op se não for um canal de palco
+    return player;
   } catch (err) {
     log.warn('[messageHandler] autojoin falhou (ignorado)', err);
     return undefined;
@@ -87,8 +94,13 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     const isReplyToBot =
       message.reference?.messageId != null &&
       message.mentions.repliedUser?.id === deps.client.user!.id;
+    // text-in-voice: mensagem enviada no chat de texto DENTRO do canal de voz onde o
+    // Voxi está agora (o texto do canal de voz tem channelId == id do canal de voz).
+    const botVoiceChannelId = message.guild.members?.me?.voice?.channelId ?? null;
+    const isTextInVoice =
+      cfg.textInVoice && botVoiceChannelId != null && botVoiceChannelId === message.channelId;
 
-    if (!isAutoreadChannel && !isMention && !isReplyToBot) return;
+    if (!isAutoreadChannel && !isMention && !isReplyToBot && !isTextInVoice) return;
 
     // Gating por role: se a guild definiu um role permitido, so o autor com esse
     // role e lido por auto-leitura (cobre canal, mencao e resposta). Sem role
@@ -100,11 +112,11 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
       if (!member || !member.roles.cache.has(cfg.ttsRoleId)) return;
     }
 
-    // Opt-out por utilizador: so silencia a leitura PASSIVA do canal de auto-leitura.
-    // Uma mencao/reply ao bot e uma accao EXPLICITA do utilizador (como /tts), por isso
-    // NAO e bloqueada pelo opt-out — so a leitura automatica do canal e que e.
+    // Opt-out por utilizador: so silencia a leitura PASSIVA (canal de auto-leitura OU
+    // chat-em-voz). Uma mencao/reply ao bot e uma accao EXPLICITA do utilizador (como
+    // /tts), por isso NAO e bloqueada pelo opt-out — so a leitura automatica e que e.
     if (
-      isAutoreadChannel &&
+      (isAutoreadChannel || isTextInVoice) &&
       !isMention &&
       !isReplyToBot &&
       isOptedOut(deps.db, message.guildId, message.author.id)

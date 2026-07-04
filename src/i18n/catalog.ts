@@ -363,6 +363,14 @@ export const catalog: Record<string, Entry> = {
     en: 'Voxi will **ignore** other bots and webhooks (only real people are read).',
     pt: 'O Voxi **ignora** outros bots e webhooks (só lê pessoas reais).',
   },
+  'config.textInVoiceOn': {
+    en: "✅ Voxi will also read the **text chat inside its voice channel**.",
+    pt: '✅ O Voxi também vai ler o **chat de texto dentro do canal de voz** onde está.',
+  },
+  'config.textInVoiceOff': {
+    en: 'Voxi will **not** read the voice channel text chat (only the TTS channel).',
+    pt: 'O Voxi **não** lê o chat de texto do canal de voz (só o canal de TTS).',
+  },
   // Sucesso do /config default-voice: lidera com o NOME AMIGAVEL ({name}) e mantem o
   // id cru ({model}) subtil/copy-pasteavel. Usada quando o utilizador nao tem voz
   // propria, por isso e a voz que os membros vao ouvir por defeito.
@@ -406,6 +414,10 @@ export const catalog: Record<string, Entry> = {
   'config.showReadBots': {
     en: 'Read bots/webhooks: {value}',
     pt: 'Ler bots/webhooks: {value}',
+  },
+  'config.showTextInVoice': {
+    en: 'Text-in-voice: {value}',
+    pt: 'Texto-em-voz: {value}',
   },
   'config.showVoice': {
     en: 'Default voice: {value}',

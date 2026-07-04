@@ -85,6 +85,7 @@ function makeMessage(opts: {
   attachments?: Array<{ contentType?: string | null; name?: string | null }>;
   displayName?: string;
   authorId?: string;
+  botVoiceChannelId?: string;
 } = {}): any {
   const mention = opts.mention ?? false;
   const replyToBot = opts.replyToBot ?? false;
@@ -97,7 +98,11 @@ function makeMessage(opts: {
       opts.guild !== undefined
         ? opts.guild
         : {
-            members: { cache: { get: () => undefined } },
+            // members.me.voice.channelId = canal de voz onde o bot está (text-in-voice).
+            members: {
+              cache: { get: () => undefined },
+              me: { voice: { channelId: opts.botVoiceChannelId ?? null } },
+            },
             channels: { cache: { get: () => undefined } },
           },
     guildId: opts.guildId !== undefined ? opts.guildId : GUILD,
@@ -156,6 +161,39 @@ describe('handleMessage — ramos não cobertos pelos testes existentes', () => 
     setGuildConfig(db, GUILD, { readBots: true });
     const deps = makeDeps(db, say);
     await handleMessage(makeMessage({ bot: true, authorId: BOT_ID, content: 'eco' }), deps);
+    expect(say).not.toHaveBeenCalled();
+  });
+
+  // ── text-in-voice: ler o chat de texto dentro do canal de voz do bot ──────
+  it('text-in-voice ON → mensagem no canal de voz do bot é lida (mesmo não sendo o canal TTS)', async () => {
+    setGuildConfig(db, GUILD, { textInVoice: true });
+    const deps = makeDeps(db, say);
+    // Mensagem num canal (o chat-em-voz 'vc-9') != canal TTS (CHAN); o bot está em 'vc-9'.
+    await handleMessage(
+      makeMessage({ content: 'olá do chat de voz', channelId: 'vc-9', botVoiceChannelId: 'vc-9' }),
+      deps,
+    );
+    expect(say).toHaveBeenCalledTimes(1);
+    expect(say.mock.calls[0][0].text).toBe('olá do chat de voz');
+  });
+
+  it('text-in-voice OFF → mensagem no canal de voz do bot é ignorada', async () => {
+    const deps = makeDeps(db, say);
+    await handleMessage(
+      makeMessage({ content: 'olá', channelId: 'vc-9', botVoiceChannelId: 'vc-9' }),
+      deps,
+    );
+    expect(say).not.toHaveBeenCalled();
+  });
+
+  it('text-in-voice ON mas mensagem NOUTRO canal de voz → ignorada', async () => {
+    setGuildConfig(db, GUILD, { textInVoice: true });
+    const deps = makeDeps(db, say);
+    // Bot em 'vc-9' mas a mensagem veio de 'vc-outro'.
+    await handleMessage(
+      makeMessage({ content: 'olá', channelId: 'vc-outro', botVoiceChannelId: 'vc-9' }),
+      deps,
+    );
     expect(say).not.toHaveBeenCalled();
   });
 

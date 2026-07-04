@@ -24,6 +24,9 @@ export interface GuildConfig {
   // DESLIGADO por defeito (comportamento histórico: ignora bots). O próprio Voxi NUNCA
   // se lê a si mesmo, independentemente disto (anti-loop).
   readBots: boolean;
+  // textInVoice: ler também as mensagens do chat de texto EMBUTIDO no canal de voz onde
+  // o Voxi está (o texto dos canais de voz do Discord). DESLIGADO por defeito.
+  textInVoice: boolean;
 }
 
 const DEFAULTS: GuildConfig = {
@@ -40,6 +43,7 @@ const DEFAULTS: GuildConfig = {
   xsaid: true, // anunciar "{nome} disse" LIGADO por defeito
   autojoin: false, // entrar sozinho na call DESLIGADO por defeito (opt-in)
   readBots: false, // NÃO ler outros bots por defeito (comportamento histórico)
+  textInVoice: false, // NÃO ler o chat-em-voz por defeito (opt-in)
 };
 
 interface GuildConfigRow {
@@ -55,6 +59,7 @@ interface GuildConfigRow {
   xsaid: number | null;
   autojoin: number | null;
   read_bots: number | null;
+  text_in_voice: number | null;
 }
 
 export function getGuildConfig(db: Database.Database, guildId: string): GuildConfig {
@@ -78,6 +83,7 @@ export function getGuildConfig(db: Database.Database, guildId: string): GuildCon
     // NOT NULL DEFAULT 0; null defensivo (DB antiga) => default OFF.
     autojoin: row.autojoin == null ? DEFAULTS.autojoin : row.autojoin === 1,
     readBots: row.read_bots == null ? DEFAULTS.readBots : row.read_bots === 1,
+    textInVoice: row.text_in_voice == null ? DEFAULTS.textInVoice : row.text_in_voice === 1,
   };
 }
 
@@ -94,8 +100,8 @@ export function setGuildConfig(
   const next: GuildConfig = { ...current, ...patch };
   db.prepare(
     `INSERT INTO guild_config
-       (guild_id, tts_channel_id, autoread, default_voice, max_chars, rate_per_min, enabled, tts_role_id, locale, xsaid, autojoin, read_bots)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       (guild_id, tts_channel_id, autoread, default_voice, max_chars, rate_per_min, enabled, tts_role_id, locale, xsaid, autojoin, read_bots, text_in_voice)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(guild_id) DO UPDATE SET
        tts_channel_id = excluded.tts_channel_id,
        autoread       = excluded.autoread,
@@ -107,7 +113,8 @@ export function setGuildConfig(
        locale         = excluded.locale,
        xsaid          = excluded.xsaid,
        autojoin       = excluded.autojoin,
-       read_bots      = excluded.read_bots`,
+       read_bots      = excluded.read_bots,
+       text_in_voice  = excluded.text_in_voice`,
   ).run(
     guildId,
     next.ttsChannelId,
@@ -121,5 +128,6 @@ export function setGuildConfig(
     next.xsaid ? 1 : 0,
     next.autojoin ? 1 : 0,
     next.readBots ? 1 : 0,
+    next.textInVoice ? 1 : 0,
   );
 }

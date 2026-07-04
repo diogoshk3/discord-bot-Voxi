@@ -6,7 +6,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type Database from 'better-sqlite3';
 
-vi.mock('../src/voice/session', () => ({ createVoiceSession: vi.fn() }));
+vi.mock('../src/voice/session', () => ({
+  createVoiceSession: vi.fn(),
+  becomeSpeakerIfStage: vi.fn(),
+}));
 
 import { handleMessage } from '../src/commands/messageHandler';
 import { createVoiceSession } from '../src/voice/session';
