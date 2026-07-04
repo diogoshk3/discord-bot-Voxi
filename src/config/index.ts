@@ -70,6 +70,28 @@ function numEnv(name: string, fallback: number): number {
 }
 
 /**
+ * Numero que TEM de ser POSITIVO (> 0). Ausente/vazio => fallback. Valor
+ * nao-numerico, <= 0, ou (se `integer`) nao-inteiro => AVISA e usa o fallback, em
+ * vez de aceitar em silencio. Racional: `RATE_PER_MIN=0` / `QUEUE_CAP=0` /
+ * `MAX_CHARS=0` (typo) tornavam o bot silenciosamente MUDO (fila/limitador rejeitam
+ * tudo) sem explicacao. Degradar para o default seguro + avisar e melhor do que um
+ * bot morto silencioso OU um crash-loop de arranque.
+ */
+function numEnvPositive(name: string, fallback: number, opts: { integer?: boolean } = {}): number {
+  const raw = process.env[name];
+  if (raw === undefined || raw.trim() === '') return fallback;
+  const parsed = Number(raw);
+  const bad = !Number.isFinite(parsed) || parsed <= 0 || (opts.integer && !Number.isInteger(parsed));
+  if (bad) {
+    log.warn(
+      `[config] ${name}="${raw}" invalido (esperado ${opts.integer ? 'inteiro ' : ''}> 0). A usar o default ${fallback}.`,
+    );
+    return fallback;
+  }
+  return parsed;
+}
+
+/**
  * Numero OPCIONAL: ausente/vazio => undefined (ao contrario de numEnv, que tem
  * sempre fallback). Valor nao-numerico tambem => undefined — a escolha
  * defensiva, consistente com o resto do modulo: nao arrancamos um servidor por
@@ -121,12 +143,12 @@ export function loadConfig(): AppConfig {
     modelsDir: strEnv('MODELS_DIR', './models'),
     dbPath: strEnv('DB_PATH', './tts.db'),
     defaultVoice: strEnv('DEFAULT_VOICE', 'en_US-amy-medium'),
-    defaultSpeed: numEnv('DEFAULT_SPEED', 1),
+    defaultSpeed: numEnvPositive('DEFAULT_SPEED', 1), // > 0 (fracionario ok: 0.5–2.0)
     inactivityMs: numEnv('INACTIVITY_MS', 1_500_000), // 25 min sem atividade -> sai do canal
-    messageLeadMs: numEnv('MESSAGE_LEAD_MS', 200), // 0.20s de silêncio antes de falar a mensagem
-    queueCap: numEnv('QUEUE_CAP', 20),
-    maxChars: numEnv('MAX_CHARS', 300),
-    ratePerMin: numEnv('RATE_PER_MIN', 5),
+    messageLeadMs: numEnv('MESSAGE_LEAD_MS', 200), // 0.20s (0 = sem espera, por isso NÃO exige > 0)
+    queueCap: numEnvPositive('QUEUE_CAP', 20, { integer: true }),
+    maxChars: numEnvPositive('MAX_CHARS', 300, { integer: true }),
+    ratePerMin: numEnvPositive('RATE_PER_MIN', 5, { integer: true }),
     ttsEngine: engineEnv(),
     openaiApiKey: strEnv('OPENAI_API_KEY', '') || undefined,
     // P9.3 — texto opcional da presenca; vazio/ausente => undefined e buildPresence

@@ -16,8 +16,18 @@ const MAX_CONTENT = 1900;
 
 function hashError(error: unknown): string {
   const e = error as { stack?: string; message?: string };
-  const key = (e?.stack || e?.message || String(error)).slice(0, 1000);
-  return createHash('sha1').update(key).digest('hex');
+  let key = e?.stack || e?.message;
+  if (!key) {
+    // Rejeições NÃO-Error (objeto simples, string, etc.) — comum no unhandledRejection.
+    // Sem isto, tudo caía em String(error) === "[object Object]" e colidia num só hash,
+    // deduplicando falhas genuinamente diferentes. Serializa (guardado) para distinguir.
+    try {
+      key = JSON.stringify(error);
+    } catch {
+      key = String(error);
+    }
+  }
+  return createHash('sha1').update(String(key).slice(0, 1000)).digest('hex');
 }
 
 /** Formata o erro como content de webhook (cabeçalho + stack num code block, truncado). */
@@ -51,6 +61,9 @@ export function createErrorReporter(
       const h = hashError(error);
       if (seen.has(h)) return false; // já reportado — não faz spam
       if (seen.size >= DEDUP_CAP) seen.clear();
+      // Marca ANTES do await para deduplicar envios concorrentes do MESMO erro; mas
+      // remove se o envio FALHAR, para que a próxima ocorrência possa re-tentar — senão
+      // uma falha transitória (429/5xx/rede) perdia esse sinal para sempre nesta janela.
       seen.add(h);
       try {
         const res = await fetchImpl(url, {
@@ -58,8 +71,13 @@ export function createErrorReporter(
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ content: formatErrorMessage(error, context) }),
         });
-        return res.ok;
+        if (!res.ok) {
+          seen.delete(h);
+          return false;
+        }
+        return true;
       } catch (err) {
+        seen.delete(h);
         log.warn(
           '[errorReporter] falha a enviar erro para o webhook (ignorado):',
           (err as Error).message,

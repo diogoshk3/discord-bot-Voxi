@@ -144,7 +144,17 @@ async function main(): Promise<void> {
     }
   });
 
-  await registerCommands(config.token, config.clientId);
+  // Sincronizar os comandos NÃO é fatal: é um PUT global fortemente rate-limited
+  // (429s) e os comandos já ficaram registados de arranques anteriores. Se falhar
+  // (429/rede), avisamos e seguimos para o login — o bot arranca com o conjunto de
+  // comandos já registado. Antes, um 429 transitório abortava o arranque e, sob o
+  // supervisor, entrava em crash-loop a re-disparar o PUT rate-limited (queimando a
+  // quota diária de comandos globais e prolongando a falha).
+  try {
+    await registerCommands(config.token, config.clientId);
+  } catch (err) {
+    log.error('[index] falha ao sincronizar comandos (ignorado, arranco com os já registados)', err);
+  }
   await client.login(config.token);
 }
 

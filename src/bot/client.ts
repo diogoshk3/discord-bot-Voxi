@@ -121,7 +121,14 @@ export function bindEvents(deps: BotDeps): void {
     void errorReporter.report(reason, 'unhandledRejection');
   });
   process.on('uncaughtException', (err) => {
-    log.error('[process] uncaughtException', err);
-    void errorReporter.report(err, 'uncaughtException');
+    log.error('[process] uncaughtException — a reportar e a SAIR (o supervisor reinicia limpo)', err);
+    // Guia do Node: após uma exceção não-apanhada o processo fica em estado indefinido.
+    // Saímos com código != 0 para o supervisor (start-prod.mjs) reiniciar de fresco, em
+    // vez de ficarmos "vivos mas partidos" — o que o health endpoint reportaria como OK
+    // enquanto o bot está wedged. Janela curta para o webhook de erro escoar antes de sair.
+    const exit = (): void => process.exit(1);
+    const t = setTimeout(exit, 2000);
+    t.unref();
+    void errorReporter.report(err, 'uncaughtException').finally(exit);
   });
 }

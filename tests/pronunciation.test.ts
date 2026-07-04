@@ -24,6 +24,22 @@ describe('applyPronunciation', () => {
     expect(applyPronunciation('eggs e ovos', dict)).toBe('eggs e ovos');
   });
 
+  // Bug-hunt 2026-07: o replacement (controlado pelo admin via /config pronunciation)
+  // era passado CRU como 2.º arg de String.replace, que interpreta $&, $1, $`, $', $$
+  // como diretivas. Um replacement com '$' produzia áudio errado (ex.: "R$" -> insere
+  // o termo casado). Tem de ser LITERAL (as irmãs restoreAccents/expandAbbreviations
+  // usam replacers-função por isto). Casos abaixo cobrem os padrões $.
+  it('trata o replacement como LITERAL (não interpreta $&, $1, $$ como diretivas)', () => {
+    // $& = termo casado; se fosse interpretado, "gg" -> "[gg]" viraria "[gg]"->"[[gg]]"? Não.
+    expect(applyPronunciation('preco gg', [{ term: 'gg', replacement: '$&' }])).toBe('preco $&');
+    // símbolo de moeda literal — o caso real do mundo.
+    expect(applyPronunciation('paga dollars agora', [{ term: 'dollars', replacement: 'R$' }])).toBe(
+      'paga R$ agora',
+    );
+    // $$ deve ficar $$ (não colapsar para $), $1 literal (não há grupo 1).
+    expect(applyPronunciation('a x b', [{ term: 'x', replacement: '$$$1' }])).toBe('a $$$1 b');
+  });
+
   it('substitui multiplos termos diferentes', () => {
     const dict: PronunciationEntry[] = [
       { term: 'gg', replacement: 'good game' },

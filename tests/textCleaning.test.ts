@@ -47,6 +47,20 @@ describe('cleanText', () => {
     it('sem URL -> []', () => {
       expect(collectUrlMedia('mensagem normal sem links')).toEqual([]);
     });
+
+    // Bug-hunt 2026-07: um URL DENTRO de código/spoiler era anunciado DUAS vezes
+    // (como "código"/"spoiler" via collectMarkdownMedia E como "link"/"gif" aqui),
+    // porque este scan corria sobre o texto CRU. Agora só conta URLs no que sobra
+    // depois de remover código e spoilers — paridade com o que o cleanText remove.
+    it('URL dentro de código NÃO é contado como link (evita dupla contagem)', () => {
+      expect(collectUrlMedia('`https://tenor.com/view/x-gif-1`')).toEqual([]);
+      expect(collectUrlMedia('```\nhttps://exemplo.com\n```')).toEqual([]);
+      expect(collectUrlMedia('||https://exemplo.com||')).toEqual([]);
+    });
+
+    it('URL FORA de código continua a ser contado (o normal não muda)', () => {
+      expect(collectUrlMedia('vê `codigo` e https://exemplo.com')).toEqual(['link']);
+    });
   });
 
   describe('spoiler — conteúdo NÃO é lido (só anunciado)', () => {

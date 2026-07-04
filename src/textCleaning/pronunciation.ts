@@ -30,7 +30,11 @@ export function applyPronunciation(text: string, dict: PronunciationEntry[]): st
       `(?<=^|[^\\p{L}\\p{N}])${escapeRegExp(t)}(?=[^\\p{L}\\p{N}]|$)`,
       'giu',
     );
-    out = out.replace(pattern, replacement);
+    // Replacer-FUNÇÃO (não string) para tratar o replacement como LITERAL: uma string
+    // crua faria String.replace interpretar $&, $1, $`, $', $$ como diretivas (o
+    // replacement é controlado pelo admin via /config pronunciation — ex.: "R$"). As
+    // irmãs restoreAccents/expandAbbreviations já usam replacers-função por isto.
+    out = out.replace(pattern, () => replacement);
   }
   return out;
 }

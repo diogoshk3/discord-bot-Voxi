@@ -63,4 +63,34 @@ describe('createErrorReporter', () => {
     const r = createErrorReporter('https://wh', fetchImpl as unknown as typeof fetch);
     expect(await r.report(new Error('e'), 'ctx')).toBe(false);
   });
+
+  // Bug-hunt 2026-07: o hash era marcado "seen" ANTES do envio ter sucesso, por isso
+  // uma falha transitória perdia esse erro para sempre na janela de dedup. Agora, se o
+  // envio falhar, a MESMA ocorrência pode ser re-tentada; a dedup só cola após sucesso.
+  it('envio falhado NÃO deduplica: a próxima ocorrência re-tenta e ao ter sucesso passa a deduplicar', async () => {
+    let ok = false;
+    const fetchImpl = vi.fn(async () => {
+      if (!ok) throw new Error('down');
+      return { ok: true, status: 204 } as Response;
+    });
+    const r = createErrorReporter('https://wh', fetchImpl as unknown as typeof fetch);
+    const err = new Error('flaky');
+    // 1ª: rede em baixo -> false, e NÃO fica preso como "seen".
+    expect(await r.report(err, 'ctx')).toBe(false);
+    // 2ª: rede recupera -> re-tenta e envia (prova de que não foi deduplicado).
+    ok = true;
+    expect(await r.report(err, 'ctx')).toBe(true);
+    // 3ª: agora sim deduplica (já foi enviado com sucesso).
+    expect(await r.report(err, 'ctx')).toBe(false);
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it('dedup distingue rejeições NÃO-Error diferentes (objetos simples)', async () => {
+    const fetchImpl = okFetch();
+    const r = createErrorReporter('https://wh', fetchImpl as unknown as typeof fetch);
+    await r.report({ code: 'A', detail: 'um' }, 'ctx');
+    await r.report({ code: 'B', detail: 'dois' }, 'ctx');
+    // Antes: ambos hasheavam "[object Object]" e o 2.º era suprimido. Agora: 2 envios.
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
 });

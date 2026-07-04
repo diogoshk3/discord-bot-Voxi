@@ -31,7 +31,16 @@ function isGifUrl(url: string): boolean {
  * PURO. Ordem preservada; um item por URL.
  */
 export function collectUrlMedia(raw: string): MediaKind[] {
-  const matches = raw.match(RE_URL);
+  // Conta URLs SÓ no que resta depois de tirar spoilers e código — a MESMA ordem de
+  // remoção do cleanText (spoiler -> bloco -> inline -> url). Sem isto, um URL DENTRO
+  // de um bloco de código era anunciado DUAS vezes: como "código"
+  // (collectMarkdownMedia) e como "link"/"gif" aqui. Mantém a paridade exata com o que
+  // o cleanText realmente remove do corpo falado.
+  const body = raw
+    .replace(RE_SPOILER, ' ')
+    .replace(RE_CODE_BLOCK, ' ')
+    .replace(RE_INLINE_CODE, ' ');
+  const matches = body.match(RE_URL);
   if (!matches) return [];
   return matches.map((u) => (isGifUrl(u) ? 'gif' : 'link'));
 }

@@ -50,6 +50,12 @@ export function startHealthServer(config: Pick<AppConfig, 'healthPort'>): Server
   if (port === undefined) return undefined;
 
   const server = http.createServer((req, res) => {
+    // Um cliente que corte a ligação a meio do pedido emite 'error' no stream do
+    // req; sem listener, o Node relança-o como exceção não-apanhada. Espelha o
+    // servidor de webhook (vote.ts) que já tem este guard.
+    req.on('error', (err) => {
+      log.warn('[health] erro no stream do pedido (ignorado)', err);
+    });
     const { status, body } = healthResponse(req.url);
     res.writeHead(status, { 'Content-Type': 'application/json' });
     res.end(body);
