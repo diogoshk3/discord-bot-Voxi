@@ -10,13 +10,28 @@ const opts: CleanOptions = {
 
 describe('cleanText', () => {
   describe('URLs', () => {
-    it('remove http(s) (nao le links)', () => {
-      expect(cleanText('vai a https://exemplo.com agora', opts)).toBe('vai a agora');
-      expect(cleanText('http://a.b/c?x=1', opts)).toBe('');
+    it('link http(s) -> "a link" (nao le o URL cru)', () => {
+      expect(cleanText('vai a https://exemplo.com agora', opts)).toBe('vai a a link agora');
+      expect(cleanText('http://a.b/c?x=1', opts)).toBe('a link');
     });
 
-    it('remove www. (nao le links)', () => {
-      expect(cleanText('ve www.exemplo.com ja', opts)).toBe('ve ja');
+    it('link www. -> "a link"', () => {
+      expect(cleanText('ve www.exemplo.com ja', opts)).toBe('ve a link ja');
+    });
+
+    it('GIF do Tenor -> "a gif"', () => {
+      expect(cleanText('olha https://tenor.com/view/cat-gif-12345 lol', opts)).toBe('olha a gif lol');
+    });
+
+    it('GIF do Giphy -> "a gif"', () => {
+      expect(cleanText('https://giphy.com/gifs/funny-abc123', opts)).toBe('a gif');
+      expect(cleanText('media de https://media.giphy.com/media/xyz/giphy.gif', opts)).toBe(
+        'media de a gif',
+      );
+    });
+
+    it('media .gif direta -> "a gif"', () => {
+      expect(cleanText('https://cdn.exemplo.com/animacao.gif', opts)).toBe('a gif');
     });
   });
 
@@ -164,15 +179,15 @@ describe('cleanText', () => {
 
   describe('edge-cases: emoji + URL + mencao juntos', () => {
     it('limpa emoji + URL + mencao de user na mesma mensagem', () => {
-      // emoji unicode removido, URL removida (nao le links), mencao resolvida
-      expect(cleanText('😀 https://example.com <@123>', opts)).toBe('@user123');
+      // emoji unicode removido, URL -> "a link", mencao resolvida
+      expect(cleanText('😀 https://example.com <@123>', opts)).toBe('a link @user123');
     });
 
     it('limpa role + custom emoji + URL na mesma mensagem', () => {
-      // role removido, custom emoji LIDO (fire), URL removida (nao le links)
+      // role removido, custom emoji LIDO (fire), URL -> "a link"
       expect(
         cleanText('check <@&999> <:fire:123> at https://x.com', opts),
-      ).toBe('check fire at');
+      ).toBe('check fire at a link');
     });
 
     it('mensagem so de emojis unicode devolve ""', () => {

@@ -78,12 +78,15 @@ function makeMessage(opts: {
   content?: string;
   mention?: boolean;
   replyToBot?: boolean;
+  attachments?: Array<{ contentType?: string | null; name?: string | null }>;
 } = {}): any {
   const mention = opts.mention ?? false;
   const replyToBot = opts.replyToBot ?? false;
 
   return {
     author: { bot: opts.bot ?? false, id: USER },
+    // attachments: Collection real tem .some(); um array serve para o mock.
+    attachments: opts.attachments,
     guild:
       opts.guild !== undefined
         ? opts.guild
@@ -258,5 +261,45 @@ describe('handleMessage — ramos não cobertos pelos testes existentes', () => 
       model: expect.any(String),
       speed: expect.any(Number),
     });
+  });
+
+  // ── GIF anexado (sem texto) → "a gif" ─────────────────────────────────────
+  it('anexo .gif sem texto → player.say com "a gif"', async () => {
+    const deps = makeDeps(db, say);
+    await handleMessage(
+      makeMessage({ content: '', attachments: [{ contentType: 'image/gif', name: 'cat.gif' }] }),
+      deps,
+    );
+    expect(say).toHaveBeenCalledTimes(1);
+    expect(say.mock.calls[0][0].text).toBe('a gif');
+  });
+
+  it('anexo detetado por .gif no nome (contentType null) → "a gif"', async () => {
+    const deps = makeDeps(db, say);
+    await handleMessage(
+      makeMessage({ content: '', attachments: [{ contentType: null, name: 'boom.GIF' }] }),
+      deps,
+    );
+    expect(say).toHaveBeenCalledTimes(1);
+    expect(say.mock.calls[0][0].text).toBe('a gif');
+  });
+
+  it('texto + anexo .gif → texto seguido de "a gif"', async () => {
+    const deps = makeDeps(db, say);
+    await handleMessage(
+      makeMessage({ content: 'olha', attachments: [{ contentType: 'image/gif', name: 'x.gif' }] }),
+      deps,
+    );
+    expect(say).toHaveBeenCalledTimes(1);
+    expect(say.mock.calls[0][0].text).toBe('olha a gif');
+  });
+
+  it('anexo que NAO e gif (png) sem texto → ignorada', async () => {
+    const deps = makeDeps(db, say);
+    await handleMessage(
+      makeMessage({ content: '', attachments: [{ contentType: 'image/png', name: 'foto.png' }] }),
+      deps,
+    );
+    expect(say).not.toHaveBeenCalled();
   });
 });

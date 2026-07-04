@@ -225,8 +225,8 @@ describe('pipeline central — integracao end-to-end (store real + player falso)
 
     expect(say).toHaveBeenCalledTimes(1);
     const req = say.mock.calls[0][0];
-    // URL removida (nao le links), emoji removido, <@123> -> Diogo, <#456> -> geral.
-    expect(req.text).toBe('olha este link que o Diogo mandou no geral');
+    // URL -> "a link" (nao le o URL cru), emoji removido, <@123> -> Diogo, <#456> -> geral.
+    expect(req.text).toBe('olha este link a link que o Diogo mandou no geral');
   });
 
   // ── 6. PRONUNCIA real aplicada antes do synth ─────────────────────────────

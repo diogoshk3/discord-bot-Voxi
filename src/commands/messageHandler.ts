@@ -13,10 +13,28 @@ import { prepareSpeech } from './prepareSpeech';
 import { recallLang, rememberLang } from '../language/langMemory';
 import { log } from '../logging/logger';
 
+/**
+ * Anexo e um GIF quando o contentType e image/gif ou o nome do ficheiro termina
+ * em .gif. (Os GIFs do picker do Discord chegam como link tenor.com no content —
+ * esses sao tratados no cleanText; aqui e so para .gif arrastados como anexo.)
+ */
+function hasGifAttachment(message: Message): boolean {
+  return (
+    message.attachments?.some(
+      (a) => a.contentType === 'image/gif' || !!a.name?.toLowerCase().endsWith('.gif'),
+    ) ?? false
+  );
+}
+
 export async function handleMessage(message: Message, deps: BotDeps): Promise<void> {
   try {
     if (message.author.bot || !message.guild || !message.guildId) return;
-    if (!message.content) return;
+    // Conteudo a falar: o texto da mensagem + "a gif" por cada GIF anexado (para
+    // que um .gif arrastado sem texto seja anunciado como "a gif", tal como um
+    // link do Tenor no content e). Sem texto e sem GIF -> nada a ler.
+    let rawContent = message.content ?? '';
+    if (hasGifAttachment(message)) rawContent = rawContent ? `${rawContent} a gif` : 'a gif';
+    if (!rawContent) return;
 
     const cfg = getGuildConfig(deps.db, message.guildId);
     if (!cfg.enabled) return;
@@ -64,7 +82,7 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     if (!rl.allow(message.author.id, Date.now())) return;
 
     // limpeza com caches da guild
-    const cleaned = cleanText(message.content, {
+    const cleaned = cleanText(rawContent, {
       maxChars: cfg.maxChars,
       resolveUser: (id: string) =>
         message.guild!.members.cache.get(id)?.displayName ??

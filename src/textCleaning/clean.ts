@@ -7,6 +7,16 @@ export interface CleanOptions {
 const RE_CODE_BLOCK = /```[\s\S]*?```/g;
 const RE_INLINE_CODE = /`[^`]*`/g;
 const RE_URL = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/gi;
+
+// Um URL e um GIF quando: (a) o caminho termina em .gif (media direta), ou (b) o
+// host e de um provedor de GIFs (Tenor/Giphy). Os GIFs do picker do Discord chegam
+// como link tenor.com no content, por isso esta deteccao cobre o caso dominante.
+// Substring simples em vez de match de host exato — para LEITURA em voz alta um
+// falso-positivo raro ("evil-tenor.com") e inofensivo, e a simplicidade vale mais.
+function isGifUrl(url: string): boolean {
+  const s = url.toLowerCase();
+  return /\.gif\b/.test(s) || s.includes('tenor.com') || s.includes('giphy.com');
+}
 const RE_ROLE = /<@&\d+>/g;
 const RE_USER = /<@!?(\d+)>/g;
 const RE_CHANNEL = /<#(\d+)>/g;
@@ -34,10 +44,12 @@ export function cleanText(raw: string, opts: CleanOptions): string {
   t = t.replace(RE_CODE_BLOCK, ' ');
   t = t.replace(RE_INLINE_CODE, ' ');
 
-  // 2. URLs -> REMOVIDAS (o Diogo nao quer que o bot leia links). Cobre tambem os
-  // GIFs do Tenor/Giphy, que chegam como URL no content. (Anexos .gif nem estao
-  // no content, por isso ja nao eram lidos.)
-  t = t.replace(RE_URL, ' ');
+  // 2. URLs -> anunciadas em vez de lidas. O Diogo NAO quer o URL cru falado, mas
+  // quer saber que houve media: um link generico vira "a link"; um GIF (link do
+  // Tenor/Giphy ou media .gif) vira "a gif". Os GIFs do picker do Discord chegam
+  // como link tenor.com no content, por isso este caminho ja cobre o caso comum;
+  // os anexos .gif (que nao estao no content) sao tratados no messageHandler.
+  t = t.replace(RE_URL, (m) => (isGifUrl(m) ? ' a gif ' : ' a link '));
 
   // 3. mencoes de role (sem resolver: removidas para nao serem lidas como "<@&id>")
   t = t.replace(RE_ROLE, ' ');
