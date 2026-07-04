@@ -1,11 +1,25 @@
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { gttsLangOfModel, chunkText, GTTSEngine } from '../src/tts/gtts';
+import {
+  gttsLangOfModel,
+  chunkText,
+  GTTSEngine,
+  retryAsync,
+  isRetryableStatus,
+} from '../src/tts/gtts';
 import { createEngine } from '../src/tts/factory';
 import { AudioCache } from '../src/tts/cache';
 import type { AppConfig } from '../src/config/index';
+
+/** Erro etiquetado como no gtts.ts (retryable = transitório). */
+function tagged(msg: string, retryable: boolean): Error {
+  const e = new Error(msg) as Error & { retryable: boolean };
+  e.retryable = retryable;
+  return e;
+}
+const noSleep = async () => {};
 
 describe('gttsLangOfModel — id de modelo Piper -> código tl do gTTS', () => {
   it('usa o prefixo antes do "_" (ISO-639-1)', () => {
@@ -46,6 +60,81 @@ describe('chunkText — parte por palavra respeitando o limite', () => {
     const giant = 'x'.repeat(90);
     const chunks = chunkText(giant, 40);
     expect(chunks).toEqual(['x'.repeat(40), 'x'.repeat(40), 'x'.repeat(10)]);
+  });
+});
+
+describe('isRetryableStatus — 429/5xx transitório; 403/4xx falha dura', () => {
+  it('429 e 5xx -> retryable', () => {
+    expect(isRetryableStatus(429)).toBe(true);
+    expect(isRetryableStatus(500)).toBe(true);
+    expect(isRetryableStatus(503)).toBe(true);
+  });
+  it('403 e outros 4xx -> NÃO retryable', () => {
+    expect(isRetryableStatus(403)).toBe(false);
+    expect(isRetryableStatus(404)).toBe(false);
+    expect(isRetryableStatus(400)).toBe(false);
+  });
+});
+
+describe('retryAsync — repete só erros transitórios, com limite', () => {
+  it('erro transitório 1x depois sucesso -> devolve o resultado (repetiu)', async () => {
+    let n = 0;
+    const fn = vi.fn(async () => {
+      n++;
+      if (n === 1) throw tagged('blip', true);
+      return 'ok';
+    });
+    const out = await retryAsync(fn, { retries: 2, sleep: noSleep });
+    expect(out).toBe('ok');
+    expect(fn).toHaveBeenCalledTimes(2);
+  });
+
+  it('erro NÃO-retryable (ex.: timeout/403) -> falha JÁ, sem repetir', async () => {
+    const fn = vi.fn(async () => {
+      throw tagged('timeout', false);
+    });
+    await expect(retryAsync(fn, { retries: 2, sleep: noSleep })).rejects.toThrow('timeout');
+    expect(fn).toHaveBeenCalledTimes(1); // sem retries
+  });
+
+  it('erro transitório persistente -> esgota as tentativas e propaga o último', async () => {
+    const fn = vi.fn(async () => {
+      throw tagged('429', true);
+    });
+    await expect(retryAsync(fn, { retries: 2, sleep: noSleep })).rejects.toThrow('429');
+    expect(fn).toHaveBeenCalledTimes(3); // 1 + 2 retries
+  });
+});
+
+describe('GTTSEngine.fetchChunk — retry no fetch (via fetchImpl injetado)', () => {
+  let dir: string;
+  afterEach(() => {
+    if (dir) rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('um 503 momentâneo é recuperado na 2ª tentativa (mesma voz Google)', async () => {
+    dir = mkdtempSync(join(tmpdir(), 'gtts-retry-'));
+    let calls = 0;
+    const fetchImpl = vi.fn(async () => {
+      calls++;
+      if (calls === 1) return { ok: false, status: 503, statusText: 'Service Unavailable' } as Response;
+      return { ok: true, status: 200, arrayBuffer: async () => new Uint8Array([1, 2, 3, 4]).buffer } as Response;
+    });
+    const engine = new GTTSEngine(new AudioCache(dir), { fetchImpl: fetchImpl as unknown as typeof fetch, sleepImpl: noSleep });
+    // synth chama fetchChunk; com 1 pedaço curto, o ffmpeg converte os bytes. Aqui só
+    // exercitamos que NÃO rebenta no 503 e que o fetch foi chamado 2x (recuperou).
+    await engine.synth({ text: 'ola', model: 'pt_BR-cadu-medium', speed: 1 }).catch(() => {});
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it('um 403 (bloqueio) NÃO é repetido — falha dura', async () => {
+    dir = mkdtempSync(join(tmpdir(), 'gtts-403-'));
+    const fetchImpl = vi.fn(async () => ({ ok: false, status: 403, statusText: 'Forbidden' }) as Response);
+    const engine = new GTTSEngine(new AudioCache(dir), { fetchImpl: fetchImpl as unknown as typeof fetch, sleepImpl: noSleep });
+    await expect(
+      engine.synth({ text: 'ola', model: 'pt_BR-cadu-medium', speed: 1 }),
+    ).rejects.toThrow(/403/);
+    expect(fetchImpl).toHaveBeenCalledTimes(1); // sem retry
   });
 });
 

@@ -21,11 +21,64 @@ import ffmpegPath from 'ffmpeg-static';
 import type { SynthRequest, TTSEngine } from './engine';
 import { AudioCache, cacheKey } from './cache';
 import { concatWavs, silenceWav } from './wavConcat';
+import { log } from '../logging/logger';
 
 const GTTS_URL = 'https://translate.google.com/translate_tts';
 const GTTS_TIMEOUT_MS = 15000;
 /** Limite prático de caracteres por request do endpoint translate_tts. */
 const GTTS_MAX_CHARS = 200;
+/** Tentativas EXTRA por pedido quando o erro é TRANSITÓRIO (rede/5xx/429). Default 2. */
+const GTTS_DEFAULT_RETRIES = 2;
+/** Espera base entre tentativas (backoff linear: 300ms, 600ms, …). */
+const GTTS_RETRY_BASE_MS = 300;
+
+/** Erro etiquetado com se vale a pena repetir (transitório) ou não (falha dura). */
+type TaggedError = Error & { retryable?: boolean };
+function taggedError(message: string, retryable: boolean): TaggedError {
+  const e = new Error(message) as TaggedError;
+  e.retryable = retryable;
+  return e;
+}
+
+/**
+ * Um estado HTTP é TRANSITÓRIO (vale a pena repetir) quando é 429 (limite momentâneo
+ * da Google) ou 5xx (erro do servidor). 403 e outros 4xx são falhas DURAS (repetir não
+ * ajuda — ex.: bloqueio). PURA.
+ */
+export function isRetryableStatus(status: number): boolean {
+  return status === 429 || status >= 500;
+}
+
+/**
+ * Corre `fn`, repetindo-a até `retries` vezes SÓ quando o erro está etiquetado como
+ * `retryable` (transitório), com backoff linear (`baseDelayMs` × tentativa). Um erro
+ * não-retryable (ex.: timeout, 403) falha IMEDIATAMENTE — evita empilhar esperas. O
+ * `sleep` é injetável para testes. PURA (sem estado global). Propaga o último erro.
+ */
+export async function retryAsync<T>(
+  fn: () => Promise<T>,
+  opts: {
+    retries: number;
+    sleep: (ms: number) => Promise<void>;
+    baseDelayMs?: number;
+    onRetry?: (err: unknown, attempt: number) => void;
+  },
+): Promise<T> {
+  const base = opts.baseDelayMs ?? GTTS_RETRY_BASE_MS;
+  let lastErr: unknown;
+  for (let attempt = 0; attempt <= opts.retries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      const retryable = (err as TaggedError).retryable === true;
+      if (!retryable || attempt === opts.retries) throw err;
+      opts.onRetry?.(err, attempt);
+      await opts.sleep(base * (attempt + 1));
+    }
+  }
+  throw lastErr;
+}
 /** A Google rejeita o User-Agent default do fetch; finge um browser. */
 const GTTS_UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36';
@@ -77,11 +130,26 @@ export function chunkText(text: string, max: number): string[] {
   return chunks;
 }
 
+export interface GttsOptions {
+  /** fetch injetável (testes). Default: o `fetch` global. */
+  fetchImpl?: typeof fetch;
+  /** sleep injetável (testes deterministicos). Default: setTimeout real. */
+  sleepImpl?: (ms: number) => Promise<void>;
+  /** tentativas EXTRA por pedido para erros transitórios. Default GTTS_DEFAULT_RETRIES. */
+  retries?: number;
+}
+
 export class GTTSEngine implements TTSEngine {
   private readonly cache: AudioCache;
+  private readonly fetchImpl: typeof fetch;
+  private readonly sleep: (ms: number) => Promise<void>;
+  private readonly retries: number;
 
-  constructor(cache: AudioCache) {
+  constructor(cache: AudioCache, opts: GttsOptions = {}) {
     this.cache = cache;
+    this.fetchImpl = opts.fetchImpl ?? fetch;
+    this.sleep = opts.sleepImpl ?? ((ms) => new Promise((r) => setTimeout(r, ms)));
+    this.retries = opts.retries ?? GTTS_DEFAULT_RETRIES;
   }
 
   async synth(req: SynthRequest): Promise<string> {
@@ -119,7 +187,25 @@ export class GTTSEngine implements TTSEngine {
     }
   }
 
+  /**
+   * Busca UM pedaço, com RETRY para falhas TRANSITÓRIAS (rede intermitente, 5xx, 429
+   * momentâneo) — a Google translate_tts é um endpoint não-oficial e falha às vezes por
+   * um instante. NÃO repete timeouts (evita empilhar 15s×N) nem 403/bloqueios (repetir
+   * não ajuda). Mantém a MESMA voz da Google — não muda de motor.
+   */
   private async fetchChunk(text: string, lang: string): Promise<Buffer> {
+    return retryAsync(() => this.fetchChunkOnce(text, lang), {
+      retries: this.retries,
+      sleep: this.sleep,
+      onRetry: (err, attempt) =>
+        log.warn(
+          `[gtts] tentativa ${attempt + 1} falhou (${(err as Error).message}) — a repetir…`,
+        ),
+    });
+  }
+
+  /** Uma tentativa de busca. Lança um erro ETIQUETADO (retryable) para o retry decidir. */
+  private async fetchChunkOnce(text: string, lang: string): Promise<Buffer> {
     const url =
       `${GTTS_URL}?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(lang)}` +
       `&q=${encodeURIComponent(text)}`;
@@ -127,25 +213,28 @@ export class GTTSEngine implements TTSEngine {
     const timer = setTimeout(() => controller.abort(), GTTS_TIMEOUT_MS);
     let res: Response;
     try {
-      res = await fetch(url, {
+      res = await this.fetchImpl(url, {
         headers: { 'User-Agent': GTTS_UA },
         signal: controller.signal,
       });
     } catch (err) {
-      const reason =
-        (err as Error)?.name === 'AbortError'
-          ? `timeout (${GTTS_TIMEOUT_MS}ms)`
-          : (err as Error).message;
-      throw new Error(`gTTS: falha de rede (${reason})`);
+      const isTimeout = (err as Error)?.name === 'AbortError';
+      const reason = isTimeout ? `timeout (${GTTS_TIMEOUT_MS}ms)` : (err as Error).message;
+      // Timeout NÃO é retryable (não empilhar esperas de 15s); outra falha de rede é transitória.
+      throw taggedError(`gTTS: falha de rede (${reason})`, !isTimeout);
     } finally {
       clearTimeout(timer);
     }
     if (!res.ok) {
-      // 429 = rate-limit da Google (o preço de um endpoint não-oficial).
-      throw new Error(`gTTS: HTTP ${res.status} ${res.statusText} (429 = limite da Google)`);
+      // 429 = rate-limit da Google (o preço de um endpoint não-oficial); 5xx = erro do
+      // servidor. Ambos transitórios -> retry. 403/outros 4xx -> falha dura.
+      throw taggedError(
+        `gTTS: HTTP ${res.status} ${res.statusText} (429 = limite da Google)`,
+        isRetryableStatus(res.status),
+      );
     }
     const buf = Buffer.from(await res.arrayBuffer());
-    if (buf.length === 0) throw new Error('gTTS: resposta vazia');
+    if (buf.length === 0) throw taggedError('gTTS: resposta vazia', false);
     return buf;
   }
 }
