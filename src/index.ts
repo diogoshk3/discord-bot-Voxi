@@ -7,7 +7,7 @@ import { startBotListUpdater } from './botLists';
 import { log } from './logging/logger';
 import { initDb } from './store/db';
 import { AudioCache } from './tts/cache';
-import { createEngine, selectEngine } from './tts/factory';
+import { createEngine, createPerUserEngine, selectEngine } from './tts/factory';
 import { GuildVoicePlayer } from './voice/player';
 import { AloneWatcher } from './voice/aloneWatcher';
 import type { BotDeps } from './bot/deps';
@@ -60,13 +60,14 @@ async function main(): Promise<void> {
     log.error('[health] falha inesperada no health-check do ffmpeg (ignorado)', err);
   }
 
-  // Motor base (Piper/Neural). P14.4: selectEngine embrulha-o num
-  // MultiSegmentEngine SO se a flag EXPERIMENTAL multilingualSegments estiver ON.
-  // Com a flag OFF (default), devolve o motor base tal e qual — caminho
-  // byte-a-byte o de hoje.
-  const baseEngine = createEngine(config, cache);
+  // Motor base. Por defeito (free), é o motor POR-UTILIZADOR: gTTS (Google, default) +
+  // Piper, escolhido em /voice set por cada pessoa (PerUserEngineRouter via req.engine).
+  // Só com TTS_ENGINE=neural (operador) é que se usa o motor único (OpenAI). P14.4:
+  // selectEngine embrulha-o num MultiSegmentEngine se a flag multilingualSegments estiver ON.
+  const baseEngine =
+    config.ttsEngine === 'neural' ? createEngine(config, cache) : createPerUserEngine(config, cache);
   const engine = selectEngine(baseEngine, config, availableModels, cache);
-  log.info(`[index] motor TTS ativo: ${config.ttsEngine}`);
+  log.info(`[index] motor TTS ativo: ${config.ttsEngine === 'neural' ? 'neural' : 'per-user (google+piper)'}`);
   if (config.multilingualSegments) {
     log.warn(
       '[index] MULTILINGUAL_SEGMENTS ON — sintese multi-lingua por-segmento EXPERIMENTAL ativa.',

@@ -77,8 +77,14 @@ export class MultiSegmentEngine implements TTSEngine {
       for (const seg of segments) {
         const model = pickVoice(seg.lang, this.availableModels, req.model);
         // Cada segmento passa pelo motor base (cache single-voice do base
-        // reutilizada — sintese legitima de um substring).
-        const path = await this.base.synth({ text: seg.text, model, speed: req.speed });
+        // reutilizada — sintese legitima de um substring). Herda o `engine` da
+        // mensagem para o PerUserEngineRouter usar o motor certo do utilizador.
+        const path = await this.base.synth({
+          text: seg.text,
+          model,
+          speed: req.speed,
+          engine: req.engine,
+        });
         wavs.push(readFileSync(path));
       }
 
@@ -108,7 +114,7 @@ export class MultiSegmentEngine implements TTSEngine {
     // combinar nem cachear no namespace 'multiseg'; a cache single-voice do base chega).
     if (segs.length === 1) {
       const seg = segs[0];
-      return this.base.synth({ text: seg.text, model: seg.model, speed: req.speed });
+      return this.base.synth({ text: seg.text, model: seg.model, speed: req.speed, engine: req.engine });
     }
 
     // Chave da cache do resultado COMBINADO. Inclui os PROPRIOS segmentos (texto+voz)
@@ -118,9 +124,12 @@ export class MultiSegmentEngine implements TTSEngine {
     const SEP_FIELD = '␟';
     const SEP_SEG = '␦';
     const payload = segs.map((s) => `${s.text}${SEP_FIELD}${s.model}`).join(SEP_SEG);
-    // leadSilenceMs entra na chave: com/sem silêncio de arranque não podem colidir.
+    // leadSilenceMs entra na chave: com/sem silêncio de arranque não podem colidir. O
+    // MOTOR também (append-only p/ 'piper'): dois users com motores diferentes e o mesmo
+    // texto misturado NÃO se cruzam neste namespace combinado.
+    const engineKey = req.engine === 'piper' ? ' piper' : '';
     const key = createHash('sha1')
-      .update(`${payload} ${req.speed} lead${req.leadSilenceMs ?? 0}`, 'utf8')
+      .update(`${payload} ${req.speed} lead${req.leadSilenceMs ?? 0}${engineKey}`, 'utf8')
       .digest('hex');
     const cached = this.cache.get(key);
     if (cached) return cached;
@@ -128,7 +137,12 @@ export class MultiSegmentEngine implements TTSEngine {
     try {
       const wavs: Buffer[] = [];
       for (const seg of segs) {
-        const path = await this.base.synth({ text: seg.text, model: seg.model, speed: req.speed });
+        const path = await this.base.synth({
+          text: seg.text,
+          model: seg.model,
+          speed: req.speed,
+          engine: req.engine,
+        });
         wavs.push(readFileSync(path));
       }
       const combined = this.withLead(req, concatWavs(wavs, { silenceMs: SEGMENT_SILENCE_MS }));
@@ -140,7 +154,7 @@ export class MultiSegmentEngine implements TTSEngine {
         '[multiSegment] falha no caminho de segmentos explicitos, fallback single-voice:',
         (err as Error).message,
       );
-      return this.base.synth({ text: req.text, model: req.model, speed: req.speed });
+      return this.base.synth({ text: req.text, model: req.model, speed: req.speed, engine: req.engine });
     }
   }
 

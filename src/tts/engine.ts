@@ -19,6 +19,11 @@ export interface SynthRequest {
   // `model` e os WAVs sao concatenados. O `text`/`model` de topo continuam a ser o
   // fallback single-voice (flag do motor OFF) e a base da chave de cache.
   segments?: { text: string; model: string }[];
+  // MOTOR escolhido PELO UTILIZADOR para esta fala: 'google' (gTTS, default) ou
+  // 'piper' (self-host). Ausente/undefined = 'google'. O PerUserEngineRouter despacha
+  // por este campo; entra na chave de cache (só quando 'piper') para não cruzar áudio
+  // entre users de motores diferentes.
+  engine?: 'google' | 'piper';
 }
 
 export interface TTSEngine {

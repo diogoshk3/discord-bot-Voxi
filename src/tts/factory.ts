@@ -7,6 +7,7 @@ import { NeuralEngine } from './neural';
 import { GTTSEngine } from './gtts';
 import { MultiSegmentEngine } from './multiSegment';
 import { RouterEngine } from './router';
+import { PerUserEngineRouter } from './perUserRouter';
 import { log } from '../logging/logger';
 
 /**
@@ -18,6 +19,18 @@ import { log } from '../logging/logger';
  * (apanhado pelo main().catch -> exit(1)). A sintese neural real e verificacao
  * ao vivo pendente; o que aqui se testa e a SELECAO.
  */
+/**
+ * Motor POR-UTILIZADOR (Google/Piper): constrói o gTTS (default) e o Piper e devolve um
+ * PerUserEngineRouter que despacha por `req.engine`. É o motor-base da instância pública
+ * — cada pessoa escolhe o seu motor em `/voice set`, com o Google por defeito.
+ */
+export function createPerUserEngine(config: AppConfig, cache: AudioCache): TTSEngine {
+  const google = new GTTSEngine(cache.withNamespace('gtts'));
+  const piper = makePiper(config, cache);
+  log.info("[factory] motor por-utilizador ativo: google (default) + piper (opção do user).");
+  return new PerUserEngineRouter(google, piper);
+}
+
 function makePiper(config: AppConfig, cache: AudioCache): TTSEngine {
   return new PiperEngine(config.piperPath, config.modelsDir, cache.withNamespace('piper'), {
     // Params de qualidade globais vindos da config (envs NOISE_*/SENTENCE_SILENCE).
