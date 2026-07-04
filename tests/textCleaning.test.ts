@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { cleanText } from '../src/textCleaning/clean';
+import { cleanText, collectUrlMedia } from '../src/textCleaning/clean';
 import type { CleanOptions } from '../src/textCleaning/clean';
 
 const opts: CleanOptions = {
@@ -10,28 +10,42 @@ const opts: CleanOptions = {
 
 describe('cleanText', () => {
   describe('URLs', () => {
-    it('link http(s) -> "a link" (nao le o URL cru)', () => {
-      expect(cleanText('vai a https://exemplo.com agora', opts)).toBe('vai a a link agora');
-      expect(cleanText('http://a.b/c?x=1', opts)).toBe('a link');
+    // O URL é REMOVIDO do corpo; o anúncio ("um link"/"um gif") é feito a jusante
+    // (localizado na voz) via collectUrlMedia — testado no próprio describe abaixo.
+    it('remove http(s) do corpo (nao le o URL cru)', () => {
+      expect(cleanText('vai a https://exemplo.com agora', opts)).toBe('vai a agora');
+      expect(cleanText('http://a.b/c?x=1', opts)).toBe('');
     });
 
-    it('link www. -> "a link"', () => {
-      expect(cleanText('ve www.exemplo.com ja', opts)).toBe('ve a link ja');
+    it('remove www. do corpo', () => {
+      expect(cleanText('ve www.exemplo.com ja', opts)).toBe('ve ja');
+    });
+  });
+
+  describe('collectUrlMedia — classifica URLs em link/gif p/ anúncio', () => {
+    it('URL normal -> [link]', () => {
+      expect(collectUrlMedia('vai a https://exemplo.com agora')).toEqual(['link']);
+      expect(collectUrlMedia('ve www.exemplo.com ja')).toEqual(['link']);
     });
 
-    it('GIF do Tenor -> "a gif"', () => {
-      expect(cleanText('olha https://tenor.com/view/cat-gif-12345 lol', opts)).toBe('olha a gif lol');
+    it('GIF do Tenor/Giphy -> [gif]', () => {
+      expect(collectUrlMedia('olha https://tenor.com/view/cat-gif-12345 lol')).toEqual(['gif']);
+      expect(collectUrlMedia('https://giphy.com/gifs/funny-abc123')).toEqual(['gif']);
     });
 
-    it('GIF do Giphy -> "a gif"', () => {
-      expect(cleanText('https://giphy.com/gifs/funny-abc123', opts)).toBe('a gif');
-      expect(cleanText('media de https://media.giphy.com/media/xyz/giphy.gif', opts)).toBe(
-        'media de a gif',
-      );
+    it('media .gif direta -> [gif]', () => {
+      expect(collectUrlMedia('https://cdn.exemplo.com/animacao.gif')).toEqual(['gif']);
     });
 
-    it('media .gif direta -> "a gif"', () => {
-      expect(cleanText('https://cdn.exemplo.com/animacao.gif', opts)).toBe('a gif');
+    it('vários URLs -> um item por URL, ordem preservada', () => {
+      expect(collectUrlMedia('a https://x.com b https://tenor.com/view/y c')).toEqual([
+        'link',
+        'gif',
+      ]);
+    });
+
+    it('sem URL -> []', () => {
+      expect(collectUrlMedia('mensagem normal sem links')).toEqual([]);
     });
   });
 
@@ -179,15 +193,15 @@ describe('cleanText', () => {
 
   describe('edge-cases: emoji + URL + mencao juntos', () => {
     it('limpa emoji + URL + mencao de user na mesma mensagem', () => {
-      // emoji unicode removido, URL -> "a link", mencao resolvida
-      expect(cleanText('😀 https://example.com <@123>', opts)).toBe('a link @user123');
+      // emoji unicode removido, URL removida do corpo, mencao resolvida
+      expect(cleanText('😀 https://example.com <@123>', opts)).toBe('@user123');
     });
 
     it('limpa role + custom emoji + URL na mesma mensagem', () => {
-      // role removido, custom emoji LIDO (fire), URL -> "a link"
+      // role removido, custom emoji LIDO (fire), URL removida do corpo
       expect(
         cleanText('check <@&999> <:fire:123> at https://x.com', opts),
-      ).toBe('check fire at a link');
+      ).toBe('check fire at');
     });
 
     it('mensagem so de emojis unicode devolve ""', () => {

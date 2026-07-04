@@ -294,12 +294,43 @@ describe('handleMessage — ramos não cobertos pelos testes existentes', () => 
     expect(say.mock.calls[0][0].text).toBe('olha a gif');
   });
 
-  it('anexo que NAO e gif (png) sem texto → ignorada', async () => {
+  it('anexo png sem texto → anuncia "an image" (por tipo)', async () => {
     const deps = makeDeps(db, say);
     await handleMessage(
       makeMessage({ content: '', attachments: [{ contentType: 'image/png', name: 'foto.png' }] }),
       deps,
     );
-    expect(say).not.toHaveBeenCalled();
+    expect(say).toHaveBeenCalledTimes(1);
+    expect(say.mock.calls[0][0].text).toBe('an image');
+  });
+
+  it('vários anexos sem texto → "multiple files"', async () => {
+    const deps = makeDeps(db, say);
+    await handleMessage(
+      makeMessage({
+        content: '',
+        attachments: [
+          { contentType: 'image/png', name: 'a.png' },
+          { contentType: 'video/mp4', name: 'b.mp4' },
+        ],
+      }),
+      deps,
+    );
+    expect(say).toHaveBeenCalledTimes(1);
+    expect(say.mock.calls[0][0].text).toBe('multiple files');
+  });
+
+  it('link no texto → corpo + "a link"', async () => {
+    const deps = makeDeps(db, say);
+    await handleMessage(makeMessage({ content: 'olha https://exemplo.com' }), deps);
+    expect(say).toHaveBeenCalledTimes(1);
+    expect(say.mock.calls[0][0].text).toBe('olha a link');
+  });
+
+  it('mensagem só com um link → "a link" (corpo vazio)', async () => {
+    const deps = makeDeps(db, say);
+    await handleMessage(makeMessage({ content: 'https://exemplo.com' }), deps);
+    expect(say).toHaveBeenCalledTimes(1);
+    expect(say.mock.calls[0][0].text).toBe('a link');
   });
 });

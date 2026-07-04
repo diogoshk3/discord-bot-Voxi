@@ -2,7 +2,9 @@ import { Message } from 'discord.js';
 import type { BotDeps } from '../bot/deps';
 import { getPlayer, getLimiter } from '../bot/deps';
 import { isBlocked } from '../moderation/filter';
-import { cleanText } from '../textCleaning/clean';
+import { cleanText, collectUrlMedia } from '../textCleaning/clean';
+import { mediaFromAttachments, mediaFromStickers } from '../language/attachmentMedia';
+import type { MediaItem } from '../language/spokenPhrases';
 import { getGuildConfig } from '../store/guildConfig';
 import { getBlocklist } from '../store/blocklist';
 import { getPronunciations } from '../store/pronunciation';
@@ -14,27 +16,26 @@ import { recallLang, rememberLang } from '../language/langMemory';
 import { log } from '../logging/logger';
 
 /**
- * Anexo e um GIF quando o contentType e image/gif ou o nome do ficheiro termina
- * em .gif. (Os GIFs do picker do Discord chegam como link tenor.com no content —
- * esses sao tratados no cleanText; aqui e so para .gif arrastados como anexo.)
+ * Recolhe a MEDIA a anunciar de uma mensagem: URLs no texto (link/gif, via
+ * collectUrlMedia — mesmo RE_URL do cleanText), anexos por tipo (imagem/vídeo/…) e
+ * stickers (pelo nome). A ordem é URLs -> anexos -> stickers. `?.values()` funciona
+ * tanto para a Collection do discord.js como para o array dos mocks de teste; ausente
+ * -> vazio. PURO em relação à `message` (só lê).
  */
-function hasGifAttachment(message: Message): boolean {
-  return (
-    message.attachments?.some(
-      (a) => a.contentType === 'image/gif' || !!a.name?.toLowerCase().endsWith('.gif'),
-    ) ?? false
-  );
+function collectMessageMedia(message: Message): MediaItem[] {
+  const urls: MediaItem[] = collectUrlMedia(message.content ?? '').map((kind) => ({ kind }));
+  const atts = mediaFromAttachments([...(message.attachments?.values() ?? [])]);
+  const stickers = mediaFromStickers([...(message.stickers?.values() ?? [])]);
+  return [...urls, ...atts, ...stickers];
 }
 
 export async function handleMessage(message: Message, deps: BotDeps): Promise<void> {
   try {
     if (message.author.bot || !message.guild || !message.guildId) return;
-    // Conteudo a falar: o texto da mensagem + "a gif" por cada GIF anexado (para
-    // que um .gif arrastado sem texto seja anunciado como "a gif", tal como um
-    // link do Tenor no content e). Sem texto e sem GIF -> nada a ler.
-    let rawContent = message.content ?? '';
-    if (hasGifAttachment(message)) rawContent = rawContent ? `${rawContent} a gif` : 'a gif';
-    if (!rawContent) return;
+    // Há algo a ler quando há TEXTO ou MEDIA (um .gif/imagem/sticker sem texto também
+    // é anunciado). Sem nenhum dos dois -> nada a fazer.
+    const media = collectMessageMedia(message);
+    if (!message.content && media.length === 0) return;
 
     const cfg = getGuildConfig(deps.db, message.guildId);
     if (!cfg.enabled) return;
@@ -82,7 +83,7 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     if (!rl.allow(message.author.id, Date.now())) return;
 
     // limpeza com caches da guild
-    const cleaned = cleanText(rawContent, {
+    const cleaned = cleanText(message.content ?? '', {
       maxChars: cfg.maxChars,
       resolveUser: (id: string) =>
         message.guild!.members.cache.get(id)?.displayName ??
@@ -93,12 +94,12 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
         return ch && 'name' in ch ? (ch.name as string) : 'canal';
       },
     });
-    // Guard de vazio endurecido: exige pelo menos UMA letra ou numero (\p{L}\p{N}).
-    // Cobre nao so o vazio '' como qualquer texto que ficou so com pontuacao,
-    // simbolos ou residuo zero-width (rede de seguranca para o strip de emoji):
-    // nada disso e "legivel", por isso nao vale a pena mandar ao synth (clipe
-    // vazio/inutil). Nota: isto passa a ignorar tambem "!!!" (so-pontuacao).
-    if (!/[\p{L}\p{N}]/u.test(cleaned)) return;
+    // Guard de vazio endurecido: exige pelo menos UMA letra ou numero (\p{L}\p{N}) no
+    // corpo — OU media a anunciar (um gif/imagem/sticker sem texto é falado na mesma).
+    // Cobre o vazio '' e texto que ficou só com pontuação/símbolos/residuo zero-width
+    // (rede de segurança do strip de emoji): nada disso é "legível". Sem corpo legível
+    // E sem media -> não vale sintetizar.
+    if (!/[\p{L}\p{N}]/u.test(cleaned) && media.length === 0) return;
 
     // Personalizacao de palavras e agora so via /config pronunciation (aplicada
     // dentro do prepareSpeech). O texto limpo segue tal e qual como base.
@@ -123,6 +124,7 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
       defaultSpeed: deps.config.defaultSpeed,
       autoDetect: auto,
       recentLang,
+      media,
     });
     if (learnedLang) rememberLang(message.guildId, message.author.id, learnedLang);
 

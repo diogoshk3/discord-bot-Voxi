@@ -1,5 +1,11 @@
 import { detectLangDetailed } from '../language/detect';
 import { pickVoiceForLang } from '../language/voiceMap';
+import {
+  langKeyOfModel,
+  spokenPhrasesFor,
+  buildMediaSuffix,
+  type MediaItem,
+} from '../language/spokenPhrases';
 import { expandAbbreviations, splitEnglishSlang } from '../textCleaning/abbreviations';
 import { restoreAccents, accentLangOfModel } from '../textCleaning/accents';
 import { applyPronunciation, type PronunciationEntry } from '../textCleaning/pronunciation';
@@ -25,6 +31,13 @@ export interface PrepareSpeechInput {
    * palpite incerto do franc. Vazio/undefined = sem memoria (comportamento de hoje).
    */
   recentLang?: string;
+  /**
+   * Media a ANUNCIAR no fim da fala (links, gifs, anexos por tipo, stickers). É
+   * acrescentada DEPOIS de resolvida a voz e localizada na LÍNGUA DESSA voz (ex.
+   * gif -> "um gif" em voz PT). Não passa por gírias/pronúncia (são palavras nossas,
+   * já corretas) e NÃO entra na deteção de língua (esta corre só sobre `personal`).
+   */
+  media?: MediaItem[];
 }
 
 export interface PreparedSpeech {
@@ -52,6 +65,32 @@ export interface PreparedSpeech {
  * PURA: sem efeitos secundarios.
  */
 export function prepareSpeech(input: PrepareSpeechInput): PreparedSpeech {
+  return decorateWithMedia(prepareSpeechCore(input), input.media);
+}
+
+/**
+ * Acrescenta o anúncio de media ao fim da fala já resolvida, localizado na língua da
+ * VOZ-BASE (`req.model`) — a mesma voz que fala a mensagem diz o anúncio. No caminho
+ * MISTURADO (com `segments`) acrescenta um segmento extra na voz-base, senão o anúncio
+ * não seria falado (o motor usa `segments`, não `text`). `text` leva sempre o anúncio
+ * (fallback single-voice + base da cache). Corpo vazio (só media) -> fala só o anúncio.
+ * PURA. Sem media -> devolve o resultado intacto.
+ */
+function decorateWithMedia(result: PreparedSpeech, media: MediaItem[] | undefined): PreparedSpeech {
+  if (!media || media.length === 0) return result;
+  const phrases = spokenPhrasesFor(langKeyOfModel(result.req.model));
+  const suffix = buildMediaSuffix(media, phrases);
+  if (!suffix) return result;
+
+  const spoken = result.spoken ? `${result.spoken} ${suffix}` : suffix;
+  const req: SynthRequest = { ...result.req, text: spoken };
+  if (req.segments && req.segments.length > 0) {
+    req.segments = [...req.segments, { text: suffix, model: result.req.model }];
+  }
+  return { ...result, spoken, req };
+}
+
+function prepareSpeechCore(input: PrepareSpeechInput): PreparedSpeech {
   const speed = input.userVoice ? input.userVoice.speed : input.defaultSpeed;
   const preferred =
     (input.userVoice && input.userVoice.model) ||

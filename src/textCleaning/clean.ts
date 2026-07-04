@@ -4,6 +4,8 @@ export interface CleanOptions {
   resolveChannel: (id: string) => string;
 }
 
+import type { MediaKind } from '../language/spokenPhrases';
+
 const RE_CODE_BLOCK = /```[\s\S]*?```/g;
 const RE_INLINE_CODE = /`[^`]*`/g;
 const RE_URL = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/gi;
@@ -16,6 +18,19 @@ const RE_URL = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/gi;
 function isGifUrl(url: string): boolean {
   const s = url.toLowerCase();
   return /\.gif\b/.test(s) || s.includes('tenor.com') || s.includes('giphy.com');
+}
+
+/**
+ * Recolhe os URLs de `raw` como itens de media a ANUNCIAR (gif vs link), partilhando
+ * EXATAMENTE o mesmo RE_URL + isGifUrl que o `cleanText` usa para os REMOVER — assim
+ * o que é removido e o que é anunciado nunca dessincronizam. A localização do anúncio
+ * ("um link"/"a gif") acontece a jusante (prepareSpeech), quando já se sabe a voz.
+ * PURO. Ordem preservada; um item por URL.
+ */
+export function collectUrlMedia(raw: string): MediaKind[] {
+  const matches = raw.match(RE_URL);
+  if (!matches) return [];
+  return matches.map((u) => (isGifUrl(u) ? 'gif' : 'link'));
 }
 const RE_ROLE = /<@&\d+>/g;
 const RE_USER = /<@!?(\d+)>/g;
@@ -44,12 +59,11 @@ export function cleanText(raw: string, opts: CleanOptions): string {
   t = t.replace(RE_CODE_BLOCK, ' ');
   t = t.replace(RE_INLINE_CODE, ' ');
 
-  // 2. URLs -> anunciadas em vez de lidas. O Diogo NAO quer o URL cru falado, mas
-  // quer saber que houve media: um link generico vira "a link"; um GIF (link do
-  // Tenor/Giphy ou media .gif) vira "a gif". Os GIFs do picker do Discord chegam
-  // como link tenor.com no content, por isso este caminho ja cobre o caso comum;
-  // os anexos .gif (que nao estao no content) sao tratados no messageHandler.
-  t = t.replace(RE_URL, (m) => (isGifUrl(m) ? ' a gif ' : ' a link '));
+  // 2. URLs -> REMOVIDAS do corpo (o Diogo nao quer o URL cru falado). O ANÚNCIO
+  // ("um link"/"um gif") e feito a jusante, ja localizado na lingua da voz: o
+  // messageHandler/`/tts` recolhem os URLs via `collectUrlMedia` (mesmo RE_URL, sem
+  // dessync) e passam-nos como media ao prepareSpeech, que os acrescenta no fim.
+  t = t.replace(RE_URL, ' ');
 
   // 3. mencoes de role (sem resolver: removidas para nao serem lidas como "<@&id>")
   t = t.replace(RE_ROLE, ' ');

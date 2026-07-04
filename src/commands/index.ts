@@ -25,7 +25,7 @@ import {
   addPronunciation,
   removePronunciation,
 } from '../store/pronunciation';
-import { cleanText } from '../textCleaning/clean';
+import { cleanText, collectUrlMedia } from '../textCleaning/clean';
 import { isBlocked } from '../moderation/filter';
 import { prepareSpeech } from './prepareSpeech';
 import { recallLang, rememberLang } from '../language/langMemory';
@@ -523,11 +523,14 @@ async function handleTts(i: ChatInputCommandInteraction, deps: BotDeps): Promise
       return ch && 'name' in ch ? (ch.name as string) : 'canal';
     },
   });
+  // Media do texto do /tts: URLs -> anúncio "um link"/"um gif" (localizado a jusante).
+  // O /tts é um comando de texto (sem anexos/stickers), por isso só há media de URLs.
+  const media = collectUrlMedia(raw);
   // Guard de vazio endurecido (mesma regra do messageHandler): exige >=1 letra ou
-  // numero (\p{L}\p{N}). Cobre '' e tambem texto so com pontuacao/simbolos/residuo
-  // zero-width (rede de seguranca do strip de emoji) — nada legivel, nao vale
-  // sintetizar. Nota: "!!!" (so-pontuacao) passa a responder nothingAfterClean.
-  if (!/[\p{L}\p{N}]/u.test(cleaned)) {
+  // numero (\p{L}\p{N}) no corpo — OU media (um /tts só com um link fala "um link").
+  // Cobre '' e texto so com pontuacao/simbolos/residuo zero-width (rede de seguranca
+  // do strip de emoji). "!!!" (so-pontuacao) sem media -> nothingAfterClean.
+  if (!/[\p{L}\p{N}]/u.test(cleaned) && media.length === 0) {
     await i.editReply(t('tts.nothingAfterClean', locale));
     return;
   }
@@ -557,6 +560,7 @@ async function handleTts(i: ChatInputCommandInteraction, deps: BotDeps): Promise
     defaultSpeed: deps.config.defaultSpeed,
     autoDetect: auto,
     recentLang,
+    media: media.map((kind) => ({ kind })),
   });
   if (learnedLang) rememberLang(i.guildId!, i.user.id, learnedLang);
 
