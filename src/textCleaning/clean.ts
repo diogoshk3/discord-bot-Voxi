@@ -8,6 +8,9 @@ import type { MediaKind } from '../language/spokenPhrases';
 
 const RE_CODE_BLOCK = /```[\s\S]*?```/g;
 const RE_INLINE_CODE = /`[^`]*`/g;
+// Spoiler do Discord: ||conteudo oculto||. NAO deve ser LIDO (expor o segredo em voz
+// alta anula o spoiler) — o conteudo e removido do corpo e anunciado como "spoiler".
+const RE_SPOILER = /\|\|[\s\S]*?\|\|/g;
 const RE_URL = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/gi;
 
 // Um URL e um GIF quando: (a) o caminho termina em .gif (media direta), ou (b) o
@@ -32,6 +35,25 @@ export function collectUrlMedia(raw: string): MediaKind[] {
   if (!matches) return [];
   return matches.map((u) => (isGifUrl(u) ? 'gif' : 'link'));
 }
+
+/**
+ * Recolhe SPOILERS e CÓDIGO de `raw` como itens a ANUNCIAR ("spoiler"/"código"), na
+ * MESMA ordem de remoção do cleanText (spoiler primeiro, depois blocos e inline code)
+ * — por isso código DENTRO de um spoiler não é contado duas vezes. O corpo perde-os
+ * (cleanText remove-os); aqui só se anuncia que existiram. A localização é a jusante
+ * (prepareSpeech). PURO. Um item por ocorrência.
+ */
+export function collectMarkdownMedia(raw: string): MediaKind[] {
+  const out: MediaKind[] = [];
+  const spoilers = raw.match(RE_SPOILER);
+  if (spoilers) for (let n = 0; n < spoilers.length; n++) out.push('spoiler');
+  // Conta código SÓ no que resta depois de tirar os spoilers (evita dupla-contagem).
+  const rest = raw.replace(RE_SPOILER, ' ');
+  const blocks = rest.match(RE_CODE_BLOCK)?.length ?? 0;
+  const inline = rest.replace(RE_CODE_BLOCK, ' ').match(RE_INLINE_CODE)?.length ?? 0;
+  for (let n = 0; n < blocks + inline; n++) out.push('code');
+  return out;
+}
 const RE_ROLE = /<@&\d+>/g;
 const RE_USER = /<@!?(\d+)>/g;
 const RE_CHANNEL = /<#(\d+)>/g;
@@ -54,6 +76,11 @@ const RE_WS = /\s+/g;
 
 export function cleanText(raw: string, opts: CleanOptions): string {
   let t = raw;
+
+  // 0. remover SPOILERS (||...||) do corpo — o conteudo oculto NAO e lido; e anunciado
+  // como "spoiler" a jusante (collectMarkdownMedia). Antes do code para que um bloco de
+  // codigo dentro de um spoiler saia junto (contado como spoiler, nao como codigo).
+  t = t.replace(RE_SPOILER, ' ');
 
   // 1. remover code blocks (fenced primeiro, depois inline)
   t = t.replace(RE_CODE_BLOCK, ' ');

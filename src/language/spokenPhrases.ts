@@ -21,7 +21,9 @@ export type MediaKind =
   | 'file'
   | 'archive'
   | 'multiple'
-  | 'sticker';
+  | 'sticker'
+  | 'spoiler'
+  | 'code';
 
 /** Um item de media a anunciar. `text` só é usado por 'sticker' (o nome do sticker). */
 export interface MediaItem {

@@ -2,7 +2,7 @@ import { Message } from 'discord.js';
 import type { BotDeps } from '../bot/deps';
 import { getPlayer, getLimiter } from '../bot/deps';
 import { isBlocked } from '../moderation/filter';
-import { cleanText, collectUrlMedia } from '../textCleaning/clean';
+import { cleanText, collectUrlMedia, collectMarkdownMedia } from '../textCleaning/clean';
 import { mediaFromAttachments, mediaFromStickers } from '../language/attachmentMedia';
 import type { MediaItem } from '../language/spokenPhrases';
 import { getGuildConfig } from '../store/guildConfig';
@@ -23,10 +23,12 @@ import { log } from '../logging/logger';
  * -> vazio. PURO em relação à `message` (só lê).
  */
 function collectMessageMedia(message: Message): MediaItem[] {
-  const urls: MediaItem[] = collectUrlMedia(message.content ?? '').map((kind) => ({ kind }));
+  const content = message.content ?? '';
+  const urls: MediaItem[] = collectUrlMedia(content).map((kind) => ({ kind }));
+  const markdown: MediaItem[] = collectMarkdownMedia(content).map((kind) => ({ kind }));
   const atts = mediaFromAttachments([...(message.attachments?.values() ?? [])]);
   const stickers = mediaFromStickers([...(message.stickers?.values() ?? [])]);
-  return [...urls, ...atts, ...stickers];
+  return [...urls, ...markdown, ...atts, ...stickers];
 }
 
 export async function handleMessage(message: Message, deps: BotDeps): Promise<void> {

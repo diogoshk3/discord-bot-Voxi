@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { cleanText, collectUrlMedia } from '../src/textCleaning/clean';
+import { cleanText, collectUrlMedia, collectMarkdownMedia } from '../src/textCleaning/clean';
 import type { CleanOptions } from '../src/textCleaning/clean';
 
 const opts: CleanOptions = {
@@ -46,6 +46,27 @@ describe('cleanText', () => {
 
     it('sem URL -> []', () => {
       expect(collectUrlMedia('mensagem normal sem links')).toEqual([]);
+    });
+  });
+
+  describe('spoiler — conteúdo NÃO é lido (só anunciado)', () => {
+    it('cleanText remove o conteúdo do spoiler do corpo', () => {
+      expect(cleanText('olha ||segredo grande|| aqui', opts)).toBe('olha aqui');
+      expect(cleanText('||tudo oculto||', opts)).toBe('');
+    });
+
+    it('collectMarkdownMedia conta spoilers e código', () => {
+      expect(collectMarkdownMedia('olha ||segredo|| aqui')).toEqual(['spoiler']);
+      expect(collectMarkdownMedia('corre `npm test` agora')).toEqual(['code']);
+      expect(collectMarkdownMedia('```\nbloco\n``` e `inline`')).toEqual(['code', 'code']);
+    });
+
+    it('código DENTRO de spoiler conta só como spoiler (sem dupla contagem)', () => {
+      expect(collectMarkdownMedia('||`secret code`||')).toEqual(['spoiler']);
+    });
+
+    it('sem spoiler nem código -> []', () => {
+      expect(collectMarkdownMedia('mensagem normal')).toEqual([]);
     });
   });
 

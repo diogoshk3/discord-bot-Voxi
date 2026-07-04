@@ -379,4 +379,12 @@ describe('handleMessage — ramos não cobertos pelos testes existentes', () => 
     expect(say).toHaveBeenCalledTimes(1);
     expect(say.mock.calls[0][0].text).toBe('olá mundo');
   });
+
+  it('spoiler → conteúdo NÃO é lido, anuncia "spoiler" (xsaid OFF)', async () => {
+    setGuildConfig(db, GUILD, { xsaid: false });
+    const deps = makeDeps(db, say);
+    await handleMessage(makeMessage({ content: 'olha ||o segredo|| aqui' }), deps);
+    expect(say).toHaveBeenCalledTimes(1);
+    expect(say.mock.calls[0][0].text).toBe('olha aqui spoiler');
+  });
 });

@@ -25,7 +25,7 @@ import {
   addPronunciation,
   removePronunciation,
 } from '../store/pronunciation';
-import { cleanText, collectUrlMedia } from '../textCleaning/clean';
+import { cleanText, collectUrlMedia, collectMarkdownMedia } from '../textCleaning/clean';
 import { isBlocked } from '../moderation/filter';
 import { prepareSpeech } from './prepareSpeech';
 import { recallLang, rememberLang } from '../language/langMemory';
@@ -535,9 +535,9 @@ async function handleTts(i: ChatInputCommandInteraction, deps: BotDeps): Promise
       return ch && 'name' in ch ? (ch.name as string) : 'canal';
     },
   });
-  // Media do texto do /tts: URLs -> anúncio "um link"/"um gif" (localizado a jusante).
-  // O /tts é um comando de texto (sem anexos/stickers), por isso só há media de URLs.
-  const media = collectUrlMedia(raw);
+  // Media do texto do /tts: URLs -> "um link"/"um gif" e spoiler/código -> "spoiler"/
+  // "código" (anúncios localizados a jusante). O /tts é texto (sem anexos/stickers).
+  const media = [...collectUrlMedia(raw), ...collectMarkdownMedia(raw)];
   // Guard de vazio endurecido (mesma regra do messageHandler): exige >=1 letra ou
   // numero (\p{L}\p{N}) no corpo — OU media (um /tts só com um link fala "um link").
   // Cobre '' e texto so com pontuacao/simbolos/residuo zero-width (rede de seguranca
