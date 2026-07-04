@@ -17,6 +17,9 @@ export interface GuildConfig {
   // por defeito (decisão do Diogo); desligável com /config xsaid. O anúncio é
   // localizado na língua da voz (spokenPhrases.said).
   xsaid: boolean;
+  // autojoin: o Voxi entra sozinho no canal de voz do autor quando chega uma mensagem
+  // para ler e ele ainda não está numa call. DESLIGADO por defeito (opt-in).
+  autojoin: boolean;
 }
 
 const DEFAULTS: GuildConfig = {
@@ -31,6 +34,7 @@ const DEFAULTS: GuildConfig = {
   ttsRoleId: null,
   locale: DEFAULT_LOCALE, // 'en' — ingles como idioma da interface por defeito
   xsaid: true, // anunciar "{nome} disse" LIGADO por defeito
+  autojoin: false, // entrar sozinho na call DESLIGADO por defeito (opt-in)
 };
 
 interface GuildConfigRow {
@@ -44,6 +48,7 @@ interface GuildConfigRow {
   tts_role_id: string | null;
   locale: string | null;
   xsaid: number | null;
+  autojoin: number | null;
 }
 
 export function getGuildConfig(db: Database.Database, guildId: string): GuildConfig {
@@ -64,6 +69,8 @@ export function getGuildConfig(db: Database.Database, guildId: string): GuildCon
     locale: row.locale ?? DEFAULT_LOCALE,
     // NOT NULL DEFAULT 1; null defensivo (DB antiga) => default ON.
     xsaid: row.xsaid == null ? DEFAULTS.xsaid : row.xsaid === 1,
+    // NOT NULL DEFAULT 0; null defensivo (DB antiga) => default OFF.
+    autojoin: row.autojoin == null ? DEFAULTS.autojoin : row.autojoin === 1,
   };
 }
 
@@ -80,8 +87,8 @@ export function setGuildConfig(
   const next: GuildConfig = { ...current, ...patch };
   db.prepare(
     `INSERT INTO guild_config
-       (guild_id, tts_channel_id, autoread, default_voice, max_chars, rate_per_min, enabled, tts_role_id, locale, xsaid)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       (guild_id, tts_channel_id, autoread, default_voice, max_chars, rate_per_min, enabled, tts_role_id, locale, xsaid, autojoin)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(guild_id) DO UPDATE SET
        tts_channel_id = excluded.tts_channel_id,
        autoread       = excluded.autoread,
@@ -91,7 +98,8 @@ export function setGuildConfig(
        enabled        = excluded.enabled,
        tts_role_id    = excluded.tts_role_id,
        locale         = excluded.locale,
-       xsaid          = excluded.xsaid`,
+       xsaid          = excluded.xsaid,
+       autojoin       = excluded.autojoin`,
   ).run(
     guildId,
     next.ttsChannelId,
@@ -103,5 +111,6 @@ export function setGuildConfig(
     next.ttsRoleId,
     next.locale,
     next.xsaid ? 1 : 0,
+    next.autojoin ? 1 : 0,
   );
 }

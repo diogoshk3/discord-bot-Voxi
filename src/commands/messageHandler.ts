@@ -1,6 +1,8 @@
-import { Message } from 'discord.js';
+import { Message, PermissionFlagsBits } from 'discord.js';
 import type { BotDeps } from '../bot/deps';
 import { getPlayer, getLimiter } from '../bot/deps';
+import { createVoiceSession } from '../voice/session';
+import type { GuildVoicePlayer } from '../voice/player';
 import { isBlocked } from '../moderation/filter';
 import { cleanText, collectUrlMedia, collectMarkdownMedia } from '../textCleaning/clean';
 import { mediaFromAttachments, mediaFromStickers } from '../language/attachmentMedia';
@@ -31,6 +33,33 @@ function collectMessageMedia(message: Message): MediaItem[] {
   const atts = mediaFromAttachments([...(message.attachments?.values() ?? [])]);
   const stickers = mediaFromStickers([...(message.stickers?.values() ?? [])]);
   return [...urls, ...markdown, ...atts, ...stickers];
+}
+
+/**
+ * Autojoin: quando o Voxi ainda não está numa call e o autor está num canal de voz,
+ * entra sozinho nesse canal (se autojoin ON e o bot tiver Connect/Speak). Devolve o
+ * player criado, ou undefined se não deu para entrar (autojoin OFF, autor fora de voz,
+ * sem permissões). Falha silenciosa via try/catch — nunca crasha o handler.
+ */
+function maybeAutojoin(
+  message: Message,
+  deps: BotDeps,
+  autojoinOn: boolean,
+): GuildVoicePlayer | undefined {
+  if (!autojoinOn || !message.guild || !message.guildId) return undefined;
+  const channel = message.member?.voice?.channel;
+  if (!channel || !channel.isVoiceBased()) return undefined;
+  const me = deps.client.user;
+  const perms = me ? channel.permissionsFor(me) : null;
+  if (!perms || !perms.has(PermissionFlagsBits.Connect) || !perms.has(PermissionFlagsBits.Speak)) {
+    return undefined;
+  }
+  try {
+    return createVoiceSession(deps, message.guildId, channel.id, message.guild.voiceAdapterCreator);
+  } catch (err) {
+    log.warn('[messageHandler] autojoin falhou (ignorado)', err);
+    return undefined;
+  }
 }
 
 export async function handleMessage(message: Message, deps: BotDeps): Promise<void> {
@@ -78,9 +107,14 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
       return;
     }
 
-    // gating: jogador ativo nesta guild
-    const player = getPlayer(deps, message.guildId);
-    if (!player) return;
+    // gating: jogador ativo nesta guild. Com autojoin ON, se o Voxi ainda não está
+    // numa call e o autor está num canal de voz (e o bot tem Connect/Speak), entra
+    // sozinho no canal do autor — em vez de exigir um /join manual.
+    let player = getPlayer(deps, message.guildId);
+    if (!player) {
+      player = maybeAutojoin(message, deps, cfg.autojoin);
+      if (!player) return;
+    }
 
     // rate-limit por user (limiter persistente por guild)
     const rl = getLimiter(deps, message.guildId, cfg.ratePerMin);

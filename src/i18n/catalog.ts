@@ -347,6 +347,14 @@ export const catalog: Record<string, Entry> = {
     en: 'Voxi will **no longer** announce who spoke — it reads only the message.',
     pt: 'O Voxi **deixou de** anunciar quem falou — lê só a mensagem.',
   },
+  'config.autojoinOn': {
+    en: '✅ Auto-join **on** — Voxi will join your voice channel when you type in the TTS channel.',
+    pt: '✅ Auto-entrada **ligada** — o Voxi entra no teu canal de voz quando escreves no canal de TTS.',
+  },
+  'config.autojoinOff': {
+    en: 'Auto-join **off** — use `/join` to bring Voxi into voice.',
+    pt: 'Auto-entrada **desligada** — usa `/join` para trazer o Voxi para a voz.',
+  },
   // Sucesso do /config default-voice: lidera com o NOME AMIGAVEL ({name}) e mantem o
   // id cru ({model}) subtil/copy-pasteavel. Usada quando o utilizador nao tem voz
   // propria, por isso e a voz que os membros vao ouvir por defeito.
@@ -382,6 +390,10 @@ export const catalog: Record<string, Entry> = {
   'config.showXsaid': {
     en: 'Announce speaker (xsaid): {value}',
     pt: 'Anunciar quem falou (xsaid): {value}',
+  },
+  'config.showAutojoin': {
+    en: 'Auto-join: {value}',
+    pt: 'Auto-entrada: {value}',
   },
   'config.showVoice': {
     en: 'Default voice: {value}',

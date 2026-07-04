@@ -70,6 +70,7 @@ describe('store', () => {
         ttsRoleId: null,
         locale: 'en', // default: ingles como idioma da interface
         xsaid: true, // anunciar quem falou LIGADO por defeito
+        autojoin: false, // entrar sozinho na call DESLIGADO por defeito
       });
     });
 
@@ -109,6 +110,7 @@ describe('store', () => {
         ttsRoleId: null,
         locale: 'en', // default: ingles como idioma da interface
         xsaid: true, // anunciar quem falou LIGADO por defeito
+        autojoin: false, // entrar sozinho na call DESLIGADO por defeito
       });
     });
 

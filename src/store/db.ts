@@ -28,7 +28,8 @@ export function initDb(path: string): Database.Database {
         enabled        INTEGER NOT NULL DEFAULT 1,
         tts_role_id    TEXT,
         locale         TEXT NOT NULL DEFAULT 'en',
-        xsaid          INTEGER NOT NULL DEFAULT 1
+        xsaid          INTEGER NOT NULL DEFAULT 1,
+        autojoin       INTEGER NOT NULL DEFAULT 0
       );
 
       CREATE TABLE IF NOT EXISTS blocklist (
@@ -107,6 +108,12 @@ export function initDb(path: string): Database.Database {
     // ficam com xsaid ON, nao NULL. No-op em DBs novas (o CREATE TABLE ja tem a coluna).
     if (!cols.some((c) => c.name === 'xsaid')) {
       db.exec('ALTER TABLE guild_config ADD COLUMN xsaid INTEGER NOT NULL DEFAULT 1');
+    }
+    // Migracao idempotente do `autojoin` (Vaga 2): o bot entra sozinho na call quando
+    // chega mensagem para ler. DEFAULT 0 (DESLIGADO) — opt-in, para nao surpreender
+    // (o bot so entra se o admin quiser). No-op em DBs novas.
+    if (!cols.some((c) => c.name === 'autojoin')) {
+      db.exec('ALTER TABLE guild_config ADD COLUMN autojoin INTEGER NOT NULL DEFAULT 0');
     }
 
     return db;

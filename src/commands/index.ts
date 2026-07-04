@@ -15,6 +15,7 @@ import { joinVoiceChannel, getVoiceConnection } from '@discordjs/voice';
 import type { BotDeps } from '../bot/deps';
 import { getPlayer, removePlayer, getLimiter } from '../bot/deps';
 import { GuildVoicePlayer } from '../voice/player';
+import { createVoiceSession } from '../voice/session';
 import { getUserVoice, setUserVoice, resetUserVoice } from '../store/userVoice';
 import { getGuildConfig, setGuildConfig, resetGuildConfig } from '../store/guildConfig';
 import { addBlockword, removeBlockword, getBlocklist } from '../store/blocklist';
@@ -324,6 +325,18 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
     )
     .addSubcommand((s) =>
       s
+        .setName('autojoin')
+        .setDescription('Voxi joins your voice channel automatically when you type in the TTS channel')
+        .addBooleanOption((o) =>
+          o
+            .setName('active')
+            .setNameLocalizations({ 'pt-BR': 'ativo' })
+            .setDescription('on/off')
+            .setRequired(true),
+        ),
+    )
+    .addSubcommand((s) =>
+      s
         .setName('default-voice')
         .setDescription("Set the server's default voice (used when the user has no voice of their own)")
         .addStringOption((o) => o.setName('model').setDescription('Piper model').setRequired(true).setAutocomplete(true)),
@@ -471,24 +484,9 @@ export function joinUserVoice(i: ChatInputCommandInteraction, deps: BotDeps): Jo
   if (!perms || !perms.has(PermissionFlagsBits.Connect) || !perms.has(PermissionFlagsBits.Speak)) {
     return { status: 'missing-perms', channelName: channel.name };
   }
-  removePlayer(deps, i.guildId!);
-  const connection = joinVoiceChannel({
-    channelId: channel.id,
-    guildId: i.guildId!,
-    adapterCreator: i.guild!.voiceAdapterCreator,
-    selfDeaf: true,
-    selfMute: false,
-  });
-  const player = new GuildVoicePlayer(connection, deps.engine, deps.config.queueCap, deps.config.inactivityMs, () => {
-    // Identity-aware (defesa extra, cobre QUALQUER caller de onIdle): so agir se
-    // este player ainda for o registado na guild. Se ja foi substituido (ex.: um
-    // /join durante a reconexao instalou um player NOVO no mesmo slot), esta closure
-    // e stale — remove-la iria derrubar o SUBSTITUTO e matar a sessao nova. No-op.
-    if (deps.players.get(i.guildId!) !== player) return;
-    removePlayer(deps, i.guildId!);
-    getVoiceConnection(i.guildId!)?.destroy();
-  });
-  deps.players.set(i.guildId!, player);
+  // Cria a sessão via helper partilhado (mesma lógica do autojoin). O guard de
+  // identidade no onIdle vive lá.
+  createVoiceSession(deps, i.guildId!, channel.id, i.guild!.voiceAdapterCreator);
   return { status: 'joined', channelName: channel.name };
 }
 
@@ -996,6 +994,11 @@ async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps): Prom
     const on = i.options.getBoolean('active', true);
     setGuildConfig(deps.db, i.guildId!, { xsaid: on });
     await reply(i, on ? t('config.xsaidOn', locale) : t('config.xsaidOff', locale));
+  } else if (sub === 'autojoin') {
+    // O bot entra sozinho na call do autor quando chega mensagem. DESLIGADO por defeito.
+    const on = i.options.getBoolean('active', true);
+    setGuildConfig(deps.db, i.guildId!, { autojoin: on });
+    await reply(i, on ? t('config.autojoinOn', locale) : t('config.autojoinOff', locale));
   } else if (sub === 'default-voice') {
     // Valida contra os modelos disponiveis, tal como /voice set.
     const model = i.options.getString('model', true);
@@ -1041,6 +1044,7 @@ async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps): Prom
       t('config.showRole', locale, { value: roleStr }),
       t('config.showEnabled', locale, { value: cfg.enabled ? on : off }),
       t('config.showXsaid', locale, { value: cfg.xsaid ? on : off }),
+      t('config.showAutojoin', locale, { value: cfg.autojoin ? on : off }),
       t('config.showVoice', locale, { value: voiceStr }),
       t('config.showMaxChars', locale, { value: cfg.maxChars }),
       t('config.showRateLimit', locale, { value: cfg.ratePerMin }),
