@@ -138,9 +138,24 @@ describe('handleMessage — ramos não cobertos pelos testes existentes', () => 
   });
 
   // ── 1. Autor é bot ────────────────────────────────────────────────────────
-  it('mensagem de bot → ignorada (sem say)', async () => {
+  it('mensagem de bot → ignorada por defeito (read_bots OFF)', async () => {
     const deps = makeDeps(db, say);
     await handleMessage(makeMessage({ bot: true }), deps);
+    expect(say).not.toHaveBeenCalled();
+  });
+
+  it('read_bots ON → mensagem de outro bot é lida', async () => {
+    setGuildConfig(db, GUILD, { readBots: true });
+    const deps = makeDeps(db, say);
+    await handleMessage(makeMessage({ bot: true, content: 'sou um bot' }), deps);
+    expect(say).toHaveBeenCalledTimes(1);
+    expect(say.mock.calls[0][0].text).toBe('sou um bot');
+  });
+
+  it('read_bots ON → o PRÓPRIO Voxi continua a NÃO ser lido (anti-loop)', async () => {
+    setGuildConfig(db, GUILD, { readBots: true });
+    const deps = makeDeps(db, say);
+    await handleMessage(makeMessage({ bot: true, authorId: BOT_ID, content: 'eco' }), deps);
     expect(say).not.toHaveBeenCalled();
   });
 

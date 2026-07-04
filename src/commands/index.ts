@@ -337,6 +337,19 @@ export const commandDefs: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
     )
     .addSubcommand((s) =>
       s
+        .setName('read-bots')
+        .setNameLocalizations({ 'pt-BR': 'ler-bots' })
+        .setDescription('Read messages from other bots and webhooks (off by default)')
+        .addBooleanOption((o) =>
+          o
+            .setName('active')
+            .setNameLocalizations({ 'pt-BR': 'ativo' })
+            .setDescription('on/off')
+            .setRequired(true),
+        ),
+    )
+    .addSubcommand((s) =>
+      s
         .setName('default-voice')
         .setDescription("Set the server's default voice (used when the user has no voice of their own)")
         .addStringOption((o) => o.setName('model').setDescription('Piper model').setRequired(true).setAutocomplete(true)),
@@ -999,6 +1012,11 @@ async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps): Prom
     const on = i.options.getBoolean('active', true);
     setGuildConfig(deps.db, i.guildId!, { autojoin: on });
     await reply(i, on ? t('config.autojoinOn', locale) : t('config.autojoinOff', locale));
+  } else if (sub === 'read-bots') {
+    // Ler outros bots/webhooks. DESLIGADO por defeito (o Voxi nunca se lê a si próprio).
+    const on = i.options.getBoolean('active', true);
+    setGuildConfig(deps.db, i.guildId!, { readBots: on });
+    await reply(i, on ? t('config.readBotsOn', locale) : t('config.readBotsOff', locale));
   } else if (sub === 'default-voice') {
     // Valida contra os modelos disponiveis, tal como /voice set.
     const model = i.options.getString('model', true);
@@ -1045,6 +1063,7 @@ async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps): Prom
       t('config.showEnabled', locale, { value: cfg.enabled ? on : off }),
       t('config.showXsaid', locale, { value: cfg.xsaid ? on : off }),
       t('config.showAutojoin', locale, { value: cfg.autojoin ? on : off }),
+      t('config.showReadBots', locale, { value: cfg.readBots ? on : off }),
       t('config.showVoice', locale, { value: voiceStr }),
       t('config.showMaxChars', locale, { value: cfg.maxChars }),
       t('config.showRateLimit', locale, { value: cfg.ratePerMin }),

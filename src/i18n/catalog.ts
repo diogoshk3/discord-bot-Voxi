@@ -355,6 +355,14 @@ export const catalog: Record<string, Entry> = {
     en: 'Auto-join **off** — use `/join` to bring Voxi into voice.',
     pt: 'Auto-entrada **desligada** — usa `/join` para trazer o Voxi para a voz.',
   },
+  'config.readBotsOn': {
+    en: '✅ Voxi will now read messages from **other bots and webhooks** too.',
+    pt: '✅ O Voxi passa a ler também mensagens de **outros bots e webhooks**.',
+  },
+  'config.readBotsOff': {
+    en: 'Voxi will **ignore** other bots and webhooks (only real people are read).',
+    pt: 'O Voxi **ignora** outros bots e webhooks (só lê pessoas reais).',
+  },
   // Sucesso do /config default-voice: lidera com o NOME AMIGAVEL ({name}) e mantem o
   // id cru ({model}) subtil/copy-pasteavel. Usada quando o utilizador nao tem voz
   // propria, por isso e a voz que os membros vao ouvir por defeito.
@@ -394,6 +402,10 @@ export const catalog: Record<string, Entry> = {
   'config.showAutojoin': {
     en: 'Auto-join: {value}',
     pt: 'Auto-entrada: {value}',
+  },
+  'config.showReadBots': {
+    en: 'Read bots/webhooks: {value}',
+    pt: 'Ler bots/webhooks: {value}',
   },
   'config.showVoice': {
     en: 'Default voice: {value}',

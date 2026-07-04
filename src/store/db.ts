@@ -29,7 +29,8 @@ export function initDb(path: string): Database.Database {
         tts_role_id    TEXT,
         locale         TEXT NOT NULL DEFAULT 'en',
         xsaid          INTEGER NOT NULL DEFAULT 1,
-        autojoin       INTEGER NOT NULL DEFAULT 0
+        autojoin       INTEGER NOT NULL DEFAULT 0,
+        read_bots      INTEGER NOT NULL DEFAULT 0
       );
 
       CREATE TABLE IF NOT EXISTS blocklist (
@@ -114,6 +115,11 @@ export function initDb(path: string): Database.Database {
     // (o bot so entra se o admin quiser). No-op em DBs novas.
     if (!cols.some((c) => c.name === 'autojoin')) {
       db.exec('ALTER TABLE guild_config ADD COLUMN autojoin INTEGER NOT NULL DEFAULT 0');
+    }
+    // Migracao idempotente do `read_bots` (Vaga 2): ler mensagens de outros bots/
+    // webhooks. DEFAULT 0 (NAO ler bots — o comportamento historico). No-op em DBs novas.
+    if (!cols.some((c) => c.name === 'read_bots')) {
+      db.exec('ALTER TABLE guild_config ADD COLUMN read_bots INTEGER NOT NULL DEFAULT 0');
     }
 
     return db;

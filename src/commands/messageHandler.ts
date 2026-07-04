@@ -64,14 +64,19 @@ function maybeAutojoin(
 
 export async function handleMessage(message: Message, deps: BotDeps): Promise<void> {
   try {
-    if (message.author.bot || !message.guild || !message.guildId) return;
+    if (!message.guild || !message.guildId) return;
+    // O Voxi NUNCA se lê a si próprio — anti-loop, independentemente do read_bots.
+    if (deps.client.user && message.author.id === deps.client.user.id) return;
+
+    const cfg = getGuildConfig(deps.db, message.guildId);
+    if (!cfg.enabled) return;
+    // Outros bots/webhooks: só se o servidor optou por read_bots (default: ignora).
+    if (message.author.bot && !cfg.readBots) return;
+
     // Há algo a ler quando há TEXTO ou MEDIA (um .gif/imagem/sticker sem texto também
     // é anunciado). Sem nenhum dos dois -> nada a fazer.
     const media = collectMessageMedia(message);
     if (!message.content && media.length === 0) return;
-
-    const cfg = getGuildConfig(deps.db, message.guildId);
-    if (!cfg.enabled) return;
 
     const isAutoreadChannel = cfg.autoread && cfg.ttsChannelId === message.channelId;
     const isMention = message.mentions.has(deps.client.user!.id, {

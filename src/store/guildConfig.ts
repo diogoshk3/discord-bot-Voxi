@@ -20,6 +20,10 @@ export interface GuildConfig {
   // autojoin: o Voxi entra sozinho no canal de voz do autor quando chega uma mensagem
   // para ler e ele ainda não está numa call. DESLIGADO por defeito (opt-in).
   autojoin: boolean;
+  // readBots: ler mensagens de OUTROS bots/webhooks (ex.: bridges, notificações).
+  // DESLIGADO por defeito (comportamento histórico: ignora bots). O próprio Voxi NUNCA
+  // se lê a si mesmo, independentemente disto (anti-loop).
+  readBots: boolean;
 }
 
 const DEFAULTS: GuildConfig = {
@@ -35,6 +39,7 @@ const DEFAULTS: GuildConfig = {
   locale: DEFAULT_LOCALE, // 'en' — ingles como idioma da interface por defeito
   xsaid: true, // anunciar "{nome} disse" LIGADO por defeito
   autojoin: false, // entrar sozinho na call DESLIGADO por defeito (opt-in)
+  readBots: false, // NÃO ler outros bots por defeito (comportamento histórico)
 };
 
 interface GuildConfigRow {
@@ -49,6 +54,7 @@ interface GuildConfigRow {
   locale: string | null;
   xsaid: number | null;
   autojoin: number | null;
+  read_bots: number | null;
 }
 
 export function getGuildConfig(db: Database.Database, guildId: string): GuildConfig {
@@ -71,6 +77,7 @@ export function getGuildConfig(db: Database.Database, guildId: string): GuildCon
     xsaid: row.xsaid == null ? DEFAULTS.xsaid : row.xsaid === 1,
     // NOT NULL DEFAULT 0; null defensivo (DB antiga) => default OFF.
     autojoin: row.autojoin == null ? DEFAULTS.autojoin : row.autojoin === 1,
+    readBots: row.read_bots == null ? DEFAULTS.readBots : row.read_bots === 1,
   };
 }
 
@@ -87,8 +94,8 @@ export function setGuildConfig(
   const next: GuildConfig = { ...current, ...patch };
   db.prepare(
     `INSERT INTO guild_config
-       (guild_id, tts_channel_id, autoread, default_voice, max_chars, rate_per_min, enabled, tts_role_id, locale, xsaid, autojoin)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       (guild_id, tts_channel_id, autoread, default_voice, max_chars, rate_per_min, enabled, tts_role_id, locale, xsaid, autojoin, read_bots)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(guild_id) DO UPDATE SET
        tts_channel_id = excluded.tts_channel_id,
        autoread       = excluded.autoread,
@@ -99,7 +106,8 @@ export function setGuildConfig(
        tts_role_id    = excluded.tts_role_id,
        locale         = excluded.locale,
        xsaid          = excluded.xsaid,
-       autojoin       = excluded.autojoin`,
+       autojoin       = excluded.autojoin,
+       read_bots      = excluded.read_bots`,
   ).run(
     guildId,
     next.ttsChannelId,
@@ -112,5 +120,6 @@ export function setGuildConfig(
     next.locale,
     next.xsaid ? 1 : 0,
     next.autojoin ? 1 : 0,
+    next.readBots ? 1 : 0,
   );
 }
