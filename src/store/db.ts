@@ -113,6 +113,17 @@ export function initDb(path: string): Database.Database {
         persona  TEXT NOT NULL,
         PRIMARY KEY (guild_id, user_id)
       );
+
+      -- Aniversário por-(guild,user): mês + dia (sem ano). Quando a pessoa entra na call
+      -- do Voxi no seu dia de anos, ele diz "Parabéns {nome}". Tabela NOVA (CREATE IF NOT
+      -- EXISTS cobre DBs novas e antigas).
+      CREATE TABLE IF NOT EXISTS user_birthday (
+        guild_id TEXT NOT NULL,
+        user_id  TEXT NOT NULL,
+        month    INTEGER NOT NULL,
+        day      INTEGER NOT NULL,
+        PRIMARY KEY (guild_id, user_id)
+      );
     `);
 
     // Migracao idempotente para DBs criadas antes da coluna tts_role_id existir.

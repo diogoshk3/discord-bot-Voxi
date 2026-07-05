@@ -237,6 +237,28 @@ export const catalog: Record<string, Entry> = {
     pt: '🤔 {text}',
   },
 
+  // ── /birthday ──────────────────────────────────────────────────────────────
+  'birthday.set': {
+    en: "🎂 Birthday saved: **{day}/{month}**. I'll wish you a happy birthday when you join a voice channel that day!",
+    pt: '🎂 Aniversário guardado: **{day}/{month}**. Digo-te parabéns quando entrares numa call nesse dia!',
+  },
+  'birthday.invalid': {
+    en: "That's not a real date. Check the day and month.",
+    pt: 'Essa data não existe. Verifica o dia e o mês.',
+  },
+  'birthday.cleared': {
+    en: '🎂 Birthday removed.',
+    pt: '🎂 Aniversário removido.',
+  },
+  'birthday.show': {
+    en: '🎂 Your birthday is set to **{day}/{month}**.',
+    pt: '🎂 O teu aniversário está definido para **{day}/{month}**.',
+  },
+  'birthday.none': {
+    en: "You haven't set a birthday yet. Use `/birthday set`.",
+    pt: 'Ainda não definiste um aniversário. Usa `/birthday set`.',
+  },
+
   // ── /voice abbrev (abreviaturas pessoais, globais) ─────────────────────────
   'voice.abbrev.added': {
     en: 'Got it — {term} will be read as {replacement}.',
@@ -790,11 +812,13 @@ export const catalog: Record<string, Entry> = {
       '• /joke — I tell a short joke (pick a language + optional laughter) · e.g. /joke English\n' +
       '• /laugh — I laugh out loud in your current voice\n' +
       '• /8ball · /fortune · /fact · /wyr — I answer/read out loud (and in chat)\n' +
+      '• /birthday set — I wish you a happy birthday when you join on your day\n' +
       '• /game — play a minigame with the server (13 games!) · e.g. /game play, /game leaderboard',
     pt:
       '• /joke — conto uma piada curta (escolhe a lingua + risos opcionais) · ex. /joke Portuguese\n' +
       '• /laugh — rio-me em voz alta na tua voz atual\n' +
       '• /8ball · /fortune · /fact · /wyr — respondo/leio em voz alta (e no chat)\n' +
+      '• /birthday set — digo-te parabens quando entrares na call no teu dia\n' +
       '• /game — joga um minijogo com o servidor (13 jogos!) · ex. /game play, /game leaderboard',
   },
   'help.groupAdmin': {

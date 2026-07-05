@@ -28,6 +28,7 @@ import { setOptOut, setOptIn } from '../store/optout';
 import { setNickname, clearNickname } from '../store/nickname';
 import { getPersona, setPersona } from '../store/persona';
 import { isPersona, PERSONA_CHOICES, type Persona } from '../textCleaning/personas';
+import { getBirthday, setBirthday, clearBirthday, isValidBirthday } from '../store/birthday';
 import { sanitizeSpeakerName } from '../language/speakerName';
 import { isDetectionOn, setDetection } from '../store/langDetect';
 import {
@@ -220,6 +221,37 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
   new SlashCommandBuilder()
     .setName('wyr')
     .setDescription('Voxi asks a "would you rather" question')
+    .toJSON(),
+  // /birthday — regista o teu aniversário; o Voxi diz "Parabéns" quando entrares na call
+  // nesse dia. Sem ano (só interessa o dia). set / clear / show.
+  new SlashCommandBuilder()
+    .setName('birthday')
+    .setDescription('Voxi wishes you a happy birthday when you join on your day')
+    .addSubcommand((s) =>
+      s
+        .setName('set')
+        .setDescription('Set your birthday (day + month, no year)')
+        .addIntegerOption((o) =>
+          o
+            .setName('day')
+            .setNameLocalizations({ 'pt-BR': 'dia' })
+            .setDescription('Day of the month (1–31)')
+            .setRequired(true)
+            .setMinValue(1)
+            .setMaxValue(31),
+        )
+        .addIntegerOption((o) =>
+          o
+            .setName('month')
+            .setNameLocalizations({ 'pt-BR': 'mes' })
+            .setDescription('Month (1–12)')
+            .setRequired(true)
+            .setMinValue(1)
+            .setMaxValue(12),
+        ),
+    )
+    .addSubcommand((s) => s.setName('clear').setDescription('Remove your saved birthday'))
+    .addSubcommand((s) => s.setName('show').setDescription('Show your saved birthday'))
     .toJSON(),
   new SlashCommandBuilder()
     .setName('voice')
@@ -1070,6 +1102,36 @@ async function handleMicroFun(
   }
 
   await i.editReply(replyText);
+}
+
+/**
+ * /birthday set|clear|show — regista o dia de anos (mês+dia, sem ano) por-(guild,user).
+ * No dia, quando a pessoa entra na call do Voxi, ele diz "Parabéns" (greetOnJoin). Valida
+ * a combinação dia/mês (recusa 31/02 etc.). Respostas ephemeral no locale do próprio.
+ */
+async function handleBirthday(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
+  const locale = localeForUser(deps, i);
+  const sub = i.options.getSubcommand();
+  if (sub === 'set') {
+    const day = i.options.getInteger('day', true);
+    const month = i.options.getInteger('month', true);
+    if (!isValidBirthday(month, day)) {
+      await reply(i, t('birthday.invalid', locale));
+      return;
+    }
+    setBirthday(deps.db, i.guildId!, i.user.id, month, day);
+    await reply(i, t('birthday.set', locale, { day, month }));
+  } else if (sub === 'clear') {
+    clearBirthday(deps.db, i.guildId!, i.user.id);
+    await reply(i, t('birthday.cleared', locale));
+  } else {
+    // show
+    const bd = getBirthday(deps.db, i.guildId!, i.user.id);
+    await reply(
+      i,
+      bd ? t('birthday.show', locale, { day: bd.day, month: bd.month }) : t('birthday.none', locale),
+    );
+  }
 }
 
 /**
@@ -1982,6 +2044,8 @@ export async function handleInteraction(i: ChatInputCommandInteraction, deps: Bo
         return await handleMicroFun(i, deps, 'fact');
       case 'wyr':
         return await handleMicroFun(i, deps, 'wyr');
+      case 'birthday':
+        return await handleBirthday(i, deps);
       case 'game':
         return await handleGame(i, deps);
       case 'voice':

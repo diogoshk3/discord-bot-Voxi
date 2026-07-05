@@ -52,6 +52,33 @@ export const GREET_LANGUAGE_CHOICES: { name: string; value: string }[] = [
   { name: 'Magyar', value: 'hu' },
 ];
 
+/**
+ * Parabéns "Feliz aniversário {name}" por lingua-base, para o Voxi dizer quando alguém
+ * ENTRA na call no seu dia de anos (em vez da saudação normal). Mesmas línguas do
+ * GREETINGS; fallback ao inglês. `{name}` já sanitizado.
+ */
+export const BIRTHDAY_WISHES: Record<string, string> = {
+  en: 'Happy birthday {name}',
+  pt: 'Feliz aniversário {name}',
+  es: 'Feliz cumpleaños {name}',
+  fr: 'Joyeux anniversaire {name}',
+  de: 'Alles Gute zum Geburtstag {name}',
+  it: 'Buon compleanno {name}',
+  nl: 'Gefeliciteerd met je verjaardag {name}',
+  sv: 'Grattis på födelsedagen {name}',
+  da: 'Tillykke med fødselsdagen {name}',
+  fi: 'Hyvää syntymäpäivää {name}',
+  pl: 'Wszystkiego najlepszego {name}',
+  ru: 'С днём рождения {name}',
+  uk: 'З днем народження {name}',
+  tr: 'Doğum günün kutlu olsun {name}',
+  cs: 'Všechno nejlepší {name}',
+  el: 'Χρόνια πολλά {name}',
+  ro: 'La mulți ani {name}',
+  ca: 'Per molts anys {name}',
+  hu: 'Boldog születésnapot {name}',
+};
+
 /** Códigos de saudação válidos (para validar o /config greet-language). */
 export const GREET_LOCALES: ReadonlySet<string> = new Set(Object.keys(GREETINGS));
 
@@ -88,10 +115,13 @@ export function buildGreeting(opts: {
   availableModels: string[];
   defaultVoice: string;
   defaultSpeed: number;
+  /** Se true, usa os PARABÉNS (BIRTHDAY_WISHES) em vez do "Olá" — dia de anos. */
+  birthday?: boolean;
 }): SynthRequest {
   const requested = (opts.locale || 'en').split('-')[0].toLowerCase();
-  const base = GREETINGS[requested] ? requested : 'en';
-  const text = GREETINGS[base].replace('{name}', opts.name).replace(/\s+/g, ' ').trim();
+  const table = opts.birthday ? BIRTHDAY_WISHES : GREETINGS;
+  const base = table[requested] ? requested : 'en';
+  const text = table[base].replace('{name}', opts.name).replace(/\s+/g, ' ').trim();
   const model = opts.availableModels.find((m) => baseOfModel(m) === base) ?? opts.defaultVoice;
   return { text, model, speed: opts.defaultSpeed, singleVoice: true };
 }

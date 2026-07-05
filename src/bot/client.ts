@@ -16,6 +16,7 @@ import { getGuildConfig } from '../store/guildConfig';
 import { getNickname } from '../store/nickname';
 import { sanitizeSpeakerName } from '../language/speakerName';
 import { buildGreeting, isJoinIntoChannel } from '../voice/greeting';
+import { getBirthday, isBirthdayToday } from '../store/birthday';
 import { buildPresence } from './presence';
 import { pickWelcomeChannel, buildWelcomeEmbed } from './welcome';
 import { DEFAULT_LOCALE } from '../i18n/index';
@@ -56,12 +57,16 @@ function greetOnJoin(deps: BotDeps, oldState: VoiceState, newState: VoiceState):
     if (!cfg.enabled || !cfg.greetOnJoin) return;
     const rawName =
       getNickname(deps.db, guildId, member.id) ?? member.displayName ?? member.user.username ?? '';
+    // Dia de anos? Se a pessoa faz anos hoje, o Voxi diz "Parabéns {nome}" em vez do "Olá".
+    const bd = getBirthday(deps.db, guildId, member.id);
+    const isBirthday = bd !== null && isBirthdayToday(bd, new Date());
     const req = buildGreeting({
       locale: cfg.greetLocale,
       name: sanitizeSpeakerName(rawName),
       availableModels: deps.availableModels,
       defaultVoice: cfg.defaultVoice || deps.config.defaultVoice || 'en_US-amy-medium',
       defaultSpeed: deps.config.defaultSpeed,
+      birthday: isBirthday,
     });
     void player.say(req);
   } catch (err) {
