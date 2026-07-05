@@ -1012,4 +1012,51 @@ export const catalog: Record<string, Entry> = {
   'game.accentSwap.round': { en: '🌍 Round {n}/{total} — what word am I trying to say?', pt: '🌍 Ronda {n}/{total} — que palavra estou a tentar dizer?' },
   'game.accentSwap.correct': { en: '✅ **{user}** got it — **{word}**!', pt: '✅ **{user}** acertou — **{word}**!' },
   'game.accentSwap.timeout': { en: '⏱️ Time! The word was **{word}**.', pt: '⏱️ Tempo! A palavra era **{word}**.' },
+
+  // ── Reflexos ──────────────────────────────────────────────────────────────
+  'game.reflexes.name': { en: 'Reflexes', pt: 'Reflexos' },
+  'game.reflexes.desc': {
+    en: "I count down, then shout GO — first to type after that wins. Don't jump early!",
+    pt: 'Faço a contagem e grito JÁ — o primeiro a escrever depois disso ganha. Não te precipites!',
+  },
+  'game.reflexes.intro': {
+    en: "⚡ **Reflexes** — {rounds} rounds. When I shout **GO**, type anything as fast as you can. Type before GO and it's a false start!",
+    pt: '⚡ **Reflexos** — {rounds} rondas. Quando eu gritar **JÁ**, escreve o que for o mais rápido possível. Escreveres antes do JÁ é falsa partida!',
+  },
+  'game.reflexes.ready': { en: '🚦 Round {n}/{total} — get ready…', pt: '🚦 Ronda {n}/{total} — preparados…' },
+  // FALADO (na voz da guild): a contagem decrescente.
+  'game.reflexes.countdown': { en: 'three… two… one…', pt: 'três… dois… um…' },
+  'game.reflexes.go': { en: '🟢 **GO!!!**', pt: '🟢 **JÁ!!!**' },
+  'game.reflexes.goVoice': { en: 'Go!', pt: 'Já!' },
+  'game.reflexes.tooSoon': { en: '🔴 **{user}** jumped the gun — too soon!', pt: '🔴 **{user}** precipitou-se — cedo demais!' },
+  'game.reflexes.win': { en: '⚡ **{user}** is the fastest! Point!', pt: '⚡ **{user}** foi o mais rápido! Ponto!' },
+  'game.reflexes.tooSlow': { en: '😴 Nobody reacted in time. Next!', pt: '😴 Ninguém reagiu a tempo. Próxima!' },
+
+  // ── Voxi Diz (Simon Says) ─────────────────────────────────────────────────
+  'game.voxiSays.name': { en: 'Voxi Says', pt: 'Voxi Diz' },
+  'game.voxiSays.desc': {
+    en: "Only obey when the order starts with 'Voxi says'. Fall for a trap and you're caught!",
+    pt: "Só obedeces quando a ordem começa por 'Voxi diz'. Cais numa ratoeira e és apanhado!",
+  },
+  'game.voxiSays.intro': {
+    en: "🫡 **Voxi Says** — {rounds} orders. Do it ONLY if I start with **'Voxi says'**. Otherwise, don't move!",
+    pt: "🫡 **Voxi Diz** — {rounds} ordens. Só cumpres se eu começar por **'Voxi diz'**. Caso contrário, não mexas!",
+  },
+  // FALADOS (na voz da guild): o prefixo da ordem e o verbo.
+  'game.voxiSays.prefix': { en: 'Voxi says', pt: 'Voxi diz' },
+  'game.voxiSays.verb': { en: 'type', pt: 'escrevam' },
+  'game.voxiSays.real': { en: '🗣️ Round {n}/{total} — “{command}”', pt: '🗣️ Ronda {n}/{total} — «{command}»' },
+  'game.voxiSays.trap': { en: '🗣️ Round {n}/{total} — “{command}”', pt: '🗣️ Ronda {n}/{total} — «{command}»' },
+  'game.voxiSays.obeyed': { en: '✅ **{user}** obeyed first — point!', pt: '✅ **{user}** obedeceu primeiro — ponto!' },
+  'game.voxiSays.caught': { en: "🔴 **{user}** — I didn't say Voxi says! Caught!", pt: '🔴 **{user}** — eu não disse Voxi diz! Apanhado!' },
+  'game.voxiSays.nobody': { en: '😴 Nobody obeyed **{word}** in time. Next!', pt: '😴 Ninguém obedeceu a **{word}** a tempo. Próxima!' },
+  'game.voxiSays.trapCleared': { en: '😌 It was a trap — well spotted, nobody fell for **{word}**.', pt: '😌 Era uma ratoeira — bem visto, ninguém caiu em **{word}**.' },
+
+  // ── Roleta (Verdade ou Consequência) ──────────────────────────────────────
+  'game.roulette.name': { en: 'Truth or Dare Roulette', pt: 'Roleta (Verdade ou Consequência)' },
+  'game.roulette.desc': {
+    en: 'I spin and read one truth-or-dare prompt out loud. Run it again for another.',
+    pt: 'Rodo a roleta e leio um desafio (verdade ou consequência) em voz alta. Corre outra vez para outro.',
+  },
+  'game.roulette.header': { en: '🎯 **The wheel says…**', pt: '🎯 **A roleta diz…**' },
 };

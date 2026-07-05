@@ -7,6 +7,9 @@ import { spellingDef } from './spelling';
 import { spellOutDef } from './spellOut';
 import { fastSpeechDef } from './fastSpeech';
 import { accentSwapDef } from './accentSwap';
+import { reflexesDef } from './reflexes';
+import { voxiSaysDef } from './voxiSays';
+import { rouletteDef } from './roulette';
 
 /**
  * Registo de todos os minijogos do /game. Adicionar um jogo novo = criar o ficheiro
@@ -21,6 +24,9 @@ export const GAME_DEFS: readonly GameDefinition[] = [
   spellOutDef,
   fastSpeechDef,
   accentSwapDef,
+  reflexesDef,
+  voxiSaysDef,
+  rouletteDef,
 ];
 
 /** Procura um jogo pelo id (o value do autocomplete). undefined se nao existir. */
