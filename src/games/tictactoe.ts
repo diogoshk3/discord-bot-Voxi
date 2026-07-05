@@ -1,4 +1,5 @@
 import type { Game, GameContext, GameDefinition, GameMessage } from './types';
+import { announceWinner } from './finish';
 import { firstInteger } from './util';
 
 const IDLE_MS = 180_000;
@@ -85,6 +86,7 @@ class TicTacToeGame implements Game {
       const uid = mark === 'X' ? this.xId! : this.oId!;
       ctx.award(uid, 1);
       void ctx.send(`${ctx.t('game.tictactoe.win', { user: this.names[uid], mark })}\n${this.render()}`);
+      announceWinner(ctx, this.names[uid]);
       ctx.end();
       return;
     }

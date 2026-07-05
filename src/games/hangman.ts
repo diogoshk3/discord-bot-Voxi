@@ -1,4 +1,5 @@
 import type { Game, GameContext, GameDefinition, GameMessage } from './types';
+import { announceWinner } from './finish';
 import { wordsForLocale } from './content/words';
 import { normalizeAnswer, seededIndex } from './util';
 
@@ -81,6 +82,7 @@ class HangmanGame implements Game {
     for (const ch of this.word) this.revealed.add(ch); // revela tudo no resumo
     ctx.award(msg.authorId, 1);
     void ctx.send(this.render(ctx, ctx.t('game.hangman.win', { user: msg.authorName, word: this.word.toUpperCase() })));
+    announceWinner(ctx, msg.authorName);
     ctx.end();
   }
 

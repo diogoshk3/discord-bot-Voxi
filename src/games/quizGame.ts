@@ -1,4 +1,5 @@
 import type { Game, GameContext, GameMessage, SayOpts } from './types';
+import { bump, sendStandings, type Tally } from './finish';
 
 /**
  * Uma ronda de um jogo-quiz de voz: o que FALAR/ENVIAR e como reconhecer a resposta
@@ -40,7 +41,7 @@ export abstract class QuizGame implements Game {
   private total = 0;
   private answered = true; // true entre rondas — nao aceita palpites fora de ronda
   private cur: QuizRound | null = null;
-  private readonly tally = new Map<string, { name: string; points: number }>();
+  private readonly tally: Tally = new Map();
 
   /** Prep unica; devolve o nº de rondas. <=0 => sem conteudo (envia emptyMessage). */
   protected abstract prepare(ctx: GameContext): number;
@@ -92,24 +93,13 @@ export abstract class QuizGame implements Game {
     if (!this.cur.accept(msg.content)) return;
     this.answered = true;
     ctx.award(msg.authorId, 1);
-    const entry = this.tally.get(msg.authorId) ?? { name: msg.authorName, points: 0 };
-    entry.points += 1;
-    entry.name = msg.authorName;
-    this.tally.set(msg.authorId, entry);
+    bump(this.tally, msg.authorId, msg.authorName, 1);
     void ctx.send(this.cur.onCorrect(msg.authorName));
     this.next(ctx);
   }
 
   private async finish(ctx: GameContext): Promise<void> {
-    const ranked = [...this.tally.values()].sort((a, b) => b.points - a.points);
-    if (ranked.length === 0) {
-      await ctx.send(ctx.t('game.finish.noScores'));
-    } else {
-      const lines = ranked.map((r, i) =>
-        ctx.t('game.finish.line', { rank: i + 1, user: r.name, points: r.points }),
-      );
-      await ctx.send(`${ctx.t('game.finish.title')}\n${lines.join('\n')}`);
-    }
+    await sendStandings(ctx, this.tally); // placar + anúncio do vencedor em voz
     ctx.end();
   }
 }

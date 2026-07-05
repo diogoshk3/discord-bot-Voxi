@@ -1,4 +1,5 @@
 import type { Game, GameContext, GameDefinition, GameMessage } from './types';
+import { announceWinner } from './finish';
 import { pickWordleWords } from './content/wordleWords';
 import { normalizeAnswer, seededIndex } from './util';
 
@@ -71,6 +72,7 @@ class WordleGame implements Game {
       void ctx.send(
         ctx.t('game.wordle.win', { user: msg.authorName, word: this.target.toUpperCase(), row, n: this.guesses }),
       );
+      announceWinner(ctx, msg.authorName);
       ctx.end();
       return;
     }

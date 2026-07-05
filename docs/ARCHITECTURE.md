@@ -129,7 +129,10 @@ jogo (sem leak). Famílias:
   `needsVoice=false`, com timeout de inatividade (3 min).
 
 Todo o texto passa por `t()` (chaves `game.*`; `en` fonte + `pt`); o conteúdo *seeded*
-(bancos de palavras/frases/desafios) vive em `games/content/*`.
+(bancos de palavras/frases/desafios) vive em `games/content/*`. No **fim** de cada
+partida com vencedor, o Voxi anuncia-o **em voz alta** (`announceWinner`, chave
+`game.finish.winnerVoice`) — on-brand; é no-op se o bot não estiver numa call (jogos
+de tabuleiro sem voz).
 
 A **interface está em inglês por defeito** (`guild_config.locale='en'`); cada guild
 pode trocar com `/config language` (`en`/`pt`). Todo o texto de resposta passa por

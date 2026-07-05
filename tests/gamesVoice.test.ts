@@ -91,7 +91,7 @@ describe('jogos de voz — smoke (todos arrancam e terminam sem crashar)', () =>
 
 describe('Matemática Falada — acerto', () => {
   it('aceita o resultado correto e pontua', async () => {
-    const { env, send, persistScores } = harness();
+    const { env, send, persistScores, say } = harness();
     const mgr = new GameManager(env);
     mgr.start(G, C, gameById('math')!.create());
     await flush();
@@ -113,6 +113,10 @@ describe('Matemática Falada — acerto', () => {
     expect(persistScores).toHaveBeenCalledTimes(1);
     const [, points] = persistScores.mock.calls[0];
     expect(points.get('u')).toBe(5);
+    // On-brand: o Voxi anuncia o vencedor em VOZ ALTA no fim.
+    expect(
+      say.mock.calls.some((c) => String((c[0] as { text: string }).text).startsWith('game.finish.winnerVoice')),
+    ).toBe(true);
   });
 });
 

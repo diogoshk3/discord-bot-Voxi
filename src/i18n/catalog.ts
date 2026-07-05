@@ -888,6 +888,11 @@ export const catalog: Record<string, Entry> = {
     en: "🏁 Game over — nobody scored this time. Next time!",
     pt: '🏁 Fim de jogo — ninguém pontuou desta vez. Para a próxima!',
   },
+  // FALADO (na voz da guild): o Voxi anuncia o vencedor em voz alta no fim.
+  'game.finish.winnerVoice': {
+    en: '{user} wins!',
+    pt: '{user} venceu!',
+  },
 
   // ── Adivinha a Língua ─────────────────────────────────────────────────────
   'game.guessLanguage.name': {
