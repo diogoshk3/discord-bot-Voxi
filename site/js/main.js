@@ -258,6 +258,57 @@
     }
   }
 
+  /* ── hero waveform (signature: sound made visible) ───── */
+  const wave = $("#wave");
+  if (wave && !reduce) {
+    const ctx = wave.getContext("2d");
+    let W = 0, H = 0;
+    const resize = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = wave.clientWidth;
+      H = wave.clientHeight;
+      wave.width = Math.round(W * dpr);
+      wave.height = Math.round(H * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    resize();
+    window.addEventListener("resize", resize, { passive: true });
+
+    // three neon layers, each a speech-like burst tapered at the edges
+    const layers = [
+      { amp: 0.52, freq: 1.5, speed: 0.6, col: "rgba(102,114,255,0.85)", lw: 2.6 },
+      { amp: 0.36, freq: 2.4, speed: -0.95, col: "rgba(46,230,200,0.8)", lw: 2.1 },
+      { amp: 0.22, freq: 3.7, speed: 1.35, col: "rgba(154,164,255,0.55)", lw: 1.5 },
+    ];
+    let t = 0;
+    const draw = () => {
+      ctx.clearRect(0, 0, W, H);
+      const mid = H / 2;
+      for (const L of layers) {
+        ctx.beginPath();
+        ctx.lineWidth = L.lw;
+        ctx.strokeStyle = L.col;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = L.col;
+        for (let x = 0; x <= W; x += 5) {
+          const p = x / W;
+          const env = Math.sin(p * Math.PI); // taper to 0 at both ends
+          const y =
+            mid +
+            (Math.sin(p * Math.PI * 2 * L.freq + t * L.speed) * (H * L.amp * 0.5) +
+              Math.sin(p * Math.PI * L.freq + t * L.speed * 1.7) * (H * L.amp * 0.22)) *
+              env;
+          x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+      ctx.shadowBlur = 0;
+      t += 0.028;
+      requestAnimationFrame(draw);
+    };
+    draw();
+  }
+
   /* ── boot ────────────────────────────────────────────── */
   applyLang(lang);
   runChat();
