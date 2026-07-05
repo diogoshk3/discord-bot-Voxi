@@ -6,7 +6,8 @@
 // flag OFF, este modulo NEM sequer e instanciado — o motor base e usado tal e
 // qual, por isso o comportamento por defeito e byte-a-byte o de hoje.
 
-import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { rmDirSafe } from './cleanupDir';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
@@ -178,7 +179,7 @@ export class MultiSegmentEngine implements TTSEngine {
       writeFileSync(outPath, wav);
       return this.cache.put(key, outPath);
     } finally {
-      rmSync(workDir, { recursive: true, force: true });
+      rmDirSafe(workDir);
     }
   }
 }

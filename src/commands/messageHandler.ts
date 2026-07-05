@@ -80,13 +80,19 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     // O Voxi NUNCA se lê a si próprio — anti-loop, independentemente do read_bots.
     if (message.author.id === me.id) return;
 
+    // Kill-switch da guild e gate de bots ANTES do hook dos jogos. O kill-switch
+    // (/config enabled:off) tem de parar TUDO — incluindo um jogo /game a decorrer
+    // (senão continuava a consumir mensagens e a falar). E as mensagens de OUTROS
+    // bots/webhooks só devem chegar ao jogo (como palpites) se read_bots estiver ON.
+    const cfg = getGuildConfig(deps.db, message.guildId);
+    if (!cfg.enabled) return;
+    if (message.author.bot && !cfg.readBots) return;
+
     // Minijogos (/game): se há um jogo ativo NO CANAL desta mensagem, entrega-a ao
     // jogo (um potencial palpite) e NÃO a lê em voz alta — as respostas dos jogadores
-    // não são TTS. Colocado ANTES de toda a lógica de auto-leitura/rate-limit: um
-    // palpite não deve gastar rate-limit nem exigir que o canal de auto-leitura esteja
-    // configurado. As próprias mensagens do bot já foram filtradas acima, por isso o
-    // que chega aqui no canal do jogo é sempre input dos jogadores. handleMessage
-    // devolve true = consumida (o jogo trata dela) -> saímos sem sintetizar.
+    // não são TTS. Colocado ANTES da auto-leitura/rate-limit (mas DEPOIS do kill-switch/
+    // read-bots acima): um palpite não deve gastar rate-limit nem exigir canal de
+    // auto-leitura configurado. handleMessage devolve true = consumida -> saímos.
     if (
       deps.games?.handleMessage({
         guildId: message.guildId,
@@ -98,11 +104,6 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     ) {
       return;
     }
-
-    const cfg = getGuildConfig(deps.db, message.guildId);
-    if (!cfg.enabled) return;
-    // Outros bots/webhooks: só se o servidor optou por read_bots (default: ignora).
-    if (message.author.bot && !cfg.readBots) return;
 
     // Há algo a ler quando há TEXTO ou MEDIA (um .gif/imagem/sticker sem texto também
     // é anunciado). Sem nenhum dos dois -> nada a fazer.

@@ -1,5 +1,6 @@
 // src/tts/neural.ts
-import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { rmDirSafe } from './cleanupDir';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { SynthRequest, TTSEngine } from './engine';
@@ -55,7 +56,7 @@ export class NeuralEngine implements TTSEngine {
       writeFileSync(outPath, audio);
       return this.cache.put(key, outPath);
     } finally {
-      rmSync(workDir, { recursive: true, force: true });
+      rmDirSafe(workDir);
     }
   }
 

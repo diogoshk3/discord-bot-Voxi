@@ -35,6 +35,21 @@ describe('prepareSpeech — so girias (single voice EN)', () => {
   });
 });
 
+describe('prepareSpeech — teto de saída (anti-amplificação)', () => {
+  it('limita o req.text a 2400 chars; o spoken fica inteiro (blocklist)', () => {
+    // Texto que, mesmo sem expansão, já ultrapassa o teto de síntese.
+    const long = 'palavra '.repeat(500); // ~4000 chars
+    const { req, spoken } = prepareSpeech({ ...BASE, personal: long });
+    expect(req.text.length).toBe(2400); // o que vai para a síntese é limitado
+    expect(spoken.length).toBeGreaterThan(2400); // o spoken (blocklist) NÃO é truncado
+  });
+
+  it('não mexe em texto normal (abaixo do teto)', () => {
+    const { req } = prepareSpeech({ ...BASE, personal: 'uma frase normal e curta' });
+    expect(req.text.length).toBeLessThan(2400);
+  });
+});
+
 describe('prepareSpeech — MISTURADO (voz por-segmento)', () => {
   it('"isto esta a funcionar muito bem hoje btw" -> segments length 2, base pt_, giria en_', () => {
     const { req, spoken } = prepareSpeech({

@@ -62,6 +62,19 @@ describe('chunkText — parte por palavra respeitando o limite', () => {
     const chunks = chunkText(giant, 40);
     expect(chunks).toEqual(['x'.repeat(40), 'x'.repeat(40), 'x'.repeat(10)]);
   });
+
+  it('palavra gigante com surrogates: corta por CODE POINT (encodeURIComponent nunca lança)', () => {
+    // O 'a' inicial DESALINHA as fronteiras (cada emoji = 2 unidades UTF-16), por isso
+    // um slice por unidade UTF-16 deixaria um surrogate solitário -> encodeURIComponent
+    // lançava URIError (o bug). Cortar por code point (Array.from) evita-o.
+    const giant = 'a' + '😀'.repeat(250);
+    const chunks = chunkText(giant, 200);
+    expect(chunks.length).toBeGreaterThan(1);
+    for (const c of chunks) {
+      expect(() => encodeURIComponent(c)).not.toThrow(); // cada pedaço é texto válido
+    }
+    expect(chunks.join('')).toBe(giant); // reconstrói a palavra inteira
+  });
 });
 
 // Bug (relatado pelo Diogo, confirmado empíricamente em 22 línguas): o Google

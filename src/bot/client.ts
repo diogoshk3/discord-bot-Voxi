@@ -138,11 +138,15 @@ export function bindEvents(deps: BotDeps): void {
 
   // guildDelete — o Voxi saiu (kick/leave) ou perdeu acesso a uma guild. Libertar
   // os recursos retidos por guildId (limiter + player) para nao vazar memoria em
-  // uptime longo. Toda a logica testavel esta em handleGuildDelete (deps.ts);
-  // aqui so ligamos o evento. Nota: o Discord tambem dispara isto em outages
-  // transitorios (guild.available === false) — destruir o player nesse caso e
-  // inofensivo (e recriado on-demand quando a guild volta).
+  // uptime longo. Toda a logica testavel esta em handleGuildDelete (deps.ts).
+  // IMPORTANTE: o Discord dispara isto TAMBEM em OUTAGES transitorios da guild
+  // (guild.available === false). Nesse caso NAO destruimos a sessao — a ligacao de
+  // voz sobrevive ao blip e a sua propria reconexao (VoiceConnectionStatus.Disconnected
+  // -> handleDisconnect) trata do resto. Se destruissemos, o bot saia silenciosamente
+  // da call e SO voltava quando alguem mandasse mensagem/`/join` (nada re-join automatico
+  // em GuildAvailable). So libertamos recursos numa remocao REAL (available !== false).
   client.on(Events.GuildDelete, (guild: Guild) => {
+    if (guild.available === false) return;
     handleGuildDelete(deps, guild.id);
   });
 

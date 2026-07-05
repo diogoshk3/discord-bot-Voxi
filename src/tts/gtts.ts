@@ -15,6 +15,7 @@
 // leadSilenceMs, player).
 import { spawn } from 'node:child_process';
 import { mkdtempSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
+import { rmDirSafe } from './cleanupDir';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import ffmpegPath from 'ffmpeg-static';
@@ -121,7 +122,13 @@ export function chunkText(text: string, max: number): string[] {
         chunks.push(cur);
         cur = '';
       }
-      for (let i = 0; i < w.length; i += max) chunks.push(w.slice(i, i + max));
+      // Corta por CODE POINT (Array.from), nao por unidade UTF-16 (w.slice): um corte a
+      // meio de um par de surrogates (emoji / char nao-BMP) deixaria um surrogate
+      // solitario e o encodeURIComponent do q= no fetchChunk lancaria URIError -> a fala
+      // falhava com input hostil (spam de nao-BMP sem espacos). Assim cada pedaco e texto
+      // valido. `max` passa a contar code points (<= chars UTF-16), o que e mais seguro.
+      const cps = Array.from(w);
+      for (let i = 0; i < cps.length; i += max) chunks.push(cps.slice(i, i + max).join(''));
       continue;
     }
     if (cur.length === 0) {
@@ -210,7 +217,7 @@ export class GTTSEngine implements TTSEngine {
       writeFileSync(outPath, wav);
       return this.cache.put(key, outPath);
     } finally {
-      rmSync(workDir, { recursive: true, force: true });
+      rmDirSafe(workDir);
     }
   }
 
@@ -285,7 +292,7 @@ function mp3ToWav(mp3: Buffer, speed: number): Promise<Buffer> {
   try {
     writeFileSync(inPath, mp3);
   } catch (err) {
-    rmSync(workDir, { recursive: true, force: true });
+    rmDirSafe(workDir);
     throw err;
   }
 

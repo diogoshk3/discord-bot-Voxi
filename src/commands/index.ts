@@ -472,14 +472,16 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
                 .setName('term')
                 .setNameLocalizations({ 'pt-BR': 'termo' })
                 .setDescription('Term to replace')
-                .setRequired(true),
+                .setRequired(true)
+                .setMaxLength(80),
             )
             .addStringOption((o) =>
               o
                 .setName('pronunciation')
                 .setNameLocalizations({ 'pt-BR': 'pronuncia' })
                 .setDescription('How it should be read')
-                .setRequired(true),
+                .setRequired(true)
+                .setMaxLength(200),
             ),
         )
         .addSubcommand((s) =>

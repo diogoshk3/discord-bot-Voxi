@@ -1,6 +1,7 @@
 // src/tts/piper.ts
 import { spawn } from 'node:child_process';
-import { mkdtempSync, existsSync, statSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, existsSync, statSync, readFileSync, writeFileSync } from 'node:fs';
+import { rmDirSafe } from './cleanupDir';
 import { tmpdir, cpus } from 'node:os';
 import { join } from 'node:path';
 import type { SynthRequest, TTSEngine } from './engine';
@@ -234,7 +235,7 @@ export class PiperEngine implements TTSEngine {
 
       return this.cache.put(key, outPath);
     } finally {
-      rmSync(workDir, { recursive: true, force: true });
+      rmDirSafe(workDir);
     }
   }
 

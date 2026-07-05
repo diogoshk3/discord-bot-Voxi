@@ -70,8 +70,47 @@ export interface PreparedSpeech {
  * A pronuncia acontece AQUI (antes da blocklist a montante correr sobre `spoken`).
  * PURA: sem efeitos secundarios.
  */
+/**
+ * Teto RÍGIDO de caracteres do texto que vai para a SÍNTESE. O cleanText limita o texto
+ * de ENTRADA (`maxChars` ≤ 2000), mas as expansões a jusante (pronúncia, gírias EN,
+ * acentos, prefixo xsaid + sufixo de media) CRESCEM a string sem re-cap. Sem este teto,
+ * uma mensagem de 2000 chars de gíria ("imho imho…") expandia ~5× → ~10k chars →
+ * chunkText partia isso em ~50 pedidos HTTP ao gTTS por UMA mensagem → 429 da Google
+ * para a guild toda (amplificação/auto-DoS). 2400 dá folga para as expansões legítimas
+ * sobre um input no máximo (2000) + anúncios, e limita o fan-out a ~12 pedidos/mensagem.
+ */
+const MAX_SYNTH_CHARS = 2400;
+
+/**
+ * Aplica o teto de saída ao `req` (texto e segmentos) — o que efetivamente é
+ * sintetizado. NÃO mexe no `spoken` (usado pela blocklist a jusante), para não perder
+ * precisão na verificação de palavras bloqueadas. Trunca por CODE POINT (surrogate-safe).
+ */
+function capSynth(result: PreparedSpeech): PreparedSpeech {
+  const text = result.req.text;
+  if (text.length <= MAX_SYNTH_CHARS) return result;
+  const req: SynthRequest = { ...result.req, text: Array.from(text).slice(0, MAX_SYNTH_CHARS).join('') };
+  if (req.segments && req.segments.length > 0) {
+    const kept: { text: string; model: string }[] = [];
+    let budget = MAX_SYNTH_CHARS;
+    for (const seg of req.segments) {
+      if (budget <= 0) break;
+      const cps = Array.from(seg.text);
+      if (cps.length <= budget) {
+        kept.push(seg);
+        budget -= cps.length;
+      } else {
+        kept.push({ text: cps.slice(0, budget).join(''), model: seg.model });
+        budget = 0;
+      }
+    }
+    req.segments = kept;
+  }
+  return { ...result, req };
+}
+
 export function prepareSpeech(input: PrepareSpeechInput): PreparedSpeech {
-  return decorateAnnouncements(prepareSpeechCore(input), input);
+  return capSynth(decorateAnnouncements(prepareSpeechCore(input), input));
 }
 
 /**

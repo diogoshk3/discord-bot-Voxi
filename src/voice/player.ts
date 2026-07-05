@@ -225,10 +225,12 @@ export class GuildVoicePlayer {
         inputType: StreamType.Arbitrary,
       });
       this.current = resource;
-      // messagesSpoken: incrementa quando o áudio começa efectivamente a tocar
-      // (após síntese com sucesso e sem destroy entretanto).
-      metrics.inc('messagesSpoken');
+      // play() PRIMEIRO: se lançar sincronamente (transcoder/prism a falhar), o catch
+      // conta synthErrors — e NÃO queremos contar essa mensagem como "falada". Por isso
+      // messagesSpoken incrementa SÓ DEPOIS de play() ter sido chamado com sucesso (o
+      // áudio começou a tocar), senão uma falha contava 2× (messagesSpoken + synthErrors).
       this.player.play(resource);
+      metrics.inc('messagesSpoken');
     } catch (err) {
       log.error('[player] erro ao criar/tocar o recurso, item saltado:', err);
       metrics.inc('synthErrors');
