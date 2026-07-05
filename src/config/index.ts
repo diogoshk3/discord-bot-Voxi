@@ -46,6 +46,12 @@ export interface AppConfig {
   noiseScale: number;
   noiseW: number;
   sentenceSilence: number;
+  // Circuit-breaker do gTTS: após N falhas CONSECUTIVAS da Google (bloqueio/timeout
+  // de ~15s), o motor "abre" e serve o Piper diretamente durante o cooldown, sem
+  // voltar a tentar o gTTS — para não acumular stalls de 15s por mensagem. Uma
+  // síntese bem-sucedida fecha-o. Env: GTTS_BREAKER_THRESHOLD / GTTS_BREAKER_COOLDOWN_MS.
+  gttsBreakerThreshold: number;
+  gttsBreakerCooldownMs: number;
 }
 
 function requireEnv(name: string): string {
@@ -187,5 +193,9 @@ export function loadConfig(): AppConfig {
     noiseScale: numEnv('NOISE_SCALE', PIPER_DEFAULT_SYNTH_PARAMS.noiseScale),
     noiseW: numEnv('NOISE_W', PIPER_DEFAULT_SYNTH_PARAMS.noiseW),
     sentenceSilence: numEnv('SENTENCE_SILENCE', PIPER_DEFAULT_SYNTH_PARAMS.sentenceSilence),
+    // Circuit-breaker do gTTS: 3 falhas consecutivas -> abre 60s (usa o Piper). Ambos
+    // > 0 (numEnvPositive): um threshold/cooldown 0 desligaria a proteção sem querer.
+    gttsBreakerThreshold: numEnvPositive('GTTS_BREAKER_THRESHOLD', 3, { integer: true }),
+    gttsBreakerCooldownMs: numEnvPositive('GTTS_BREAKER_COOLDOWN_MS', 60_000, { integer: true }),
   };
 }

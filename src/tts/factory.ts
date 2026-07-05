@@ -8,6 +8,7 @@ import { GTTSEngine } from './gtts';
 import { MultiSegmentEngine } from './multiSegment';
 import { RouterEngine } from './router';
 import { PerUserEngineRouter } from './perUserRouter';
+import { CircuitBreakerEngine } from './circuitBreaker';
 import { log } from '../logging/logger';
 
 /**
@@ -25,9 +26,20 @@ import { log } from '../logging/logger';
  * — cada pessoa escolhe o seu motor em `/voice set`, com o Google por defeito.
  */
 export function createPerUserEngine(config: AppConfig, cache: AudioCache): TTSEngine {
-  const google = new GTTSEngine(cache.withNamespace('gtts'));
+  const gtts = new GTTSEngine(cache.withNamespace('gtts'));
   const piper = makePiper(config, cache);
-  log.info("[factory] motor por-utilizador ativo: google (default) + piper (opção do user).");
+  // Circuit-breaker à volta do gTTS: após N falhas consecutivas (Google bloqueia/
+  // timeout de ~15s), abre durante um cooldown e serve o Piper diretamente — sem
+  // tentar o gTTS — para não acumular stalls de 15s por mensagem. Só o CAMINHO GOOGLE
+  // passa pelo breaker; quem escolheu Piper vai direto ao Piper (inalterado).
+  const google = new CircuitBreakerEngine(gtts, piper, {
+    threshold: config.gttsBreakerThreshold,
+    cooldownMs: config.gttsBreakerCooldownMs,
+    label: 'gtts',
+  });
+  log.info(
+    `[factory] motor por-utilizador ativo: google+breaker (${config.gttsBreakerThreshold} falhas -> ${config.gttsBreakerCooldownMs}ms) + piper (opção do user).`,
+  );
   return new PerUserEngineRouter(google, piper);
 }
 
