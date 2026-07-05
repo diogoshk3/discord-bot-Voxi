@@ -34,10 +34,17 @@ export function guessableLanguages(availableModels: string[]): Candidate[] {
 }
 
 /**
- * Conjunto de respostas ACEITES para a lingua `base`, no `locale` da guild: o codigo
- * base ('de'), o autonimo ('Deutsch'), o nome no locale do servidor ('Alemão' num
- * servidor PT) e o nome em ingles ('German'). Tudo normalizado (sem acentos, minusc.)
- * para comparacao tolerante. PURA.
+ * Línguas em que se aceita o NOME da língua adivinhada — as mais faladas nos servidores
+ * do Voxi. Assim um jogador escreve na SUA língua: "espanhol" (pt), "spanish" (en),
+ * "español" (es), "espagnol" (fr), "spanisch" (de), "spagnolo" (it), etc. — todos contam.
+ */
+const ANSWER_LOCALES = ['en', 'pt', 'es', 'fr', 'de', 'it', 'nl'] as const;
+
+/**
+ * Conjunto de respostas ACEITES para a lingua `base`: o codigo ('de'), o autonimo
+ * ('Deutsch'), e o nome da lingua escrito em VÁRIAS línguas comuns (pt/en/es/fr/de/it/
+ * nl) + o locale do jogo. Tudo normalizado (sem acentos, minusculas) para comparacao
+ * tolerante — um jogador acerta escrevendo o nome na SUA língua ou em inglês. PURA.
  */
 export function acceptableAnswers(base: string, locale: string): Set<string> {
   const set = new Set<string>();
@@ -46,9 +53,9 @@ export function acceptableAnswers(base: string, locale: string): Set<string> {
   };
   add(base);
   add((LOCALE_DISPLAY_NAMES as Record<string, string>)[base]); // autonimo, se suportado
-  add(localizedLanguageName(base, locale)); // nome no locale da guild
-  add(localizedLanguageName(base, 'en')); // nome em ingles
   add(localizedLanguageName(base, base)); // autonimo via ICU (cobre bases nao-suportadas)
+  add(localizedLanguageName(base, locale)); // nome no locale do jogo
+  for (const loc of ANSWER_LOCALES) add(localizedLanguageName(base, loc)); // nome em varias linguas
   return set;
 }
 

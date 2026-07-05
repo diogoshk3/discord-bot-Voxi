@@ -1094,9 +1094,9 @@ export const catalog: Record<string, Entry> = {
     en: '🟩 **Wordle** — type a 5-letter word. You share {max} guesses. 🟩 right spot · 🟨 wrong spot · ⬛ not in word.',
     pt: '🟩 **Termo** — escreve uma palavra de 5 letras. Partilham {max} tentativas. 🟩 sítio certo · 🟨 sítio errado · ⬛ não existe.',
   },
-  'game.wordle.guess': { en: '{row} `{guess}` — **{user}** ({left} left)', pt: '{row} `{guess}` — **{user}** (faltam {left})' },
-  'game.wordle.win': { en: '🎉 {row}\n**{user}** got it in {n} — **{word}**!', pt: '🎉 {row}\n**{user}** acertou em {n} — **{word}**!' },
-  'game.wordle.lose': { en: '💀 {row} `{guess}`\nOut of guesses! The word was **{word}**.', pt: '💀 {row} `{guess}`\nSem tentativas! A palavra era **{word}**.' },
+  'game.wordle.guess': { en: '{row} — **{user}** ({left} left)\n{letters}', pt: '{row} — **{user}** (faltam {left})\n{letters}' },
+  'game.wordle.win': { en: '🎉 {row}\n{letters}\n**{user}** got it in {n} — **{word}**!', pt: '🎉 {row}\n{letters}\n**{user}** acertou em {n} — **{word}**!' },
+  'game.wordle.lose': { en: '💀 {row}\n{letters}\nOut of guesses! The word was **{word}**.', pt: '💀 {row}\n{letters}\nSem tentativas! A palavra era **{word}**.' },
   'game.wordle.idle': { en: '🕹️ Game paused (nobody playing). The word was **{word}**.', pt: '🕹️ Jogo terminado (ninguém a jogar). A palavra era **{word}**.' },
 
   // ── Galo (tic-tac-toe) ────────────────────────────────────────────────────

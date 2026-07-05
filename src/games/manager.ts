@@ -19,6 +19,8 @@ interface Session {
   seed: number;
   /** O jogo usa a call (jogos de voz) ? Decide se uma SAÍDA DE VOZ o deve terminar. */
   needsVoice: boolean;
+  /** Locale do jogo (o de QUEM iniciou) — decide o idioma do texto E do conteúdo. */
+  locale: string;
 }
 
 /** Mensagem crua que chega ao manager a partir do handler de mensagens. */
@@ -70,7 +72,13 @@ export class GameManager {
    * nesta guild (o chamador traduz para uma mensagem amigavel). O `game.start` pode
    * ser async; um erro nele e engolido+logado (nunca crasha o comando).
    */
-  start(guildId: string, channelId: string, game: Game, needsVoice = true): StartResult {
+  start(
+    guildId: string,
+    channelId: string,
+    game: Game,
+    needsVoice = true,
+    locale?: string,
+  ): StartResult {
     if (this.sessions.has(guildId)) return 'already-active';
     const session: Session = {
       guildId,
@@ -81,6 +89,8 @@ export class GameManager {
       ended: false,
       seed: this.env.clock.now(),
       needsVoice,
+      // Locale de quem iniciou (ex.: 'pt'); sem ele cai no locale da guild.
+      locale: locale || this.env.localeOf(guildId),
     };
     this.sessions.set(guildId, session);
     const ctx = this.makeContext(session);
@@ -168,7 +178,7 @@ export class GameManager {
     return {
       guildId: s.guildId,
       channelId: s.channelId,
-      locale: env.localeOf(s.guildId),
+      locale: s.locale,
       seed: s.seed,
       availableModels: env.availableModels,
       defaultVoice: env.defaultVoiceOf(s.guildId),
@@ -196,7 +206,7 @@ export class GameManager {
           env.logError('[game] send', err);
         }
       },
-      t: (key, params) => env.translate(key, env.localeOf(s.guildId), params),
+      t: (key, params) => env.translate(key, s.locale, params),
       after: (ms, fn): void => {
         if (s.ended) return;
         const handle = env.clock.setTimeout(() => {

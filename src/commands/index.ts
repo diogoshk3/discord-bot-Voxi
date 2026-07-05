@@ -1487,7 +1487,9 @@ async function handleGame(i: ChatInputCommandInteraction, deps: BotDeps): Promis
       await reply(i, t('game.start.needVoice', locale));
       return;
     }
-    const res = deps.games.start(i.guildId!, i.channelId, def.create(), def.needsVoice);
+    // Locale do jogo = o de QUEM inicia (localeForUser), não o da guild — assim um
+    // servidor sem /config language joga na língua de quem clicou (ex.: PT).
+    const res = deps.games.start(i.guildId!, i.channelId, def.create(), def.needsVoice, locale);
     if (res === 'already-active') {
       const ch = deps.games.channelOf(i.guildId!) ?? i.channelId;
       await reply(i, t('game.start.alreadyActive', locale, { channel: ch }));

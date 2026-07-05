@@ -66,11 +66,14 @@ class WordleGame implements Game {
     this.armIdle(ctx);
     this.guesses++;
     const row = this.scoreRow(g);
+    // As letras vão na 2ª linha, POR BAIXO dos quadrados (o Discord não deixa pôr texto
+    // dentro dos emojis 🟩🟨⬛). Espaçadas para se alinharem sob os quadrados.
+    const letters = g.toUpperCase().split('').join(' ');
     if (g === this.target) {
       this.over = true;
       ctx.award(msg.authorId, 1);
       void ctx.send(
-        ctx.t('game.wordle.win', { user: msg.authorName, word: this.target.toUpperCase(), row, n: this.guesses }),
+        ctx.t('game.wordle.win', { user: msg.authorName, word: this.target.toUpperCase(), row, letters, n: this.guesses }),
       );
       announceWinner(ctx, msg.authorName);
       ctx.end();
@@ -78,15 +81,15 @@ class WordleGame implements Game {
     }
     if (this.guesses >= MAX_GUESSES) {
       this.over = true;
-      void ctx.send(ctx.t('game.wordle.lose', { word: this.target.toUpperCase(), row, guess: g.toUpperCase() }));
+      void ctx.send(ctx.t('game.wordle.lose', { word: this.target.toUpperCase(), row, letters }));
       ctx.end();
       return;
     }
     void ctx.send(
       ctx.t('game.wordle.guess', {
         user: msg.authorName,
-        guess: g.toUpperCase(),
         row,
+        letters,
         left: MAX_GUESSES - this.guesses,
       }),
     );

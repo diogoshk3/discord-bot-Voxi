@@ -64,6 +64,16 @@ describe('guessLanguage — funcoes puras', () => {
     expect(set.has('german')).toBe(true); // nome em ingles
     expect(set.has('deutsch')).toBe(true); // autonimo
   });
+
+  it('acceptableAnswers aceita o nome em VÁRIAS línguas (bug: "espanhol" era recusado)', () => {
+    // Mesmo com o jogo em inglês, um jogador PT deve acertar com "espanhol".
+    const set = acceptableAnswers('es', 'en');
+    expect(set.has('espanhol')).toBe(true); // PT
+    expect(set.has('spanish')).toBe(true); // EN
+    expect(set.has('espanol')).toBe(true); // ES (autónimo, sem acento)
+    expect(set.has('espagnol')).toBe(true); // FR
+    expect(set.has('es')).toBe(true); // código
+  });
 });
 
 // ── fluxo completo via o manager real ────────────────────────────────────────
