@@ -16,6 +16,7 @@ import {
 import { isOptedOut, setOptOut, setOptIn } from '../src/store/optout';
 import { getNickname, setNickname, clearNickname } from '../src/store/nickname';
 import { getPersona, setPersona, clearPersona } from '../src/store/persona';
+import { getVoiceEffect, setVoiceEffect } from '../src/store/voiceEffect';
 
 const G = 'guild-1';
 const U = 'user-1';
@@ -372,6 +373,24 @@ describe('store', () => {
       setPersona(db, G, 'u1', 'cowboy');
       expect(getPersona(db, 'outra-guild', 'u1')).toBe('none');
       expect(getPersona(db, G, 'u2')).toBe('none');
+    });
+  });
+
+  describe('voiceEffect', () => {
+    it('sem efeito -> none; persiste, sobrescreve e limpa', () => {
+      expect(getVoiceEffect(db, G, 'u1')).toBe('none');
+      setVoiceEffect(db, G, 'u1', 'robot');
+      expect(getVoiceEffect(db, G, 'u1')).toBe('robot');
+      setVoiceEffect(db, G, 'u1', 'deep');
+      expect(getVoiceEffect(db, G, 'u1')).toBe('deep');
+      setVoiceEffect(db, G, 'u1', 'none'); // apaga a linha
+      expect(getVoiceEffect(db, G, 'u1')).toBe('none');
+    });
+
+    it('é por-(guild,user)', () => {
+      setVoiceEffect(db, G, 'u1', 'echo');
+      expect(getVoiceEffect(db, 'outra', 'u1')).toBe('none');
+      expect(getVoiceEffect(db, G, 'u2')).toBe('none');
     });
   });
 });

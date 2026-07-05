@@ -8,6 +8,7 @@ import { log } from './logging/logger';
 import { initDb } from './store/db';
 import { AudioCache } from './tts/cache';
 import { createEngine, createPerUserEngine, selectEngine } from './tts/factory';
+import { EffectEngine } from './tts/effects';
 import { GuildVoicePlayer } from './voice/player';
 import { AloneWatcher } from './voice/aloneWatcher';
 import type { BotDeps } from './bot/deps';
@@ -71,7 +72,13 @@ async function main(): Promise<void> {
   // selectEngine embrulha-o num MultiSegmentEngine se a flag multilingualSegments estiver ON.
   const baseEngine =
     config.ttsEngine === 'neural' ? createEngine(config, cache) : createPerUserEngine(config, cache);
-  const engine = selectEngine(baseEngine, config, availableModels, cache);
+  // EffectEngine é o motor MAIS EXTERNO: aplica o efeito de voz (req.effect, premium) ao
+  // WAV final, DEPOIS de tudo (incl. multi-segmento e cache). Cache própria (namespace
+  // 'fx') para o áudio com efeito não colidir com o limpo; falha do efeito -> voz limpa.
+  const engine = new EffectEngine(
+    selectEngine(baseEngine, config, availableModels, cache),
+    cache.withNamespace('fx'),
+  );
   log.info(`[index] motor TTS ativo: ${config.ttsEngine === 'neural' ? 'neural' : 'per-user (google+piper)'}`);
   if (config.multilingualSegments) {
     log.warn(

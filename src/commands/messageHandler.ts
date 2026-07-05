@@ -12,6 +12,7 @@ import { getGuildConfig } from '../store/guildConfig';
 import { getBlocklist } from '../store/blocklist';
 import { redactBlocked } from '../moderation/filter';
 import { getPersona } from '../store/persona';
+import { getVoiceEffect } from '../store/voiceEffect';
 import { bumpTalk } from '../store/talkStats';
 import { getPronunciations } from '../store/pronunciation';
 import { getUserVoice } from '../store/userVoice';
@@ -249,6 +250,8 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     // Persona (/voice persona) DEPOIS da redação: o filtro vê o texto sem estilo (senão uma
     // persona que altera a palavra bloqueada passava ao lado). 'none' -> req intacto.
     const outReq = applyPersonaToRequest(redacted, getPersona(deps.db, message.guildId, message.author.id));
+    // Efeito de voz (premium): aplicado ao WAV pelo EffectEngine (motor externo).
+    outReq.effect = getVoiceEffect(deps.db, message.guildId, message.author.id);
 
     // Passou tudo: esta mensagem VAI ser lida. Regista o autor como último locutor
     // (só agora — uma mensagem bloqueada/ignorada não conta para a supressão do xsaid).

@@ -164,6 +164,19 @@ export const catalog: Record<string, Entry> = {
     en: '✅ Persona cleared — Voxi reads your messages normally again.',
     pt: '✅ Persona removida — o Voxi volta a ler as tuas mensagens normalmente.',
   },
+  // /voice effect — efeito de voz (premium, 2 amostras grátis).
+  'voice.effect.set': {
+    en: '✅ Voice effect set to **{effect}** — your messages now play with that effect. Use `/voice effect none` to turn it off.',
+    pt: '✅ Efeito de voz definido para **{effect}** — as tuas mensagens passam a tocar com esse efeito. Usa `/voice effect none` para desligar.',
+  },
+  'voice.effect.cleared': {
+    en: '✅ Voice effect removed — clean voice again.',
+    pt: '✅ Efeito de voz removido — voz limpa outra vez.',
+  },
+  'voice.effect.locked': {
+    en: '🔒 **{effect}** is a Premium effect. Free effects: 🤖 Robot and 🔊 Echo. Unlock all with Voxi Premium — see `/premium`.',
+    pt: '🔒 **{effect}** é um efeito Premium. Efeitos grátis: 🤖 Robot e 🔊 Echo. Desbloqueia todos com o Voxi Premium — vê `/premium`.',
+  },
   // /voice detection — liga/desliga a deteccao AUTOMATICA de lingua para o proprio.
   // DEFAULT = OFF (voz UNICA fixa p/ todas as linguas — parece a mesma pessoa). ON e
   // opt-in: voz nativa por lingua, MAS pode trocar de locutor. A mensagem OFF aponta
@@ -837,6 +850,7 @@ export const catalog: Record<string, Entry> = {
       '• /voice reset — go back to the default voice\n' +
       '• /voice detection <on/off> — native voice per language, speaker may change (off by default: one fixed voice)\n' +
       '• /voice persona <style> — read your messages in a fun style (pirate, uwu, Yoda...)\n' +
+      '• /voice effect <effect> — voice effect (robot, echo… 💎 more with Premium)\n' +
       '• /voice optout · /voice optin — turn auto-read off / on for you',
     pt:
       '• /voice set <model> — escolhe a tua voz · ex. /voice set pt_PT-tugao-medium\n' +
@@ -845,6 +859,7 @@ export const catalog: Record<string, Entry> = {
       '• /voice reset — volta a voz por defeito\n' +
       '• /voice detection <on/off> — voz nativa por lingua, o locutor pode mudar (desligado por defeito: uma voz fixa)\n' +
       '• /voice persona <estilo> — le as tuas mensagens num estilo divertido (pirata, uwu, Yoda...)\n' +
+      '• /voice effect <efeito> — efeito de voz (robot, echo… 💎 mais com Premium)\n' +
       '• /voice optout · /voice optin — desliga / liga a leitura automatica para ti',
   },
   'help.groupFun': {

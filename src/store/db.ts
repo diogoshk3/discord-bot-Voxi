@@ -154,6 +154,15 @@ export function initDb(path: string): Database.Database {
         source     TEXT NOT NULL DEFAULT ''
       );
 
+      -- Efeito de voz por-(guild,user): filtro ffmpeg aplicado ao TTS da pessoa (premium,
+      -- com 2 amostras gratis). Sem linha => 'none' (voz limpa). Tabela NOVA.
+      CREATE TABLE IF NOT EXISTS user_effect (
+        guild_id TEXT NOT NULL,
+        user_id  TEXT NOT NULL,
+        effect   TEXT NOT NULL,
+        PRIMARY KEY (guild_id, user_id)
+      );
+
       -- Códigos de resgate (Ko-fi/Patreon): gerados offline, resgatados 1x com /redeem.
       -- kind = 'guild'|'user'; days = duração; used_by/used_at NULL enquanto por usar.
       CREATE TABLE IF NOT EXISTS redeem_code (

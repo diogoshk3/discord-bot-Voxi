@@ -24,6 +24,10 @@ export interface SynthRequest {
   // por este campo; entra na chave de cache (só quando 'piper') para não cruzar áudio
   // entre users de motores diferentes.
   engine?: 'google' | 'piper';
+  // EFEITO de voz (premium) a aplicar ao WAV DEPOIS da síntese (robot/echo/deep...).
+  // Ausente/'none' => voz limpa. NÃO entra na cacheKey (o EffectEngine tem cache própria
+  // keyed por cacheKey+efeito), por isso o áudio limpo continua partilhado entre users.
+  effect?: string;
 }
 
 export interface TTSEngine {

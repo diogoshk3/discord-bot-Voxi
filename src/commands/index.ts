@@ -30,7 +30,15 @@ import { getPersona, setPersona } from '../store/persona';
 import { isPersona, PERSONA_CHOICES, type Persona } from '../textCleaning/personas';
 import { getBirthday, setBirthday, clearBirthday, isValidBirthday } from '../store/birthday';
 import { getTopSpeakers } from '../store/talkStats';
-import { redeemCode, getGuildPremiumExpiry } from '../store/premium';
+import { redeemCode, getGuildPremiumExpiry, isGuildPremium, isUserPremium } from '../store/premium';
+import { getVoiceEffect, setVoiceEffect } from '../store/voiceEffect';
+import {
+  EFFECT_CHOICES,
+  isVoiceEffect,
+  isPremiumEffect,
+  effectLabel,
+  type VoiceEffect,
+} from '../tts/effects';
 import { sanitizeSpeakerName } from '../language/speakerName';
 import { isDetectionOn, setDetection } from '../store/langDetect';
 import {
@@ -354,6 +362,19 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
             .setDescription('Speaking style (none = normal)')
             .setRequired(true)
             .addChoices(...PERSONA_CHOICES),
+        ),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName('effect')
+        .setDescription('Apply a voice effect to your messages (💎 = Premium)')
+        .addStringOption((o) =>
+          o
+            .setName('effect')
+            .setNameLocalizations({ 'pt-BR': 'efeito' })
+            .setDescription('Voice effect (none = clean; 💎 needs Premium)')
+            .setRequired(true)
+            .addChoices(...EFFECT_CHOICES),
         ),
     )
     .toJSON(),
@@ -823,6 +844,7 @@ async function speakRawText(
   if (!readable) return { status: 'blocked' };
   // Persona DEPOIS da redação (o filtro vê o texto sem estilo). 'none' -> req intacto.
   const outReq = applyPersonaToRequest(redacted, getPersona(deps.db, guildId, userId));
+  outReq.effect = getVoiceEffect(deps.db, guildId, userId); // efeito de voz (premium)
   if (deps.config.messageLeadMs > 0) outReq.leadSilenceMs = deps.config.messageLeadMs;
   const queued = await player.say(outReq);
   return { status: queued ? 'queued' : 'busy' };
@@ -1329,6 +1351,27 @@ async function handleVoice(i: ChatInputCommandInteraction, deps: BotDeps): Promi
       persona === 'none'
         ? t('voice.persona.cleared', locale)
         : t('voice.persona.set', locale, { style: personaLabel(persona) }),
+    );
+  } else if (sub === 'effect') {
+    const raw = i.options.getString('effect', true);
+    const effect: VoiceEffect = isVoiceEffect(raw) ? raw : 'none';
+    // GATE premium: efeitos premium exigem Voxi Premium (servidor) OU Voxi Plus (user).
+    // Só aqui, ao GUARDAR — o player aplica cegamente o que estiver guardado.
+    if (isPremiumEffect(effect)) {
+      const now = Date.now();
+      const unlocked =
+        isGuildPremium(deps.db, i.guildId!, now) || isUserPremium(deps.db, i.user.id, now);
+      if (!unlocked) {
+        await reply(i, t('voice.effect.locked', locale, { effect: effectLabel(effect) }));
+        return;
+      }
+    }
+    setVoiceEffect(deps.db, i.guildId!, i.user.id, effect);
+    await reply(
+      i,
+      effect === 'none'
+        ? t('voice.effect.cleared', locale)
+        : t('voice.effect.set', locale, { effect: effectLabel(effect) }),
     );
   } else if (sub === 'preview') {
     const SAMPLE = t('preview.sample', locale);
