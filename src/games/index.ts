@@ -1,13 +1,27 @@
 import { t } from '../i18n/index';
 import type { GameDefinition } from './types';
 import { guessLanguageDef } from './guessLanguage';
+import { mathDef } from './math';
+import { skipCountDef } from './skipCount';
+import { spellingDef } from './spelling';
+import { spellOutDef } from './spellOut';
+import { fastSpeechDef } from './fastSpeech';
+import { accentSwapDef } from './accentSwap';
 
 /**
  * Registo de todos os minijogos do /game. Adicionar um jogo novo = criar o ficheiro
  * (com o seu GameDefinition) e acrescenta-lo aqui — o comando, o autocomplete e o
  * /game list derivam TUDO desta lista, por isso nada mais precisa de mudar.
  */
-export const GAME_DEFS: readonly GameDefinition[] = [guessLanguageDef];
+export const GAME_DEFS: readonly GameDefinition[] = [
+  guessLanguageDef,
+  mathDef,
+  skipCountDef,
+  spellingDef,
+  spellOutDef,
+  fastSpeechDef,
+  accentSwapDef,
+];
 
 /** Procura um jogo pelo id (o value do autocomplete). undefined se nao existir. */
 export function gameById(id: string): GameDefinition | undefined {

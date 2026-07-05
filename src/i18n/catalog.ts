@@ -916,4 +916,100 @@ export const catalog: Record<string, Entry> = {
     en: "I don't have enough voices installed to play this. Ask an admin to add more voices.",
     pt: 'Não tenho vozes suficientes instaladas para jogar isto. Pede a um admin para adicionar mais vozes.',
   },
+
+  // ── Matemática Falada ─────────────────────────────────────────────────────
+  'game.math.name': { en: 'Mental Math', pt: 'Matemática Falada' },
+  'game.math.desc': {
+    en: 'I say a sum out loud — first to type the answer wins.',
+    pt: 'Digo uma conta em voz alta — o primeiro a escrever o resultado ganha.',
+  },
+  'game.math.intro': {
+    en: '🔢 **Mental Math** — {rounds} sums. Listen and type the answer as fast as you can!',
+    pt: '🔢 **Matemática Falada** — {rounds} contas. Ouve e escreve o resultado o mais rápido que conseguires!',
+  },
+  'game.math.round': { en: '🧮 Round {n}/{total} — **{a} {op} {b} = ?**', pt: '🧮 Ronda {n}/{total} — **{a} {op} {b} = ?**' },
+  'game.math.correct': { en: '✅ **{user}** nailed it — the answer was **{answer}**!', pt: '✅ **{user}** acertou — o resultado era **{answer}**!' },
+  'game.math.timeout': { en: '⏱️ Time! The answer was **{answer}**.', pt: '⏱️ Tempo! O resultado era **{answer}**.' },
+  // Palavras dos operadores — FALADAS (na voz da guild), por isso texto simples.
+  'game.math.plus': { en: 'plus', pt: 'mais' },
+  'game.math.minus': { en: 'minus', pt: 'menos' },
+  'game.math.times': { en: 'times', pt: 'vezes' },
+
+  // ── Contagem Sabotada ─────────────────────────────────────────────────────
+  'game.skipCount.name': { en: 'Missing Number', pt: 'Contagem Sabotada' },
+  'game.skipCount.desc': {
+    en: 'I count out loud but skip one number — first to catch it wins.',
+    pt: 'Conto em voz alta mas salto um número — o primeiro a apanhá-lo ganha.',
+  },
+  'game.skipCount.intro': {
+    en: '🔢 **Missing Number** — I count, but I skip one. Type the missing number! ({rounds} rounds)',
+    pt: '🔢 **Contagem Sabotada** — eu conto, mas salto um número. Escreve o que faltou! ({rounds} rondas)',
+  },
+  'game.skipCount.round': { en: '👂 Round {n}/{total} — which number did I skip?', pt: '👂 Ronda {n}/{total} — que número saltei?' },
+  'game.skipCount.correct': { en: '✅ **{user}** caught it — I skipped **{answer}**!', pt: '✅ **{user}** apanhou — saltei o **{answer}**!' },
+  'game.skipCount.timeout': { en: '⏱️ Time! I skipped **{answer}**.', pt: '⏱️ Tempo! Saltei o **{answer}**.' },
+
+  // ── Ditado ────────────────────────────────────────────────────────────────
+  'game.spelling.name': { en: 'Spelling Bee', pt: 'Ditado' },
+  'game.spelling.desc': {
+    en: 'I say a word — first to spell it correctly wins.',
+    pt: 'Digo uma palavra — o primeiro a escrevê-la corretamente ganha.',
+  },
+  'game.spelling.intro': {
+    en: "✍️ **Spelling Bee** — I'll say {rounds} words. Type each one spelled correctly!",
+    pt: '✍️ **Ditado** — vou dizer {rounds} palavras. Escreve cada uma corretamente!',
+  },
+  'game.spelling.round': { en: '🗣️ Round {n}/{total} — write the word I say…', pt: '🗣️ Ronda {n}/{total} — escreve a palavra que eu disser…' },
+  'game.spelling.correct': { en: '✅ **{user}** spelled **{word}** right!', pt: '✅ **{user}** escreveu **{word}** corretamente!' },
+  'game.spelling.timeout': { en: '⏱️ Time! The word was **{word}**.', pt: '⏱️ Tempo! A palavra era **{word}**.' },
+  'game.spelling.empty': {
+    en: "I don't have a word list for this server's voice language yet.",
+    pt: 'Ainda não tenho uma lista de palavras para a língua da voz deste servidor.',
+  },
+
+  // ── Soletrado ao Contrário ────────────────────────────────────────────────
+  'game.spellOut.name': { en: 'Unscramble the Spelling', pt: 'Soletrado ao Contrário' },
+  'game.spellOut.desc': {
+    en: 'I spell a word letter by letter — first to write the whole word wins.',
+    pt: 'Soletro uma palavra letra a letra — o primeiro a escrever a palavra inteira ganha.',
+  },
+  'game.spellOut.intro': {
+    en: '🔡 **Unscramble the Spelling** — I spell {rounds} words letter by letter. Type the full word!',
+    pt: '🔡 **Soletrado ao Contrário** — soletro {rounds} palavras letra a letra. Escreve a palavra completa!',
+  },
+  'game.spellOut.round': { en: '🔤 Round {n}/{total} — listen to the letters…', pt: '🔤 Ronda {n}/{total} — ouve as letras…' },
+  'game.spellOut.correct': { en: '✅ **{user}** got it — **{word}**!', pt: '✅ **{user}** acertou — **{word}**!' },
+  'game.spellOut.timeout': { en: '⏱️ Time! It spelled **{word}**.', pt: '⏱️ Tempo! Soletrava **{word}**.' },
+
+  // ── Velocidade Estúpida ───────────────────────────────────────────────────
+  'game.fastSpeech.name': { en: 'Fast Talk', pt: 'Velocidade Estúpida' },
+  'game.fastSpeech.desc': {
+    en: 'I read a sentence super fast — first to type what I said wins.',
+    pt: 'Leio uma frase super depressa — o primeiro a escrever o que eu disse ganha.',
+  },
+  'game.fastSpeech.intro': {
+    en: '💨 **Fast Talk** — {rounds} sentences at ludicrous speed. Type what you hear!',
+    pt: '💨 **Velocidade Estúpida** — {rounds} frases a uma velocidade ridícula. Escreve o que ouvires!',
+  },
+  'game.fastSpeech.round': { en: '⚡ Round {n}/{total} — here it comes, fast!', pt: '⚡ Ronda {n}/{total} — aí vai, depressa!' },
+  'game.fastSpeech.correct': { en: '✅ **{user}** decoded it: “{phrase}”', pt: '✅ **{user}** decifrou: “{phrase}”' },
+  'game.fastSpeech.timeout': { en: '⏱️ Time! It was: “{phrase}”', pt: '⏱️ Tempo! Era: “{phrase}”' },
+  'game.fastSpeech.empty': {
+    en: "I don't have phrases for this server's voice language yet.",
+    pt: 'Ainda não tenho frases para a língua da voz deste servidor.',
+  },
+
+  // ── Sotaque Trocado ───────────────────────────────────────────────────────
+  'game.accentSwap.name': { en: 'Funny Accent', pt: 'Sotaque Trocado' },
+  'game.accentSwap.desc': {
+    en: 'I say a word with a foreign accent — first to write it wins.',
+    pt: 'Digo uma palavra com um sotaque estrangeiro — o primeiro a escrevê-la ganha.',
+  },
+  'game.accentSwap.intro': {
+    en: '🎭 **Funny Accent** — {rounds} words said with the wrong accent. Type the word!',
+    pt: '🎭 **Sotaque Trocado** — {rounds} palavras ditas com o sotaque errado. Escreve a palavra!',
+  },
+  'game.accentSwap.round': { en: '🌍 Round {n}/{total} — what word am I trying to say?', pt: '🌍 Ronda {n}/{total} — que palavra estou a tentar dizer?' },
+  'game.accentSwap.correct': { en: '✅ **{user}** got it — **{word}**!', pt: '✅ **{user}** acertou — **{word}**!' },
+  'game.accentSwap.timeout': { en: '⏱️ Time! The word was **{word}**.', pt: '⏱️ Tempo! A palavra era **{word}**.' },
 };

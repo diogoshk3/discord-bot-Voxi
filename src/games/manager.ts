@@ -158,6 +158,7 @@ export class GameManager {
       locale: env.localeOf(s.guildId),
       seed: s.seed,
       availableModels: env.availableModels,
+      defaultVoice: env.defaultVoiceOf(s.guildId),
       say: async (text: string, opts): Promise<boolean> => {
         const player = env.getPlayer(s.guildId);
         if (!player) return false;

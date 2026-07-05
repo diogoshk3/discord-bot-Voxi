@@ -1,5 +1,6 @@
 import { LOCALE_DISPLAY_NAMES } from '../i18n/index';
-import type { Game, GameContext, GameDefinition, GameMessage } from './types';
+import type { GameContext, GameDefinition } from './types';
+import { QuizGame, type QuizRound } from './quizGame';
 import { LANGUAGE_PHRASES } from './content/languagePhrases';
 import { baseCodeOf, localizedLanguageName, normalizeAnswer, seededShuffle } from './util';
 
@@ -54,84 +55,40 @@ export function acceptableAnswers(base: string, locale: string): Set<string> {
 /**
  * "Adivinha a Lingua" — o Voxi le uma frase numa lingua aleatoria (das que tem voz
  * instalada) e o 1o a escrever o nome da lingua ganha o ponto. Best-of-5 rondas.
- *
- * Cada ronda captura o seu numero (`round`) no timeout: um palpite certo avanca a
- * ronda (incrementa `round`), pelo que o timeout velho — que compara `this.round ===
- * myRound` — vira no-op. E o mecanismo que evita o timer-fantasma de uma ronda ja
- * respondida disparar durante a ronda seguinte (sem precisar de cancelar o timer).
+ * Assenta na base QuizGame (loop de rondas, timeout, placar, resumo final); aqui so
+ * vive o CONTEUDO: escolher as linguas e reconhecer o nome da lingua.
  */
-class GuessLanguageGame implements Game {
+class GuessLanguageGame extends QuizGame {
   readonly id = 'guess-language';
+  protected roundMs = ROUND_MS;
   private order: Candidate[] = [];
-  private round = 0;
-  private answered = true; // true entre rondas (nao aceita palpites fora de ronda)
-  private current: Candidate | null = null;
-  private answers = new Set<string>();
-  /** Placar local so para o resumo final (o ctx.award e a fonte de verdade dos pontos). */
-  private readonly tally = new Map<string, { name: string; points: number }>();
+  private rounds = 0;
 
-  async start(ctx: GameContext): Promise<void> {
+  protected prepare(ctx: GameContext): number {
     this.order = seededShuffle(guessableLanguages(ctx.availableModels), ctx.seed);
-    if (this.order.length === 0) {
-      await ctx.send(ctx.t('game.guessLanguage.noLanguages'));
-      ctx.end();
-      return;
-    }
-    await ctx.send(ctx.t('game.guessLanguage.intro', { rounds: Math.min(ROUNDS, this.order.length) }));
-    this.nextRound(ctx);
+    this.rounds = Math.min(ROUNDS, this.order.length);
+    return this.rounds;
   }
 
-  private nextRound(ctx: GameContext): void {
-    const total = Math.min(ROUNDS, this.order.length);
-    if (this.round >= total) {
-      void this.finish(ctx);
-      return;
-    }
-    const cand = this.order[this.round];
-    this.round++;
-    this.current = cand;
-    this.answers = acceptableAnswers(cand.base, ctx.locale);
-    this.answered = false;
-    const myRound = this.round;
-    void ctx.send(ctx.t('game.guessLanguage.round', { n: this.round, total }));
-    void ctx.say(cand.phrase, { model: cand.model });
-    ctx.after(ROUND_MS, () => {
-      if (this.round === myRound && !this.answered) this.onTimeout(ctx);
-    });
+  protected emptyMessage(ctx: GameContext): string {
+    return ctx.t('game.guessLanguage.noLanguages');
   }
 
-  private onTimeout(ctx: GameContext): void {
-    this.answered = true;
-    const name = this.current ? localizedLanguageName(this.current.base, ctx.locale) : '';
-    void ctx.send(ctx.t('game.guessLanguage.timeout', { language: name }));
-    this.nextRound(ctx);
+  protected intro(ctx: GameContext, rounds: number): string {
+    return ctx.t('game.guessLanguage.intro', { rounds });
   }
 
-  onMessage(ctx: GameContext, msg: GameMessage): void {
-    if (this.answered || !this.current) return;
-    if (!this.answers.has(normalizeAnswer(msg.content))) return;
-    this.answered = true;
-    ctx.award(msg.authorId, 1);
-    const entry = this.tally.get(msg.authorId) ?? { name: msg.authorName, points: 0 };
-    entry.points += 1;
-    entry.name = msg.authorName;
-    this.tally.set(msg.authorId, entry);
-    const language = localizedLanguageName(this.current.base, ctx.locale);
-    void ctx.send(ctx.t('game.guessLanguage.correct', { user: msg.authorName, language }));
-    this.nextRound(ctx);
-  }
-
-  private async finish(ctx: GameContext): Promise<void> {
-    const ranked = [...this.tally.values()].sort((a, b) => b.points - a.points);
-    if (ranked.length === 0) {
-      await ctx.send(ctx.t('game.finish.noScores'));
-    } else {
-      const lines = ranked.map((r, i) =>
-        ctx.t('game.finish.line', { rank: i + 1, user: r.name, points: r.points }),
-      );
-      await ctx.send(`${ctx.t('game.finish.title')}\n${lines.join('\n')}`);
-    }
-    ctx.end();
+  protected makeRound(ctx: GameContext, index: number): QuizRound {
+    const cand = this.order[index];
+    const answers = acceptableAnswers(cand.base, ctx.locale);
+    const language = localizedLanguageName(cand.base, ctx.locale);
+    return {
+      speak: { text: cand.phrase, opts: { model: cand.model } },
+      announce: ctx.t('game.guessLanguage.round', { n: index + 1, total: this.rounds }),
+      accept: (raw) => answers.has(normalizeAnswer(raw)),
+      onCorrect: (user) => ctx.t('game.guessLanguage.correct', { user, language }),
+      onTimeout: () => ctx.t('game.guessLanguage.timeout', { language }),
+    };
   }
 }
 

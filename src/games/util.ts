@@ -52,6 +52,31 @@ function xorshift(seed: number): () => number {
   };
 }
 
+/** Gerador de inteiros nao-negativos deterministas a partir de `seed` (stream). */
+export function makeRng(seed: number): () => number {
+  return xorshift(seed);
+}
+
+/** Primeiro inteiro (com sinal opcional) num texto; null se nao houver. */
+export function firstInteger(s: string): number | null {
+  const m = s.match(/-?\d+/);
+  return m ? parseInt(m[0], 10) : null;
+}
+
+/**
+ * Semelhanca de Jaccard entre dois textos ao nivel de PALAVRA (ambos normalizados):
+ * |A∩B| / |A∪B|, em [0,1]. Usada para aceitar respostas "quase iguais" (ex. jogo da
+ * Velocidade, onde uma gralha nao deve invalidar). Conjuntos vazios -> 0.
+ */
+export function jaccard(a: string, b: string): number {
+  const A = new Set(normalizeAnswer(a).split(' ').filter(Boolean));
+  const B = new Set(normalizeAnswer(b).split(' ').filter(Boolean));
+  if (A.size === 0 || B.size === 0) return 0;
+  let inter = 0;
+  for (const x of A) if (B.has(x)) inter++;
+  return inter / (A.size + B.size - inter);
+}
+
 /** Indice determinista em [0, n) a partir de uma semente. n<=0 -> 0. */
 export function seededIndex(seed: number, n: number): number {
   if (n <= 0) return 0;

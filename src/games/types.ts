@@ -55,6 +55,8 @@ export interface GameContext {
   readonly seed: number;
   /** Modelos de voz instalados (para escolher a voz por lingua). */
   readonly availableModels: string[];
+  /** Voz default desta guild (id de modelo) — a lingua-base dela decide o conteudo. */
+  readonly defaultVoice: string;
 
   /** Fala em voz alta (se houver player/call). Devolve false se nao deu para falar. */
   say(text: string, opts?: SayOpts): Promise<boolean>;
