@@ -11,7 +11,7 @@ window.VOXI_I18N = {
     "cta.add": "Add to Discord",
     "cta.support": "Join support server",
 
-    "hero.badge": "Core free forever",
+    "hero.badge": "Core free forever · Open source",
     "hero.title1": "Type it.",
     "hero.title2": "Hear it.",
     "hero.sub": "Voxi reads your Discord chat out loud with natural neural voices — in 34 languages, with games, laughter and a core that's free forever.",
@@ -42,6 +42,8 @@ window.VOXI_I18N = {
     "feat.7.d": "Robot, echo, deep, chipmunk, radio, demon… your messages, transformed. Two effects free, all eight with Premium.",
     "feat.8.t": "Fair Premium",
     "feat.8.d": "€4/month unlocks the extras. Everything that's free today stays free — that's a promise, not a trick.",
+    "feat.9.t": "Open source",
+    "feat.9.d": "All of Voxi's code is public on GitHub. Audit it, learn from it, or open a PR — no secrets, no spyware.",
 
     "lang.eyebrow": "Languages",
     "lang.title": "One server, every language.",
@@ -116,7 +118,7 @@ window.VOXI_I18N = {
     "cta.add": "Adicionar ao Discord",
     "cta.support": "Servidor de suporte",
 
-    "hero.badge": "Essencial grátis para sempre",
+    "hero.badge": "Essencial grátis para sempre · Open source",
     "hero.title1": "Escreve.",
     "hero.title2": "Ouve.",
     "hero.sub": "O Voxi lê o teu chat do Discord em voz alta com vozes neurais naturais — em 34 línguas, com jogos, risos e um essencial grátis para sempre.",
@@ -147,6 +149,8 @@ window.VOXI_I18N = {
     "feat.7.d": "Robô, eco, grave, esquilo, rádio, demónio… as tuas mensagens, transformadas. Dois efeitos grátis, os oito com Premium.",
     "feat.8.t": "Premium justo",
     "feat.8.d": "€4/mês desbloqueia os extras. Tudo o que hoje é grátis continua grátis — é uma promessa, não um truque.",
+    "feat.9.t": "Open source",
+    "feat.9.d": "Todo o código do Voxi é público no GitHub. Audita-o, aprende com ele ou abre um PR — sem segredos, sem spyware.",
 
     "lang.eyebrow": "Línguas",
     "lang.title": "Um servidor, todas as línguas.",

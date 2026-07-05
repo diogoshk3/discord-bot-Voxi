@@ -160,6 +160,8 @@ body > *:not(.grain):not(.orbs) { position: relative; z-index: 2; }
 .nav__links a { color: var(--text-1); font-weight: 500; font-size: 15px; transition: color 0.2s; }
 .nav__links a:hover { color: var(--text-0); }
 .nav__actions { display: flex; align-items: center; gap: 14px; }
+.nav__gh { display: grid; place-items: center; color: var(--text-1); transition: color 0.2s, transform 0.2s; }
+.nav__gh:hover { color: var(--text-0); transform: scale(1.12); }
 .lang-toggle { display: inline-flex; padding: 3px; border-radius: 999px; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--line); }
 .lang-toggle button {
   border: 0; background: transparent; color: var(--text-1); cursor: pointer;
@@ -275,6 +277,13 @@ body > *:not(.grain):not(.orbs) { position: relative; z-index: 2; }
 .card h3 { font-size: 20.5px; font-weight: 600; font-family: var(--f-body); margin-bottom: 9px; }
 .card p { font-size: 15.5px; color: var(--text-1); }
 .card--accent { border-color: rgba(255, 194, 75, 0.26); }
+/* card CLICÁVEL (ex. Open source -> GitHub): mesmo visual, cursor + seta no canto */
+.card--link { display: block; cursor: pointer; }
+.card__arrow {
+  position: absolute; top: 22px; right: 24px; font-size: 20px; color: var(--text-2);
+  transition: color 0.25s, transform 0.25s;
+}
+.card--link:hover .card__arrow { color: var(--aqua); transform: translate(3px, -3px); }
 .card__badge {
   position: absolute; top: 22px; right: 22px; font-family: var(--f-mono); font-size: 10.5px; font-weight: 700;
   color: #1a1500; background: var(--amber); padding: 3px 9px; border-radius: 6px; letter-spacing: 0.05em;
