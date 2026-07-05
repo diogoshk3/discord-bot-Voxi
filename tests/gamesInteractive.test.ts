@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { GameManager } from '../src/games/manager';
 import type { Clock, GameEnv, TimerHandle } from '../src/games/types';
 import { gameById } from '../src/games/index';
+import { pickPrompts, ROULETTE_PROMPTS } from '../src/games/content/roulettePrompts';
 
 const flush = (): Promise<void> => new Promise((r) => setImmediate(r));
 
@@ -136,5 +137,15 @@ describe('Roleta', () => {
     expect(send.mock.calls.some((c) => String(c[1]).startsWith('game.roulette.header'))).toBe(true);
     expect(say).toHaveBeenCalledTimes(1);
     expect(mgr.active(G)).toBe(false); // terminou logo no start
+  });
+
+  it('pickPrompts resolve a língua (base do locale) e cai em inglês se não houver', () => {
+    for (const lang of ['en', 'pt', 'es', 'fr', 'de', 'it']) {
+      expect(pickPrompts(lang)).toBe(ROULETTE_PROMPTS[lang]);
+      expect(pickPrompts(`${lang}-XX`)).toBe(ROULETTE_PROMPTS[lang]); // normaliza a base
+    }
+    expect(pickPrompts('zz')).toBe(ROULETTE_PROMPTS.en); // sem banco -> inglês
+    // Cada banco tem desafios (não vazio).
+    for (const arr of Object.values(ROULETTE_PROMPTS)) expect(arr.length).toBeGreaterThan(0);
   });
 });
