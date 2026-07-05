@@ -867,6 +867,8 @@ async function speakRawText(
   if (!readable) return { status: 'blocked' };
   const outReq = redacted;
   outReq.effect = getVoiceEffect(deps.db, guildId, userId); // efeito de voz (premium)
+  const cloneRow = getClone(deps.db, userId); // clone de voz (premium)
+  if (cloneRow?.enabled) outReq.cloneRef = cloneRow.samplePath;
   if (deps.config.messageLeadMs > 0) outReq.leadSilenceMs = deps.config.messageLeadMs;
   const queued = await player.say(outReq);
   return { status: queued ? 'queued' : 'busy' };

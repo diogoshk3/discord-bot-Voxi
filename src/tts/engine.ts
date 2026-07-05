@@ -28,6 +28,10 @@ export interface SynthRequest {
   // Ausente/'none' => voz limpa. NÃO entra na cacheKey (o EffectEngine tem cache própria
   // keyed por cacheKey+efeito), por isso o áudio limpo continua partilhado entre users.
   effect?: string;
+  // CLONE de voz (premium): caminho do WAV de referência da PRÓPRIA voz do autor. Quando
+  // presente, o CloneEngine sintetiza `text` nessa voz (sidecar Python) em vez do motor
+  // normal; qualquer falha cai na voz normal. Fora da cacheKey (cache própria 'clone').
+  cloneRef?: string;
 }
 
 export interface TTSEngine {

@@ -12,6 +12,7 @@ import { getGuildConfig } from '../store/guildConfig';
 import { getBlocklist } from '../store/blocklist';
 import { redactBlocked } from '../moderation/filter';
 import { getVoiceEffect } from '../store/voiceEffect';
+import { getClone } from '../store/voiceClone';
 import { bumpTalk } from '../store/talkStats';
 import { getPronunciations } from '../store/pronunciation';
 import { getUserVoice } from '../store/userVoice';
@@ -249,6 +250,10 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     const outReq = redacted;
     // Efeito de voz (premium): aplicado ao WAV pelo EffectEngine (motor externo).
     outReq.effect = getVoiceEffect(deps.db, message.guildId, message.author.id);
+    // Clone de voz (premium): se o autor tem clone LIGADO, o CloneEngine sintetiza na
+    // voz dele. Sem motor instalado, o engine ignora e serve a voz normal.
+    const clone = getClone(deps.db, message.author.id);
+    if (clone?.enabled) outReq.cloneRef = clone.samplePath;
 
     // Passou tudo: esta mensagem VAI ser lida. Regista o autor como último locutor
     // (só agora — uma mensagem bloqueada/ignorada não conta para a supressão do xsaid).

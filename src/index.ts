@@ -9,6 +9,7 @@ import { initDb } from './store/db';
 import { AudioCache } from './tts/cache';
 import { createEngine, createPerUserEngine, selectEngine } from './tts/factory';
 import { EffectEngine } from './tts/effects';
+import { CloneEngine, resolveCloneCmd } from './tts/cloneEngine';
 import { GuildVoicePlayer } from './voice/player';
 import { AloneWatcher } from './voice/aloneWatcher';
 import type { BotDeps } from './bot/deps';
@@ -72,13 +73,20 @@ async function main(): Promise<void> {
   // selectEngine embrulha-o num MultiSegmentEngine se a flag multilingualSegments estiver ON.
   const baseEngine =
     config.ttsEngine === 'neural' ? createEngine(config, cache) : createPerUserEngine(config, cache);
-  // EffectEngine é o motor MAIS EXTERNO: aplica o efeito de voz (req.effect, premium) ao
-  // WAV final, DEPOIS de tudo (incl. multi-segmento e cache). Cache própria (namespace
-  // 'fx') para o áudio com efeito não colidir com o limpo; falha do efeito -> voz limpa.
-  const engine = new EffectEngine(
+  // Decoradores externos, de dentro para fora:
+  //   selectEngine (multi-segmento) -> CloneEngine (voz clonada, premium) -> EffectEngine
+  // O CloneEngine substitui a SÍNTESE quando req.cloneRef está presente (voz da pessoa);
+  // o EffectEngine aplica o efeito por CIMA do resultado. Ambos caem na voz normal/limpa
+  // em falha e têm cache própria. O sidecar de clone é auto-detetado (tools/clone-venv)
+  // ou vem de CLONE_CMD; ausente => clone inerte (serve sempre a voz normal).
+  const cloneCmd = resolveCloneCmd(config.cloneCmd);
+  const cloneEngine = new CloneEngine(
     selectEngine(baseEngine, config, availableModels, cache),
-    cache.withNamespace('fx'),
+    cache.withNamespace('clone'),
+    cloneCmd,
   );
+  log.info(`[index] clone de voz: ${cloneEngine.available ? 'motor detetado' : 'sem motor (voz normal)'}`);
+  const engine = new EffectEngine(cloneEngine, cache.withNamespace('fx'));
   log.info(`[index] motor TTS ativo: ${config.ttsEngine === 'neural' ? 'neural' : 'per-user (google+piper)'}`);
   if (config.multilingualSegments) {
     log.warn(
