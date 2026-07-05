@@ -371,6 +371,18 @@ export const catalog: Record<string, Entry> = {
     en: 'Voxi will **not** read the voice channel text chat (only the TTS channel).',
     pt: 'O Voxi **não** lê o chat de texto do canal de voz (só o canal de TTS).',
   },
+  'config.greetOn': {
+    en: "✅ I'll greet people by name when they join the voice channel.",
+    pt: '✅ Vou saudar as pessoas pelo nome quando entrarem no canal de voz.',
+  },
+  'config.greetOff': {
+    en: "🔇 I **won't** greet people when they join the voice channel.",
+    pt: '🔇 **Não** vou saudar as pessoas quando entrarem no canal de voz.',
+  },
+  'config.greetLangSet': {
+    en: '✅ Join greeting language set to **{language}**.',
+    pt: '✅ Língua da saudação de entrada definida para **{language}**.',
+  },
   // Sucesso do /config default-voice: lidera com o NOME AMIGAVEL ({name}) e mantem o
   // id cru ({model}) subtil/copy-pasteavel. Usada quando o utilizador nao tem voz
   // propria, por isso e a voz que os membros vao ouvir por defeito.
@@ -418,6 +430,10 @@ export const catalog: Record<string, Entry> = {
   'config.showTextInVoice': {
     en: 'Text-in-voice: {value}',
     pt: 'Texto-em-voz: {value}',
+  },
+  'config.showGreet': {
+    en: 'Greet on join: {value} ({language})',
+    pt: 'Saudar à entrada: {value} ({language})',
   },
   'config.showVoice': {
     en: 'Default voice: {value}',

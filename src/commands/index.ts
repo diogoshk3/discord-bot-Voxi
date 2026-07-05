@@ -43,6 +43,7 @@ import { laughterFor } from '../content/laughter';
 import { JOKE_LANGUAGES, jokeLangByKey, pickJoke } from '../content/jokes';
 import { GAME_DEFS, gameById, filterGameChoices } from '../games/index';
 import { getLeaderboard, getUserScore, getUserRank } from '../store/gameScore';
+import { GREET_LANGUAGE_CHOICES, GREET_LOCALES } from '../voice/greeting';
 import { log } from '../logging/logger';
 import {
   t,
@@ -377,6 +378,32 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
             .setNameLocalizations({ 'pt-BR': 'ativo' })
             .setDescription('on/off')
             .setRequired(true),
+        ),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName('greet')
+        .setDescription('Greet people by name when they join the voice channel (on by default)')
+        .addBooleanOption((o) =>
+          o
+            .setName('active')
+            .setNameLocalizations({ 'pt-BR': 'ativo' })
+            .setDescription('on/off')
+            .setRequired(true),
+        ),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName('greet-language')
+        .setNameLocalizations({ 'pt-BR': 'idioma-saudacao' })
+        .setDescription('Language of the join greeting (English by default)')
+        .addStringOption((o) =>
+          o
+            .setName('language')
+            .setNameLocalizations({ 'pt-BR': 'idioma' })
+            .setDescription('Greeting language')
+            .setRequired(true)
+            .addChoices(...GREET_LANGUAGE_CHOICES),
         ),
     )
     .addSubcommand((s) =>
@@ -1188,6 +1215,22 @@ async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps): Prom
     const on = i.options.getBoolean('active', true);
     setGuildConfig(deps.db, i.guildId!, { textInVoice: on });
     await reply(i, on ? t('config.textInVoiceOn', locale) : t('config.textInVoiceOff', locale));
+  } else if (sub === 'greet') {
+    // Saudação de voz a quem entra na call. LIGADA por defeito.
+    const on = i.options.getBoolean('active', true);
+    setGuildConfig(deps.db, i.guildId!, { greetOnJoin: on });
+    await reply(i, on ? t('config.greetOn', locale) : t('config.greetOff', locale));
+  } else if (sub === 'greet-language') {
+    // Língua da saudação (choices estáticas -> já validadas pelo Discord; revalidamos
+    // defensivamente contra o conjunto de saudações suportadas).
+    const lang = i.options.getString('language', true);
+    if (!GREET_LOCALES.has(lang)) {
+      await reply(i, t('config.language.unsupported', locale));
+      return;
+    }
+    setGuildConfig(deps.db, i.guildId!, { greetLocale: lang });
+    const label = GREET_LANGUAGE_CHOICES.find((c) => c.value === lang)?.name ?? lang;
+    await reply(i, t('config.greetLangSet', locale, { language: label }));
   } else if (sub === 'default-voice') {
     // Valida contra os modelos disponiveis, tal como /voice set.
     const model = i.options.getString('model', true);
@@ -1236,6 +1279,10 @@ async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps): Prom
       t('config.showAutojoin', locale, { value: cfg.autojoin ? on : off }),
       t('config.showReadBots', locale, { value: cfg.readBots ? on : off }),
       t('config.showTextInVoice', locale, { value: cfg.textInVoice ? on : off }),
+      t('config.showGreet', locale, {
+        value: cfg.greetOnJoin ? on : off,
+        language: GREET_LANGUAGE_CHOICES.find((c) => c.value === cfg.greetLocale)?.name ?? cfg.greetLocale,
+      }),
       t('config.showVoice', locale, { value: voiceStr }),
       t('config.showMaxChars', locale, { value: cfg.maxChars }),
       t('config.showRateLimit', locale, { value: cfg.ratePerMin }),

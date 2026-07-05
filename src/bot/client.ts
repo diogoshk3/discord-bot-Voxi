@@ -9,9 +9,13 @@ import {
   VoiceState,
 } from 'discord.js';
 import type { BotDeps } from './deps';
-import { handleGuildDelete } from './deps';
+import { handleGuildDelete, getPlayer } from './deps';
 import { handleInteraction, handleAutocomplete, handleMessageContextMenu } from '../commands/index';
 import { handleMessage } from '../commands/messageHandler';
+import { getGuildConfig } from '../store/guildConfig';
+import { getNickname } from '../store/nickname';
+import { sanitizeSpeakerName } from '../language/speakerName';
+import { buildGreeting, isJoinIntoChannel } from '../voice/greeting';
 import { buildPresence } from './presence';
 import { pickWelcomeChannel, buildWelcomeEmbed } from './welcome';
 import { DEFAULT_LOCALE } from '../i18n/index';
@@ -29,6 +33,40 @@ export function createClient(): Client {
     ],
     partials: [Partials.Channel],
   });
+}
+
+/**
+ * Saudação de voz: o Voxi diz "Olá {nome}" quando um HUMANO entra no canal de voz onde
+ * ele está. LIGADA por defeito (guild_config.greet_on_join); língua em greet_locale
+ * (default inglês). Best-effort e defensiva: nunca crasha o gateway. Ignora bots (incl.
+ * o próprio), respeita o kill-switch (enabled) e exige um player ativo. O nome é
+ * resolvido e SANITIZADO como no xsaid (honra o /voice nickname).
+ */
+function greetOnJoin(deps: BotDeps, oldState: VoiceState, newState: VoiceState): void {
+  try {
+    const member = newState.member;
+    if (!member || member.user.bot) return;
+    const guildId = newState.guild?.id;
+    if (!guildId) return;
+    const player = getPlayer(deps, guildId);
+    if (!player) return;
+    const botChannelId = newState.guild.members.me?.voice?.channelId ?? null;
+    if (!isJoinIntoChannel(oldState.channelId, newState.channelId, botChannelId)) return;
+    const cfg = getGuildConfig(deps.db, guildId);
+    if (!cfg.enabled || !cfg.greetOnJoin) return;
+    const rawName =
+      getNickname(deps.db, guildId, member.id) ?? member.displayName ?? member.user.username ?? '';
+    const req = buildGreeting({
+      locale: cfg.greetLocale,
+      name: sanitizeSpeakerName(rawName),
+      availableModels: deps.availableModels,
+      defaultVoice: cfg.defaultVoice || deps.config.defaultVoice || 'en_US-amy-medium',
+      defaultSpeed: deps.config.defaultSpeed,
+    });
+    void player.say(req);
+  } catch (err) {
+    log.warn('[client] falha na saudação de entrada (ignorado)', err);
+  }
 }
 
 export function bindEvents(deps: BotDeps): void {
@@ -71,6 +109,8 @@ export function bindEvents(deps: BotDeps): void {
     const guildId = newState.guild?.id ?? oldState.guild?.id;
     if (!guildId || !deps.players.has(guildId)) return;
     deps.aloneWatcher?.evaluate(guildId);
+    // Saudação: alguém ENTROU no canal do bot -> "Olá {nome}" (se ligado).
+    greetOnJoin(deps, oldState, newState);
   });
 
   // guildCreate — o Voxi entrou num servidor novo. Enviamos UMA vez um welcome

@@ -85,6 +85,8 @@ describe('store', () => {
         autojoin: false, // entrar sozinho na call DESLIGADO por defeito
         readBots: false, // NÃO ler outros bots por defeito
         textInVoice: false, // NÃO ler o chat-em-voz por defeito
+        greetOnJoin: true, // saudar quem entra na call LIGADO por defeito
+        greetLocale: 'en', // inglês como língua da saudação por defeito
       });
     });
 
@@ -127,6 +129,8 @@ describe('store', () => {
         autojoin: false, // entrar sozinho na call DESLIGADO por defeito
         readBots: false, // NÃO ler outros bots por defeito
         textInVoice: false, // NÃO ler o chat-em-voz por defeito
+        greetOnJoin: true, // saudar quem entra na call LIGADO por defeito
+        greetLocale: 'en', // inglês como língua da saudação por defeito
       });
     });
 

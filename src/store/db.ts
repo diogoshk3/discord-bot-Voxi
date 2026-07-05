@@ -32,7 +32,9 @@ export function initDb(path: string): Database.Database {
         xsaid          INTEGER NOT NULL DEFAULT 1,
         autojoin       INTEGER NOT NULL DEFAULT 0,
         read_bots      INTEGER NOT NULL DEFAULT 0,
-        text_in_voice  INTEGER NOT NULL DEFAULT 0
+        text_in_voice  INTEGER NOT NULL DEFAULT 0,
+        greet_on_join  INTEGER NOT NULL DEFAULT 1,
+        greet_locale   TEXT NOT NULL DEFAULT 'en'
       );
 
       CREATE TABLE IF NOT EXISTS blocklist (
@@ -139,6 +141,16 @@ export function initDb(path: string): Database.Database {
     // de texto DENTRO do canal de voz onde o Voxi esta. DEFAULT 0 (desligado). No-op novas.
     if (!cols.some((c) => c.name === 'text_in_voice')) {
       db.exec('ALTER TABLE guild_config ADD COLUMN text_in_voice INTEGER NOT NULL DEFAULT 0');
+    }
+    // Saudacao de voz ao entrar na call. DEFAULT 1 (LIGADO — pedido do Diogo: vem
+    // ligada por defeito, desligavel). greet_locale = lingua da saudacao (DEFAULT 'en',
+    // a principal e sempre ingles). ADD COLUMN com default constante backfilla as linhas
+    // existentes. No-op em DBs novas (o CREATE ja inclui as colunas).
+    if (!cols.some((c) => c.name === 'greet_on_join')) {
+      db.exec('ALTER TABLE guild_config ADD COLUMN greet_on_join INTEGER NOT NULL DEFAULT 1');
+    }
+    if (!cols.some((c) => c.name === 'greet_locale')) {
+      db.exec("ALTER TABLE guild_config ADD COLUMN greet_locale TEXT NOT NULL DEFAULT 'en'");
     }
     // Migracao idempotente do `engine` no user_voice: motor por-utilizador (google/piper).
     // DEFAULT 'google' -> as vozes ja gravadas ficam no motor Google (backfill). No-op novas.

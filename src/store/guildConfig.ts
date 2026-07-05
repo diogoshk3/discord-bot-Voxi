@@ -27,6 +27,11 @@ export interface GuildConfig {
   // textInVoice: ler também as mensagens do chat de texto EMBUTIDO no canal de voz onde
   // o Voxi está (o texto dos canais de voz do Discord). DESLIGADO por defeito.
   textInVoice: boolean;
+  // greetOnJoin: o Voxi diz "Olá {nome}" quando alguém ENTRA no canal de voz onde ele
+  // está. LIGADO por defeito (desligável com /config greet). greetLocale = língua da
+  // saudação (a principal é sempre inglês, 'en').
+  greetOnJoin: boolean;
+  greetLocale: string;
 }
 
 const DEFAULTS: GuildConfig = {
@@ -44,6 +49,8 @@ const DEFAULTS: GuildConfig = {
   autojoin: false, // entrar sozinho na call DESLIGADO por defeito (opt-in)
   readBots: false, // NÃO ler outros bots por defeito (comportamento histórico)
   textInVoice: false, // NÃO ler o chat-em-voz por defeito (opt-in)
+  greetOnJoin: true, // saudar quem entra na call LIGADO por defeito
+  greetLocale: DEFAULT_LOCALE, // 'en' — inglês como língua da saudação por defeito
 };
 
 interface GuildConfigRow {
@@ -60,6 +67,8 @@ interface GuildConfigRow {
   autojoin: number | null;
   read_bots: number | null;
   text_in_voice: number | null;
+  greet_on_join: number | null;
+  greet_locale: string | null;
 }
 
 export function getGuildConfig(db: Database.Database, guildId: string): GuildConfig {
@@ -84,6 +93,8 @@ export function getGuildConfig(db: Database.Database, guildId: string): GuildCon
     autojoin: row.autojoin == null ? DEFAULTS.autojoin : row.autojoin === 1,
     readBots: row.read_bots == null ? DEFAULTS.readBots : row.read_bots === 1,
     textInVoice: row.text_in_voice == null ? DEFAULTS.textInVoice : row.text_in_voice === 1,
+    greetOnJoin: row.greet_on_join == null ? DEFAULTS.greetOnJoin : row.greet_on_join === 1,
+    greetLocale: row.greet_locale ?? DEFAULTS.greetLocale,
   };
 }
 
@@ -100,8 +111,8 @@ export function setGuildConfig(
   const next: GuildConfig = { ...current, ...patch };
   db.prepare(
     `INSERT INTO guild_config
-       (guild_id, tts_channel_id, autoread, default_voice, max_chars, rate_per_min, enabled, tts_role_id, locale, xsaid, autojoin, read_bots, text_in_voice)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       (guild_id, tts_channel_id, autoread, default_voice, max_chars, rate_per_min, enabled, tts_role_id, locale, xsaid, autojoin, read_bots, text_in_voice, greet_on_join, greet_locale)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(guild_id) DO UPDATE SET
        tts_channel_id = excluded.tts_channel_id,
        autoread       = excluded.autoread,
@@ -114,7 +125,9 @@ export function setGuildConfig(
        xsaid          = excluded.xsaid,
        autojoin       = excluded.autojoin,
        read_bots      = excluded.read_bots,
-       text_in_voice  = excluded.text_in_voice`,
+       text_in_voice  = excluded.text_in_voice,
+       greet_on_join  = excluded.greet_on_join,
+       greet_locale   = excluded.greet_locale`,
   ).run(
     guildId,
     next.ttsChannelId,
@@ -129,5 +142,7 @@ export function setGuildConfig(
     next.autojoin ? 1 : 0,
     next.readBots ? 1 : 0,
     next.textInVoice ? 1 : 0,
+    next.greetOnJoin ? 1 : 0,
+    next.greetLocale,
   );
 }
