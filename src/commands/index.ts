@@ -30,6 +30,7 @@ import { getPersona, setPersona } from '../store/persona';
 import { isPersona, PERSONA_CHOICES, type Persona } from '../textCleaning/personas';
 import { getBirthday, setBirthday, clearBirthday, isValidBirthday } from '../store/birthday';
 import { getTopSpeakers } from '../store/talkStats';
+import { redeemCode, getGuildPremiumExpiry } from '../store/premium';
 import { sanitizeSpeakerName } from '../language/speakerName';
 import { isDetectionOn, setDetection } from '../store/langDetect';
 import {
@@ -258,6 +259,23 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
   new SlashCommandBuilder()
     .setName('topspeakers')
     .setDescription('See who Voxi has read the most — and daily streaks')
+    .toJSON(),
+  // /premium — estado da assinatura + como obter. /redeem — resgatar um código.
+  new SlashCommandBuilder()
+    .setName('premium')
+    .setDescription('See this server’s Voxi Premium status')
+    .toJSON(),
+  new SlashCommandBuilder()
+    .setName('redeem')
+    .setDescription('Redeem a Voxi Premium/Plus code')
+    .addStringOption((o) =>
+      o
+        .setName('code')
+        .setNameLocalizations({ 'pt-BR': 'codigo' })
+        .setDescription('Your redeem code (VOXI-XXXX-XXXX-XXXX)')
+        .setRequired(true)
+        .setMaxLength(40),
+    )
     .toJSON(),
   new SlashCommandBuilder()
     .setName('voice')
@@ -1069,6 +1087,40 @@ async function handleTopSpeakers(i: ChatInputCommandInteraction, deps: BotDeps):
     }),
   );
   await i.reply({ content: `${t('topspeakers.title', locale)}\n${lines.join('\n')}` });
+}
+
+/** /premium — estado da assinatura do servidor + como obter (ephemeral). */
+async function handlePremium(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
+  const locale = localeForUser(deps, i);
+  const expiry = getGuildPremiumExpiry(deps.db, i.guildId!);
+  if (expiry && expiry > Date.now()) {
+    // Discord renderiza <t:SEGUNDOS:D> como data localizada por-utilizador.
+    await reply(i, t('premium.active', locale, { date: `<t:${Math.floor(expiry / 1000)}:D>` }));
+  } else {
+    await reply(i, t('premium.inactive', locale));
+  }
+}
+
+/** /redeem <code> — resgata um código de Premium (servidor) ou Plus (utilizador). */
+async function handleRedeem(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
+  const locale = localeForUser(deps, i);
+  const code = i.options.getString('code', true).trim().toUpperCase();
+  const res = redeemCode(
+    deps.db,
+    code,
+    { guildId: i.guildId ?? undefined, userId: i.user.id },
+    Date.now(),
+  );
+  if (res.status === 'invalid') {
+    await reply(i, t('redeem.invalid', locale));
+    return;
+  }
+  if (res.status === 'used') {
+    await reply(i, t('redeem.used', locale));
+    return;
+  }
+  const target = res.kind === 'guild' ? t('redeem.targetServer', locale) : t('redeem.targetYou', locale);
+  await reply(i, t('redeem.ok', locale, { target, date: `<t:${Math.floor(res.expiresAt! / 1000)}:D>` }));
 }
 
 type MicroFunKind = '8ball' | 'fortune' | 'fact' | 'wyr';
@@ -2078,6 +2130,10 @@ export async function handleInteraction(i: ChatInputCommandInteraction, deps: Bo
         return await handleBirthday(i, deps);
       case 'topspeakers':
         return await handleTopSpeakers(i, deps);
+      case 'premium':
+        return await handlePremium(i, deps);
+      case 'redeem':
+        return await handleRedeem(i, deps);
       case 'game':
         return await handleGame(i, deps);
       case 'voice':

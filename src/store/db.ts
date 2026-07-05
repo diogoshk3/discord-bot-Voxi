@@ -137,6 +137,33 @@ export function initDb(path: string): Database.Database {
         last_date    TEXT NOT NULL DEFAULT '',
         PRIMARY KEY (guild_id, user_id)
       );
+
+      -- Voxi Premium por-servidor: expira em expires_at (unix ms). Sem linha OU expirado
+      -- => Free. source regista a origem (redeem/kofi/manual). Só features NOVAS sao
+      -- gated por isto; nada do que ja e gratis passa a pago.
+      CREATE TABLE IF NOT EXISTS premium_guild (
+        guild_id   TEXT PRIMARY KEY,
+        expires_at INTEGER NOT NULL,
+        source     TEXT NOT NULL DEFAULT ''
+      );
+
+      -- Voxi Plus por-utilizador (perks pessoais que seguem a pessoa entre servidores).
+      CREATE TABLE IF NOT EXISTS premium_user (
+        user_id    TEXT PRIMARY KEY,
+        expires_at INTEGER NOT NULL,
+        source     TEXT NOT NULL DEFAULT ''
+      );
+
+      -- Códigos de resgate (Ko-fi/Patreon): gerados offline, resgatados 1x com /redeem.
+      -- kind = 'guild'|'user'; days = duração; used_by/used_at NULL enquanto por usar.
+      CREATE TABLE IF NOT EXISTS redeem_code (
+        code       TEXT PRIMARY KEY,
+        kind       TEXT NOT NULL,
+        days       INTEGER NOT NULL,
+        used_by    TEXT,
+        used_at    INTEGER,
+        created_at INTEGER NOT NULL
+      );
     `);
 
     // Migracao idempotente para DBs criadas antes da coluna tts_role_id existir.

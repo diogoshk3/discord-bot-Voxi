@@ -273,6 +273,36 @@ export const catalog: Record<string, Entry> = {
     pt: '{rank}. <@{user}> — **{count}** mensagens · 🔥 streak de {streak} dias',
   },
 
+  // ── /premium & /redeem ─────────────────────────────────────────────────────
+  'premium.active': {
+    en: '💎 This server has **Voxi Premium** until {date}. Thank you for supporting Voxi!',
+    pt: '💎 Este servidor tem **Voxi Premium** até {date}. Obrigado por apoiares o Voxi!',
+  },
+  'premium.inactive': {
+    en: 'This server is on the **Free** plan — and everything you use today stays free. Premium (€4/mo) adds premium voices, 24/7 in-call, full voice effects and higher limits. Support: https://ko-fi.com/',
+    pt: 'Este servidor está no plano **Free** — e tudo o que já usas continua grátis. O Premium (€4/mês) acrescenta vozes premium, 24/7 na call, efeitos de voz completos e limites maiores. Apoio: https://ko-fi.com/',
+  },
+  'redeem.ok': {
+    en: '✅ Code redeemed! **{target}** now has Voxi Premium until {date}.',
+    pt: '✅ Código resgatado! **{target}** tem agora Voxi Premium até {date}.',
+  },
+  'redeem.invalid': {
+    en: "That code doesn't exist. Check for typos (format: VOXI-XXXX-XXXX-XXXX).",
+    pt: 'Esse código não existe. Verifica se está bem escrito (formato: VOXI-XXXX-XXXX-XXXX).',
+  },
+  'redeem.used': {
+    en: 'That code has already been used.',
+    pt: 'Esse código já foi usado.',
+  },
+  'redeem.targetServer': {
+    en: 'This server',
+    pt: 'Este servidor',
+  },
+  'redeem.targetYou': {
+    en: 'You',
+    pt: 'Tu',
+  },
+
   // ── /voice abbrev (abreviaturas pessoais, globais) ─────────────────────────
   'voice.abbrev.added': {
     en: 'Got it — {term} will be read as {replacement}.',
