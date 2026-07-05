@@ -25,6 +25,7 @@ import type { BotDeps } from '../src/bot/deps';
 import { initDb } from '../src/store/db';
 import { setGuildConfig } from '../src/store/guildConfig';
 import { addBlockword } from '../src/store/blocklist';
+import { setPersona } from '../src/store/persona';
 import { setNickname } from '../src/store/nickname';
 import { setUserVoice } from '../src/store/userVoice';
 
@@ -316,6 +317,19 @@ describe('handleMessage — ramos não cobertos pelos testes existentes', () => 
     const deps = makeDeps(db, say);
     await handleMessage(makeMessage({ content: 'spam' }), deps);
     expect(say).not.toHaveBeenCalled();
+  });
+
+  it('persona NÃO fura a blocklist: a redação corre ANTES da persona', async () => {
+    // uwu transformaria "hello" -> "hewwo"; se a persona corresse primeiro, o filtro de
+    // "hello" falhava e o bot dizia "hewwo". A redação corre antes -> "hello" é removido.
+    addBlockword(db, GUILD, 'hello');
+    setPersona(db, GUILD, USER, 'uwu');
+    const deps = makeDeps(db, say);
+    await handleMessage(makeMessage({ content: 'hello world' }), deps);
+    expect(say).toHaveBeenCalledTimes(1);
+    const text = say.mock.calls[0][0].text as string;
+    expect(text).not.toContain('hewwo'); // a palavra bloqueada não escapou estilizada
+    expect(text).toContain('wowwd'); // o resto continua a ser lido com a persona (world -> wowwd)
   });
 
   // ── 12. Caminho feliz ─────────────────────────────────────────────────────

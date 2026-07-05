@@ -17,7 +17,7 @@ import { getPronunciations } from '../store/pronunciation';
 import { getUserVoice } from '../store/userVoice';
 import { isOptedOut } from '../store/optout';
 import { isDetectionOn } from '../store/langDetect';
-import { prepareSpeech, redactRequest, hasReadableText } from './prepareSpeech';
+import { prepareSpeech, redactRequest, hasReadableText, applyPersonaToRequest } from './prepareSpeech';
 import { recallLang, rememberLang } from '../language/langMemory';
 import { log } from '../logging/logger';
 
@@ -232,7 +232,6 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
       recentLang,
       media,
       announceSpeaker: announce ? speakerName : undefined,
-      persona: getPersona(deps.db, message.guildId, message.author.id),
     });
     if (learnedLang) rememberLang(message.guildId, message.author.id, learnedLang);
     // Motor escolhido pelo autor (google default | piper). O PerUserEngineRouter usa isto.
@@ -242,10 +241,14 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     // texto REALMENTE falado (req.text + segmentos) — o Voxi lê a mensagem SEM dizer
     // essas palavras. Se depois de redigir não sobra nada legível (a mensagem era só
     // palavra(s) bloqueada(s)), não fala. (`blocklist` já foi buscada no guard acima.)
-    const outReq = redactRequest(req, blocklist);
+    const redacted = redactRequest(req, blocklist);
     const readable =
-      hasReadableText(outReq.text) || (outReq.segments?.some((s) => hasReadableText(s.text)) ?? false);
+      hasReadableText(redacted.text) || (redacted.segments?.some((s) => hasReadableText(s.text)) ?? false);
     if (!readable) return;
+
+    // Persona (/voice persona) DEPOIS da redação: o filtro vê o texto sem estilo (senão uma
+    // persona que altera a palavra bloqueada passava ao lado). 'none' -> req intacto.
+    const outReq = applyPersonaToRequest(redacted, getPersona(deps.db, message.guildId, message.author.id));
 
     // Passou tudo: esta mensagem VAI ser lida. Regista o autor como último locutor
     // (só agora — uma mensagem bloqueada/ignorada não conta para a supressão do xsaid).

@@ -38,7 +38,7 @@ import {
   removePronunciation,
 } from '../store/pronunciation';
 import { cleanText, collectUrlMedia, collectMarkdownMedia } from '../textCleaning/clean';
-import { prepareSpeech, redactRequest, hasReadableText } from './prepareSpeech';
+import { prepareSpeech, redactRequest, hasReadableText, applyPersonaToRequest } from './prepareSpeech';
 import { recallLang, rememberLang } from '../language/langMemory';
 import type { SynthRequest } from '../tts/engine';
 import { voiceDisplayName, formatVoiceList, makeLocalizedNamer } from '../language/voiceMap';
@@ -791,7 +791,6 @@ async function speakRawText(
     autoDetect: auto,
     recentLang,
     media: media.map((kind) => ({ kind })),
-    persona: getPersona(deps.db, guildId, userId),
   });
   if (learnedLang) rememberLang(guildId, userId, learnedLang);
   // Motor escolhido pelo user (google default | piper) — usado pelo PerUserEngineRouter.
@@ -800,10 +799,12 @@ async function speakRawText(
   // Blocklist: REDIGE as palavras bloqueadas (o Voxi lê o resto sem as dizer). Só devolve
   // 'blocked' se, depois de as remover, não sobrar nada legível (era só palavra bloqueada).
   const blocklist = getBlocklist(deps.db, guildId);
-  const outReq = redactRequest(req, blocklist);
+  const redacted = redactRequest(req, blocklist);
   const readable =
-    hasReadableText(outReq.text) || (outReq.segments?.some((s) => hasReadableText(s.text)) ?? false);
+    hasReadableText(redacted.text) || (redacted.segments?.some((s) => hasReadableText(s.text)) ?? false);
   if (!readable) return { status: 'blocked' };
+  // Persona DEPOIS da redação (o filtro vê o texto sem estilo). 'none' -> req intacto.
+  const outReq = applyPersonaToRequest(redacted, getPersona(deps.db, guildId, userId));
   if (deps.config.messageLeadMs > 0) outReq.leadSilenceMs = deps.config.messageLeadMs;
   const queued = await player.say(outReq);
   return { status: queued ? 'queued' : 'busy' };

@@ -67,13 +67,6 @@ export interface PrepareSpeechInput {
    * localizado na língua da voz (spokenPhrases.said); o nome sai tal e qual.
    */
   announceSpeaker?: string;
-  /**
-   * Persona de fala do autor (/voice persona): estilo divertido com que o Voxi lê as
-   * mensagens desta pessoa (pirate/uwu/yoda/cowboy/medieval). Aplica-se ao TEXTO que vai
-   * para a síntese DEPOIS de tudo o resto (deteção de língua, anúncios), por isso NÃO
-   * afeta a escolha de voz. Ausente/'none' => leitura normal.
-   */
-  persona?: Persona;
 }
 
 export interface PreparedSpeech {
@@ -140,25 +133,22 @@ function capSynth(result: PreparedSpeech): PreparedSpeech {
 }
 
 /**
- * Aplica a PERSONA (/voice persona) ao texto sintetizado — `req.text` e cada segmento —
- * DEPOIS da deteção de língua e dos anúncios, mas ANTES do cap (o teto continua a limitar
- * o resultado). 'none'/ausente -> intacto. Não mexe no `spoken` (pré-persona; já não é
- * usado a jusante). PURA.
+ * Aplica a PERSONA (/voice persona) a um SynthRequest — `text` e cada segmento. Corre nos
+ * CHAMADORES, DEPOIS da blocklist (redactRequest), para a redação ver o texto SEM estilo —
+ * senão uma persona que altera a palavra bloqueada (uwu: "hello"->"hewwo") passava ao lado
+ * do filtro. 'none'/ausente -> req intacto. PURA.
  */
-function applyPersonaToResult(result: PreparedSpeech, persona: Persona | undefined): PreparedSpeech {
-  if (!persona || persona === 'none') return result;
-  const text = applyPersona(result.req.text, persona);
-  const req: SynthRequest = { ...result.req, text };
-  if (req.segments && req.segments.length > 0) {
-    req.segments = req.segments.map((s) => ({ ...s, text: applyPersona(s.text, persona) }));
+export function applyPersonaToRequest(req: SynthRequest, persona: Persona | undefined): SynthRequest {
+  if (!persona || persona === 'none') return req;
+  const out: SynthRequest = { ...req, text: applyPersona(req.text, persona) };
+  if (out.segments && out.segments.length > 0) {
+    out.segments = out.segments.map((s) => ({ ...s, text: applyPersona(s.text, persona) }));
   }
-  return { ...result, req };
+  return out;
 }
 
 export function prepareSpeech(input: PrepareSpeechInput): PreparedSpeech {
-  return capSynth(
-    applyPersonaToResult(decorateAnnouncements(prepareSpeechCore(input), input), input.persona),
-  );
+  return capSynth(decorateAnnouncements(prepareSpeechCore(input), input));
 }
 
 /**

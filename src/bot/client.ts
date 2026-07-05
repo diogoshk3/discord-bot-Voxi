@@ -54,12 +54,16 @@ function greetOnJoin(deps: BotDeps, oldState: VoiceState, newState: VoiceState):
     const botChannelId = newState.guild.members.me?.voice?.channelId ?? null;
     if (!isJoinIntoChannel(oldState.channelId, newState.channelId, botChannelId)) return;
     const cfg = getGuildConfig(deps.db, guildId);
-    if (!cfg.enabled || !cfg.greetOnJoin) return;
-    const rawName =
-      getNickname(deps.db, guildId, member.id) ?? member.displayName ?? member.user.username ?? '';
+    if (!cfg.enabled) return; // kill-switch do servidor
     // Dia de anos? Se a pessoa faz anos hoje, o Voxi diz "Parabéns {nome}" em vez do "Olá".
     const bd = getBirthday(deps.db, guildId, member.id);
     const isBirthday = bd !== null && isBirthdayToday(bd, new Date());
+    // Os PARABÉNS são opt-in individual e intencional (a própria pessoa registou a data),
+    // por isso disparam mesmo com a saudação normal desligada. Já a saudação "Olá" só sai
+    // se `greetOnJoin` estiver ON. Sem parabéns E sem saudação -> nada a dizer.
+    if (!isBirthday && !cfg.greetOnJoin) return;
+    const rawName =
+      getNickname(deps.db, guildId, member.id) ?? member.displayName ?? member.user.username ?? '';
     const req = buildGreeting({
       locale: cfg.greetLocale,
       name: sanitizeSpeakerName(rawName),
