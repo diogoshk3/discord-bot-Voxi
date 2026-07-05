@@ -42,7 +42,7 @@ import { voiceDisplayName, formatVoiceList, makeLocalizedNamer } from '../langua
 import { laughterFor } from '../content/laughter';
 import { JOKE_LANGUAGES, jokeLangByKey, pickJoke } from '../content/jokes';
 import { GAME_DEFS, gameById, filterGameChoices } from '../games/index';
-import { getLeaderboard } from '../store/gameScore';
+import { getLeaderboard, getUserScore, getUserRank } from '../store/gameScore';
 import { log } from '../logging/logger';
 import {
   t,
@@ -521,6 +521,7 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
     .addSubcommand((s) =>
       s.setName('leaderboard').setDescription("Show the server's game leaderboard"),
     )
+    .addSubcommand((s) => s.setName('stats').setDescription('Show your own game stats'))
     .toJSON(),
   // Context-menu (botão direito numa mensagem -> Apps -> Speak): lê essa mensagem em
   // voz alta com a voz de quem clicou. Complementa o /tts sem escrever nada.
@@ -1525,6 +1526,22 @@ async function handleGame(i: ChatInputCommandInteraction, deps: BotDeps): Promis
       }),
     );
     await i.reply({ content: `${t('game.leaderboard.title', locale)}\n${lines.join('\n')}` });
+    return;
+  }
+
+  if (sub === 'stats') {
+    // Estatisticas do PROPRIO (ephemeral): pontos, vitorias e posicao no ranking.
+    const score = getUserScore(deps.db, i.guildId!, i.user.id);
+    const { rank, total } = getUserRank(deps.db, i.guildId!, i.user.id);
+    if (score.points === 0 && score.wins === 0) {
+      await reply(i, t('game.stats.none', locale));
+      return;
+    }
+    const rankStr = rank ? t('game.stats.rank', locale, { rank, total }) : t('game.stats.unranked', locale);
+    await reply(
+      i,
+      t('game.stats.body', locale, { points: score.points, wins: score.wins, rank: rankStr }),
+    );
     return;
   }
 }

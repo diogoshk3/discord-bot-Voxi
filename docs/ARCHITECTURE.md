@@ -74,6 +74,13 @@ Cada pasta de `src/` e a sua responsabilidade (o que está realmente no código)
 | `commands/prepareSpeech.ts` | `prepareSpeech` (partilhado por `/tts` e leitura de canal): texto→`SynthRequest`. Deteção ON → parte **gírias EN** para um segmento em voz inglesa e deteta o resto por si (**vozes mistas**, ex. "isto funciona **btw**"); usa a **memória de língua** (`recentLang`) para desambiguar curtos e devolve `learnedLang` (deteção confiante) para o caller memorizar. Deteção OFF → voz fixa `singleVoice`. | `detect`, `voiceMap`, `abbreviations`, `pronunciation`, `langMemory` |
 | `content/jokes.ts` | Catálogo de piadas curtas multilingue (~34 línguas) + `JOKE_LANGUAGES` (autocomplete `idioma`), `jokeLangByKey`, `pickJoke(langKey, seed)` (puro/seeded). Usado pelo `/joke`. | — |
 | `content/laughter.ts` | `laughterFor(prefix)`: riso localizado pela língua da voz (ex. cirílico para `ru_`), com fallback "hahaha". Usado pelo `/laugh` e pelo `/joke` (opção `risos`). | — |
+| `games/manager.ts` | `GameManager`: **1 jogo ativo por guild** (lock; há 1 só ligação de voz por guild). `handleMessage` encaminha as mensagens do **canal do jogo** para a partida e devolve `true` (consumida → o `handleMessage` do TTS salta essa mensagem). Possui os timers da sessão (cancelados **sempre** no fim); persiste pontos no fim **normal** (`end`), descarta no fim **forçado** (`stop`/`endGuild`). Desacoplado de discord.js/SQLite via `GameEnv`. | `games/types` |
+| `games/types.ts` | `Clock` (relógio + timers **injetáveis**, `systemClock`; testes deterministas), `GameContext` (`say`/`send`/`t`/`after`/`award`/`end` + `seed`/`locale`/`defaultVoice`), `Game`, `GameDefinition`, `GameEnv`. | — |
+| `games/quizGame.ts` | Base `QuizGame` dos 7 jogos "voz → 1º a acertar" (loop de N rondas, timeout com **guarda de ronda**, placar local, resumo final `game.finish.*`). Cada jogo concreto só implementa `prepare`/`makeRound`/`emptyMessage`. | `games/types` |
+| `games/finish.ts` | `bump`/`sendStandings`: placar partilhado pelos jogos que **não** assentam no `QuizGame` (Reflexos, Voxi Diz). | `games/types` |
+| `games/*.ts` | Os 13 jogos: `guessLanguage`, `math`, `skipCount`, `spelling`, `spellOut`, `fastSpeech`, `accentSwap` (voz, sobre `QuizGame`); `reflexes`, `voxiSays`, `roulette` (timing/one-shot); `hangman`, `wordle`, `tictactoe` (tabuleiro, texto). Conteúdo *seeded* em `games/content/*`. | `games/*`, `content` |
+| `games/index.ts` | Registo `GAME_DEFS` (13 jogos) + `gameById`/`filterGameChoices` (autocomplete com nomes na língua do utilizador). Adicionar um jogo = criar o ficheiro e listá-lo aqui. | todos os jogos |
+| `store/gameScore.ts` | Leaderboard SQLite (tabela `game_score`): `addPoints`/`addWin`/`persistGameScores` (transação: soma pontos + `+1 vitória` a quem mais pontuou), `getLeaderboard`/`getUserScore`/`getUserRank`. | `db` |
 | `bot/welcome.ts` | `pickWelcomeChannel(guild)` + `buildWelcomeEmbed(locale)` (puros): escolha do canal e embed de boas-vindas no `guildCreate` (onboarding). | `i18n`, `discord.js` |
 | `bot/client.ts` | `createClient` (intents + partials) e `bindEvents` (eventos do gateway + handlers globais `unhandledRejection`/`uncaughtException`; `guildCreate`→welcome; `guildDelete`→`handleGuildDelete`). | `discord.js`, `commands`, `welcome` |
 | `bot/deps.ts` | Tipo `BotDeps` (injeção de dependências) e helpers `getPlayer`/`removePlayer`/`getLimiter`/`handleGuildDelete` (liberta limiter **e** player ao sair de uma guild). | — |
@@ -96,7 +103,30 @@ sobre ~34 línguas; `risos` acrescenta o riso da língua no fim; `content/jokes.
 cap 10; `store/userAbbrev.ts` + `textCleaning/userAbbrev.ts`, tabela `user_abbreviation`),
 `/config` (admin: tts-channel, autoread, max-chars, rate-limit, role, enabled,
 default-voice, **language**, show, reset, + subgrupos `blockword` e `pronunciation`),
+`/game play|stop|list|leaderboard|stats` (minijogos — ver abaixo),
 `/stats` (admin).
+
+### Minijogos (`/game`)
+
+**13 jogos** de grupo, geridos pelo `GameManager` (`src/games/`): **1 jogo ativo por
+guild** de cada vez. O comando `/game play <jogo>` arranca (autocomplete com os nomes
+na língua de quem invoca; jogos de **voz** exigem o bot numa call — `needsVoice`),
+`/game stop` pára, `/game list` lista, `/game leaderboard` mostra o top do servidor e
+`/game stats` as estatísticas do próprio (pontos, vitórias, posição). O leaderboard
+persiste em `game_score` (`store/gameScore.ts`).
+
+Os jogadores respondem no **canal onde o jogo foi aberto**; o `GameManager.handleMessage`
+consome essas mensagens (não são lidas em voz alta). Os timers usam um `Clock` injetável
+e são cancelados no fim; o `removePlayer`/`handleGuildDelete` chamam `endGuild` para não
+orfanar timers quando o bot sai da call/guild. Famílias:
+- **Voz → 1º a acertar** (base `QuizGame`): Adivinha a Língua, Matemática Falada,
+  Contagem Sabotada, Ditado, Soletrado ao Contrário, Velocidade Estúpida, Sotaque Trocado.
+- **Timing / one-shot**: Reflexos, Voxi Diz, Roleta (Verdade ou Consequência).
+- **Tabuleiro (texto, jogadas por letra/palavra/número)**: Forca, Termo/Wordle, Galo —
+  `needsVoice=false`, com timeout de inatividade (3 min).
+
+Todo o texto passa por `t()` (chaves `game.*`; `en` fonte + `pt`); o conteúdo *seeded*
+(bancos de palavras/frases/desafios) vive em `games/content/*`.
 
 A **interface está em inglês por defeito** (`guild_config.locale='en'`); cada guild
 pode trocar com `/config language` (`en`/`pt`). Todo o texto de resposta passa por
@@ -109,6 +139,11 @@ Pipeline de auto-leitura em `commands/messageHandler.ts` (`handleMessage`), pela
 **ordem real** do código:
 
 1. **Ignorar**: mensagem de bot, sem guild, ou sem `content` → sai.
+1b. **Minijogo ativo** (`deps.games?.handleMessage`): se houver um jogo `/game` a decorrer
+   **no canal desta mensagem**, ela é entregue à partida (um potencial palpite) e o
+   pipeline sai **sem** a ler em voz alta — as respostas dos jogadores não são TTS. Vem
+   **antes** do rate-limit/auto-leitura (um palpite não gasta rate-limit nem exige canal
+   configurado). As próprias mensagens do bot já foram filtradas no passo 1.
 2. **Kill-switch da guild**: se `guild_config.enabled` for falso → sai.
 3. **Trigger**: continua só se for canal de auto-leitura (`autoread` + canal igual a
    `tts_channel_id`), **ou** menção ao bot, **ou** reply ao bot. Senão → sai.

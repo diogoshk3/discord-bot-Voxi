@@ -107,3 +107,28 @@ export function getUserScore(
   if (!row) return { userId, points: 0, wins: 0 };
   return { userId: row.user_id, points: row.points, wins: row.wins };
 }
+
+/**
+ * Posicao de `userId` no ranking da guild (1 = topo) e o total de jogadores. `rank`
+ * e null se a pessoa ainda nao pontuou (nao esta no ranking). O rank e o nº de
+ * jogadores com MAIS pontos + 1 (empates partilham a mesma posicao base).
+ */
+export function getUserRank(
+  db: Database.Database,
+  guildId: string,
+  userId: string,
+): { rank: number | null; total: number } {
+  const total = (
+    db.prepare('SELECT COUNT(*) AS n FROM game_score WHERE guild_id = ?').get(guildId) as { n: number }
+  ).n;
+  const me = db
+    .prepare('SELECT points FROM game_score WHERE guild_id = ? AND user_id = ?')
+    .get(guildId, userId) as { points: number } | undefined;
+  if (!me) return { rank: null, total };
+  const ahead = (
+    db
+      .prepare('SELECT COUNT(*) AS n FROM game_score WHERE guild_id = ? AND points > ?')
+      .get(guildId, me.points) as { n: number }
+  ).n;
+  return { rank: ahead + 1, total };
+}

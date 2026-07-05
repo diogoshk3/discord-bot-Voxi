@@ -743,10 +743,12 @@ export const catalog: Record<string, Entry> = {
   'help.groupFunBody': {
     en:
       '• /joke — I tell a short joke (pick a language + optional laughter) · e.g. /joke English\n' +
-      '• /laugh — I laugh out loud in your current voice',
+      '• /laugh — I laugh out loud in your current voice\n' +
+      '• /game — play a minigame with the server (13 games!) · e.g. /game play, /game leaderboard',
     pt:
       '• /joke — conto uma piada curta (escolhe a lingua + risos opcionais) · ex. /joke Portuguese\n' +
-      '• /laugh — rio-me em voz alta na tua voz atual',
+      '• /laugh — rio-me em voz alta na tua voz atual\n' +
+      '• /game — joga um minijogo com o servidor (13 jogos!) · ex. /game play, /game leaderboard',
   },
   'help.groupAdmin': {
     en: 'Server admin (needs Manage Server)',
@@ -1108,4 +1110,16 @@ export const catalog: Record<string, Entry> = {
   'game.tictactoe.win': { en: '🎉 **{user}** ({mark}) wins!', pt: '🎉 **{user}** ({mark}) ganhou!' },
   'game.tictactoe.draw': { en: '🤝 It’s a draw!', pt: '🤝 Empate!' },
   'game.tictactoe.idle': { en: '🕹️ Game ended (nobody playing).', pt: '🕹️ Jogo terminado (ninguém a jogar).' },
+
+  // ── /game stats (por-utilizador) ──────────────────────────────────────────
+  'game.stats.none': {
+    en: "You haven't played any games yet. Try `/game play`!",
+    pt: 'Ainda não jogaste nenhum jogo. Experimenta `/game play`!',
+  },
+  'game.stats.body': {
+    en: '🎮 **Your stats** — **{points}** points · **{wins}** wins · {rank}',
+    pt: '🎮 **As tuas estatísticas** — **{points}** pontos · **{wins}** vitórias · {rank}',
+  },
+  'game.stats.rank': { en: 'rank **#{rank}** of {total}', pt: 'posição **#{rank}** de {total}' },
+  'game.stats.unranked': { en: 'not ranked yet', pt: 'ainda sem posição' },
 };

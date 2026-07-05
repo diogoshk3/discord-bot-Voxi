@@ -7,6 +7,7 @@ import {
   persistGameScores,
   getLeaderboard,
   getUserScore,
+  getUserRank,
 } from '../src/store/gameScore';
 
 const G = 'guild-1';
@@ -71,5 +72,17 @@ describe('gameScore store — leaderboard dos minijogos', () => {
     addPoints(db, 'guild-2', 'a', 9);
     expect(getUserScore(db, G, 'a').points).toBe(4);
     expect(getUserScore(db, 'guild-2', 'a').points).toBe(9);
+  });
+
+  it('getUserRank: posicao 1=topo, total de jogadores, null se nunca jogou', () => {
+    addPoints(db, G, 'a', 10);
+    addPoints(db, G, 'b', 5);
+    addPoints(db, G, 'c', 5);
+    expect(getUserRank(db, G, 'a')).toEqual({ rank: 1, total: 3 });
+    // b e c empatados a 5: ambos a seguir ao 'a' (1 jogador a frente -> rank 2).
+    expect(getUserRank(db, G, 'b')).toEqual({ rank: 2, total: 3 });
+    expect(getUserRank(db, G, 'c')).toEqual({ rank: 2, total: 3 });
+    // Quem nunca jogou: rank null, mas o total reflete os que jogaram.
+    expect(getUserRank(db, G, 'ninguem')).toEqual({ rank: null, total: 3 });
   });
 });
