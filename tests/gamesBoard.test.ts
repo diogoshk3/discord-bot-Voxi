@@ -132,6 +132,24 @@ describe('Termo/Wordle', () => {
     expect(guessMsg).toContain(guess.toUpperCase()[0]);
     expect(mgr.active(G)).toBe(true); // ainda a decorrer
   });
+
+  it('mostra o teclado com as letras descartadas (fora) após um palpite', async () => {
+    const { env, send } = harness();
+    const mgr = new GameManager(env);
+    mgr.start(G, C, gameById('wordle')!.create());
+    await flush();
+    const { words } = pickWordleWords('en');
+    const target = normalizeAnswer(words[seededIndex(SEED, words.length)]);
+    // Palpite de 5 letras que NÃO estão no alvo -> todas viram "fora".
+    const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
+    const notInTarget = alphabet.filter((l) => !target.includes(l)).slice(0, 5).join('');
+    say(mgr, 'u', notInTarget);
+    await flush();
+    const guessMsg = send.mock.calls.map((c) => String(c[1])).find((s) => s.includes('game.wordle.guess'));
+    expect(guessMsg).toContain('game.wordle.out'); // linha das letras descartadas
+    // A 1ª letra descartada aparece na linha "fora".
+    expect(guessMsg).toContain(notInTarget[0].toUpperCase());
+  });
 });
 
 describe('Galo', () => {

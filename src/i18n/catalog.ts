@@ -1095,6 +1095,9 @@ export const catalog: Record<string, Entry> = {
     pt: '🟩 **Termo** — escreve uma palavra de 5 letras. Partilham {max} tentativas. 🟩 sítio certo · 🟨 sítio errado · ⬛ não existe.',
   },
   'game.wordle.guess': { en: '**{user}** — {left} left', pt: '**{user}** — faltam {left}' },
+  // "Teclado" de estado: letras na palavra / descartadas (riscadas).
+  'game.wordle.inWord': { en: '🟢 in word: {letters}', pt: '🟢 na palavra: {letters}' },
+  'game.wordle.out': { en: '🚫 out: ~~{letters}~~', pt: '🚫 fora: ~~{letters}~~' },
   'game.wordle.win': { en: '🎉 **{user}** got it in {n} — **{word}**!', pt: '🎉 **{user}** acertou em {n} — **{word}**!' },
   'game.wordle.lose': { en: '💀 Out of guesses! The word was **{word}**.', pt: '💀 Sem tentativas! A palavra era **{word}**.' },
   'game.wordle.idle': { en: '🕹️ Game paused (nobody playing). The word was **{word}**.', pt: '🕹️ Jogo terminado (ninguém a jogar). A palavra era **{word}**.' },

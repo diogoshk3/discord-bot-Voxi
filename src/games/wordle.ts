@@ -24,6 +24,9 @@ class WordleGame implements Game {
   private guesses = 0;
   private over = false;
   private moves = 0;
+  /** Letras JÁ SABIDAS: `present` estão na palavra; `absent` foram descartadas. */
+  private readonly present = new Set<string>();
+  private readonly absent = new Set<string>();
 
   async start(ctx: GameContext): Promise<void> {
     const { words } = pickWordleWords(ctx.locale);
@@ -73,6 +76,27 @@ class WordleGame implements Game {
     return '```ansi\n' + cells + '\n```';
   }
 
+  /** Regista as letras deste palpite: na palavra (present) ou descartadas (absent). */
+  private trackLetters(guess: string): void {
+    for (const l of new Set(guess)) {
+      if (this.target.includes(l)) this.present.add(l);
+      else this.absent.add(l);
+    }
+  }
+
+  /**
+   * "Teclado" de estado sob o palpite: letras JÁ NA palavra (verde) e letras
+   * DESCARTADAS (riscadas). Linha vazia ('') enquanto não se sabe nada. Ordenadas.
+   */
+  private keyboard(ctx: GameContext): string {
+    const up = (set: Set<string>): string =>
+      [...set].sort().map((c) => c.toUpperCase()).join(' ');
+    const parts: string[] = [];
+    if (this.present.size) parts.push(ctx.t('game.wordle.inWord', { letters: up(this.present) }));
+    if (this.absent.size) parts.push(ctx.t('game.wordle.out', { letters: up(this.absent) }));
+    return parts.length ? '\n' + parts.join('   ') : '';
+  }
+
   onMessage(ctx: GameContext, msg: GameMessage): void {
     if (this.over) return;
     const g = normalizeAnswer(msg.content).replace(/[^a-zà-ſ]/g, '');
@@ -80,6 +104,7 @@ class WordleGame implements Game {
     this.armIdle(ctx);
     this.guesses++;
     const row = this.renderRow(g);
+    this.trackLetters(g);
     if (g === this.target) {
       this.over = true;
       ctx.award(msg.authorId, 1);
@@ -96,7 +121,9 @@ class WordleGame implements Game {
       ctx.end();
       return;
     }
-    void ctx.send(`${row}\n${ctx.t('game.wordle.guess', { user: msg.authorName, left: MAX_GUESSES - this.guesses })}`);
+    void ctx.send(
+      `${row}\n${ctx.t('game.wordle.guess', { user: msg.authorName, left: MAX_GUESSES - this.guesses })}${this.keyboard(ctx)}`,
+    );
   }
 }
 
