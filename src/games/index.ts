@@ -10,6 +10,9 @@ import { accentSwapDef } from './accentSwap';
 import { reflexesDef } from './reflexes';
 import { voxiSaysDef } from './voxiSays';
 import { rouletteDef } from './roulette';
+import { hangmanDef } from './hangman';
+import { wordleDef } from './wordle';
+import { tictactoeDef } from './tictactoe';
 
 /**
  * Registo de todos os minijogos do /game. Adicionar um jogo novo = criar o ficheiro
@@ -27,6 +30,9 @@ export const GAME_DEFS: readonly GameDefinition[] = [
   reflexesDef,
   voxiSaysDef,
   rouletteDef,
+  hangmanDef,
+  wordleDef,
+  tictactoeDef,
 ];
 
 /** Procura um jogo pelo id (o value do autocomplete). undefined se nao existir. */

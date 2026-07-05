@@ -59,3 +59,15 @@ export function pickWordSource(defaultVoice: string, availableModels: string[]):
   const enModel = availableModels.find((m) => baseCodeOf(m) === 'en') ?? defaultVoice;
   return { base: 'en', model: enModel, words: WORD_BANK.en };
 }
+
+/**
+ * Palavras para um jogo de TEXTO (sem voz): pela lingua da INTERFACE da guild (locale),
+ * nao pela voz. Fallback a ingles. Devolve so palavras SEM hifen/espaco (limpas para a
+ * Forca). PURA.
+ */
+export function wordsForLocale(locale: string): { base: string; words: string[] } {
+  const base = locale.split('-')[0].toLowerCase();
+  const bank = WORD_BANK[base] ?? WORD_BANK.en;
+  const clean = bank.filter((w) => !w.includes('-') && !w.includes(' '));
+  return { base: WORD_BANK[base] ? base : 'en', words: clean };
+}

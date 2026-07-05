@@ -1059,4 +1059,53 @@ export const catalog: Record<string, Entry> = {
     pt: 'Rodo a roleta e leio um desafio (verdade ou consequência) em voz alta. Corre outra vez para outro.',
   },
   'game.roulette.header': { en: '🎯 **The wheel says…**', pt: '🎯 **A roleta diz…**' },
+
+  // ── Forca (Hangman) ───────────────────────────────────────────────────────
+  'game.hangman.name': { en: 'Hangman', pt: 'Forca' },
+  'game.hangman.desc': {
+    en: 'Guess the word one letter at a time — 6 misses and it’s over.',
+    pt: 'Adivinha a palavra letra a letra — 6 erros e acabou.',
+  },
+  'game.hangman.intro': {
+    en: '🪢 **Hangman** — type one letter at a time to guess the word. You can also type the whole word!',
+    pt: '🪢 **Forca** — escreve uma letra de cada vez para adivinhar a palavra. Também podes tentar a palavra inteira!',
+  },
+  'game.hangman.hit': { en: '🟢 **{user}** found **{letter}**!', pt: '🟢 **{user}** encontrou o **{letter}**!' },
+  'game.hangman.miss': { en: '🔴 **{user}** — no **{letter}**.', pt: '🔴 **{user}** — não há **{letter}**.' },
+  'game.hangman.wrongLetters': { en: 'Wrong: {letters}', pt: 'Erradas: {letters}' },
+  'game.hangman.win': { en: '🎉 **{user}** solved it — **{word}**!', pt: '🎉 **{user}** resolveu — **{word}**!' },
+  'game.hangman.lose': { en: '💀 Out of tries! The word was **{word}**.', pt: '💀 Sem tentativas! A palavra era **{word}**.' },
+  'game.hangman.idle': { en: '🕹️ Game paused (nobody playing). The word was **{word}**.', pt: '🕹️ Jogo terminado (ninguém a jogar). A palavra era **{word}**.' },
+
+  // ── Termo/Wordle ──────────────────────────────────────────────────────────
+  'game.wordle.name': { en: 'Wordle', pt: 'Termo' },
+  'game.wordle.desc': {
+    en: 'Guess the 5-letter word. 🟩 right spot, 🟨 wrong spot, ⬛ not in word.',
+    pt: 'Adivinha a palavra de 5 letras. 🟩 sítio certo, 🟨 sítio errado, ⬛ não existe.',
+  },
+  'game.wordle.intro': {
+    en: '🟩 **Wordle** — type a 5-letter word. You share {max} guesses. 🟩 right spot · 🟨 wrong spot · ⬛ not in word.',
+    pt: '🟩 **Termo** — escreve uma palavra de 5 letras. Partilham {max} tentativas. 🟩 sítio certo · 🟨 sítio errado · ⬛ não existe.',
+  },
+  'game.wordle.guess': { en: '{row} `{guess}` — **{user}** ({left} left)', pt: '{row} `{guess}` — **{user}** (faltam {left})' },
+  'game.wordle.win': { en: '🎉 {row}\n**{user}** got it in {n} — **{word}**!', pt: '🎉 {row}\n**{user}** acertou em {n} — **{word}**!' },
+  'game.wordle.lose': { en: '💀 {row} `{guess}`\nOut of guesses! The word was **{word}**.', pt: '💀 {row} `{guess}`\nSem tentativas! A palavra era **{word}**.' },
+  'game.wordle.idle': { en: '🕹️ Game paused (nobody playing). The word was **{word}**.', pt: '🕹️ Jogo terminado (ninguém a jogar). A palavra era **{word}**.' },
+
+  // ── Galo (tic-tac-toe) ────────────────────────────────────────────────────
+  'game.tictactoe.name': { en: 'Tic-Tac-Toe', pt: 'Jogo do Galo' },
+  'game.tictactoe.desc': {
+    en: 'Two players — type a number 1-9 to place your mark. Three in a row wins.',
+    pt: 'Dois jogadores — escreve um número 1-9 para marcar. Três em linha ganha.',
+  },
+  'game.tictactoe.intro': {
+    en: '⭕ **Tic-Tac-Toe** — first two players to move are ❌ and ⭕ (❌ starts). Type a number 1-9 to play your cell.',
+    pt: '⭕ **Jogo do Galo** — os dois primeiros a jogar são ❌ e ⭕ (❌ começa). Escreve um número 1-9 para jogar na casa.',
+  },
+  'game.tictactoe.turn': { en: 'Turn: **{mark}**', pt: 'Vez de: **{mark}**' },
+  'game.tictactoe.notYourTurn': { en: '⏳ **{user}**, it’s **{mark}**’s turn.', pt: '⏳ **{user}**, é a vez do **{mark}**.' },
+  'game.tictactoe.taken': { en: '🚫 Cell {cell} is taken — pick another.', pt: '🚫 A casa {cell} está ocupada — escolhe outra.' },
+  'game.tictactoe.win': { en: '🎉 **{user}** ({mark}) wins!', pt: '🎉 **{user}** ({mark}) ganhou!' },
+  'game.tictactoe.draw': { en: '🤝 It’s a draw!', pt: '🤝 Empate!' },
+  'game.tictactoe.idle': { en: '🕹️ Game ended (nobody playing).', pt: '🕹️ Jogo terminado (ninguém a jogar).' },
 };
