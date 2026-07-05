@@ -38,6 +38,14 @@ export function getGuildPremiumExpiry(db: Database.Database, guildId: string): n
   return row ? row.expires_at : null;
 }
 
+/** Expiry do Plus do utilizador (unix ms) ou null se nunca teve. Pode estar no passado. */
+export function getUserPremiumExpiry(db: Database.Database, userId: string): number | null {
+  const row = db
+    .prepare('SELECT expires_at FROM premium_user WHERE user_id = ?')
+    .get(userId) as { expires_at: number } | undefined;
+  return row ? row.expires_at : null;
+}
+
 /**
  * Concede `days` de premium à guild. ESTENDE a partir do máximo entre agora e o expiry
  * atual (renovar antes de expirar acumula, não perde tempo). Devolve o novo expiry (ms).

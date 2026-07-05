@@ -287,13 +287,29 @@ export const catalog: Record<string, Entry> = {
   },
 
   // ── /premium & /redeem ─────────────────────────────────────────────────────
-  'premium.active': {
-    en: '💎 This server has **Voxi Premium** until {date}. Thank you for supporting Voxi!',
-    pt: '💎 Este servidor tem **Voxi Premium** até {date}. Obrigado por apoiares o Voxi!',
+  'premium.title': {
+    en: '💎 **Voxi Premium status**',
+    pt: '💎 **Estado do Voxi Premium**',
   },
-  'premium.inactive': {
-    en: 'This server is on the **Free** plan — and everything you use today stays free. Premium (€4/mo) adds premium voices, 24/7 in-call, full voice effects and higher limits. Support: https://ko-fi.com/',
-    pt: 'Este servidor está no plano **Free** — e tudo o que já usas continua grátis. O Premium (€4/mês) acrescenta vozes premium, 24/7 na call, efeitos de voz completos e limites maiores. Apoio: https://ko-fi.com/',
+  'premium.lineServerActive': {
+    en: '🖥️ **Server:** Premium until {date}',
+    pt: '🖥️ **Servidor:** Premium até {date}',
+  },
+  'premium.lineServerFree': {
+    en: '🖥️ **Server:** Free plan',
+    pt: '🖥️ **Servidor:** plano Free',
+  },
+  'premium.lineUserActive': {
+    en: '👤 **You (Plus):** active until {date}',
+    pt: '👤 **Tu (Plus):** ativo até {date}',
+  },
+  'premium.lineUserFree': {
+    en: '👤 **You (Plus):** not active',
+    pt: '👤 **Tu (Plus):** inativo',
+  },
+  'premium.getHint': {
+    en: 'Everything you use today stays free. Premium (€4/mo) adds premium voices, 24/7 in-call, full voice effects and higher limits. Support: https://ko-fi.com/',
+    pt: 'Tudo o que já usas continua grátis. O Premium (€4/mês) acrescenta vozes premium, 24/7 na call, efeitos de voz completos e limites maiores. Apoio: https://ko-fi.com/',
   },
   'redeem.ok': {
     en: '✅ Code redeemed! **{target}** now has Voxi Premium until {date}.',

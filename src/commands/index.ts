@@ -30,7 +30,13 @@ import { getPersona, setPersona } from '../store/persona';
 import { isPersona, PERSONA_CHOICES, type Persona } from '../textCleaning/personas';
 import { getBirthday, setBirthday, clearBirthday, isValidBirthday } from '../store/birthday';
 import { getTopSpeakers } from '../store/talkStats';
-import { redeemCode, getGuildPremiumExpiry, isGuildPremium, isUserPremium } from '../store/premium';
+import {
+  redeemCode,
+  getGuildPremiumExpiry,
+  getUserPremiumExpiry,
+  isGuildPremium,
+  isUserPremium,
+} from '../store/premium';
 import { getVoiceEffect, setVoiceEffect } from '../store/voiceEffect';
 import {
   EFFECT_CHOICES,
@@ -1111,16 +1117,29 @@ async function handleTopSpeakers(i: ChatInputCommandInteraction, deps: BotDeps):
   await i.reply({ content: `${t('topspeakers.title', locale)}\n${lines.join('\n')}` });
 }
 
-/** /premium — estado da assinatura do servidor + como obter (ephemeral). */
+/** /premium — estado das assinaturas (servidor + próprio utilizador) + como obter. */
 async function handlePremium(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
   const locale = localeForUser(deps, i);
-  const expiry = getGuildPremiumExpiry(deps.db, i.guildId!);
-  if (expiry && expiry > Date.now()) {
-    // Discord renderiza <t:SEGUNDOS:D> como data localizada por-utilizador.
-    await reply(i, t('premium.active', locale, { date: `<t:${Math.floor(expiry / 1000)}:D>` }));
-  } else {
-    await reply(i, t('premium.inactive', locale));
-  }
+  const now = Date.now();
+  // Discord renderiza <t:SEGUNDOS:D> como data localizada por-utilizador.
+  const stamp = (ms: number): string => `<t:${Math.floor(ms / 1000)}:D>`;
+
+  const gExp = getGuildPremiumExpiry(deps.db, i.guildId!);
+  const uExp = getUserPremiumExpiry(deps.db, i.user.id);
+  const gActive = gExp !== null && gExp > now;
+  const uActive = uExp !== null && uExp > now;
+
+  const serverLine = gActive
+    ? t('premium.lineServerActive', locale, { date: stamp(gExp) })
+    : t('premium.lineServerFree', locale);
+  const youLine = uActive
+    ? t('premium.lineUserActive', locale, { date: stamp(uExp) })
+    : t('premium.lineUserFree', locale);
+
+  const lines = [t('premium.title', locale), serverLine, youLine];
+  // Só mostra o "como obter" quando NENHUM dos dois está ativo (senão é ruído).
+  if (!gActive && !uActive) lines.push('', t('premium.getHint', locale));
+  await reply(i, lines.join('\n'));
 }
 
 /** /redeem <code> — resgata um código de Premium (servidor) ou Plus (utilizador). */
