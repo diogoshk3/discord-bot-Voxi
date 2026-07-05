@@ -38,12 +38,15 @@
 
   /* ── i18n ────────────────────────────────────────────── */
   const DICT = window.VOXI_I18N;
-  let lang = localStorage.getItem("voxi-lang");
-  if (!lang) lang = (navigator.language || "en").toLowerCase().startsWith("pt") ? "pt" : "en";
+  // Idioma por defeito: INGLÊS. NÃO fazemos sniffing do navigator (senão um browser PT
+  // abria o site em português). Só respeitamos uma escolha EXPLÍCITA (guardada quando o
+  // utilizador carrega no toggle EN/PT). Chave nova ("voxi.lang") para ignorar o valor que
+  // a versão anterior auto-guardava a partir do navigator — assim toda a gente recomeça em EN.
+  const LS_KEY = "voxi.lang";
+  let lang = localStorage.getItem(LS_KEY) || "en";
 
   function applyLang(l) {
     lang = DICT[l] ? l : "en";
-    localStorage.setItem("voxi-lang", lang);
     document.documentElement.lang = lang;
     const d = DICT[lang];
     $$("[data-i18n]").forEach((el) => {
@@ -56,7 +59,11 @@
   }
 
   $$(".lang-toggle button").forEach((b) =>
-    b.addEventListener("click", () => applyLang(b.dataset.lang)),
+    b.addEventListener("click", () => {
+      // Só uma escolha EXPLÍCITA persiste (o default EN não escreve nada).
+      localStorage.setItem(LS_KEY, b.dataset.lang);
+      applyLang(b.dataset.lang);
+    }),
   );
 
   /* ── navbar ──────────────────────────────────────────── */
