@@ -203,8 +203,8 @@
   /* ── animated Discord chat mock ──────────────────────── */
   const chat = $("#chat");
   const SCRIPT = [
-    { name: "Ana", av: "A", cls: "u", text: "boa noite pessoal 🌙", say: "PT" },
     { name: "Kai", av: "K", cls: "u", text: "what's the plan tonight?", say: "EN" },
+    { name: "Ana", av: "A", cls: "u", text: "boa noite pessoal 🌙", say: "PT" },
     { name: "Léa", av: "L", cls: "u", text: "on lance une partie ? 🎮", say: "FR" },
   ];
 
