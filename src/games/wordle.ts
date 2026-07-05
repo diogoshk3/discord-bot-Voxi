@@ -1,7 +1,7 @@
 import type { Game, GameContext, GameDefinition, GameMessage } from './types';
 import { announceWinner } from './finish';
 import { pickWordleWords } from './content/wordleWords';
-import { normalizeAnswer, seededIndex } from './util';
+import { fullWidthLetters, normalizeAnswer, seededIndex } from './util';
 
 const MAX_GUESSES = 8;
 const IDLE_MS = 180_000;
@@ -67,8 +67,9 @@ class WordleGame implements Game {
     this.guesses++;
     const row = this.scoreRow(g);
     // As letras vão na 2ª linha, POR BAIXO dos quadrados (o Discord não deixa pôr texto
-    // dentro dos emojis 🟩🟨⬛). Espaçadas para se alinharem sob os quadrados.
-    const letters = g.toUpperCase().split('').join(' ');
+    // dentro dos emojis 🟩🟨⬛). Em LARGURA COMPLETA (fullwidth) para cada letra ter a
+    // largura de um emoji e ficar alinhada sob o seu quadrado.
+    const letters = fullWidthLetters(g);
     if (g === this.target) {
       this.over = true;
       ctx.award(msg.authorId, 1);

@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { GameManager } from '../src/games/manager';
 import type { Clock, GameEnv, TimerHandle } from '../src/games/types';
 import { GAME_DEFS, gameById } from '../src/games/index';
-import { firstInteger, makeRng, jaccard } from '../src/games/util';
+import { firstInteger, makeRng, jaccard, fullWidthLetters } from '../src/games/util';
 
 const flush = (): Promise<void> => new Promise((r) => setImmediate(r));
 
@@ -152,5 +152,11 @@ describe('util dos jogos', () => {
     expect(jaccard('o gato dormiu', 'o gato dormiu')).toBe(1);
     expect(jaccard('abc', 'xyz')).toBe(0);
     expect(jaccard('o gato dormiu no sofa', 'o gato dormiu no sofá')).toBeGreaterThanOrEqual(0.7);
+  });
+  it('fullWidthLetters converte A-Z em largura completa (alinham com emojis)', () => {
+    expect(fullWidthLetters('crazy')).toBe('ＣＲＡＺＹ');
+    expect(fullWidthLetters('MESOS')).toBe('ＭＥＳＯＳ');
+    // 1 char fullwidth por letra (mesma contagem de code points).
+    expect([...fullWidthLetters('table')].length).toBe(5);
   });
 });

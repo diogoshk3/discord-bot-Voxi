@@ -41,6 +41,21 @@ export function localizedLanguageName(base: string, locale: string): string {
   return base;
 }
 
+/**
+ * Converte letras A-Z para as suas versões de LARGURA COMPLETA (fullwidth, U+FF21+),
+ * que têm ~a mesma largura de um emoji no Discord. Serve para alinhar uma linha de
+ * letras EXATAMENTE por baixo de uma linha de quadrados emoji (🟩🟨⬛), sem depender
+ * de espaços (que nunca batem certo com a largura do emoji). Não-letras ficam intactas.
+ */
+export function fullWidthLetters(s: string): string {
+  let out = '';
+  for (const ch of s.toUpperCase()) {
+    const code = ch.codePointAt(0) ?? 0;
+    out += code >= 0x41 && code <= 0x5a ? String.fromCodePoint(0xff21 + (code - 0x41)) : ch;
+  }
+  return out;
+}
+
 /** Gerador xorshift de 32 bits a partir de uma semente (nunca 0). Interno. */
 function xorshift(seed: number): () => number {
   let state = (Math.floor(seed) | 0) || 0x9e3779b9;
