@@ -355,6 +355,32 @@ body > *:not(.grain):not(.orbs) { position: relative; z-index: 2; }
 .cmd code { flex: 0 0 auto; font-size: 15px; color: var(--aqua); font-weight: 700; }
 .cmd span { color: var(--text-1); font-size: 15px; }
 
+/* ── pricing ────────────────────────────────────────────── */
+.pricing { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; max-width: 920px; margin: 0 auto; }
+.price-card {
+  position: relative; padding: 38px 34px; border-radius: var(--radius);
+  background: var(--glass); border: 1px solid var(--line); box-shadow: inset 0 1px 0 var(--hi);
+}
+.price-card h3 { font-family: var(--f-body); font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+.price-card__price { display: flex; align-items: baseline; gap: 10px; margin: 4px 0 24px; }
+.price-card__price b { font-family: var(--f-display); font-weight: 800; font-size: 46px; color: var(--text-0); line-height: 1; }
+.price-card__price span { color: var(--text-2); font-size: 14px; }
+.price-card .ticks { gap: 12px; }
+.price-card .ticks li { font-size: 15.5px; }
+.price-card--pro {
+  border-color: rgba(255, 194, 75, 0.4);
+  background: linear-gradient(180deg, rgba(255, 194, 75, 0.08), transparent 55%), var(--glass);
+  box-shadow: inset 0 1px 0 var(--hi), 0 24px 60px -30px rgba(255, 194, 75, 0.25);
+}
+.price-card--pro .price-card__price b { background: linear-gradient(115deg, #ffc24b, #ff9d5c); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.price-card__badge {
+  position: absolute; top: 24px; right: 24px; display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--f-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+  color: #1a1500; background: var(--amber); padding: 5px 11px; border-radius: 999px;
+  box-shadow: 0 4px 16px -4px rgba(255, 194, 75, 0.6);
+}
+.price-card__note { margin-top: 22px; font-family: var(--f-mono); font-size: 12.5px; color: var(--text-2); }
+
 /* ── faq ────────────────────────────────────────────────── */
 .faq { display: grid; gap: 12px; }
 .qa { border-radius: 15px; background: var(--glass); border: 1px solid var(--line); overflow: hidden; box-shadow: inset 0 1px 0 var(--hi); }
@@ -424,6 +450,7 @@ body > *:not(.grain):not(.orbs) { position: relative; z-index: 2; }
   .stats__grid { grid-template-columns: repeat(2, 1fr); gap: 26px 12px; }
   .stat:not(:last-child)::after { display: none; }
   .cards, .steps { grid-template-columns: 1fr; }
+  .pricing { grid-template-columns: 1fr; }
   .foot__grid { grid-template-columns: 1fr 1fr; }
   .foot__base { flex-direction: column; gap: 8px; text-align: center; }
   .cmd { flex-direction: column; gap: 4px; }
