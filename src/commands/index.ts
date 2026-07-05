@@ -42,6 +42,14 @@ import type { SynthRequest } from '../tts/engine';
 import { voiceDisplayName, formatVoiceList, makeLocalizedNamer } from '../language/voiceMap';
 import { laughterFor } from '../content/laughter';
 import { JOKE_LANGUAGES, jokeLangByKey, pickJoke } from '../content/jokes';
+import {
+  funLocaleOf,
+  pickEightball,
+  pickFortune,
+  pickFact,
+  pickWyr,
+  type FunLocale,
+} from '../content/microfun';
 import { GAME_DEFS, gameById, filterGameChoices } from '../games/index';
 import { getLeaderboard, getUserScore, getUserRank } from '../store/gameScore';
 import { GREET_LANGUAGE_CHOICES, GREET_LOCALES } from '../voice/greeting';
@@ -186,6 +194,32 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
         .setDescription('Add laughter at the end?')
         .setRequired(true),
     )
+    .toJSON(),
+  // Micro-comandos divertidos (falados na voz + resposta pública). Funcionam sem estar
+  // numa call (só texto); se o Voxi estiver na call, também fala.
+  new SlashCommandBuilder()
+    .setName('8ball')
+    .setDescription('Ask the magic 8-ball a yes/no question')
+    .addStringOption((o) =>
+      o
+        .setName('question')
+        .setNameLocalizations({ 'pt-BR': 'pergunta' })
+        .setDescription('Your yes/no question')
+        .setRequired(true)
+        .setMaxLength(200),
+    )
+    .toJSON(),
+  new SlashCommandBuilder()
+    .setName('fortune')
+    .setDescription('Voxi reads you a fortune')
+    .toJSON(),
+  new SlashCommandBuilder()
+    .setName('fact')
+    .setDescription('Voxi tells you a random fun fact')
+    .toJSON(),
+  new SlashCommandBuilder()
+    .setName('wyr')
+    .setDescription('Voxi asks a "would you rather" question')
     .toJSON(),
   new SlashCommandBuilder()
     .setName('voice')
@@ -973,6 +1007,69 @@ async function handleJoke(i: ChatInputCommandInteraction, deps: BotDeps): Promis
 
   // Confirmacao inclui a piada escrita (o user ve o que esta a ser lido).
   await i.editReply(queued ? t('joke.playing', locale, { joke }) : t('tts.busy', locale));
+}
+
+type MicroFunKind = '8ball' | 'fortune' | 'fact' | 'wyr';
+
+/**
+ * Micro-comandos divertidos (/8ball, /fortune, /fact, /wyr): escolhem uma frase do banco
+ * na LÍNGUA DA UI do utilizador (EN/PT) e respondem PUBLICAMENTE em texto; se o Voxi
+ * estiver na call, também a FALA (voz da língua da frase, motor do utilizador). Ao
+ * contrário do /joke, funcionam FORA de uma call (texto na mesma). A fala é best-effort e
+ * rate-limited (mesmo limiter do /tts): rate-limit -> texto na mesma, sem falar.
+ */
+async function handleMicroFun(
+  i: ChatInputCommandInteraction,
+  deps: BotDeps,
+  kind: MicroFunKind,
+): Promise<void> {
+  await i.deferReply();
+  const locale = localeForUser(deps, i);
+  const funLoc: FunLocale = funLocaleOf(locale);
+  const seed = Date.now();
+
+  let spoken: string;
+  let replyText: string;
+  switch (kind) {
+    case '8ball': {
+      const question = i.options.getString('question', true);
+      spoken = pickEightball(funLoc, seed);
+      replyText = t('fun.eightball', locale, { question, answer: spoken });
+      break;
+    }
+    case 'fortune':
+      spoken = pickFortune(funLoc, seed);
+      replyText = t('fun.fortune', locale, { text: spoken });
+      break;
+    case 'fact':
+      spoken = pickFact(funLoc, seed);
+      replyText = t('fun.fact', locale, { text: spoken });
+      break;
+    case 'wyr':
+      spoken = pickWyr(funLoc, seed);
+      replyText = t('fun.wyr', locale, { text: spoken });
+      break;
+  }
+
+  // Fala (best-effort): só se o Voxi estiver na call E o utilizador não estiver rate-limited.
+  const player = getPlayer(deps, i.guildId!);
+  if (player) {
+    const cfg = getGuildConfig(deps.db, i.guildId!);
+    const rl = getLimiter(deps, i.guildId!, cfg.ratePerMin);
+    if (rl.allow(i.user.id, Date.now())) {
+      const prefix = funLoc === 'pt' ? 'pt_' : 'en_';
+      const model =
+        deps.availableModels.find((m) => m.startsWith(prefix)) ||
+        cfg.defaultVoice ||
+        deps.config.defaultVoice ||
+        'en_US-amy-medium';
+      const engine = getUserVoice(deps.db, i.guildId!, i.user.id)?.engine;
+      // singleVoice: a língua da frase é CONHECIDA (o banco), a deteção não manda.
+      void player.say({ text: spoken, model, speed: deps.config.defaultSpeed, singleVoice: true, engine });
+    }
+  }
+
+  await i.editReply(replyText);
 }
 
 /**
@@ -1877,6 +1974,14 @@ export async function handleInteraction(i: ChatInputCommandInteraction, deps: Bo
         return await handleLaugh(i, deps);
       case 'joke':
         return await handleJoke(i, deps);
+      case '8ball':
+        return await handleMicroFun(i, deps, '8ball');
+      case 'fortune':
+        return await handleMicroFun(i, deps, 'fortune');
+      case 'fact':
+        return await handleMicroFun(i, deps, 'fact');
+      case 'wyr':
+        return await handleMicroFun(i, deps, 'wyr');
       case 'game':
         return await handleGame(i, deps);
       case 'voice':

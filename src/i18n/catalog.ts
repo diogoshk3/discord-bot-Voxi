@@ -219,6 +219,24 @@ export const catalog: Record<string, Entry> = {
     pt: 'Nao conheco essa lingua. Escolhe uma da lista.',
   },
 
+  // ── Micro-comandos divertidos (/8ball, /fortune, /fact, /wyr) ──────────────
+  'fun.eightball': {
+    en: '🎱 **{question}**\n> {answer}',
+    pt: '🎱 **{question}**\n> {answer}',
+  },
+  'fun.fortune': {
+    en: '🥠 {text}',
+    pt: '🥠 {text}',
+  },
+  'fun.fact': {
+    en: '💡 {text}',
+    pt: '💡 {text}',
+  },
+  'fun.wyr': {
+    en: '🤔 {text}',
+    pt: '🤔 {text}',
+  },
+
   // ── /voice abbrev (abreviaturas pessoais, globais) ─────────────────────────
   'voice.abbrev.added': {
     en: 'Got it — {term} will be read as {replacement}.',
@@ -771,10 +789,12 @@ export const catalog: Record<string, Entry> = {
     en:
       '• /joke — I tell a short joke (pick a language + optional laughter) · e.g. /joke English\n' +
       '• /laugh — I laugh out loud in your current voice\n' +
+      '• /8ball · /fortune · /fact · /wyr — I answer/read out loud (and in chat)\n' +
       '• /game — play a minigame with the server (13 games!) · e.g. /game play, /game leaderboard',
     pt:
       '• /joke — conto uma piada curta (escolhe a lingua + risos opcionais) · ex. /joke Portuguese\n' +
       '• /laugh — rio-me em voz alta na tua voz atual\n' +
+      '• /8ball · /fortune · /fact · /wyr — respondo/leio em voz alta (e no chat)\n' +
       '• /game — joga um minijogo com o servidor (13 jogos!) · ex. /game play, /game leaderboard',
   },
   'help.groupAdmin': {
