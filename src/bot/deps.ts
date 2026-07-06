@@ -30,6 +30,13 @@ export interface BotDeps {
    * nao o injetam; sem ele nao ha jogos, so o TTS normal). Ver src/games.
    */
   games?: GameManager;
+  /**
+   * Há motor de clone de voz REALMENTE disponível nesta instância? Reflete o
+   * `CloneEngine.available` (que inclui a AUTO-DETEÇÃO do venv em tools/clone-venv),
+   * NÃO apenas o env CLONE_CMD. Sem isto, a UI olhava só para config.cloneCmd e dizia
+   * "motor não instalado" mesmo com o venv detetado. Opcional: testes caem no env.
+   */
+  cloneAvailable?: boolean;
 }
 
 export function getPlayer(deps: BotDeps, guildId: string): GuildVoicePlayer | undefined {

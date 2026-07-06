@@ -99,6 +99,9 @@ async function main(): Promise<void> {
     cloneCmd,
   );
   log.info(`[index] clone de voz: ${cloneEngine.available ? 'motor detetado' : 'sem motor (voz normal)'}`);
+  // Pré-aquece o modelo de clone no arranque (~35s de GPU), para a 1.ª mensagem clonada
+  // não pagar o cold-load. No-op sem motor; falha cai na voz normal.
+  cloneEngine.prewarm();
   const engine = new EffectEngine(cloneEngine, cache.withNamespace('fx'));
   log.info(`[index] motor TTS ativo: ${config.ttsEngine === 'neural' ? 'neural' : 'per-user (google+piper)'}`);
   if (config.multilingualSegments) {
@@ -118,6 +121,9 @@ async function main(): Promise<void> {
     limiters: new Map(),
     // xsaid: último autor lido por guild, para não repetir "{nome} disse" em seguidas.
     lastSpeaker: new Map<string, string>(),
+    // Disponibilidade REAL do clone (inclui auto-deteção do venv), para a UI não dizer
+    // "motor não instalado" quando o sidecar foi detetado sem CLONE_CMD no env.
+    cloneAvailable: cloneEngine.available,
   };
 
   // Regra de saída: o Voxi só sai da call quando fica SOZINHO (zero humanos no seu

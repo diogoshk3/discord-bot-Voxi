@@ -1384,7 +1384,10 @@ async function handleVoiceClone(
       await reply(i, t('clone.noSample', locale));
       return;
     }
-    if (on && !deps.config.cloneCmd) {
+    // Disponibilidade REAL do motor (inclui o venv auto-detetado), não só o env CLONE_CMD —
+    // senão dizíamos "motor não instalado" com o sidecar detetado e o clone a funcionar.
+    const engineAvailable = deps.cloneAvailable ?? !!deps.config.cloneCmd;
+    if (on && !engineAvailable) {
       await reply(i, t('clone.enabledNoEngine', locale));
       return;
     }

@@ -74,6 +74,16 @@ export class CloneEngine implements TTSEngine {
     return this.cmd !== null;
   }
 
+  /**
+   * Arranca o sidecar e carrega o modelo JÁ, em vez de esperar pela 1.ª mensagem clonada
+   * (que senão pagava ~35s de cold-load de GPU, dando a sensação de "não funciona"). No-op
+   * se não houver motor; qualquer falha é absorvida pelo próprio ensureChild (cai na voz
+   * normal como sempre). Chamado uma vez no arranque do bot.
+   */
+  prewarm(): void {
+    if (this.cmd) this.ensureChild();
+  }
+
   async synth(req: SynthRequest): Promise<string> {
     // Sem clone pedido, ou sem motor -> voz normal (o caminho de sempre).
     if (!req.cloneRef || !this.cmd) return this.inner.synth(req);
