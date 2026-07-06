@@ -32,7 +32,7 @@ class ChessGame implements Game {
   private moves = 0;
 
   async start(ctx: GameContext): Promise<void> {
-    await ctx.send(`${ctx.t('game.chess.intro')}\n${this.render(ctx)}`);
+    await this.sendBoard(ctx, this.render(ctx), ctx.t('game.chess.intro'), true);
     this.armIdle(ctx);
   }
 
@@ -110,8 +110,11 @@ class ChessGame implements Game {
       this.over = true;
       const winnerId = color === 'w' ? this.whiteId! : this.blackId!;
       ctx.award(winnerId, 3);
-      void ctx.send(
-        `${ctx.t('game.chess.checkmate', { move: result.san, user: this.names[winnerId] })}\n${this.render(ctx)}`,
+      void this.sendBoard(
+        ctx,
+        this.render(ctx),
+        ctx.t('game.chess.checkmate', { move: result.san, user: this.names[winnerId] }),
+        true,
       );
       announceWinner(ctx, this.names[winnerId]);
       ctx.end();
@@ -121,26 +124,59 @@ class ChessGame implements Game {
       this.over = true;
       if (this.whiteId) ctx.award(this.whiteId, 1);
       if (this.blackId) ctx.award(this.blackId, 1);
-      void ctx.send(`${ctx.t('game.chess.draw', { move: result.san })}\n${this.render(ctx)}`);
+      void this.sendBoard(ctx, this.render(ctx), ctx.t('game.chess.draw', { move: result.san }), true);
       ctx.end();
       return;
     }
 
     const nextColor = this.chess.turn();
     const checkNote = this.chess.inCheck() ? ` ${ctx.t('game.chess.check')}` : '';
-    void ctx.send(
-      `${this.render(ctx)}\n${ctx.t('game.chess.turn', {
-        move: result.san,
-        color: this.colorName(ctx, nextColor),
-      })}${checkNote}`,
-    );
+    const turnNote = `${ctx.t('game.chess.turn', {
+      move: result.san,
+      color: this.colorName(ctx, nextColor),
+    })}${checkNote}`;
+    void this.sendBoard(ctx, this.render(ctx), turnNote, false);
   }
 
   private colorName(ctx: GameContext, color: 'w' | 'b'): string {
     return color === 'w' ? ctx.t('game.chess.white') : ctx.t('game.chess.black');
   }
 
+  /** Há emojis do tabuleiro carregados? (basta a casa vazia clara existir.) */
+  private hasEmojis(ctx: GameContext): boolean {
+    return ctx.emoji('el') !== undefined;
+  }
+
   private render(ctx: GameContext): string {
+    const seats = ctx.t('game.chess.seats', {
+      white: this.whiteId ? this.names[this.whiteId] : '?',
+      black: this.blackId ? this.names[this.blackId] : '?',
+    });
+    const board = this.hasEmojis(ctx) ? this.renderEmoji(ctx) : this.renderAscii();
+    return `${seats}\n${board}`;
+  }
+
+  /** Tabuleiro em emojis: peça cburnett sobre casa clara/escura; letras dos ficheiros
+   *  em cima (emojis regionais alinham com as colunas), números das filas à direita. */
+  private renderEmoji(ctx: GameContext): string {
+    const b = this.chess.board();
+    const files = '🇦🇧🇨🇩🇪🇫🇬🇭'; // indicadores regionais A–H (largura de emoji => alinham)
+    const lines: string[] = [files];
+    for (let r = 0; r < 8; r++) {
+      let row = '';
+      for (let f = 0; f < 8; f++) {
+        const sq = (r + f) % 2 === 0 ? 'l' : 'd'; // a8 (r0,f0) é casa CLARA
+        const p = b[r][f];
+        const name = p ? `${p.color}${p.type}${sq}` : `e${sq}`;
+        row += ctx.emoji(name) ?? '';
+      }
+      lines.push(`${row} ${8 - r}`); // número da fila à direita (texto simples, não precisa alinhar)
+    }
+    return lines.join('\n');
+  }
+
+  /** Fallback ASCII (sem emojis instalados): letras num code block, como antes. */
+  private renderAscii(): string {
     const board = this.chess.board();
     const files = 'abcdefgh';
     const lines: string[] = [`  ${files.split('').join(' ')}`];
@@ -150,11 +186,32 @@ class ChessGame implements Game {
       lines.push(`${rankLabel} ${row} ${rankLabel}`);
     }
     lines.push(`  ${files.split('').join(' ')}`);
-    const seats = ctx.t('game.chess.seats', {
-      white: this.whiteId ? this.names[this.whiteId] : '?',
-      black: this.blackId ? this.names[this.blackId] : '?',
-    });
-    return `${seats}\n\`\`\`\n${lines.join('\n')}\n\`\`\``;
+    return `\`\`\`\n${lines.join('\n')}\n\`\`\``;
+  }
+
+  /**
+   * Envia o tabuleiro + uma nota (intro/jogada/fim). Em emojis o tabuleiro tem ~1700
+   * chars; se a combinação passar o limite prático do Discord, divide em 2 mensagens.
+   * `noteFirst` = a nota vem antes do tabuleiro (intro, xeque-mate) ou depois (jogada).
+   */
+  private async sendBoard(
+    ctx: GameContext,
+    board: string,
+    note: string,
+    noteFirst: boolean,
+  ): Promise<void> {
+    const combined = noteFirst ? `${note}\n${board}` : `${board}\n${note}`;
+    if (combined.length <= 1990) {
+      await ctx.send(combined);
+      return;
+    }
+    if (noteFirst) {
+      await ctx.send(note);
+      await ctx.send(board);
+    } else {
+      await ctx.send(board);
+      await ctx.send(note);
+    }
   }
 }
 

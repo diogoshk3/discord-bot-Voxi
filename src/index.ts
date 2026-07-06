@@ -16,6 +16,7 @@ import type { BotDeps } from './bot/deps';
 import { removePlayer } from './bot/deps';
 import { GameManager } from './games/manager';
 import { systemClock } from './games/types';
+import { loadBoardEmojis } from './games/boardEmojis';
 import { getGuildConfig } from './store/guildConfig';
 import { persistGameScores } from './store/gameScore';
 import { t, DEFAULT_LOCALE } from './i18n/index';
@@ -160,11 +161,15 @@ async function main(): Promise<void> {
       return config.defaultVoice || 'en_US-amy-medium';
     }
   };
+  // Emojis do tabuleiro de xadrez: mapa nome->markup preenchido POR REFERÊNCIA no
+  // ClientReady (ver abaixo). Começa vazio -> o xadrez usa ASCII até carregar.
+  const boardEmojis: Record<string, string> = {};
   deps.games = new GameManager({
     clock: systemClock,
     availableModels,
     defaultSpeed: config.defaultSpeed,
     defaultVoiceOf,
+    boardEmojis,
     getPlayer: (guildId) => deps.players.get(guildId),
     sendToChannel: async (channelId, content) => {
       const ch = client.channels.cache.get(channelId);
@@ -219,6 +224,9 @@ async function main(): Promise<void> {
     } catch (err) {
       log.error('[index] falha ao arrancar o bot-list updater (ignorado)', err);
     }
+    // Carrega os emojis do tabuleiro de xadrez (preenche `boardEmojis` por referência).
+    // Best-effort: falha => o xadrez usa ASCII.
+    void loadBoardEmojis(client, boardEmojis);
   });
 
   // Sincronizar os comandos NÃO é fatal: é um PUT global fortemente rate-limited

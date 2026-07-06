@@ -5,6 +5,7 @@ import { gameById } from '../src/games/index';
 import { wordsForLocale } from '../src/games/content/words';
 import { pickWordleWords } from '../src/games/content/wordleWords';
 import { normalizeAnswer, seededIndex } from '../src/games/util';
+import { CHESS_EMOJI_NAMES } from '../src/games/boardEmojis';
 
 const flush = (): Promise<void> => new Promise((r) => setImmediate(r));
 
@@ -285,5 +286,40 @@ describe('Xadrez', () => {
     await flush();
     expect(send.mock.calls.some((c) => String(c[1]).startsWith('game.chess.illegalMove'))).toBe(false);
     expect(mgr.active(G)).toBe(true); // ainda a decorrer, vez das brancas
+  });
+
+  // Mapa nome->markup dos 26 emojis, com IDs de 19 dígitos (como os reais) para o teste
+  // de comprimento refletir o orçamento verdadeiro dos 2000 chars.
+  const fakeEmojiMap = (): Record<string, string> =>
+    Object.fromEntries(CHESS_EMOJI_NAMES.map((n) => [n, `<:${n}:1234567890123456789>`]));
+
+  it('render em emojis: 64 casas, alternância clara/escura correta, cabe em <2000 chars', async () => {
+    const { env, send } = harness();
+    env.boardEmojis = fakeEmojiMap();
+    const mgr = new GameManager(env);
+    mgr.start(G, C, gameById('chess')!.create());
+    await flush();
+    const msg = String(send.mock.calls[0][1]);
+    // Uma partida nova = 64 casas, cada uma emite um emoji (peça ou casa vazia).
+    expect((msg.match(/<:/g) ?? []).length).toBe(64);
+    // Mapeamento peça×casa: a8 (canto sup. esq.) é casa CLARA -> torre preta clara (brl);
+    // b8 é escura -> cavalo preto escuro (bnd); a1 é escura -> torre branca escura (wrd).
+    expect(msg).toContain('<:brl:');
+    expect(msg).toContain('<:bnd:');
+    expect(msg).toContain('<:wrd:');
+    // Etiquetas dos ficheiros (indicadores regionais) no topo.
+    expect(msg).toContain('🇦');
+    // Orçamento do Discord (UTF-16 length é um limite conservador vs code points).
+    expect(msg.length).toBeLessThan(2000);
+  });
+
+  it('sem emojis instalados: cai no tabuleiro ASCII (code block), sem markup de emoji', async () => {
+    const { env, send } = harness(); // harness normal NÃO define boardEmojis
+    const mgr = new GameManager(env);
+    mgr.start(G, C, gameById('chess')!.create());
+    await flush();
+    const msg = String(send.mock.calls[0][1]);
+    expect(msg).toContain('```'); // code block ASCII
+    expect(msg).not.toContain('<:'); // nenhum emoji custom
   });
 });

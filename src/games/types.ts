@@ -66,6 +66,12 @@ export interface GameContext {
   t(key: string, params?: Record<string, string | number>): string;
   /** Agenda `fn` daqui a `ms`. O timer e CANCELADO automaticamente no fim do jogo. */
   after(ms: number, fn: () => void): void;
+  /**
+   * Markup de um emoji da aplicacao pelo nome (ex. 'wpl' -> '<:wpl:123>'), ou undefined
+   * se nao existir/ainda nao carregou. Usado pelo tabuleiro de xadrez para desenhar as
+   * pecas; ausente => o jogo cai no render ASCII.
+   */
+  emoji(name: string): string | undefined;
   /** Regista `points` para `userId` (acumulado; persistido no fim do jogo). */
   award(userId: string, points: number): void;
   /** Termina o jogo JA: cancela timers, persiste pontos, liberta o lock da guild. */
@@ -122,4 +128,10 @@ export interface GameEnv {
   persistScores(guildId: string, points: Map<string, number>): void;
   /** Log de erro (para nunca deixar um throw de jogo escapar). */
   logError(msg: string, err: unknown): void;
+  /**
+   * Mapa nome->markup dos application emojis (ex. { wpl: '<:wpl:123>' }). Preenchido no
+   * arranque (ClientReady) por referencia, por isso pode comecar vazio. Opcional: sem
+   * ele (ou vazio) o xadrez usa o tabuleiro ASCII.
+   */
+  boardEmojis?: Record<string, string>;
 }

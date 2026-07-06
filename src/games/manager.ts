@@ -207,6 +207,7 @@ export class GameManager {
         }
       },
       t: (key, params) => env.translate(key, s.locale, params),
+      emoji: (name) => env.boardEmojis?.[name],
       after: (ms, fn): void => {
         if (s.ended) return;
         const handle = env.clock.setTimeout(() => {
