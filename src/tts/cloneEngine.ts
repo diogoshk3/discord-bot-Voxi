@@ -10,7 +10,7 @@
 // (GPU): serializamos com uma fila FIFO interna.
 
 import { spawn, type ChildProcess } from 'node:child_process';
-import { join, basename } from 'node:path';
+import { join } from 'node:path';
 import { existsSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { AudioCache, cacheKey } from './cache';
@@ -78,7 +78,8 @@ export class CloneEngine implements TTSEngine {
     // Sem clone pedido, ou sem motor -> voz normal (o caminho de sempre).
     if (!req.cloneRef || !this.cmd) return this.inner.synth(req);
 
-    const key = `${cacheKey(req)}_${basename(req.cloneRef)}`;
+    // cacheKey já inclui o cloneRef (basename versionado) — re-gravar dá chave nova.
+    const key = cacheKey(req);
     const hit = this.cache.get(key);
     if (hit) return hit;
 

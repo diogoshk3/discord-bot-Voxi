@@ -107,4 +107,12 @@ describe('CloneEngine', () => {
     const eng = new CloneEngine(innerReturning('/normal.wav'), cache(), { exe: 'x', args: [] }, fakeSidecar('fail'));
     await expect(eng.synth(REQ({ cloneRef: '/ref.wav' }))).resolves.toBe('/normal.wav');
   });
+
+  it('REGRESSÃO: re-gravar (ref diferente) NÃO serve a voz velha da cache', async () => {
+    const eng = new CloneEngine(innerReturning('/normal.wav'), cache(), { exe: 'x', args: [] }, fakeSidecar('ok'));
+    const a = await eng.synth(REQ({ text: 'hello', cloneRef: '/clones/u1-1000.wav' }));
+    // mesma frase, MAS amostra re-gravada (path versionado diferente) -> chave nova
+    const b = await eng.synth(REQ({ text: 'hello', cloneRef: '/clones/u1-2000.wav' }));
+    expect(b).not.toBe(a); // não é o hit da amostra antiga
+  });
 });

@@ -1383,9 +1383,21 @@ async function handleVoiceClone(
       await i.editReply(t('clone.tooShort', locale, { seconds: Math.round(voicedMs / 1000) }));
       return;
     }
-    const outPath = join(dirname(deps.config.dbPath), 'voice-clones', `${userId}.wav`);
+    // Ficheiro VERSIONADO por timestamp: uma re-gravação é um path novo -> chave de cache
+    // nova (cacheKey inclui o basename do ref) -> não se ouve a voz velha. Apaga a amostra
+    // anterior a seguir (o ficheiro antigo deixa de ser referenciado).
+    const stamp = Date.now();
+    const prev = getClone(deps.db, userId);
+    const outPath = join(dirname(deps.config.dbPath), 'voice-clones', `${userId}-${stamp}.wav`);
     await pcmToWavFile(pcm, outPath);
-    saveClone(deps.db, userId, outPath, Date.now());
+    saveClone(deps.db, userId, outPath, stamp);
+    if (prev && prev.samplePath !== outPath) {
+      try {
+        unlinkSync(prev.samplePath);
+      } catch {
+        // ficheiro antigo já removido — inofensivo
+      }
+    }
     await i.editReply(t('clone.saved', locale, { seconds: Math.round(voicedMs / 1000) }));
   } catch (err) {
     log.error('[clone] gravação falhou:', err);
