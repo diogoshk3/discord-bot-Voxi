@@ -5,11 +5,11 @@
   "use strict";
 
   /* ── config ──────────────────────────────────────────────
-     TODO: preenche o CLIENT_ID do Voxi (é público — está em qualquer
-     link de convite). SUPPORT_URL: mete o link do teu servidor de suporte. */
+     CLIENT_ID é público (está em qualquer link de convite).
+     SUPPORT_URL é o convite do servidor de suporte do Voxi. */
   const CLIENT_ID = "1521557763220705581";
   const INVITE_PERMISSIONS = "3214336"; // Connect+Speak+ViewChannel+SendMessages+ReadMessageHistory
-  const SUPPORT_URL = "https://discord.gg/"; // TODO: link do servidor de suporte
+  const SUPPORT_URL = "https://discord.gg/V6PZYZmhcQ"; // servidor de suporte do Voxi
   const INVITE_URL =
     CLIENT_ID && CLIENT_ID !== "YOUR_CLIENT_ID"
       ? `https://discord.com/oauth2/authorize?client_id=${CLIENT_ID}&scope=bot%20applications.commands&permissions=${INVITE_PERMISSIONS}`
