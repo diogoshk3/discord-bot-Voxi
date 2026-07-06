@@ -907,6 +907,8 @@ export const catalog: Record<string, Entry> = {
     en: 'Vote for Voxi (free, every 12h) and help more people find it:\n{url}',
     pt: 'Vota no Voxi (grátis, a cada 12h) e ajuda mais gente a encontrá-lo:\n{url}',
   },
+  'invite.button': { en: 'Add Voxi', pt: 'Adicionar o Voxi' },
+  'vote.button': { en: 'Vote on top.gg', pt: 'Votar no top.gg' },
 
   // ── /help chrome (tudo o que NAO e a lista de comandos, que vem de commandDefs) ──
   // O titulo vira DESCRICAO do embed (embeds nao renderizam markdown no titulo),

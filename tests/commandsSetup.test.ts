@@ -93,7 +93,7 @@ interface FakeInteraction {
   commandName: string;
   guildId: string;
   replies: string[];
-  reply: (opts: { content: string }) => Promise<void>;
+  reply: (opts: { content?: string; embeds?: { data?: { description?: string } }[] }) => Promise<void>;
   isRepliable: () => boolean;
   replied: boolean;
   deferred: boolean;
@@ -124,8 +124,10 @@ function makeSetupInteraction(opts: {
     replied: false,
     deferred: false,
     isRepliable: () => true,
-    reply: async (o: { content: string }) => {
-      replies.push(o.content);
+    reply: async (o: { content?: string; embeds?: { data?: { description?: string } }[] }) => {
+      // /setup passou a embed — regista texto OU a descrição do embed.
+      const fromEmbeds = (o.embeds ?? []).map((e) => e?.data?.description ?? '').join('\n');
+      replies.push(o.content ?? fromEmbeds);
     },
     member: {
       permissions: { has: () => admin },

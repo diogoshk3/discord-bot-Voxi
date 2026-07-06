@@ -37,8 +37,10 @@ function makeListInteraction() {
     replied: false,
     deferred: false,
     isRepliable: () => true,
-    reply: async (o: { content: string }) => {
-      replies.push(o.content);
+    reply: async (o: { content?: string; embeds?: { data?: { description?: string } }[] }) => {
+      // /voice list passou a embed — regista texto OU a descrição do embed.
+      const fromEmbeds = (o.embeds ?? []).map((e) => e?.data?.description ?? '').join('\n');
+      replies.push(o.content ?? fromEmbeds);
     },
     options: {
       getSubcommandGroup: (_required = false) => null,

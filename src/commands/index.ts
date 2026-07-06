@@ -1689,7 +1689,9 @@ async function handleVoice(i: ChatInputCommandInteraction, deps: BotDeps): Promi
     const list = deps.availableModels.length
       ? formatVoiceList(deps.availableModels, i.locale)
       : t('voice.listEmpty', locale);
-    await reply(i, `${t('voice.listHeader', locale)}\n${list}`);
+    // Cartão: cabe bem nos 4096 chars da descrição de um embed (grupos por língua).
+    const embed = brandEmbed().setDescription(`${t('voice.listHeader', locale)}\n${list}`);
+    await i.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
   } else if (sub === 'reset') {
     resetUserVoice(deps.db, i.guildId!, i.user.id);
     await reply(i, t('voice.reset', locale));
@@ -2122,7 +2124,9 @@ async function handleSetup(i: ChatInputCommandInteraction, deps: BotDeps): Promi
   // apontar para /help (a referencia completa) — nao a duplica.
   lines.push('', t('setup.membersHeader', locale), t('setup.membersBody', locale));
 
-  await reply(i, lines.join('\n'));
+  // Cartão: verde quando está tudo OK, amarelo quando falta alguma permissão.
+  const embed = brandEmbed(anyMissing ? 'warning' : 'success').setDescription(lines.join('\n'));
+  await i.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 }
 
 async function handleStats(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
@@ -2334,7 +2338,12 @@ async function handleInvite(i: ChatInputCommandInteraction, deps: BotDeps): Prom
     permissions: INVITE_PERMISSIONS,
   });
   const url = `https://discord.com/oauth2/authorize?${params.toString()}`;
-  await i.reply({ content: t('invite.link', locale, { url }) });
+  // Botão de link + o URL no texto (fica clicável e copiável). ButtonStyle.Link não tem
+  // customId — leva só o URL, por isso não precisa de coletor.
+  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder().setStyle(ButtonStyle.Link).setURL(url).setLabel(t('invite.button', locale)).setEmoji('➕'),
+  );
+  await i.reply({ content: t('invite.link', locale, { url }), components: [row] });
 }
 
 /**
@@ -2360,7 +2369,10 @@ async function handleVote(i: ChatInputCommandInteraction, deps: BotDeps): Promis
     return;
   }
   const url = `https://top.gg/bot/${clientId}/vote`;
-  await i.reply({ content: t('vote.link', locale, { url }) });
+  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder().setStyle(ButtonStyle.Link).setURL(url).setLabel(t('vote.button', locale)).setEmoji('🗳️'),
+  );
+  await i.reply({ content: t('vote.link', locale, { url }), components: [row] });
 }
 
 /**
