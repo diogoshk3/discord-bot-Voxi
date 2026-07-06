@@ -11,6 +11,7 @@ import { spawn } from 'node:child_process';
 import { mkdtempSync, writeFileSync, mkdirSync, copyFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
+import type { Readable, Duplex } from 'node:stream';
 import ffmpegStatic from 'ffmpeg-static';
 import { rmDirSafe } from '../tts/cleanupDir';
 
@@ -69,6 +70,22 @@ export interface RecordResult {
   voicedMs: number;
 }
 
+/** Dependências injetáveis (testes): como subscrever o SSRC e como construir o descodificador. */
+export interface RecordDeps {
+  subscribe?: (connection: VoiceConnection, userId: string) => Readable;
+  makeDecoder?: () => Duplex;
+}
+
+function defaultSubscribe(connection: VoiceConnection, userId: string): Readable {
+  return connection.receiver.subscribe(userId, {
+    end: { behavior: EndBehaviorType.AfterSilence, duration: 800 },
+  });
+}
+
+function defaultMakeDecoder(): Duplex {
+  return new prism.opus.Decoder({ rate: 48000, channels: 2, frameSize: 960 }) as unknown as Duplex;
+}
+
 /**
  * Grava a voz de UM utilizador a partir da ligação de voz: subscreve o SSRC dele
  * (e só dele), descodifica opus->PCM 48k estéreo e acumula até `targetVoicedMs` de
@@ -79,32 +96,51 @@ export interface RecordResult {
 export async function recordUserSample(
   connection: VoiceConnection,
   userId: string,
-  opts: { targetVoicedMs?: number; maxWallMs?: number; shouldStop?: () => boolean } = {},
+  opts: {
+    targetVoicedMs?: number;
+    maxWallMs?: number;
+    shouldStop?: () => boolean;
+    /** Guarda-tempo de ronda-sem-áudio-nenhum (testável; produção usa o default 5s). */
+    roundSilenceMs?: number;
+  } = {},
+  deps: RecordDeps = {},
 ): Promise<RecordResult> {
   const targetVoicedMs = opts.targetVoicedMs ?? 15_000;
   const maxWallMs = opts.maxWallMs ?? 45_000;
   const shouldStop = opts.shouldStop ?? (() => false);
+  const roundSilenceMs = opts.roundSilenceMs ?? 5_000;
+  const subscribe = deps.subscribe ?? defaultSubscribe;
+  const makeDecoder = deps.makeDecoder ?? defaultMakeDecoder;
   const collector = new VoicedCollector(targetVoicedMs);
   const deadline = Date.now() + maxWallMs;
 
   while (!collector.done && Date.now() < deadline && !shouldStop()) {
     const gotAudio = await new Promise<boolean>((resolve) => {
       let received = false;
-      const opus = connection.receiver.subscribe(userId, {
-        end: { behavior: EndBehaviorType.AfterSilence, duration: 800 },
-      });
-      const decoder = new prism.opus.Decoder({ rate: 48000, channels: 2, frameSize: 960 });
+      const opus = subscribe(connection, userId);
+      const decoder = makeDecoder();
+      // CRÍTICO: `stream.pipe()` NÃO propaga destroy() da fonte para o destino — é
+      // Readable→Writable de baixo nível, sem a limpeza do stream.pipeline(). Se só
+      // destruíssemos `opus`, o `decoder` nunca emitia 'end'/'close' e a Promise da
+      // ronda ficava PENDENTE PARA SEMPRE (bug real: era por isto que nem o botão
+      // "Parar" nem o guarda-tempo de silêncio funcionavam — a gravação simplesmente
+      // não parava). Por isso destruímos SEMPRE os dois em conjunto.
+      const stopBoth = (): void => {
+        opus.destroy();
+        decoder.destroy();
+      };
       // Guarda-tempo da RONDA: se o user não falar de todo, o AfterSilence nunca arma
-      // (só conta após o 1.º pacote nalgumas versões) — corta a ronda ao fim de 5s. Também
-      // faz poll do shouldStop (botão "Parar") para fechar a ronda em curso ~200ms depois.
-      const roundTimer = setTimeout(() => opus.destroy(), 5_000);
+      // (só conta após o 1.º pacote nalgumas versões) — corta a ronda ao fim de
+      // `roundSilenceMs`. Também faz poll do shouldStop (botão "Parar") para fechar a
+      // ronda em curso ~200ms depois.
+      const roundTimer = setTimeout(stopBoth, roundSilenceMs);
       const stopPoll = setInterval(() => {
-        if (shouldStop()) opus.destroy();
+        if (shouldStop()) stopBoth();
       }, 200);
       opus.pipe(decoder);
       decoder.on('data', (chunk: Buffer) => {
         received = true;
-        if (collector.push(chunk)) opus.destroy(); // alvo atingido -> fecha já
+        if (collector.push(chunk)) stopBoth(); // alvo atingido -> fecha já
       });
       const finish = (): void => {
         clearTimeout(roundTimer);
@@ -115,7 +151,7 @@ export async function recordUserSample(
       decoder.once('end', finish);
       decoder.once('close', finish);
       decoder.once('error', finish);
-      opus.once('error', () => opus.destroy());
+      opus.once('error', stopBoth);
     });
     // Ronda sem um único frame (user calado): espera um nadinha antes de re-subscrever
     // para não fazer busy-loop de subscribe/destroy.
