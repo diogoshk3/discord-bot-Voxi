@@ -284,9 +284,16 @@ body > *:not(.grain):not(.orbs) { position: relative; z-index: 2; }
 .hear__chip:hover { color: var(--text-0); border-color: var(--aqua); transform: translateY(-1px); }
 .hear__chip.is-active { color: #fff; background: var(--blurple); border-color: transparent; box-shadow: 0 8px 22px -8px rgba(102, 114, 255, 0.7); }
 .hear__chip span { font-size: 16px; }
+.hear__chip.is-disabled { opacity: 0.32; cursor: not-allowed; pointer-events: none; }
+/* engine toggle (Google vs Piper) */
+.hear__engines { display: inline-flex; gap: 4px; padding: 4px; margin-bottom: 26px; border-radius: 999px; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--line); }
+.hear__eng { padding: 7px 20px; border-radius: 999px; border: none; cursor: pointer; background: transparent; color: var(--text-1); font-size: 14px; font-weight: 600; font-family: inherit; transition: all 0.18s ease; }
+.hear__eng:hover { color: var(--text-0); }
+.hear__eng.is-active { color: #fff; background: linear-gradient(135deg, var(--blurple), var(--aqua)); box-shadow: 0 6px 18px -6px rgba(102, 114, 255, 0.7); }
+.hear__engtag { font-family: var(--f-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--aqua); background: rgba(46, 230, 200, 0.12); border: 1px solid rgba(46, 230, 200, 0.22); padding: 2px 8px; border-radius: 6px; }
 @media (max-width: 560px) {
   .hear__stage { flex-direction: column; text-align: center; gap: 14px; }
-  .hear__nowrow { justify-content: center; }
+  .hear__nowrow { flex-wrap: wrap; justify-content: center; }
   .hear__eq { margin-left: 0; }
 }
 

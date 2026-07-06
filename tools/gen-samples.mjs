@@ -20,7 +20,7 @@ const UA =
 // e' o codigo ISO-639-1 (o mesmo prefixo dos modelos do bot).
 const SAMPLES = [
   { lang: 'en', text: "Hey! Welcome to the server. Type anything and I'll read it out loud." },
-  { lang: 'pt', text: 'Olá! Escreve o que quiseres e eu leio tudo em voz alta.' },
+  { lang: 'pt', text: 'Olá! Escreva qualquer coisa e eu leio em voz alta.' },
   { lang: 'es', text: '¡Hola! Escribe lo que quieras y lo leeré en voz alta.' },
   { lang: 'fr', text: 'Salut ! Écris ce que tu veux, je le lis à voix haute.' },
   { lang: 'de', text: 'Hallo! Schreib irgendwas und ich lese es laut vor.' },

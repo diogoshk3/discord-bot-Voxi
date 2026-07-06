@@ -320,12 +320,14 @@
   // Cada amostra: bandeira, nome da lingua e a frase EXATA que foi sintetizada
   // (tem de bater certo com o audio) + o mp3 gerado por tools/gen-samples.mjs.
   const SAMPLES = {
-    en: { flag: "🇬🇧", lang: "English", phrase: "Hey! Welcome to the server. Type anything and I'll read it out loud." },
-    pt: { flag: "🇵🇹", lang: "Português", phrase: "Olá! Escreve o que quiseres e eu leio tudo em voz alta." },
-    es: { flag: "🇪🇸", lang: "Español", phrase: "¡Hola! Escribe lo que quieras y lo leeré en voz alta." },
-    fr: { flag: "🇫🇷", lang: "Français", phrase: "Salut ! Écris ce que tu veux, je le lis à voix haute." },
-    de: { flag: "🇩🇪", lang: "Deutsch", phrase: "Hallo! Schreib irgendwas und ich lese es laut vor." },
-    ja: { flag: "🇯🇵", lang: "日本語", phrase: "こんにちは！メッセージを読み上げます。" },
+    // engines: motores com clipe para esta lingua. O japones so tem Google (o Piper
+    // standard nao tem modelo japones). Google = <lang>.mp3, Piper = <lang>-piper.mp3.
+    en: { flag: "🇬🇧", lang: "English", phrase: "Hey! Welcome to the server. Type anything and I'll read it out loud.", engines: ["google", "piper"] },
+    pt: { flag: "🇵🇹", lang: "Português", phrase: "Olá! Escreva qualquer coisa e eu leio em voz alta.", engines: ["google", "piper"] },
+    es: { flag: "🇪🇸", lang: "Español", phrase: "¡Hola! Escribe lo que quieras y lo leeré en voz alta.", engines: ["google", "piper"] },
+    fr: { flag: "🇫🇷", lang: "Français", phrase: "Salut ! Écris ce que tu veux, je le lis à voix haute.", engines: ["google", "piper"] },
+    de: { flag: "🇩🇪", lang: "Deutsch", phrase: "Hallo! Schreib irgendwas und ich lese es laut vor.", engines: ["google", "piper"] },
+    ja: { flag: "🇯🇵", lang: "日本語", phrase: "こんにちは！メッセージを読み上げます。", engines: ["google"] },
   };
 
   function initHear() {
@@ -335,24 +337,50 @@
     if (!stage || !audio || !btn) return;
     const flagEl = $("#hearFlag"),
       langEl = $("#hearLang"),
-      phraseEl = $("#hearPhrase");
+      phraseEl = $("#hearPhrase"),
+      engTag = $("#hearEngTag");
+    const ENGINE_NAME = { google: "Google", piper: "Piper" };
     let current = "en";
+    let engine = "google";
+
+    const srcFor = (code, eng) => "assets/samples/" + code + (eng === "piper" ? "-piper" : "") + ".mp3";
 
     const select = (code, autoplay) => {
       const s = SAMPLES[code];
       if (!s) return;
+      // Se a lingua nao tem o motor escolhido (ex.: japones sem Piper), toca no Google.
+      const eng = s.engines.includes(engine) ? engine : "google";
       current = code;
       flagEl.textContent = s.flag;
       langEl.textContent = s.lang;
       phraseEl.textContent = s.phrase;
+      engTag.textContent = ENGINE_NAME[eng];
       $$(".hear__chip").forEach((c) => c.classList.toggle("is-active", c.dataset.sample === code));
-      // preload="none" no <audio> => trocar o src NAO descarrega ate' se dar play.
-      audio.src = "assets/samples/" + code + ".mp3";
+      audio.src = srcFor(code, eng); // preload="none" => so descarrega ao dar play
       if (autoplay) audio.play().catch(() => {});
     };
 
-    // Toca/pausa a amostra atual. is-playing (icone + equalizador) segue os eventos
-    // do proprio <audio>, por isso trocar de lingua a meio nunca deixa dois a tocar.
+    // Marca como indisponiveis os chips das linguas sem o motor escolhido.
+    const refreshChips = () =>
+      $$(".hear__chip").forEach((c) => {
+        const s = SAMPLES[c.dataset.sample];
+        c.classList.toggle("is-disabled", !s || !s.engines.includes(engine));
+      });
+
+    // Troca de motor: reavalia os chips e recarrega a lingua atual nesse motor (ou cai
+    // numa que o tenha — ex.: japones + Piper -> ingles). Mantem o estado tocar/pausa.
+    $$(".hear__eng").forEach((b) =>
+      b.addEventListener("click", () => {
+        engine = b.dataset.engine;
+        $$(".hear__eng").forEach((x) => x.classList.toggle("is-active", x === b));
+        refreshChips();
+        const playing = !audio.paused;
+        select(SAMPLES[current].engines.includes(engine) ? current : "en", playing);
+      }),
+    );
+
+    // Toca/pausa. is-playing (icone + equalizador) segue os eventos do <audio>, por
+    // isso trocar de lingua/motor a meio nunca deixa dois a tocar.
     btn.addEventListener("click", () => (audio.paused ? audio.play().catch(() => {}) : audio.pause()));
     $$(".hear__chip").forEach((chip) =>
       chip.addEventListener("click", () => select(chip.dataset.sample, true)),
@@ -368,7 +396,8 @@
     audio.addEventListener("pause", off);
     audio.addEventListener("ended", off);
 
-    select("en", false); // estado inicial: EN escolhido, sem tocar
+    refreshChips();
+    select("en", false); // estado inicial: EN + Google, sem tocar
   }
 
   /* ── boot ────────────────────────────────────────────── */
