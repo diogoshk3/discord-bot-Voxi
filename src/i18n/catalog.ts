@@ -219,6 +219,10 @@ export const catalog: Record<string, Entry> = {
     en: '{who} needs to be in the voice channel **with me** to be recorded. Ask them to `/join` first.',
     pt: '{who} tem de estar no canal de voz **comigo** para ser gravado. Pede-lhe para usar `/join` primeiro.',
   },
+  'clone.pickFromList': {
+    en: 'Pick a person from the suggestions list (only people in the call can be recorded). Leave it empty to record yourself.',
+    pt: 'Escolhe uma pessoa da lista de sugestões (só quem está na call pode ser gravado). Deixa vazio para te gravares a ti.',
+  },
   'clone.stopBtn': {
     en: 'Stop',
     pt: 'Parar',

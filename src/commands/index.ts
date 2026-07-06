@@ -386,12 +386,16 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
           s
             .setName('record')
             .setDescription('Record a voice in the call to build your clone (yours, or someone who agrees)')
-            .addUserOption((o) =>
+            // STRING + autocomplete (não addUserOption): o seletor nativo de utilizador do
+            // Discord só mostra membros em cache/recentes. Aqui listamos EXATAMENTE quem está
+            // na call contigo — os únicos alvos válidos (gravar exige estar no canal do bot).
+            .addStringOption((o) =>
               o
                 .setName('user')
                 .setNameLocalizations({ 'pt-BR': 'pessoa' })
-                .setDescription('Whose voice to clone (empty = yourself). They must agree first.')
-                .setRequired(false),
+                .setDescription('Whose voice to clone — pick someone in the call (empty = yourself). They must agree.')
+                .setRequired(false)
+                .setAutocomplete(true),
             )
             .addIntegerOption((o) =>
               o
@@ -1399,8 +1403,14 @@ async function handleVoiceClone(
   // Alvo escolhível: por defeito o próprio invocador (auto-clone, o caso consent-first
   // trivial); se `user` for outra pessoa, gravamos a voz DELA — mas só com o consentimento
   // explícito dela (botão), preservando a invariante "nunca gravar terceiros em silêncio".
-  const target = i.options.getUser('user') ?? i.user;
-  const targetId = target.id;
+  // A opção `user` é STRING+autocomplete (id da pessoa na call); vazio = o próprio. Se
+  // vier texto que não é um id (escreveram à mão sem escolher da lista), pede para escolher.
+  const rawTarget = i.options.getString('user')?.trim();
+  if (rawTarget && !/^\d{5,25}$/.test(rawTarget)) {
+    await reply(i, t('clone.pickFromList', locale));
+    return;
+  }
+  const targetId = rawTarget || userId;
   const isSelf = targetId === userId;
   const who = `<@${targetId}>`;
   // Duração escolhível: segundos de FALA real a apanhar (5–30, default 15). O relógio-teto
@@ -2496,6 +2506,21 @@ export async function handleAutocomplete(
     if (focused.name === 'game') {
       const base = (i.locale || '').split('-')[0].toLowerCase() || 'en';
       await i.respond(filterGameChoices(focused.value, base));
+      return;
+    }
+    // /voice clone record `user`: lista quem está na call COM o bot (os únicos alvos
+    // válidos — gravar exige estar no canal do bot). Fora de uma call, lista vazia.
+    if (focused.name === 'user') {
+      const botChannel = i.guild?.members.me?.voice?.channel ?? null;
+      const q = focused.value.trim().toLowerCase();
+      const choices = botChannel
+        ? [...botChannel.members.values()]
+            .filter((m) => !m.user.bot)
+            .filter((m) => !q || m.displayName.toLowerCase().includes(q) || m.user.username.toLowerCase().includes(q))
+            .slice(0, 25)
+            .map((m) => ({ name: m.displayName.slice(0, 100), value: m.id }))
+        : [];
+      await i.respond(choices);
       return;
     }
     await i.respond([]);
