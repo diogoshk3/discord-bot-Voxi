@@ -9,10 +9,10 @@ const DEVANAGARI = /[ऀ-ॿ]/;
 const GEORGIAN = /[Ⴀ-ჿ]/;
 
 describe('JOKE_LANGUAGES (lista de linguas suportadas)', () => {
-  it('cobre exatamente as 34 linguas distintas dos modelos Piper', () => {
-    // Prefixos DISTINTOS de LANG_TO_PREFIX = 34 (no_/Norueguês nao entra: so existe
-    // em LOCALE_NAMES, nao em LANG_TO_PREFIX). Este numero e o contrato.
-    expect(JOKE_LANGUAGES.length).toBe(34);
+  it('cobre exatamente as 35 linguas distintas dos modelos Piper', () => {
+    // Prefixos DISTINTOS de LANG_TO_PREFIX = 35 (japones 'ja_' incluido; no_/Norueguês
+    // nao entra: so existe em LOCALE_NAMES, nao tem corpus de piadas). Este numero e o contrato.
+    expect(JOKE_LANGUAGES.length).toBe(35);
   });
 
   it('cada lingua tem key, prefix (xx_) e display name em INGLES nao-vazios', () => {

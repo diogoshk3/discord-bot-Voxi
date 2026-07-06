@@ -79,16 +79,16 @@ describe('i18n — t(key, locale, params)', () => {
   });
 });
 
-describe('i18n — SUPPORTED_LOCALES + endonimos (34 linguas de voz)', () => {
+describe('i18n — SUPPORTED_LOCALES + endonimos (35 linguas de voz)', () => {
   const EXPECTED = [
     'en', 'pt', 'es', 'fr', 'de', 'nl', 'pl', 'tr', 'cs', 'sv', 'fi', 'da',
     'ro', 'hu', 'cy', 'is', 'lb', 'lv', 'sk', 'sl', 'sw', 'vi', 'ca', 'it',
-    'el', 'ru', 'uk', 'kk', 'sr', 'ar', 'fa', 'ka', 'ne', 'zh',
+    'el', 'ru', 'uk', 'kk', 'sr', 'ar', 'fa', 'ka', 'ne', 'zh', 'ja',
   ];
 
-  it('SUPPORTED_LOCALES tem exatamente as 34 linguas de voz', () => {
+  it('SUPPORTED_LOCALES tem exatamente as 35 linguas de voz', () => {
     expect([...SUPPORTED_LOCALES]).toEqual(EXPECTED);
-    expect(SUPPORTED_LOCALES.length).toBe(34);
+    expect(SUPPORTED_LOCALES.length).toBe(35);
   });
 
   it('LOCALE_DISPLAY_NAMES tem um endonimo (nome na propria lingua) para CADA locale', () => {

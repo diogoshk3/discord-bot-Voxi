@@ -43,10 +43,23 @@ async function main(): Promise<void> {
   // voz portuguesa — a do Brasil (rotulada "Português"). O .onnx fica no disco, por
   // isso e REVERSIVEL: basta remover a entrada daqui para o europeu (tugao) voltar.
   const EXCLUDED_MODELS = new Set(['pt_PT-tugao-medium']);
-  const availableModels = discoverModels(config.modelsDir).filter((m) => !EXCLUDED_MODELS.has(m));
-  if (availableModels.length === 0) {
-    log.warn(`[index] nenhum modelo .onnx em ${config.modelsDir} — /voice list ficara vazio.`);
+  const piperModels = discoverModels(config.modelsDir).filter((m) => !EXCLUDED_MODELS.has(m));
+  if (piperModels.length === 0) {
+    log.warn(`[index] nenhum modelo .onnx em ${config.modelsDir} — so vozes gTTS ficarao disponiveis.`);
   }
+  // Vozes SO-Google: linguas que o gTTS fala mas SEM modelo Piper standard (ex.: japones
+  // — o rhasspy/piper-voices nao tem ja_JP). O motor-base publico e o per-user com o
+  // Google por defeito, por isso injetamos uma voz sintetica por cada, para o /voice set e
+  // a detecao automatica as oferecerem. O nome segue a convencao Piper (locale-voz-qualidade)
+  // para o gttsLangOfModel derivar o tl (ja_JP-... -> 'ja') e o LOCALE_NAMES dar o autonimo
+  // (日本語). Sem .onnx no disco: se o Google cair, o Piper nao tem fallback e a mensagem e
+  // SALTADA (nunca trava o worker) — routing dormente em voiceMap.ts (jpn->ja_, como cym/nob).
+  // Excluidas em TTS_ENGINE=neural (operador, sem gTTS).
+  const GTTS_ONLY_MODELS = config.ttsEngine === 'neural' ? [] : ['ja_JP-google-medium'];
+  const availableModels = [
+    ...piperModels,
+    ...GTTS_ONLY_MODELS.filter((m) => !piperModels.includes(m)),
+  ].sort();
 
   // P13.2 — health-check do ffmpeg no ARRANQUE. O @discordjs/voice transcodifica
   // o audio via prism-media -> ffmpeg; se o binario faltar/for da plataforma

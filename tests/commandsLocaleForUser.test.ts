@@ -70,11 +70,19 @@ describe('localeForUser — mapeia interaction.locale para o nosso locale', () =
     expect(localeForUser(makeDeps(db), iWith('fr'))).toBe('fr');
   });
 
-  it('locale Discord NAO suportado (ja) cai no locale da GUILD', () => {
-    // Guild configurada em pt; um utilizador com Discord em japones (nao suportado)
-    // ve a interface no locale da guild.
+  it('locale Discord NAO suportado (ko) cai no locale da GUILD', () => {
+    // Guild configurada em pt; um utilizador com Discord em coreano (nao suportado)
+    // ve a interface no locale da guild. (NB: 'ja'/japones passou a ser SUPORTADO com
+    // a adicao do locale ja, por isso o exemplo de "nao suportado" mudou para 'ko'.)
     setGuildConfig(db, GUILD, { locale: 'pt' });
-    expect(localeForUser(makeDeps(db), iWith('ja'))).toBe('pt');
+    expect(localeForUser(makeDeps(db), iWith('ko'))).toBe('pt');
+  });
+
+  it('ja (japones) e um locale SUPORTADO -> ja', () => {
+    // Regressao: o japones foi adicionado a SUPPORTED_LOCALES; um utilizador com o
+    // Discord em japones ve a interface em japones, nao o fallback da guild.
+    setGuildConfig(db, GUILD, { locale: 'pt' });
+    expect(localeForUser(makeDeps(db), iWith('ja'))).toBe('ja');
   });
 
   it('locale Discord NAO suportado + guild no default -> en', () => {

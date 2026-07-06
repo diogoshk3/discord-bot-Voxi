@@ -19,7 +19,7 @@ export const DEFAULT_LOCALE = 'en' as const;
 export const SUPPORTED_LOCALES = [
   'en', 'pt', 'es', 'fr', 'de', 'nl', 'pl', 'tr', 'cs', 'sv', 'fi', 'da',
   'ro', 'hu', 'cy', 'is', 'lb', 'lv', 'sk', 'sl', 'sw', 'vi', 'ca', 'it',
-  'el', 'ru', 'uk', 'kk', 'sr', 'ar', 'fa', 'ka', 'ne', 'zh',
+  'el', 'ru', 'uk', 'kk', 'sr', 'ar', 'fa', 'ka', 'ne', 'zh', 'ja',
 ] as const;
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
 
@@ -65,6 +65,7 @@ export const LOCALE_DISPLAY_NAMES: Record<SupportedLocale, string> = {
   ka: 'ქართული',
   ne: 'नेपाली',
   zh: '中文',
+  ja: '日本語',
 };
 
 /**

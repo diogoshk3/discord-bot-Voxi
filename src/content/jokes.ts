@@ -3,7 +3,7 @@
  *
  * Contrato:
  *  - Uma lingua por PREFIXO de locale distinto de LANG_TO_PREFIX (voiceMap.ts) —
- *    34 no total. FIX (auditoria i18n/locale — docs/I18N-LOCALE-AUDIT.md §0.2):
+ *    35 no total (com o japones 'ja_'). FIX (auditoria i18n/locale — docs/I18N-LOCALE-AUDIT.md §0.2):
  *    o Noruegues ('no_') NAO entra em JOKE_LANGUAGES, mas NAO e por falta de
  *    prefixo/modelo em LANG_TO_PREFIX (esse mapeamento EXISTE — 'nob'/'nno'/'nor'
  *    -> 'no_', ver voiceMap.ts) — e por falta de um corpus de piadas nativas em
@@ -34,7 +34,7 @@ export interface JokeLanguage {
 }
 
 /**
- * As 34 linguas suportadas (prefixos distintos de LANG_TO_PREFIX). Ordenadas por
+ * As 35 linguas suportadas (prefixos distintos de LANG_TO_PREFIX). Ordenadas por
  * display para uma lista de autocomplete estavel e previsivel.
  */
 export const JOKE_LANGUAGES: JokeLanguage[] = [
@@ -54,6 +54,7 @@ export const JOKE_LANGUAGES: JokeLanguage[] = [
   { key: 'hu', prefix: 'hu_', display: 'Hungarian' },
   { key: 'is', prefix: 'is_', display: 'Icelandic' },
   { key: 'it', prefix: 'it_', display: 'Italian' },
+  { key: 'ja', prefix: 'ja_', display: 'Japanese' },
   { key: 'kk', prefix: 'kk_', display: 'Kazakh' },
   { key: 'lv', prefix: 'lv_', display: 'Latvian' },
   { key: 'lb', prefix: 'lb_', display: 'Luxembourgish' },
@@ -137,6 +138,11 @@ const JOKES: Record<string, string[]> = {
   zh: [
     '为什么数学书不开心？因为它有太多问题。',
     '零对八说了什么？你的腰带真好看！',
+  ],
+  ja: [
+    '布団が吹っ飛んだ。',
+    '電話に出んわ。',
+    'ゼロが8に言いました。素敵なベルトだね！',
   ],
   // ── Piadas simples e universais (curadoria nativa a melhorar depois) ───────
   ar: [

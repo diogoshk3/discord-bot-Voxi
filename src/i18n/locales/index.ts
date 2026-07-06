@@ -28,6 +28,7 @@ import fr from './fr';
 import hu from './hu';
 import is from './is';
 import it from './it';
+import ja from './ja';
 import ka from './ka';
 import kk from './kk';
 import lb from './lb';
@@ -48,6 +49,6 @@ import vi from './vi';
 import zh from './zh';
 
 export const locales: Record<string, Record<string, string>> = {
-  ar, ca, cs, cy, da, de, el, es, fa, fi, fr, hu, is, it, ka, kk,
+  ar, ca, cs, cy, da, de, el, es, fa, fi, fr, hu, is, it, ja, ka, kk,
   lb, lv, ne, nl, pl, ro, ru, sk, sl, sr, sv, sw, tr, uk, vi, zh,
 };

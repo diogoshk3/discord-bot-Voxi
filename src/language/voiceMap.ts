@@ -72,6 +72,12 @@ const LANG_TO_PREFIX: Record<string, string> = {
   nob: 'no_',
   nno: 'no_',
   nor: 'no_',
+  // Japones. O Piper standard (rhasspy/piper-voices) NAO tem modelo ja_JP — so o
+  // gTTS (Google) fala japones bem. Mapeamos na mesma pelo MESMO padrao dormente do
+  // bloco cym/isl/ltz/nob acima: a rota fica correta e forward-compatible, e assim
+  // que um 'ja_*.onnx' aparecer em ./models os DOIS motores servem japones como
+  // qualquer outra voz. Hoje: o gTTS serve (ver a voz sintetica ja_JP em index.ts).
+  jpn: 'ja_',
 };
 
 /**
@@ -136,6 +142,7 @@ export const LOCALE_NAMES: Record<string, string> = {
   hu_HU: 'Magyar',
   is_IS: 'Íslenska',
   it_IT: 'Italiano',
+  ja_JP: '日本語',
   ka_GE: 'ქართული',
   kk_KZ: 'Қазақ тілі',
   lb_LU: 'Lëtzebuergesch',

@@ -107,6 +107,11 @@ describe('pickVoice', () => {
     expect(pickVoice('pol', ['pl_PL-mls-medium'], fallback)).toBe('pl_PL-mls-medium');
   });
 
+  // Japones: detecao 'jpn' -> voz sintetica ja_JP (so-gTTS, sem modelo Piper).
+  it('escolhe a voz japonesa para "jpn"', () => {
+    expect(pickVoice('jpn', ['ja_JP-google-medium', ...available], fallback)).toBe('ja_JP-google-medium');
+  });
+
   it('escolhe voz ucraniana para "ukr"', () => {
     expect(pickVoice('ukr', ['uk_UA-lada-x_low'], fallback)).toBe('uk_UA-lada-x_low');
   });

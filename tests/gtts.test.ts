@@ -29,6 +29,8 @@ describe('gttsLangOfModel — id de modelo Piper -> código tl do gTTS', () => {
     expect(gttsLangOfModel('es_ES-davefx-medium')).toBe('es');
     expect(gttsLangOfModel('fr_FR-siwis-medium')).toBe('fr');
     expect(gttsLangOfModel('ru_RU-denis-medium')).toBe('ru');
+    // Voz sintetica SO-gTTS do japones (sem modelo Piper): tem de mapear tl=ja.
+    expect(gttsLangOfModel('ja_JP-google-medium')).toBe('ja');
   });
 
   it('override do chinês (zh -> zh-CN) e fallback para inglês', () => {

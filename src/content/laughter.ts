@@ -68,6 +68,7 @@ const LAUGHTER: Record<string, Laugh> = {
   ka_: { unit: 'ჰა', count: 6 }, // 1.9s
   ne_: { unit: 'हा', count: 6 }, // 2.3s
   zh_: { unit: '哈哈', count: 5 }, // par espaçado evita a saturação do modelo -> 2.6s
+  ja_: { unit: 'ハ', count: 8 }, // katakana ハ (onomatopeia, lê sempre "ha"); gTTS-backed (sem .onnx) -> contagem estimada ~1.8s
 };
 
 /** "ha" x6: fallback razoável para prefixo desconhecido/vazio. */
