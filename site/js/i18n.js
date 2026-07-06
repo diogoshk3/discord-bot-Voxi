@@ -14,8 +14,8 @@ window.VOXI_I18N = {
     "hero.badge": "Core free forever · Open source",
     "hero.title1": "Type it.",
     "hero.title2": "Hear it.",
-    "hero.sub": "Voxi reads your Discord chat out loud with natural neural voices — in 34 languages, with games, laughter and a core that's free forever.",
-    "hero.mini": "34 languages · 38 voices · 13 minigames · free core",
+    "hero.sub": "Voxi reads your Discord chat out loud with natural neural voices — in 35 languages, with games, laughter and a core that's free forever.",
+    "hero.mini": "35 languages · 38 voices · 13 minigames · free core",
 
     "hear.eyebrow": "Hear it",
     "hear.title": "Press play. That's a real Voxi voice.",
@@ -33,7 +33,7 @@ window.VOXI_I18N = {
     "feat.1.t": "Auto-read channel",
     "feat.1.d": "Pick a channel and Voxi reads every message out loud. Set it up once with /setup.",
     "feat.2.t": "Your voice, your language",
-    "feat.2.d": "Every member picks their own voice from 34 languages — Google or a local neural engine.",
+    "feat.2.d": "Every member picks their own voice from 35 languages — Google or a local neural engine.",
     "feat.3.t": "Speaks like a human",
     "feat.3.d": "Detects the language of each message and even mixes voices inside a single sentence.",
     "feat.4.t": "13 voice minigames",
@@ -85,7 +85,7 @@ window.VOXI_I18N = {
     "price.free.name": "Free",
     "price.free.price": "€0",
     "price.free.per": "forever",
-    "price.free.1": "All 38 voices in 34 languages",
+    "price.free.1": "All 38 voices in 35 languages",
     "price.free.2": "Auto-read, 13 games, jokes & greetings",
     "price.free.3": "Robot & Echo voice effects",
     "price.free.4": "Every admin control & weekly leaderboard",
@@ -102,7 +102,7 @@ window.VOXI_I18N = {
     "faq.title": "Questions, answered",
 
     "finale.title": "Give your server a voice.",
-    "finale.note": "Core free forever · 34 languages · Set up in 30 seconds",
+    "finale.note": "Core free forever · 35 languages · Set up in 30 seconds",
 
     "foot.tag": "Type it, hear it.",
     "foot.product": "Product",
@@ -127,8 +127,8 @@ window.VOXI_I18N = {
     "hero.badge": "Essencial grátis para sempre · Open source",
     "hero.title1": "Escreve.",
     "hero.title2": "Ouve.",
-    "hero.sub": "O Voxi lê o teu chat do Discord em voz alta com vozes neurais naturais — em 34 línguas, com jogos, risos e um essencial grátis para sempre.",
-    "hero.mini": "34 línguas · 38 vozes · 13 minijogos · essencial grátis",
+    "hero.sub": "O Voxi lê o teu chat do Discord em voz alta com vozes neurais naturais — em 35 línguas, com jogos, risos e um essencial grátis para sempre.",
+    "hero.mini": "35 línguas · 38 vozes · 13 minijogos · essencial grátis",
 
     "hear.eyebrow": "Ouve",
     "hear.title": "Carrega em play. É mesmo a voz do Voxi.",
@@ -146,7 +146,7 @@ window.VOXI_I18N = {
     "feat.1.t": "Canal de leitura automática",
     "feat.1.d": "Escolhe um canal e o Voxi lê cada mensagem em voz alta. Configura uma vez com /setup.",
     "feat.2.t": "A tua voz, a tua língua",
-    "feat.2.d": "Cada membro escolhe a sua voz de 34 línguas — motor Google ou neural local.",
+    "feat.2.d": "Cada membro escolhe a sua voz de 35 línguas — motor Google ou neural local.",
     "feat.3.t": "Fala como um humano",
     "feat.3.d": "Deteta a língua de cada mensagem e até mistura vozes na mesma frase.",
     "feat.4.t": "13 minijogos de voz",
@@ -198,7 +198,7 @@ window.VOXI_I18N = {
     "price.free.name": "Free",
     "price.free.price": "€0",
     "price.free.per": "para sempre",
-    "price.free.1": "As 38 vozes em 34 línguas",
+    "price.free.1": "As 38 vozes em 35 línguas",
     "price.free.2": "Leitura automática, 13 jogos, piadas e saudações",
     "price.free.3": "Efeitos de voz Robot e Echo",
     "price.free.4": "Todos os controlos de admin e leaderboard semanal",
@@ -215,7 +215,7 @@ window.VOXI_I18N = {
     "faq.title": "Perguntas, respondidas",
 
     "finale.title": "Dá uma voz ao teu servidor.",
-    "finale.note": "Essencial grátis para sempre · 34 línguas · Configura em 30 segundos",
+    "finale.note": "Essencial grátis para sempre · 35 línguas · Configura em 30 segundos",
 
     "foot.tag": "Escreve, ouve.",
     "foot.product": "Produto",
@@ -288,7 +288,7 @@ window.VOXI_FAQ = [
   ],
   [
     { en: "Which languages does it support?", pt: "Que línguas suporta?" },
-    { en: "34 languages with 38 neural voices — Portuguese, English, Spanish, French, German, Japanese, Arabic, Russian and many more, each with a native voice.", pt: "34 línguas com 38 vozes neurais — português, inglês, espanhol, francês, alemão, japonês, árabe, russo e muitas mais, cada uma com voz nativa." },
+    { en: "35 languages with 38 neural voices — Portuguese, English, Spanish, French, German, Japanese, Arabic, Russian and many more, each with a native voice.", pt: "35 línguas com 38 vozes neurais — português, inglês, espanhol, francês, alemão, japonês, árabe, russo e muitas mais, cada uma com voz nativa." },
   ],
   [
     { en: "Do I need to configure anything?", pt: "Preciso de configurar alguma coisa?" },
