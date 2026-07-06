@@ -80,6 +80,11 @@ code { font-family: var(--f-mono); font-size: 0.9em; color: var(--aqua); }
 }
 .skip-link:focus { left: 12px; }
 
+/* Foco de teclado visível (a11y). Só para navegação por teclado — o :focus-visible
+   não dispara em cliques de rato, por isso não polui a UI de quem usa ponteiro. */
+:focus-visible { outline: 2px solid var(--aqua); outline-offset: 3px; border-radius: 6px; }
+:focus:not(:focus-visible) { outline: none; }
+
 /* ── atmosphere (cheap: no blur filters) ────────────────── */
 .grain {
   position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.05;

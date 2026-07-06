@@ -43,6 +43,25 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="css/main.css" />
+
+    <!-- FAQ structured data (Google rich results). Mantém em sincronia com
+         window.VOXI_FAQ (js/i18n.js) — o JSON-LD tem de ser ESTÁTICO porque os
+         crawlers não correm o JS que renderiza o FAQ. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        { "@type": "Question", "name": "Is Voxi really free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes — everything Voxi does today is free and stays free: all voices, all 13 games, greetings, admin tools. Voxi Premium (€4/month per server) only adds optional extras like the full voice-effect pack. Nothing you use ever moves behind a paywall." } },
+        { "@type": "Question", "name": "What does Premium include?", "acceptedAnswer": { "@type": "Answer", "text": "All 8 voice effects (deep, demon, radio, underwater…), with premium neural voices and 24/7 in-call mode on the way. €4/month or €40/year per server, or Voxi Plus (€1.99/month) for personal perks that follow you across servers. Redeem codes with /redeem." } },
+        { "@type": "Question", "name": "How do I add Voxi to my server?", "acceptedAnswer": { "@type": "Answer", "text": "Click \"Add to Discord\", pick your server (you need Manage Server), and run /setup. That's it." } },
+        { "@type": "Question", "name": "Which languages does it support?", "acceptedAnswer": { "@type": "Answer", "text": "34 languages with 38 neural voices — Portuguese, English, Spanish, French, German, Japanese, Arabic, Russian and many more, each with a native voice." } },
+        { "@type": "Question", "name": "Do I need to configure anything?", "acceptedAnswer": { "@type": "Answer", "text": "No. /setup does it in one step. After that, everything works with sensible defaults — you can fine-tune later with /config." } },
+        { "@type": "Question", "name": "Can everyone have a different voice?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Each member sets their own voice and language with /voice set, and Voxi can even detect the language of each message automatically." } },
+        { "@type": "Question", "name": "How do I turn features off?", "acceptedAnswer": { "@type": "Answer", "text": "Everything is toggleable via /config — the greeting, auto-read, who-said announcements, and more. There's also a full kill-switch." } }
+      ]
+    }
+    </script>
   </head>
   <body>
     <!-- grain overlay -->
