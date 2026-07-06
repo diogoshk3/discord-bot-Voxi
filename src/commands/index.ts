@@ -1296,6 +1296,15 @@ async function handleVoiceDetection(
   await reply(i, active ? t('voice.detection.on', locale) : t('voice.detection.off', locale));
 }
 
+// Utilizadores com uma gravação /voice clone record EM CURSO. BUG real descoberto
+// (auditoria): connection.receiver.subscribe(userId, ...) do @discordjs/voice devolve
+// SEMPRE o MESMO stream partilhado para um userId já subscrito — duas invocações
+// concorrentes do MESMO utilizador (duplo-toque, duas sessões) partilhavam o áudio e
+// corrompiam-se mutuamente (a primeira a terminar destruía o stream da segunda a meio).
+// Este guard bloqueia a 2.ª invocação com uma mensagem clara em vez de deixar as duas
+// gravações pisarem-se. Limpo SEMPRE no finally da 1.ª (sucesso, "curto demais" ou erro).
+const activeCloneRecordings = new Set<string>();
+
 /**
  * /voice clone record|use|status|delete — clone da PRÓPRIA voz, consent-first:
  *   - record: grava SÓ o áudio do invocador (receiver por-user) durante ~15s de fala;
@@ -1375,9 +1384,14 @@ async function handleVoiceClone(
     await reply(i, t('clone.notInVoice', locale));
     return;
   }
+  if (activeCloneRecordings.has(userId)) {
+    await reply(i, t('clone.alreadyRecording', locale));
+    return;
+  }
 
   await i.deferReply({ flags: MessageFlags.Ephemeral });
   const { channelId } = connection.joinConfig;
+  activeCloneRecordings.add(userId);
   try {
     // Botão "Parar já": para além do auto-stop (~15s de FALA ou 45s de relógio), a pessoa
     // termina quando quiser. custom_id inclui o userId — só o próprio pode carregar.
@@ -1439,6 +1453,7 @@ async function handleVoiceClone(
     } catch {
       // ligação pode ter morrido entretanto — inofensivo
     }
+    activeCloneRecordings.delete(userId);
   }
 }
 

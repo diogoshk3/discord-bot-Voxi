@@ -173,6 +173,10 @@ export const catalog: Record<string, Entry> = {
     en: 'You need to be in the voice channel **with me** to record. Use `/join` first.',
     pt: 'Tens de estar no canal de voz **comigo** para gravar. Usa `/join` primeiro.',
   },
+  'clone.alreadyRecording': {
+    en: "You're already recording a sample — finish it (or press **⏹️ Stop**) before starting another.",
+    pt: 'Já estás a gravar uma amostra — termina-a (ou carrega em **⏹️ Parar**) antes de começar outra.',
+  },
   'clone.recording': {
     en: "🎙️ **Recording your voice** — read anything aloud until it stops on its own (~15s of speech, pauses don't count), or press **⏹️ Stop** whenever you're done. I only keep YOUR audio.",
     pt: '🎙️ **A gravar a tua voz** — lê qualquer coisa em voz alta até parar sozinho (~15s de fala, as pausas não contam), ou carrega em **⏹️ Parar** quando quiseres. Só guardo o TEU áudio.',
