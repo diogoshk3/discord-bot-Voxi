@@ -36,6 +36,27 @@ describe('VoicedCollector', () => {
     c.push(v);
     expect(c.pcm()).toEqual(v);
   });
+
+  // Diagnóstico do gate de RMS: com o chão em 350, áudio de nível ~300 (fala fraca / mic com
+  // ganho baixo) é VISTO mas REJEITADO — é exatamente o cenário "gravei 15s, saiu 2s". O teste
+  // prova que framesSeen/framesVoiced/rmsStats distinguem "gate comeu" de "user falou pouco".
+  it('framesSeen conta tudo, framesVoiced só o que passa o gate; rmsStats reporta a distribuição', () => {
+    const amp = (level: number, ms: number): Buffer => {
+      const buf = Buffer.alloc(ms * BYTES_PER_MS);
+      for (let i = 0; i + 1 < buf.length; i += 2) buf.writeInt16LE(level, i);
+      return buf;
+    };
+    const c = new VoicedCollector(10_000, 350); // chão explícito = 350
+    c.push(amp(300, 20)); // abaixo do gate — visto mas não conta (fala fraca)
+    c.push(amp(300, 20));
+    c.push(amp(12000, 20)); // bem acima — conta
+    expect(c.framesSeen).toBe(3);
+    expect(c.framesVoiced).toBe(1);
+    const s = c.rmsStats();
+    expect(s.min).toBe(300);
+    expect(s.max).toBe(12000);
+    expect(s.median).toBeGreaterThanOrEqual(300);
+  });
 });
 
 // Fake "subscribe": devolve um Readable puro (sem _destroy próprio, como o
@@ -101,6 +122,24 @@ describe('recordUserSample — ronda nunca fica presa (regressão da propagaçã
 
     const result = await promise;
     expect(result.voicedMs).toBeGreaterThanOrEqual(100);
+  }, 5_000);
+
+  it('onProgress é notificado com os ms de fala acumulados enquanto grava', async () => {
+    const opus = fakeSubscribe();
+    const seen: number[] = [];
+    const promise = recordUserSample(
+      FAKE_CONNECTION,
+      'userP',
+      { targetVoicedMs: 200, maxWallMs: 10_000, onProgress: (ms) => seen.push(ms) },
+      { subscribe: () => opus, makeDecoder: fakePassthroughDecoder },
+    );
+    opus.push(voicedChunk(120));
+    opus.push(voicedChunk(120)); // passa o alvo de 200ms -> termina
+    const result = await promise;
+    expect(result.voicedMs).toBeGreaterThanOrEqual(200);
+    // Reportou progresso pelo menos uma vez e o último valor bate certo com o total.
+    expect(seen.length).toBeGreaterThan(0);
+    expect(seen[seen.length - 1]).toBe(result.voicedMs);
   }, 5_000);
 
   it('ronda totalmente silenciosa não fica presa — o guarda-tempo de ronda corta e tenta de novo', async () => {

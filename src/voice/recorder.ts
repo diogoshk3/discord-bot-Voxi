@@ -23,20 +23,36 @@ const BYTES_PER_MS = (48000 * 2 * 2) / 1000;
  * milissegundos falados. Pausas/respiração não contam — assim "15s de amostra" são
  * 15s de FALA, não de silêncio. PURA (alimentada com buffers), logo testável.
  */
+/** Chão de ruído (RMS int16) acima do qual um frame conta como FALA. ~350 ≈ −39 dBFS.
+ * NOTA: era 500 (~−36 dBFS); baixado como HIPÓTESE para a amostra de clone sair curta —
+ * fala normal (vogais fortes) passava, mas caudas de frase / consoantes suaves / mic com
+ * ganho baixo ficavam abaixo e não contavam. A prova está nos diagnósticos por-gravação
+ * (framesSeen vs framesVoiced + distribuição de RMS) que o recorder devolve. */
+const DEFAULT_RMS_THRESHOLD = 350;
+
 export class VoicedCollector {
   private chunks: Buffer[] = [];
   private voicedBytes = 0;
+  /** Diagnóstico: total de frames vistos e a distribuição de RMS (para confirmar se é o
+   *  gate a comer o áudio vs o utilizador simplesmente falar pouco). */
+  framesSeen = 0;
+  framesVoiced = 0;
+  private readonly rmsSamples: number[] = [];
 
   constructor(
     private readonly targetVoicedMs: number,
-    private readonly rmsThreshold: number = 500,
+    private readonly rmsThreshold: number = DEFAULT_RMS_THRESHOLD,
   ) {}
 
   /** Alimenta um frame PCM; devolve true quando o alvo foi atingido. */
   push(buf: Buffer): boolean {
-    if (this.isVoiced(buf)) {
+    this.framesSeen++;
+    const rms = this.rmsOf(buf);
+    this.rmsSamples.push(rms);
+    if (rms >= this.rmsThreshold) {
       this.chunks.push(buf);
       this.voicedBytes += buf.length;
+      this.framesVoiced++;
     }
     return this.done;
   }
@@ -53,21 +69,48 @@ export class VoicedCollector {
     return Buffer.concat(this.chunks);
   }
 
-  private isVoiced(buf: Buffer): boolean {
+  /** min/mediana/max do RMS dos frames vistos (0s se não viu nenhum). */
+  rmsStats(): { min: number; median: number; max: number } {
+    if (this.rmsSamples.length === 0) return { min: 0, median: 0, max: 0 };
+    const sorted = [...this.rmsSamples].sort((a, b) => a - b);
+    return {
+      min: Math.round(sorted[0]),
+      median: Math.round(sorted[Math.floor(sorted.length / 2)]),
+      max: Math.round(sorted[sorted.length - 1]),
+    };
+  }
+
+  get threshold(): number {
+    return this.rmsThreshold;
+  }
+
+  private rmsOf(buf: Buffer): number {
     const n = Math.floor(buf.length / 2);
-    if (n === 0) return false;
+    if (n === 0) return 0;
     let sum = 0;
     for (let i = 0; i < n; i++) {
       const s = buf.readInt16LE(i * 2);
       sum += s * s;
     }
-    return Math.sqrt(sum / n) >= this.rmsThreshold;
+    return Math.sqrt(sum / n);
   }
+}
+
+export interface RecordDiag {
+  framesSeen: number;
+  framesVoiced: number;
+  rmsMin: number;
+  rmsMedian: number;
+  rmsMax: number;
+  rounds: number;
+  threshold: number;
 }
 
 export interface RecordResult {
   pcm: Buffer;
   voicedMs: number;
+  /** Diagnóstico da gravação — quem chama regista-o para confirmar a causa de amostras curtas. */
+  diag: RecordDiag;
 }
 
 /** Dependências injetáveis (testes): como subscrever o SSRC e como construir o descodificador. */
@@ -102,6 +145,8 @@ export async function recordUserSample(
     shouldStop?: () => boolean;
     /** Guarda-tempo de ronda-sem-áudio-nenhum (testável; produção usa o default 5s). */
     roundSilenceMs?: number;
+    /** Notificado com os ms de FALA acumulados a cada frame vozeado (feedback ao vivo). */
+    onProgress?: (voicedMs: number) => void;
   } = {},
   deps: RecordDeps = {},
 ): Promise<RecordResult> {
@@ -109,12 +154,15 @@ export async function recordUserSample(
   const maxWallMs = opts.maxWallMs ?? 45_000;
   const shouldStop = opts.shouldStop ?? (() => false);
   const roundSilenceMs = opts.roundSilenceMs ?? 5_000;
+  const onProgress = opts.onProgress ?? ((): void => {});
   const subscribe = deps.subscribe ?? defaultSubscribe;
   const makeDecoder = deps.makeDecoder ?? defaultMakeDecoder;
   const collector = new VoicedCollector(targetVoicedMs);
   const deadline = Date.now() + maxWallMs;
+  let rounds = 0;
 
   while (!collector.done && Date.now() < deadline && !shouldStop()) {
+    rounds++;
     const gotAudio = await new Promise<boolean>((resolve) => {
       let received = false;
       const opus = subscribe(connection, userId);
@@ -140,7 +188,9 @@ export async function recordUserSample(
       opus.pipe(decoder);
       decoder.on('data', (chunk: Buffer) => {
         received = true;
-        if (collector.push(chunk)) stopBoth(); // alvo atingido -> fecha já
+        const done = collector.push(chunk);
+        onProgress(collector.voicedMs); // feedback ao vivo (o chamador faz throttle)
+        if (done) stopBoth(); // alvo atingido -> fecha já
       });
       const finish = (): void => {
         clearTimeout(roundTimer);
@@ -158,7 +208,20 @@ export async function recordUserSample(
     if (!gotAudio && !collector.done && !shouldStop()) await new Promise((r) => setTimeout(r, 400));
   }
 
-  return { pcm: collector.pcm(), voicedMs: collector.voicedMs };
+  const rms = collector.rmsStats();
+  return {
+    pcm: collector.pcm(),
+    voicedMs: collector.voicedMs,
+    diag: {
+      framesSeen: collector.framesSeen,
+      framesVoiced: collector.framesVoiced,
+      rmsMin: rms.min,
+      rmsMedian: rms.median,
+      rmsMax: rms.max,
+      rounds,
+      threshold: collector.threshold,
+    },
+  };
 }
 
 const FF_TIMEOUT_MS = 20_000;

@@ -381,11 +381,27 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
     .addSubcommandGroup((g) =>
       g
         .setName('clone')
-        .setDescription('Clone YOUR OWN voice (💎 Premium, consent-first)')
+        .setDescription('Clone a voice (💎 Premium, consent-first)')
         .addSubcommand((s) =>
           s
             .setName('record')
-            .setDescription('Record ~15s of YOUR voice in the call to build your clone'),
+            .setDescription('Record a voice in the call to build your clone (yours, or someone who agrees)')
+            .addUserOption((o) =>
+              o
+                .setName('user')
+                .setNameLocalizations({ 'pt-BR': 'pessoa' })
+                .setDescription('Whose voice to clone (empty = yourself). They must agree first.')
+                .setRequired(false),
+            )
+            .addIntegerOption((o) =>
+              o
+                .setName('seconds')
+                .setNameLocalizations({ 'pt-BR': 'segundos' })
+                .setDescription('Seconds of speech to capture (5–30, default 15)')
+                .setMinValue(5)
+                .setMaxValue(30)
+                .setRequired(false),
+            ),
         )
         .addSubcommand((s) =>
           s
@@ -1377,21 +1393,105 @@ async function handleVoiceClone(
   }
 
   // ── record ──
+  // Alvo escolhível: por defeito o próprio invocador (auto-clone, o caso consent-first
+  // trivial); se `user` for outra pessoa, gravamos a voz DELA — mas só com o consentimento
+  // explícito dela (botão), preservando a invariante "nunca gravar terceiros em silêncio".
+  const target = i.options.getUser('user') ?? i.user;
+  const targetId = target.id;
+  const isSelf = targetId === userId;
+  const who = `<@${targetId}>`;
+  // Duração escolhível: segundos de FALA real a apanhar (5–30, default 15). O relógio-teto
+  // e o mínimo aceitável derivam do alvo, para amostras curtas poderem funcionar.
+  const seconds = Math.min(30, Math.max(5, i.options.getInteger('seconds') ?? 15));
+  const targetVoicedMs = seconds * 1000;
+  const maxWallMs = Math.min(90_000, Math.max(30_000, targetVoicedMs * 3));
+  const minMs = Math.min(4_000, targetVoicedMs);
+
   const connection = getVoiceConnection(i.guildId!);
   const botChannelId = i.guild?.members.me?.voice?.channelId ?? null;
-  const userChannelId = i.guild?.members.cache.get(userId)?.voice?.channelId ?? null;
-  if (!connection || !botChannelId || userChannelId !== botChannelId) {
-    await reply(i, t('clone.notInVoice', locale));
+  await i.deferReply({ flags: MessageFlags.Ephemeral });
+  // A presença do ALVO no canal do bot é o que importa (é a voz dele que gravamos).
+  const targetMember = await i.guild?.members.fetch(targetId).catch(() => null);
+  const targetChannelId = targetMember?.voice?.channelId ?? null;
+  if (!connection || !botChannelId) {
+    await i.editReply({ content: t('clone.notInVoice', locale) });
     return;
   }
-  if (activeCloneRecordings.has(userId)) {
-    await reply(i, t('clone.alreadyRecording', locale));
+  if (targetChannelId !== botChannelId) {
+    await i.editReply({
+      content: isSelf ? t('clone.notInVoice', locale) : t('clone.targetNotInVoice', locale, { who }),
+    });
     return;
+  }
+  if (activeCloneRecordings.has(targetId)) {
+    await i.editReply({ content: t('clone.alreadyRecording', locale) });
+    return;
+  }
+  // Reserva o alvo JÁ (antes da janela de consentimento de 60s), senão duas pessoas a
+  // apontar à mesma vítima passavam ambas o has() e disparavam dois pedidos. Libertado em
+  // TODAS as saídas: nos returns antecipados do consentimento e no finally da gravação.
+  activeCloneRecordings.add(targetId);
+
+  const { channelId } = connection.joinConfig;
+
+  // CONSENTIMENTO (só quando o alvo não é o próprio): pede o OK explícito ao alvo com um
+  // botão numa mensagem pública (que também o notifica). Sem "sim" dele, não se grava nada.
+  if (!isSelf) {
+    const ch = i.channel;
+    if (!ch || !ch.isTextBased() || ch.isDMBased()) {
+      activeCloneRecordings.delete(targetId);
+      await i.editReply({ content: t('clone.failed', locale) });
+      return;
+    }
+    // O alvo lê isto — usa o locale da guild (neutro), não o do invocador.
+    const gLocale = localeFor(deps, i.guildId);
+    const consentRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`cloneok:${targetId}`)
+        .setLabel(t('clone.consentAllow', gLocale))
+        .setStyle(ButtonStyle.Success)
+        .setEmoji('✅'),
+      new ButtonBuilder()
+        .setCustomId(`cloneno:${targetId}`)
+        .setLabel(t('clone.consentDeny', gLocale))
+        .setStyle(ButtonStyle.Secondary)
+        .setEmoji('✖️'),
+    );
+    await i.editReply({ content: t('clone.consentWaiting', locale, { who }) });
+    const consentMsg = await ch.send({
+      content: t('clone.consentRequest', gLocale, { invoker: `<@${userId}>`, target: seconds }),
+      components: [consentRow],
+    });
+    const granted = await new Promise<boolean>((resolve) => {
+      const col = consentMsg.createMessageComponentCollector({
+        componentType: ComponentType.Button,
+        time: 60_000,
+      });
+      col.on('collect', (btn) => {
+        if (btn.user.id !== targetId) {
+          void btn.reply({ content: t('clone.consentNotYou', gLocale), flags: MessageFlags.Ephemeral });
+          return;
+        }
+        const ok = btn.customId.startsWith('cloneok:');
+        void btn.update({
+          content: t(ok ? 'clone.consentGranted' : 'clone.consentRefused', gLocale, { who }),
+          components: [],
+        });
+        resolve(ok);
+        col.stop('answered');
+      });
+      col.on('end', (_c, reason) => {
+        if (reason !== 'answered') resolve(false);
+      });
+    });
+    if (!granted) {
+      activeCloneRecordings.delete(targetId);
+      await i.editReply({ content: t('clone.consentRefused', locale, { who }) }).catch(() => {});
+      await consentMsg.edit({ components: [] }).catch(() => {}); // limpa botões se foi timeout
+      return;
+    }
   }
 
-  await i.deferReply({ flags: MessageFlags.Ephemeral });
-  const { channelId } = connection.joinConfig;
-  activeCloneRecordings.add(userId);
   // Handle mínimo (só o .stop() que o finally precisa) guardado FORA do try, para o
   // finally poder parar o collector em QUALQUER saída — incluindo se recordUserSample
   // lançar antes do collector.stop('done') normal. .stop() é idempotente (chamar de novo
@@ -1400,27 +1500,32 @@ async function handleVoiceClone(
   // bem para o Button específico usado aqui) — mesmo padrão do `ChildLike` em piperPool.ts.
   let collectorHandle: { stop(reason?: string): void } | undefined;
   try {
-    // Botão "Parar já": para além do auto-stop (~15s de FALA ou 45s de relógio), a pessoa
-    // termina quando quiser. custom_id inclui o userId — só o próprio pode carregar.
+    // Botão "Parar já": para além do auto-stop (alvo de FALA ou relógio-teto), tanto o
+    // invocador como o alvo podem terminar quando quiserem.
     const stopBtn = new ButtonBuilder()
-      .setCustomId(`clonestop:${userId}`)
+      .setCustomId(`clonestop:${targetId}`)
       .setLabel(t('clone.stopBtn', locale))
       .setStyle(ButtonStyle.Danger)
       .setEmoji('⏹️');
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(stopBtn);
-    // Destapa os ouvidos SÓ para esta janela (selfDeaf false), gravando apenas o invocador.
+    // Destapa os ouvidos SÓ para esta janela (selfDeaf false), gravando apenas o alvo.
     connection.rejoin({ channelId, selfDeaf: false, selfMute: false });
-    const msg = await i.editReply({ content: t('clone.recording', locale), components: [row] });
+    const msg = await i.editReply({
+      content: isSelf
+        ? t('clone.recording', locale, { target: seconds })
+        : t('clone.recordingOther', locale, { who, target: seconds }),
+      components: [row],
+    });
 
     // Sinal de paragem manual: o coletor de botões liga-o; o recorder faz poll dele.
     let stopped = false;
     const collector = msg.createMessageComponentCollector({
       componentType: ComponentType.Button,
-      time: 60_000,
+      time: maxWallMs + 5_000,
     });
     collectorHandle = collector;
     collector.on('collect', (btn) => {
-      if (btn.user.id !== userId) {
+      if (btn.user.id !== userId && btn.user.id !== targetId) {
         void btn.reply({ content: t('clone.stopNotYours', locale), flags: MessageFlags.Ephemeral });
         return;
       }
@@ -1429,15 +1534,50 @@ async function handleVoiceClone(
       collector.stop('user');
     });
 
-    const { pcm, voicedMs } = await recordUserSample(connection, userId, { shouldStop: () => stopped });
+    // Feedback ao vivo com throttle (~2.5s) — ajuda quem grava a saber que precisa de
+    // continuar a falar até ao alvo (a causa nº1 de amostras curtas de mais).
+    let lastEdit = Date.now();
+    const { pcm, voicedMs, diag } = await recordUserSample(connection, targetId, {
+      targetVoicedMs,
+      maxWallMs,
+      shouldStop: () => stopped,
+      onProgress: (ms) => {
+        const now = Date.now();
+        if (now - lastEdit < 2_500) return;
+        lastEdit = now;
+        void i
+          .editReply({
+            content: t('clone.recordingProgress', locale, { got: Math.round(ms / 1000), target: seconds }),
+            components: [row],
+          })
+          .catch(() => {});
+      },
+    });
     collector.stop('done');
-    if (voicedMs < 5_000) {
-      await i.editReply({ content: t('clone.tooShort', locale, { seconds: Math.round(voicedMs / 1000) }), components: [] });
+    // DIAGNÓSTICO da causa de amostras curtas (evidência real > teoria): se framesSeen for
+    // alto mas framesVoiced baixo, é o gate de RMS a comer o áudio (não o user a falar pouco).
+    // rmsMedian vs threshold diz logo se o chão está mal calibrado para este mic/canal.
+    log.info(
+      `[clone] diag user=${userId} target=${targetId} voicedMs=${voicedMs} ` +
+        `framesSeen=${diag.framesSeen} framesVoiced=${diag.framesVoiced} ` +
+        `rms[min/med/max]=${diag.rmsMin}/${diag.rmsMedian}/${diag.rmsMax} ` +
+        `threshold=${diag.threshold} rounds=${diag.rounds}`,
+    );
+    if (voicedMs < minMs) {
+      await i.editReply({
+        content: t('clone.tooShort', locale, {
+          seconds: Math.round(voicedMs / 1000),
+          min: Math.round(minMs / 1000),
+          target: seconds,
+        }),
+        components: [],
+      });
       return;
     }
     // Ficheiro VERSIONADO por timestamp: uma re-gravação é um path novo -> chave de cache
     // nova (cacheKey inclui o basename do ref) -> não se ouve a voz velha. Apaga a amostra
-    // anterior a seguir (o ficheiro antigo deixa de ser referenciado).
+    // anterior a seguir (o ficheiro antigo deixa de ser referenciado). O clone é SEMPRE do
+    // invocador (é ele que vai falar com esta voz), mesmo quando gravou a voz de outra pessoa.
     const stamp = Date.now();
     const prev = getClone(deps.db, userId);
     const outPath = join(dirname(deps.config.dbPath), 'voice-clones', `${userId}-${stamp}.wav`);
@@ -1450,7 +1590,12 @@ async function handleVoiceClone(
         // ficheiro antigo já removido — inofensivo
       }
     }
-    await i.editReply({ content: t('clone.saved', locale, { seconds: Math.round(voicedMs / 1000) }), components: [] });
+    await i.editReply({
+      content: isSelf
+        ? t('clone.saved', locale, { seconds: Math.round(voicedMs / 1000) })
+        : t('clone.savedOther', locale, { seconds: Math.round(voicedMs / 1000), who }),
+      components: [],
+    });
   } catch (err) {
     log.error('[clone] gravação falhou:', err);
     await i.editReply({ content: t('clone.failed', locale), components: [] }).catch(() => {});
@@ -1462,7 +1607,7 @@ async function handleVoiceClone(
     } catch {
       // ligação pode ter morrido entretanto — inofensivo
     }
-    activeCloneRecordings.delete(userId);
+    activeCloneRecordings.delete(targetId);
   }
 }
 

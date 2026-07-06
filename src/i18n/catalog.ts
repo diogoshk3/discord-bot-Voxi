@@ -178,8 +178,46 @@ export const catalog: Record<string, Entry> = {
     pt: 'Já estás a gravar uma amostra — termina-a (ou carrega em **⏹️ Parar**) antes de começar outra.',
   },
   'clone.recording': {
-    en: "🎙️ **Recording your voice** — read anything aloud until it stops on its own (~15s of speech, pauses don't count), or press **⏹️ Stop** whenever you're done. I only keep YOUR audio.",
-    pt: '🎙️ **A gravar a tua voz** — lê qualquer coisa em voz alta até parar sozinho (~15s de fala, as pausas não contam), ou carrega em **⏹️ Parar** quando quiseres. Só guardo o TEU áudio.',
+    en: "🎙️ **Recording your voice** — keep talking until it stops on its own (~{target}s of speech, pauses don't count), or press **⏹️ Stop** whenever you're done. I only keep YOUR audio.",
+    pt: '🎙️ **A gravar a tua voz** — continua a falar até parar sozinho (~{target}s de fala, as pausas não contam), ou carrega em **⏹️ Parar** quando quiseres. Só guardo o TEU áudio.',
+  },
+  'clone.recordingOther': {
+    en: '🎙️ **Recording {who}** — they should keep talking until it stops on its own (~{target}s of speech, pauses don\'t count), or press **⏹️ Stop** to finish.',
+    pt: '🎙️ **A gravar {who}** — deve continuar a falar até parar sozinho (~{target}s de fala, as pausas não contam), ou carrega em **⏹️ Parar** para terminar.',
+  },
+  'clone.recordingProgress': {
+    en: '🔴 Recording… **{got}s / {target}s** of speech captured. Keep going!',
+    pt: '🔴 A gravar… **{got}s / {target}s** de fala apanhados. Continua!',
+  },
+  'clone.consentRequest': {
+    en: '🎙️ {invoker} wants to record **your voice** ({target}s of speech) to build a voice clone they can speak with. Do you allow it? *(expires in 60s)*',
+    pt: '🎙️ {invoker} quer gravar **a tua voz** ({target}s de fala) para criar um clone de voz com que possa falar. Permites? *(expira em 60s)*',
+  },
+  'clone.consentAllow': { en: 'Allow', pt: 'Permitir' },
+  'clone.consentDeny': { en: 'No', pt: 'Não' },
+  'clone.consentNotYou': {
+    en: 'Only the person being recorded can answer this.',
+    pt: 'Só a pessoa a ser gravada pode responder a isto.',
+  },
+  'clone.consentGranted': {
+    en: '✅ {who} agreed — starting the recording.',
+    pt: '✅ {who} aceitou — a começar a gravação.',
+  },
+  'clone.consentRefused': {
+    en: '✖️ {who} declined. Recording cancelled — no audio was captured.',
+    pt: '✖️ {who} recusou. Gravação cancelada — nenhum áudio foi apanhado.',
+  },
+  'clone.consentTimeout': {
+    en: "⌛ {who} didn't answer in time. Recording cancelled.",
+    pt: '⌛ {who} não respondeu a tempo. Gravação cancelada.',
+  },
+  'clone.consentWaiting': {
+    en: '⏳ Waiting for {who} to accept in the channel…',
+    pt: '⏳ À espera que {who} aceite no canal…',
+  },
+  'clone.targetNotInVoice': {
+    en: '{who} needs to be in the voice channel **with me** to be recorded. Ask them to `/join` first.',
+    pt: '{who} tem de estar no canal de voz **comigo** para ser gravado. Pede-lhe para usar `/join` primeiro.',
   },
   'clone.stopBtn': {
     en: 'Stop',
@@ -190,12 +228,16 @@ export const catalog: Record<string, Entry> = {
     pt: 'Só quem está a gravar pode parar.',
   },
   'clone.tooShort': {
-    en: 'I only caught {seconds}s of speech — I need ~15s to clone well. Try again with `/voice clone record`.',
-    pt: 'Só apanhei {seconds}s de fala — preciso de ~15s para clonar bem. Tenta outra vez com `/voice clone record`.',
+    en: 'I only caught {seconds}s of speech — I need at least ~{min}s (target was {target}s) to clone well. Try again with `/voice clone record`.',
+    pt: 'Só apanhei {seconds}s de fala — preciso de pelo menos ~{min}s (o alvo era {target}s) para clonar bem. Tenta outra vez com `/voice clone record`.',
   },
   'clone.saved': {
     en: '✅ Voice sample saved ({seconds}s of speech). Turn it on with `/voice clone use active:true`. Only YOU can use your clone; delete it anytime with `/voice clone delete`.',
     pt: '✅ Amostra de voz guardada ({seconds}s de fala). Liga com `/voice clone use active:true`. Só TU podes usar o teu clone; apaga-o quando quiseres com `/voice clone delete`.',
+  },
+  'clone.savedOther': {
+    en: "✅ Saved {seconds}s of {who}'s voice as YOUR clone. Turn it on with `/voice clone use active:true`; delete it anytime with `/voice clone delete`.",
+    pt: '✅ Guardados {seconds}s da voz de {who} como o TEU clone. Liga com `/voice clone use active:true`; apaga quando quiseres com `/voice clone delete`.',
   },
   'clone.failed': {
     en: 'The recording failed — try again. If it keeps happening, rejoin the voice channel.',
