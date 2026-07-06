@@ -10,6 +10,7 @@ import {
   entersState,
 } from '@discordjs/voice';
 import type { TTSEngine, SynthRequest } from '../tts/engine';
+import { emphasisGain } from '../tts/emphasis';
 import { PlayQueue } from './queue';
 import { log } from '../logging/logger';
 import { metrics } from '../metrics';
@@ -239,9 +240,16 @@ export class GuildVoicePlayer {
     // reiniciar) e rejeitava o `void playNext()` do call-site (unhandledRejection).
     // Tratamento idêntico ao erro de síntese: salta o item e continua a fila.
     try {
+      // ÊNFASE: "mais alto quando há ! ou MAIÚSCULAS". Ganho calculado do texto
+      // ORIGINAL (req.text ainda tem as maiúsculas; o deCapsForGoogle só baixa dentro
+      // do gTTS). inlineVolume só quando há ganho, para não pagar o VolumeTransformer
+      // na esmagadora maioria das falas (ganho 1.0 = sem transformer, caminho normal).
+      const gain = emphasisGain(next.req.text);
       const resource = createAudioResource(audioPath, {
         inputType: StreamType.Arbitrary,
+        inlineVolume: gain !== 1,
       });
+      if (gain !== 1) resource.volume?.setVolume(gain);
       this.current = resource;
       // play() PRIMEIRO: se lançar sincronamente (transcoder/prism a falhar), o catch
       // conta synthErrors — e NÃO queremos contar essa mensagem como "falada". Por isso

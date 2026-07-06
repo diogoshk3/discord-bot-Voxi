@@ -306,6 +306,11 @@ export const catalog: Record<string, Entry> = {
     en: "✅ Per-language detection is **off** (default) — one single voice reads everything, in every language. Pick it with `/voice set`.",
     pt: '✅ Deteção por-língua **desligada** (padrão) — uma só voz lê tudo, em qualquer língua. Escolhe-a com `/voice set`.',
   },
+  // Confirma a troca de MOTOR feita a partir do /voice detection (mesmo motor do /voice set).
+  'voice.detection.engine': {
+    en: '🔧 Voice engine set to **{engine}**. Tip: Piper often sounds better in some languages.',
+    pt: '🔧 Motor de voz definido para **{engine}**. Dica: o Piper costuma soar melhor nalgumas línguas.',
+  },
   'voice.notInVoice': {
     en: "I'm not in a voice channel yet — run /join first.",
     pt: 'Ainda nao estou num canal de voz — usa /join primeiro.',

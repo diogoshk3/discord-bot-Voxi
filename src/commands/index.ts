@@ -356,6 +356,17 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
             .setNameLocalizations({ 'pt-BR': 'ativo' })
             .setDescription('On = native voice per language; Off (default) = your one fixed voice for everything')
             .setRequired(true),
+        )
+        .addStringOption((o) =>
+          o
+            .setName('engine')
+            .setNameLocalizations({ 'pt-BR': 'motor' })
+            .setDescription('Voice engine: Google (default) or Piper — Piper often sounds better in some languages')
+            .setRequired(false)
+            .addChoices(
+              { name: 'Google (default)', value: 'google' },
+              { name: 'Piper', value: 'piper' },
+            ),
         ),
     )
     .addSubcommand((s) =>
@@ -1343,7 +1354,24 @@ async function handleVoiceDetection(
 ): Promise<void> {
   const active = i.options.getBoolean('active', true);
   setDetection(deps.db, i.guildId!, i.user.id, active);
-  await reply(i, active ? t('voice.detection.on', locale) : t('voice.detection.off', locale));
+  let msg = active ? t('voice.detection.on', locale) : t('voice.detection.off', locale);
+  // MOTOR opcional aqui também (o utilizador pediu-o neste comando): escreve no MESMO
+  // sítio que o /voice set (user_voice.engine), preservando a voz e a velocidade atuais.
+  // Omitido => não mexe no motor. Piper costuma soar melhor nalgumas línguas (ex. PT).
+  const engineOpt = i.options.getString('engine') as 'google' | 'piper' | null;
+  if (engineOpt) {
+    const cur = getUserVoice(deps.db, i.guildId!, i.user.id);
+    setUserVoice(
+      deps.db,
+      i.guildId!,
+      i.user.id,
+      cur?.model ?? deps.config.defaultVoice,
+      cur?.speed ?? deps.config.defaultSpeed,
+      engineOpt,
+    );
+    msg += '\n' + t('voice.detection.engine', locale, { engine: engineOpt === 'piper' ? 'Piper' : 'Google' });
+  }
+  await reply(i, msg);
 }
 
 // Utilizadores com uma gravação /voice clone record EM CURSO. BUG real descoberto
