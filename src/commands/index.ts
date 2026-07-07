@@ -2318,15 +2318,19 @@ async function handleGame(i: ChatInputCommandInteraction, deps: BotDeps): Promis
   const sub = i.options.getSubcommand();
 
   if (sub === 'play') {
+    // Ack IMEDIATO: criar a thread é uma chamada REST que num gateway lento estoira
+    // os 3s do token da interação (10062 Unknown interaction) com o jogo JÁ criado.
+    // deferReply compra 15 min; TODAS as respostas deste ramo passam a editReply.
+    await i.deferReply({ flags: MessageFlags.Ephemeral });
     const gameId = i.options.getString('game', true);
     const def = gameById(gameId);
     if (!def) {
-      await reply(i, t('game.unknownGame', locale));
+      await i.editReply(t('game.unknownGame', locale));
       return;
     }
     // Jogos de voz exigem o bot numa call (como o /tts): sem player, nada a anunciar.
     if (def.needsVoice && !getPlayer(deps, i.guildId!)) {
-      await reply(i, t('game.start.needVoice', locale));
+      await i.editReply(t('game.start.needVoice', locale));
       return;
     }
     // Jogos 💎 Premium (ex. xadrez): Plus do próprio OU Premium do servidor, mesmo
@@ -2335,7 +2339,7 @@ async function handleGame(i: ChatInputCommandInteraction, deps: BotDeps): Promis
       const now = Date.now();
       const premium = isUserPremium(deps.db, i.user.id, now) || isGuildPremium(deps.db, i.guildId!, now);
       if (!premium) {
-        await reply(i, t('game.start.premiumLocked', locale, { game: t(def.nameKey, locale) }));
+        await i.editReply(t('game.start.premiumLocked', locale, { game: t(def.nameKey, locale) }));
         return;
       }
     }
@@ -2344,7 +2348,7 @@ async function handleGame(i: ChatInputCommandInteraction, deps: BotDeps): Promis
     // se a perdermos, apagamos a thread órfã abaixo.
     if (deps.games.active(i.guildId!)) {
       const ch = deps.games.channelOf(i.guildId!) ?? i.channelId;
-      await reply(i, t('game.start.alreadyActive', locale, { channel: ch }));
+      await i.editReply(t('game.start.alreadyActive', locale, { channel: ch }));
       return;
     }
     // Servidores grandes afogam o canal com as mensagens do jogo — corremo-lo numa
@@ -2372,11 +2376,10 @@ async function handleGame(i: ChatInputCommandInteraction, deps: BotDeps): Promis
       // Perdemos a race após o active() acima — limpa a thread que acabámos de criar.
       if (threadId) void deleteChannelSafe(i.client, threadId);
       const ch = deps.games.channelOf(i.guildId!) ?? i.channelId;
-      await reply(i, t('game.start.alreadyActive', locale, { channel: ch }));
+      await i.editReply(t('game.start.alreadyActive', locale, { channel: ch }));
       return;
     }
-    await reply(
-      i,
+    await i.editReply(
       threadId
         ? t('game.start.startedThread', locale, { game: gameName, channel: threadId })
         : t('game.start.started', locale, { game: gameName }),
