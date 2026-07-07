@@ -6,11 +6,54 @@
 // threads, canal já apagado) devolve o fallback (null / arquivar), nunca lança — mas
 // LOGA sempre o desfecho, para uma falha de permissões não passar despercebida.
 
-import { ChannelType, type Client } from 'discord.js';
+import { ChannelType, PermissionFlagsBits, type Client } from 'discord.js';
 import { log } from '../logging/logger';
 
 /** Duração de auto-arquivo (min) — rede de segurança se o apagar E o arquivar falharem. */
 const AUTO_ARCHIVE_MIN = 60;
+
+/**
+ * Diagnóstico da permissão de apagar ANTES de tentar: distingue as duas causas do
+ * "Missing Permissions", que se resolvem de formas OPOSTAS, e escreve no log a que se
+ * aplica (senão anda-se às cegas a re-convidar quando o problema é do canal, ou vice-versa):
+ *  - falta a nível do SERVIDOR  → o re-convite não pegou (link antigo?) → usar o /invite atual;
+ *  - tem no servidor mas o CANAL-pai remove-a por exceção → ligar "Gerir Tópicos" ao role
+ *    Vozen nas permissões DESSE canal.
+ * Best-effort e puramente informativo — nunca altera o fluxo nem lança.
+ */
+function diagnoseThreadDelete(ch: unknown, channelId: string): void {
+  try {
+    const thread = ch as {
+      parentId?: string;
+      guild?: { members?: { me?: unknown } };
+      parent?: { permissionsFor?: (m: unknown) => { has?: (p: bigint) => boolean } | null };
+    };
+    const me = thread.guild?.members?.me as
+      | { permissions?: { has?: (p: bigint) => boolean } }
+      | undefined;
+    if (!me) return; // sem o membro-bot em cache não há o que comparar
+    const guildHas = me.permissions?.has?.(PermissionFlagsBits.ManageThreads) ?? false;
+    // Permissão EFETIVA no canal-pai (já com as exceções aplicadas); se o pai não está em
+    // cache cai para o valor do servidor (não conseguimos afirmar exceção nesse caso).
+    const chanPerms = thread.parent?.permissionsFor?.(me);
+    const chanHas = chanPerms?.has?.(PermissionFlagsBits.ManageThreads) ?? guildHas;
+    if (chanHas) return; // deve conseguir apagar — nada a assinalar
+    if (!guildHas) {
+      log.warn(
+        `[game] diagnóstico: o Vozen NÃO tem "Gerir Tópicos" ao nível do servidor — o ` +
+          `re-convite não aplicou (link antigo?). Corre /invite no Discord e usa ESSE link.`,
+      );
+    } else {
+      log.warn(
+        `[game] diagnóstico: o Vozen tem "Gerir Tópicos" no servidor, mas o canal-pai ` +
+          `(${thread.parentId ?? '?'}) tem uma exceção que a remove — nas permissões DESSE ` +
+          `canal, adiciona o role Vozen com "Gerir Tópicos" ligado.`,
+      );
+    }
+  } catch {
+    // diagnóstico é só uma ajuda — se algo faltar, seguimos para a tentativa real
+  }
+}
 
 /**
  * Cria uma thread pública a partir de `channel` (o canal onde o /game play foi dado).
@@ -56,6 +99,8 @@ export async function deleteChannelSafe(client: Client, channelId: string): Prom
     log.warn(`[game] thread ${channelId} não encontrada para apagar (já removida?).`);
     return;
   }
+  // Antes de tentar, diz no log se (e onde) falta a permissão de apagar.
+  diagnoseThreadDelete(ch, channelId);
   const c = ch as {
     delete?: (reason?: string) => Promise<unknown>;
     setArchived?: (archived?: boolean, reason?: string) => Promise<unknown>;
