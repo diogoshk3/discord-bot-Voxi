@@ -21,7 +21,7 @@ const AUTO_ARCHIVE_MIN = 60;
  *    Vozen nas permissões DESSE canal.
  * Best-effort e puramente informativo — nunca altera o fluxo nem lança.
  */
-function diagnoseThreadDelete(ch: unknown, channelId: string): void {
+function diagnoseThreadDelete(ch: unknown, _channelId: string): void {
   try {
     const thread = ch as {
       parentId?: string;

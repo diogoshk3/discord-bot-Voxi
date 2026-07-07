@@ -11,7 +11,7 @@
 // Binario: github.com/rhasspy/piper/releases · modelos: huggingface.co/rhasspy/piper-voices
 
 import { spawn } from 'node:child_process';
-import { mkdirSync, writeFileSync, readFileSync, rmSync, existsSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';

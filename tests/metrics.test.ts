@@ -10,7 +10,7 @@ vi.mock('@discordjs/voice', async () => {
   const { EventEmitter: EE } = await import('node:events');
   const IDLE = 'idle';
   class FakeAudioPlayer extends EE {
-    play(resource: { path: string }): void {
+    play(_resource: { path: string }): void {
       setTimeout(() => this.emit(IDLE), 0);
     }
     stop(): void {
@@ -40,7 +40,6 @@ import type { TTSEngine, SynthRequest } from '../src/tts/engine';
 import { GuildVoicePlayer } from '../src/voice/player';
 import { handleInteraction } from '../src/commands/index';
 import type { BotDeps } from '../src/bot/deps';
-import { MessageFlags } from 'discord.js';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 

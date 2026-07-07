@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { PermissionFlagsBits, ChannelType } from 'discord.js';
+import { ChannelType } from 'discord.js';
 
 // Mock minimo de @discordjs/voice — nao e usado no /config, mas o import resolve-o.
 vi.mock('@discordjs/voice', () => ({
@@ -10,7 +10,7 @@ vi.mock('@discordjs/voice', () => ({
 import { handleInteraction } from '../src/commands/index';
 import type { BotDeps } from '../src/bot/deps';
 import { initDb } from '../src/store/db';
-import { getGuildConfig, setGuildConfig, resetGuildConfig } from '../src/store/guildConfig';
+import { getGuildConfig, setGuildConfig } from '../src/store/guildConfig';
 import { getBlocklist, addBlockword } from '../src/store/blocklist';
 import { getPronunciations, addPronunciation } from '../src/store/pronunciation';
 import type Database from 'better-sqlite3';

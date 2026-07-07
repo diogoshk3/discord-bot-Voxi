@@ -20,11 +20,10 @@ import {
   type RESTPostAPIApplicationCommandsJSONBody,
 } from 'discord.js';
 import { metrics } from '../metrics';
-import { joinVoiceChannel, getVoiceConnection } from '@discordjs/voice';
+import { getVoiceConnection } from '@discordjs/voice';
 import type { BotDeps } from '../bot/deps';
 import { getPlayer, removePlayer, getLimiter } from '../bot/deps';
 import { brandEmbed, rankMedal } from '../ui/theme';
-import { GuildVoicePlayer } from '../voice/player';
 import { createVoiceSession, becomeSpeakerIfStage } from '../voice/session';
 import { getUserVoice, setUserVoice, resetUserVoice } from '../store/userVoice';
 import { getGuildConfig, setGuildConfig, resetGuildConfig } from '../store/guildConfig';

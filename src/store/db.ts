@@ -252,6 +252,8 @@ export function initDb(path: string): Database.Database {
     }
     // Mensagem clara em vez de stack trace cru (caminho invalido/sem permissoes,
     // ou ficheiro existente que nao e uma base de dados SQLite valida).
-    throw new Error(`Falha ao abrir a base de dados em ${path}: ${(err as Error).message}`);
+    throw new Error(`Falha ao abrir a base de dados em ${path}: ${(err as Error).message}`, {
+      cause: err,
+    });
   }
 }

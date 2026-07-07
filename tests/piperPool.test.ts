@@ -4,7 +4,7 @@
 // real do piper `--json-input`: cada synth() escreve UMA linha JSON no stdin; o
 // piper imprime o output_file terminado no STDOUT, uma linha por utterance, em
 // ordem FIFO estrita. Essa linha de stdout E o sinal de conclusao.
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { EventEmitter } from 'node:events';
 import { PiperProcess, PiperPool, type ChildLike } from '../src/tts/piperPool';
 

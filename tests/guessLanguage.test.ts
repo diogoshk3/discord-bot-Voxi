@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { GameManager } from '../src/games/manager';
 import type { Clock, GameEnv, TimerHandle } from '../src/games/types';
 import {
