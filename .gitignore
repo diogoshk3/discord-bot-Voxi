@@ -12,6 +12,11 @@ tools/clone-venv/
 tools/_smoke_*
 voice-clones/
 
+# Sidecar TTS Kokoro (venv Python local + modelo/vozes ~340MB) — descarregados por setup-kokoro.ps1
+tools/kokoro-venv/
+tools/kokoro-v1.0.onnx
+tools/voices-v1.0.bin
+
 # Logs de produção (supervisor start-prod.mjs) + estado do registo de comandos
 logs/
 commands-state.json
