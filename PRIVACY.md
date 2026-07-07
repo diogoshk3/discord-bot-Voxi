@@ -2,7 +2,7 @@
 
 > _type it, hear it._
 
-**Última atualização:** 2026-07-04
+**Última atualização:** 2026-07-07
 
 O Vozen é um bot de Text-to-Speech (TTS) para Discord, **open-source** e **self-host**: cada operador corre a sua própria instância no seu próprio computador ou servidor (VPS). Esta política descreve **fielmente** que dados a instância guarda, onde, e como removê-los.
 
@@ -16,13 +16,22 @@ O Vozen guarda os dados abaixo numa base de dados local **SQLite** (por defeito 
 
 | Dado | Tabela | Colunas guardadas | A que se refere |
 |---|---|---|---|
-| **Preferência de voz por utilizador** | `user_voice` | `guild_id`, `user_id`, `voice_model`, `speed` | A voz (modelo) e a velocidade que um utilizador fixou para si num servidor (`/voice set`). |
-| **Configuração por servidor** | `guild_config` | `guild_id`, `tts_channel_id`, `autoread`, `default_voice`, `max_chars`, `rate_per_min`, `enabled`, `tts_role_id`, `locale`, `xsaid`, `autojoin`, `read_bots`, `text_in_voice` | Definições do servidor: canal de auto-leitura, on/off da auto-leitura, voz default, limites, kill-switch, role autorizado, idioma da interface, e os interruptores de anunciar quem falou (xsaid), auto-entrada na call, ler outros bots e ler o chat-em-voz. |
+| **Preferência de voz por utilizador** | `user_voice` | `guild_id`, `user_id`, `voice_model`, `speed`, `engine` | A voz (modelo), a velocidade e o motor (Google/Piper) que um utilizador fixou para si num servidor (`/voice set`). |
+| **Configuração por servidor** | `guild_config` | `guild_id`, `tts_channel_id`, `autoread`, `default_voice`, `max_chars`, `rate_per_min`, `enabled`, `tts_role_id`, `locale`, `xsaid`, `autojoin`, `read_bots`, `text_in_voice`, `greet_on_join`, `greet_locale` | Definições do servidor: canal de auto-leitura, on/off da auto-leitura, voz default, limites, kill-switch, role autorizado, idioma da interface, e os interruptores de anunciar quem falou (xsaid), auto-entrada na call, ler outros bots, ler o chat-em-voz e a saudação de entrada. |
 | **Apelido falado** | `user_nickname` | `guild_id`, `user_id`, `nickname` | O nome que um utilizador escolheu para ser **chamado em voz alta** pelo xsaid (`/voice nickname`). É um texto livre definido pelo próprio; pode ou não corresponder ao nome real. |
+| **Abreviaturas pessoais** | `user_abbreviation` | `user_id`, `term`, `replacement` | Substituições de texto pessoais (globais, seguem a pessoa entre servidores) definidas pelo próprio (`/voice abbrev`). |
+| **Efeito de voz** | `user_effect` | `guild_id`, `user_id`, `effect` | O filtro de voz (ex.: robô, eco) que a pessoa escolheu para si (`/voice effect`). |
 | **Deteção de língua por utilizador** | `tts_lang_detect_on` | `guild_id`, `user_id` | Registo de que um utilizador **ligou** a deteção automática de língua (voz nativa por língua). Sem registo = voz fixa (default). |
 | **Blocklist** | `blocklist` | `guild_id`, `word` | Palavras que o servidor bloqueou de serem lidas (`/config blockword`). |
 | **Dicionário de pronúncia** | `pronunciation` | `guild_id`, `term`, `replacement` | Substituições de pronúncia definidas pelo servidor (`/config pronunciation`). |
 | **Opt-out de TTS** | `tts_optout` | `guild_id`, `user_id` | Registo de que um utilizador pediu para **não** ser lido automaticamente (`/voice optout`). |
+| **Pontuações dos jogos** | `game_score` | `guild_id`, `user_id`, `points`, `wins` | Leaderboard dos minijogos (`/game`): pontos acumulados e partidas vencidas. |
+| **"Tagarelas"** | `talk_stats` | `guild_id`, `user_id`, `spoken_count`, `streak`, `best_streak`, `last_date` | Quantas mensagens de cada pessoa o bot leu + streaks de dias, para o `/topspeakers`. |
+| **Aniversário** | `user_birthday` | `guild_id`, `user_id`, `month`, `day` | **Só mês e dia** (nunca o ano), definidos pelo próprio, para o bot dar os parabéns na call (`/birthday`). |
+| **Premium por servidor** | `premium_guild` | `guild_id`, `expires_at`, `source` | Estado Premium de um servidor: quando expira e a origem (ex.: código de resgate). |
+| **Premium por utilizador (Plus)** | `premium_user` | `user_id`, `expires_at`, `source` | Estado Plus de uma pessoa (perks que a seguem entre servidores). |
+| **Códigos de resgate** | `redeem_code` | `code`, `kind`, `days`, `used_by`, `used_at`, `created_at` | Códigos Premium gerados offline; `used_by`/`used_at` só ficam preenchidos quando o código é resgatado (`/redeem`). |
+| **Clone de voz** | `user_clone` | `user_id`, `sample_path`, `consent_at`, `enabled` | **Ver secção 2.3 — é o dado mais sensível.** Aponta para o ficheiro `.wav` da amostra e regista o timestamp do consentimento. |
 
 Nota sobre o opt-out: pedir `/voice optout` **cria** um registo com o teu `user_id` (para o bot se lembrar da preferência). `/voice optin` remove esse registo. Não é guardada mais nenhuma informação a teu respeito.
 
@@ -46,7 +55,19 @@ Em resumo: **não guardamos o texto original**, apenas o áudio gerado por hash,
 
 ### 2.2 Registos (logs)
 
-O Vozen escreve **logs operacionais** para a consola/terminal (stderr/stdout — em Docker, visíveis via `docker compose logs`). Os logs contêm informação operacional: nível, timestamp, nome de comandos, e mensagens de erro. **Os logs NÃO incluem o conteúdo das mensagens dos utilizadores.** A retenção dos logs é controlada pelo operador da instância (o terminal/sistema onde o bot corre).
+O Vozen escreve **logs operacionais** para a consola/terminal e (no runner de produção) para o ficheiro `logs/vozen.log` ao lado do executável, com rotação por tamanho. Os logs contêm informação operacional: nível, timestamp, nome de comandos, e mensagens de erro. **Os logs NÃO incluem o conteúdo das mensagens dos utilizadores.** A retenção dos logs é controlada pelo operador da instância (o sistema onde o bot corre).
+
+### 2.3 Clone de voz (dado sensível — opt-in)
+
+O clone de voz (`/voice clone`, feature Premium) é o **dado mais sensível** que uma instância guarda: uma **gravação real da voz de uma pessoa**. É estritamente **opt-in** — a instância só tem uma amostra se alguém correr `/voice clone record`. Como funciona:
+
+- **Consentimento primeiro.** Podes gravar a **tua própria** voz, ou a voz de **outra pessoa apenas depois de ela dar consentimento explícito no ecrã** — um botão Permitir/Recusar que **só essa pessoa** pode carregar. Sem esse "sim", não se grava nada. `consent_at` regista o momento do consentimento.
+- **Só o alvo é gravado.** Fora da janela de gravação o bot está sempre `selfDeaf` (surdo); destapa os ouvidos **apenas durante a janela** e grava **apenas** a pessoa escolhida, nunca o resto do canal. No fim volta a ensurdecer.
+- **Onde fica.** A amostra é um `.wav` em `voice-clones/{user_id}-{timestamp}.wav` (ao lado da base de dados); a tabela `user_clone` guarda o caminho. A pasta é local e apagável.
+- **Quem controla.** A amostra fica associada a quem **correu o comando** (é essa pessoa que vai falar com a voz), e é essa pessoa que a pode apagar com `/voice clone delete` (remove o `.wav` e a linha imediatamente).
+- **Síntese.** O clone é gerado **localmente** (sidecar Python na máquina da instância) — o áudio da amostra **não é enviado para fora**.
+
+> Nota de conformidade: uma amostra de voz pode ser tratada como **dado sensível/biométrico** em certas jurisdições (ex.: RGPD). O operador da instância é o responsável por só permitir clones com o devido consentimento e por responder a pedidos de remoção.
 
 ---
 
@@ -62,11 +83,12 @@ Para os utilizadores e administradores de servidor, os comandos do bot permitem 
 | O teu apelido falado | `/voice nickname` (sem nome) | Apaga o teu registo em `user_nickname`. |
 | O teu opt-out (voltar a ser lido) | `/voice optin` | Apaga o teu registo em `tts_optout`. |
 | A tua deteção de língua | `/voice detection active:false` | Apaga o teu registo em `tts_lang_detect_on`. |
+| A tua amostra de voz clonada | `/voice clone delete` | Apaga a linha em `user_clone` **e** o ficheiro `.wav` da amostra, imediatamente. |
 | Configuração do servidor | `/config reset` | Repõe a `guild_config` aos valores por defeito. **Atenção:** o reset **NÃO** apaga a blocklist nem o dicionário de pronúncia. |
 | Uma palavra da blocklist | `/config blockword remove` | Removida individualmente (não pelo `/config reset`). |
 | Um termo de pronúncia | `/config pronunciation remove` | Removido individualmente (não pelo `/config reset`). |
 
-> **Não existe um comando único de "apagar todos os meus dados".** Os dados por utilizador vivem em `user_voice`, `user_nickname`, `tts_optout` e `tts_lang_detect_on`, e removem-se com `/voice reset`, `/voice nickname` (vazio), `/voice optin` e `/voice detection active:false`. Em alternativa, o operador da instância pode apagar registos diretamente na base de dados ou apagar os ficheiros locais.
+> **Não existe um comando único de "apagar todos os meus dados".** Os dados por utilizador vivem em várias tabelas (`user_voice`, `user_nickname`, `user_abbreviation`, `user_effect`, `tts_optout`, `tts_lang_detect_on`, `user_clone`, `game_score`, `talk_stats`, `user_birthday`, `premium_user`) e removem-se com os comandos acima (`/voice reset`, `/voice nickname` vazio, `/voice optin`, `/voice detection active:false`, `/voice clone delete`). Para uma remoção completa de qualquer dado ligado ao teu ID — incluindo estatísticas e pontuações — pede ao operador da instância (ver secção 5); ele pode apagar registos diretamente na base de dados ou os ficheiros locais.
 
 A cache de áudio é regenerável e auto-limitada (ver secção 2.1); apagá-la não perde nenhuma configuração.
 
@@ -99,17 +121,19 @@ Para gerar o áudio, o **texto limpo a sintetizar** é entregue a um motor de TT
 
 ## 5. Contacto / Responsável
 
-O **responsável** por uma instância do Vozen é o **operador** que a corre. Para questões sobre os teus dados num servidor específico, contacta o administrador desse servidor ou o operador do bot.
+O **responsável** por uma instância do Vozen é o **operador** que a corre. Para questões sobre os teus dados num servidor específico, para reportar um problema/abuso, ou para pedir a remoção dos teus dados, contacta o administrador desse servidor ou o operador do bot.
 
-> **Operador:** preenche aqui o teu contacto antes de tornares o bot público.
+> **Instância pública oficial do Vozen:**
 >
-> - Responsável: `_______________________`
-> - Email / contacto: `_______________________`
+> - Suporte / denúncia / pedidos de dados: **[servidor de suporte](https://discord.gg/V6PZYZmhcQ)** (`discord.gg/V6PZYZmhcQ`)
+> - Código-fonte: <https://github.com/diogoshk3/discord-bot-Vozen>
+>
+> **Corres a tua própria instância?** Substitui o contacto acima pelo teu antes de tornares o bot público.
 
-Os autores do projeto Vozen fornecem apenas o software (open-source); não operam uma instância partilhada nem têm acesso aos dados das instâncias de terceiros.
+Os autores do projeto Vozen fornecem apenas o software (open-source); cada operador de uma instância de terceiros é responsável pelos dados que essa instância processa.
 
 ---
 
 ## Nota / Note (EN)
 
-_Vozen is a self-hosted, open-source Discord TTS bot (AGPL-3.0). The instance operator is the data controller. The bot stores only Discord numeric IDs (`guild_id`, `user_id`) plus per-user voice preferences, spoken nickname (free text the user chooses), per-server config, blocklist, pronunciation dictionary, opt-out and language-detection records in a local SQLite database — no PII beyond the optional nickname. Message text is processed transiently to synthesize speech and is **not** stored in any table; only generated `.wav` audio is cached on disk, named by an SHA-1 hash of (cleaned text + voice + speed), capped (~500 files/engine, LRU), regenerable and deletable. Logs contain operational data, **not** message content. Where the text goes depends on `TTS_ENGINE`: **Piper** runs locally (no external send); **gTTS** (the public instance's engine) sends the text to Google; **router** may send to Google (falls back to local Piper); **neural** sends to OpenAI. Opt-in extras: server-count to top.gg (`TOPGG_TOKEN`, no personal data) and error reports to the operator's webhook (`ERROR_WEBHOOK_URL`). No data sale, no third-party analytics. Removal: `/voice reset`, `/voice nickname` (empty), `/voice optin`, `/voice detection active:false`, `/config reset` (does not clear blocklist/pronunciation — use `/config blockword remove` / `/config pronunciation remove`); the operator can delete the SQLite file and cache folder directly._
+_Vozen is a self-hosted, open-source Discord TTS bot (AGPL-3.0). The instance operator is the data controller. The bot stores only Discord numeric IDs (`guild_id`, `user_id`) plus per-user voice preferences (voice/engine/speed/effect), spoken nickname (free text the user chooses), personal abbreviations, per-server config, blocklist, pronunciation dictionary, opt-out and language-detection records, game scores, talk stats, optional birthday (month/day, no year), and Premium status in a local SQLite database — no PII beyond the optional nickname. **Voice clone (opt-in, Premium)** additionally stores a real voice recording as a `.wav` in `voice-clones/` plus a consent timestamp (`user_clone`): you may record your own voice, or another person's voice only after they grant explicit on-screen consent (a button only they can press); the bot is deafened except during the recording window and records only the chosen person; delete with `/voice clone delete` (removes the row and the `.wav`). Message text is processed transiently to synthesize speech and is **not** stored in any table; only generated `.wav` audio is cached on disk, named by an SHA-1 hash of (cleaned text + voice + speed), capped (~500 files/engine, LRU), regenerable and deletable. Logs contain operational data, **not** message content. Where the text goes depends on `TTS_ENGINE`: **Piper** runs locally (no external send); **gTTS** (the public instance's engine) sends the text to Google; **router** may send to Google (falls back to local Piper); **neural** sends to OpenAI. Voice clones are synthesized locally and never leave the machine. Opt-in extras: server-count to top.gg (`TOPGG_TOKEN`, no personal data) and error reports to the operator's webhook (`ERROR_WEBHOOK_URL`). No data sale, no third-party analytics, no using message content to train AI. Support / reports / data requests: the [support server](https://discord.gg/V6PZYZmhcQ). Removal: `/voice reset`, `/voice nickname` (empty), `/voice optin`, `/voice detection active:false`, `/voice clone delete`, `/config reset` (does not clear blocklist/pronunciation — use `/config blockword remove` / `/config pronunciation remove`); the operator can delete the SQLite file and cache folder directly._

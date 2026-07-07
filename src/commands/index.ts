@@ -2502,12 +2502,19 @@ async function handleHelp(i: ChatInputCommandInteraction, deps: BotDeps): Promis
     more.value += '\n' + missing.map((name) => `• /${name}`).join('\n');
   }
 
+  // Linha de suporte/denúncia (requisito da Política de Desenvolvedor do Discord:
+  // dar ao utilizador uma forma de reportar problemas). Vem do config (env
+  // SUPPORT_URL; default = servidor de suporte oficial).
+  const supportLine = t('help.support', locale, { url: deps.config.supportUrl });
+
   const embed = new EmbedBuilder()
     .setColor(0x5865f2) // blurple — parece intencional, nao o cinzento default
     .setTitle(t('help.embedTitle', locale))
     // Descricao: tagline da marca + o que o Vozen faz (intro) + o diferenciador
-    // (voz neural gratis) — a mesma chave do welcome embed.
-    .setDescription(`${t('help.title', locale)}\n${t('help.intro', locale)}\n\n${t('welcome.tagline', locale)}`)
+    // (voz neural gratis) — a mesma chave do welcome embed — + a linha de suporte.
+    .setDescription(
+      `${t('help.title', locale)}\n${t('help.intro', locale)}\n\n${t('welcome.tagline', locale)}\n\n${supportLine}`,
+    )
     .addFields(fields)
     .setFooter({ text: t('help.footer', locale, { command: '/setup' }) });
 

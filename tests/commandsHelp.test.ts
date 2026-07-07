@@ -87,7 +87,7 @@ function makeDeps(): BotDeps {
   return {
     client: { user: { id: 'bot-1' } },
     players: new Map(),
-    config: {},
+    config: { supportUrl: 'https://discord.gg/test' },
     availableModels: [],
     db: initDb(':memory:'),
   } as unknown as BotDeps;
@@ -107,6 +107,15 @@ describe('/help — discovery de comandos em-app', () => {
     expect(text).toContain('/setup'); // Admin
     expect(text).toContain('/stats'); // Admin
     expect(text).toContain('/config'); // Admin
+  });
+
+  it('(compliance) mostra um canal de suporte/denúncia (requisito da Política de Developer do Discord)', async () => {
+    const i = makeHelpInteraction();
+    await handleInteraction(i as any, makeDeps());
+    const text = i.replies.join('\n');
+    // A Política de Developer exige uma forma de reportar problemas; o /help expõe o URL do config.
+    expect(text).toContain('https://discord.gg/test');
+    expect(text.toLowerCase()).toMatch(/report|reportar/);
   });
 
   it('reflete os subcomandos de /voice (set, list, preview, optout, optin, detection)', async () => {

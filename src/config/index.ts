@@ -58,6 +58,11 @@ export interface AppConfig {
   // desativada (fallback à voz normal) até o operador instalar o motor (setup na
   // Vaga 2). Env: CLONE_CMD.
   cloneCmd?: string;
+  // Canal de suporte/denúncia mostrado no /help. A Política de Desenvolvedor do
+  // Discord exige que o utilizador tenha uma forma de reportar problemas/violações;
+  // este link satisfaz esse requisito. Default = servidor de suporte oficial do
+  // Vozen; um self-hoster aponta o SEU via env SUPPORT_URL.
+  supportUrl: string;
 }
 
 function requireEnv(name: string): string {
@@ -206,5 +211,8 @@ export function loadConfig(): AppConfig {
     // Clone de voz: comando do sidecar Python (ausente => síntese clonada desativada;
     // a gravação/gestão de amostras funciona na mesma).
     cloneCmd: process.env.CLONE_CMD?.trim() || undefined,
+    // Canal de suporte/denúncia (requisito da Política de Desenvolvedor do Discord).
+    // Default = servidor de suporte oficial do Vozen; override por SUPPORT_URL.
+    supportUrl: strEnv('SUPPORT_URL', 'https://discord.gg/V6PZYZmhcQ'),
   };
 }

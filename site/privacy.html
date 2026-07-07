@@ -38,7 +38,7 @@
     <main class="legal">
       <a class="back" href="index.html">← Back to Vozen</a>
       <h1>Privacy Policy</h1>
-      <p class="updated">Last updated: 6 July 2026</p>
+      <p class="updated">Last updated: 7 July 2026</p>
 
       <p>
         Vozen is a text-to-speech (TTS) bot for Discord. This page explains exactly what
@@ -63,7 +63,7 @@
         the moment it is spoken.
       </p>
       <ul>
-        <li><b>Your preferences</b> — your chosen voice, speaking speed, personal abbreviations, and a phonetic nickname (how you want your name pronounced out loud).</li>
+        <li><b>Your preferences</b> — your chosen voice and engine, speaking speed, an optional voice effect, your language-detection setting, personal abbreviations, and a phonetic nickname (how you want your name pronounced out loud).</li>
         <li><b>Server settings</b> — set by server admins: the TTS channel, auto-read on/off, default voice, character/rate limits, language, greeting options, a word blocklist, and pronunciation overrides.</li>
         <li><b>Opt-out list</b> — if you ask Vozen not to read your messages, we store that choice.</li>
         <li><b>Fun stats</b> — minigame scores (points and wins) and "top speaker" counts (how many of your messages were read aloud, plus daily streaks). These power the <code>/topspeakers</code> and <code>/game</code> leaderboards.</li>
@@ -73,14 +73,16 @@
 
       <div class="callout">
         <p>
-          <b>Voice clone (opt-in, sensitive).</b> If — and only if — you run
-          <code>/voice clone record</code>, Vozen stores a short audio recording of
-          <b>your own</b> voice plus the timestamp of your consent, so it can later speak
-          in your voice. Vozen records <b>only the person who ran the command</b>, only
-          during the explicit recording window, and never the rest of the channel. Only
-          you can enable, use, or delete your sample (<code>/voice clone delete</code>
-          removes the recording immediately). Please only clone a voice you have the right
-          to use.
+          <b>Voice clone (opt-in, sensitive).</b> If — and only if — someone runs
+          <code>/voice clone record</code>, Vozen stores a short audio recording of a
+          voice plus the timestamp of consent, so it can later speak in that voice. You can
+          record <b>your own</b> voice, or <b>another person's voice only after they grant
+          explicit on-screen consent</b> (an Allow/Deny button that only that person can
+          press). Recording happens only during the explicit recording window and captures
+          only the chosen person — never the rest of the channel. The sample belongs to the
+          person who ran the command (they are the one who will speak with it), and they can
+          delete it at any time with <code>/voice clone delete</code>, which removes the
+          recording immediately. Only clone a voice you have the right to use.
         </p>
       </div>
 
@@ -94,10 +96,14 @@
       <h2>Third parties</h2>
       <p>
         When you use a <b>Google voice</b>, the text to be spoken is sent to Google's
-        text-to-speech service to generate the audio. Neural voices and voice clones are
-        generated on our own server, and that text never leaves it. Discord processes all
-        bot activity under
+        text-to-speech service to generate the audio (subject to
+        <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google's Privacy Policy</a>).
+        Local (Piper) voices and voice clones are generated on our own server, and that text
+        never leaves it. Only the text to be spoken is ever sent out — never your user ID or
+        message history. Discord processes all bot activity under
         <a href="https://discord.com/privacy" target="_blank" rel="noopener">Discord's Privacy Policy</a>.
+        We do <b>not</b> sell your data, share it with data brokers or ad networks, or use
+        message content to train AI models.
       </p>
 
       <h2>Your controls &amp; deletion</h2>
@@ -110,7 +116,11 @@
       </ul>
 
       <h2>Children</h2>
-      <p>Vozen follows Discord's Terms of Service. You must meet Discord's minimum age requirement to use Discord and, by extension, Vozen.</p>
+      <p>
+        Vozen is not directed at children. You must be at least <b>13 years old</b> (or the
+        higher minimum age required by the laws of your country) to use Discord and, by
+        extension, Vozen. We do not knowingly collect data from anyone under that age.
+      </p>
 
       <h2>Changes</h2>
       <p>We may update this policy as Vozen evolves. The "last updated" date above reflects the current version.</p>

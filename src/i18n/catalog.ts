@@ -1055,6 +1055,12 @@ export const catalog: Record<string, Entry> = {
     en: 'New here? Run {command} to get started.',
     pt: 'Primeira vez? Corre {command} para comecares.',
   },
+  // Linha de suporte/denúncia no /help (requisito da Política de Desenvolvedor do
+  // Discord: o utilizador tem de ter uma forma de reportar problemas/violações).
+  'help.support': {
+    en: '🛟 Need help or want to report an issue? {url}',
+    pt: '🛟 Precisas de ajuda ou queres reportar um problema? {url}',
+  },
 
   // ── welcome embed (guildCreate) ────────────────────────────────────────────
   // Enviado UMA vez quando o Vozen entra num servidor novo. Guild nova nao tem
