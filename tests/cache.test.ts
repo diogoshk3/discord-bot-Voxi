@@ -460,3 +460,66 @@ describe('AudioCache.evict — ramos defensivos', () => {
     expect(existsSync(old)).toBe(false);
   });
 });
+
+describe('AudioCache contador em memória', () => {
+  let dir: string;
+  let srcDir: string;
+
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), 'ttscache-count-'));
+    srcDir = mkdtempSync(join(tmpdir(), 'ttssrc-count-'));
+  });
+
+  afterEach(() => {
+    rmSync(dir, { recursive: true, force: true });
+    rmSync(srcDir, { recursive: true, force: true });
+  });
+
+  function makeSrc(name: string, content = 'wav'): string {
+    const p = join(srcDir, name);
+    writeFileSync(p, Buffer.from(content));
+    return p;
+  }
+
+  it('abaixo do cap NÃO faz readdir (contador em memória); ao cruzar o cap, faz e despeja', () => {
+    const cache = new AudioCache(dir, 5);
+    vi.mocked(readdirSync).mockClear(); // o scan do constructor não conta para o teste
+    for (let i = 0; i < 4; i++) cache.put(`k${i}`, makeSrc(`f${i}.wav`));
+    // 4 puts <= cap 5 -> ZERO readdir (era ~1 por put antes deste plano).
+    expect(vi.mocked(readdirSync)).not.toHaveBeenCalled();
+    // 6.º put cruza o cap -> readdir + evicção do mais antigo.
+    cache.put('k4', makeSrc('f4.wav'));
+    cache.put('k5', makeSrc('f5.wav'));
+    expect(vi.mocked(readdirSync).mock.calls.length).toBeGreaterThanOrEqual(1);
+    expect(readdirSync(dir).filter((f) => f.endsWith('.wav')).length).toBeLessThanOrEqual(5);
+  });
+
+  it('warm start: apanha os ficheiros pré-existentes e despeja no 1.º put', () => {
+    // 3 ficheiros já no dir ANTES de construir a cache (cap 3).
+    for (let i = 0; i < 3; i++) writeFileSync(join(dir, `pre${i}.wav`), Buffer.from('x'));
+    const cache = new AudioCache(dir, 3);
+    cache.put('novo', makeSrc('novo.wav')); // 3 pré + 1 = 4 > cap -> despeja 1
+    expect(readdirSync(dir).filter((f) => f.endsWith('.wav')).length).toBeLessThanOrEqual(3);
+  });
+
+  it('purge da pasta em runtime ZERA o contador (não despeja indevidamente a seguir)', () => {
+    const cache = new AudioCache(dir, 3);
+    for (let i = 0; i < 3; i++) cache.put(`a${i}`, makeSrc(`a${i}.wav`));
+    rmSync(dir, { recursive: true, force: true }); // simula o purge de privacidade
+    // 3 puts de chaves NOVAS: se o contador tivesse ficado em 3, o 1.º cruzava o cap
+    // e despejava; com o reset a 0, os 3 sobrevivem.
+    for (let i = 0; i < 3; i++) cache.put(`b${i}`, makeSrc(`b${i}.wav`));
+    expect(readdirSync(dir).filter((f) => f.endsWith('.wav')).length).toBe(3);
+  });
+
+  it('re-escrever a MESMA chave não conta a dobrar', () => {
+    const cache = new AudioCache(dir, 2);
+    cache.put('k1', makeSrc('k1.wav'));
+    cache.put('k1', makeSrc('k1b.wav')); // mesma chave -> exists-first, não conta
+    vi.mocked(readdirSync).mockClear();
+    cache.put('k2', makeSrc('k2.wav')); // 2 ficheiros <= cap 2 -> sem readdir/evicção
+    expect(vi.mocked(readdirSync)).not.toHaveBeenCalled();
+    expect(existsSync(join(dir, 'k1.wav'))).toBe(true);
+    expect(existsSync(join(dir, 'k2.wav'))).toBe(true);
+  });
+});

@@ -20,7 +20,7 @@ Repo verification baseline at planning time: `npm run build` (tsc) exit 0;
 | 005 | Typecheck the test suite + `engines` field | P1 | S | — | DONE |
 | 006 | `CLAUDE.md` + `.env.example` in English | P2 | S | — | DONE |
 | 007 | Pin the Python clone-sidecar dependencies | P2 | S | — | DONE |
-| 008 | AudioCache: size counter instead of per-synthesis directory scan | P2 | S | — | TODO |
+| 008 | AudioCache: size counter instead of per-synthesis directory scan | P2 | S | — | DONE |
 | 009 | gTTS: bounded-concurrency chunk fetch (cap 3) | P2 | S-M | — | TODO |
 | 010 | Hot-path store cache (~10 SQLite reads/message → memory) | P1 | M | — | TODO |
 | 011 | Supervisor (`start-prod.mjs`) tests via extracted pure policy | P2 | M | 005* | TODO |
