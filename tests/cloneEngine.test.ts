@@ -31,8 +31,12 @@ describe('resolveCloneCmd', () => {
  * warmup -> {ready}; pedido -> escreve o WAV no `out` e responde {ok,out} (ou {ok:false}
  * se behavior='fail'; ou nada se 'hang').
  */
-function fakeSidecar(behavior: 'ok' | 'fail' | 'hang' = 'ok') {
+function fakeSidecar(
+  behavior: 'ok' | 'fail' | 'hang' | 'never-ready' = 'ok',
+  counter?: { spawns: number },
+) {
   return (() => {
+    if (counter) counter.spawns++;
     const child = new EventEmitter() as EventEmitter & {
       stdin: { write: (s: string) => void };
       stdout: EventEmitter;
@@ -47,10 +51,11 @@ function fakeSidecar(behavior: 'ok' | 'fail' | 'hang' = 'ok') {
         const req = JSON.parse(s.trim());
         queueMicrotask(() => {
           if (req.warmup) {
+            if (behavior === 'never-ready') return; // wedged: nunca responde {ready}
             child.stdout.emit('data', Buffer.from(JSON.stringify({ ok: true, ready: true, model: 'en' }) + '\n'));
             return;
           }
-          if (behavior === 'hang') return;
+          if (behavior === 'hang' || behavior === 'never-ready') return;
           if (behavior === 'ok') {
             writeFileSync(req.out, Buffer.from('RIFFcloned'));
             child.stdout.emit('data', Buffer.from(JSON.stringify({ ok: true, out: req.out }) + '\n'));
@@ -114,5 +119,36 @@ describe('CloneEngine', () => {
     // mesma frase, MAS amostra re-gravada (path versionado diferente) -> chave nova
     const b = await eng.synth(REQ({ text: 'hello', cloneRef: '/clones/u1-2000.wav' }));
     expect(b).not.toBe(a); // não é o hit da amostra antiga
+  });
+
+  it('BUG-01: sidecar vivo mas nunca pronto -> deadline expira, job rejeita e cai na voz normal', async () => {
+    const eng = new CloneEngine(
+      innerReturning('/normal.wav'),
+      cache(),
+      { exe: 'x', args: [] },
+      fakeSidecar('never-ready'),
+      30, // deadline curto para o teste
+    );
+    // Sem deadline isto ficava PENDENTE para sempre (era o bug).
+    await expect(eng.synth(REQ({ cloneRef: '/ref.wav' }))).resolves.toBe('/normal.wav');
+  });
+
+  it('BUG-01: ready dentro do prazo -> timer limpo, SEM teardown espúrio (1 só spawn)', async () => {
+    const counter = { spawns: 0 };
+    const eng = new CloneEngine(
+      innerReturning('/normal.wav'),
+      cache(),
+      { exe: 'x', args: [] },
+      fakeSidecar('ok', counter),
+      50,
+    );
+    const a = await eng.synth(REQ({ text: 'um', cloneRef: '/ref.wav' }));
+    expect(a).not.toBe('/normal.wav'); // veio do clone
+    // Espera para lá do deadline: se o timer NÃO tivesse sido limpo, restart()
+    // matava o sidecar e o spawn seguinte contava 2.
+    await new Promise((r) => setTimeout(r, 80));
+    const b = await eng.synth(REQ({ text: 'dois', cloneRef: '/ref.wav' }));
+    expect(b).not.toBe('/normal.wav');
+    expect(counter.spawns).toBe(1); // nunca reiniciou
   });
 });

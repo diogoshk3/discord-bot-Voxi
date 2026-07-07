@@ -21,6 +21,13 @@ import { log } from '../logging/logger';
 /** Tempo máximo por síntese clonada (o 1.º pedido carrega o modelo — daí generoso). */
 const SYNTH_TIMEOUT_MS = 60_000;
 
+/**
+ * Tempo máximo à espera do {ready} do warmup. O load do modelo em GPU é lento
+ * (~35s a frio — ver prewarm()), daí um teto generoso; mas um sidecar vivo que
+ * NUNCA fica pronto não pode segurar a fila para sempre.
+ */
+const READY_TIMEOUT_MS = 120_000;
+
 interface Job {
   line: string;
   outPath: string;
@@ -60,6 +67,7 @@ export class CloneEngine implements TTSEngine {
   private ready = false;
   private starting = false;
   private tmpSeq = 0;
+  private warmupTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private readonly inner: TTSEngine,
@@ -67,6 +75,8 @@ export class CloneEngine implements TTSEngine {
     private readonly cmd: { exe: string; args: string[] } | null,
     // Injeção do spawn para testes (default: child_process.spawn real).
     private readonly spawnImpl: typeof spawn = spawn,
+    // Deadline do warmup injetável para testes (default: READY_TIMEOUT_MS).
+    private readonly readyTimeoutMs: number = READY_TIMEOUT_MS,
   ) {}
 
   /** Há motor de clone instalado nesta instância? */
@@ -167,6 +177,18 @@ export class CloneEngine implements TTSEngine {
       });
       // Warmup: carrega o modelo já; o onLine liga this.ready e faz pump().
       child.stdin!.write(JSON.stringify({ warmup: true }) + '\n');
+      // Deadline do warmup: um sidecar vivo-mas-nunca-pronto prendia os jobs para
+      // sempre (o gate !ready em pump() corre ANTES do timer por-job). Expirar =>
+      // restart(): mata o processo wedged e o teardown rejeita a fila — os chamadores
+      // caem na voz normal, exatamente como no caminho de crash.
+      this.warmupTimer = setTimeout(() => {
+        this.warmupTimer = null;
+        if (this.ready) return; // corrida benigna: ficou pronto entretanto
+        log.warn(`[clone] sidecar não ficou pronto em ${this.readyTimeoutMs}ms — a reiniciar`);
+        this.restart();
+      }, this.readyTimeoutMs);
+      // Não segurar o processo vivo só por causa deste timer (shutdown limpo).
+      this.warmupTimer.unref?.();
       return true;
     } catch (err) {
       log.warn('[clone] não consegui arrancar o sidecar:', err);
@@ -194,6 +216,10 @@ export class CloneEngine implements TTSEngine {
       return; // linha não-protocolo (log solto) — ignora
     }
     if (msg.ready) {
+      if (this.warmupTimer) {
+        clearTimeout(this.warmupTimer);
+        this.warmupTimer = null;
+      }
       this.ready = true;
       this.starting = false;
       log.info('[clone] sidecar pronto');
@@ -210,6 +236,10 @@ export class CloneEngine implements TTSEngine {
   }
 
   private teardown(): void {
+    if (this.warmupTimer) {
+      clearTimeout(this.warmupTimer);
+      this.warmupTimer = null;
+    }
     const err = new Error('clone: sidecar morreu');
     this.ready = false;
     this.starting = false;
