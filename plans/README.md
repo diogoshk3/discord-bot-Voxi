@@ -24,7 +24,7 @@ Repo verification baseline at planning time: `npm run build` (tsc) exit 0;
 | 009 | gTTS: bounded-concurrency chunk fetch (cap 3) | P2 | S-M | — | DONE |
 | 010 | Hot-path store cache (~10 SQLite reads/message → memory) | P1 | M | — | DONE |
 | 011 | Supervisor (`start-prod.mjs`) tests via extracted pure policy | P2 | M | 005* | DONE |
-| 012 | `createVoiceSession` tests (onIdle identity guard) | P2 | M | — | TODO |
+| 012 | `createVoiceSession` tests (onIdle identity guard) | P2 | M | — | DONE |
 | 013 | Lint/format toolchain (ESLint flat + Prettier + editorconfig + CI) | P2 | M | — | TODO |
 | 014 | `guild_config` descriptor-driven store (kill the 10-edit lockstep) | P2 | M | 010 | TODO |
 | 015 | Split `commands/index.ts` (2821 lines → handler modules) | P3 | L | 003, 004, 013 | TODO |
