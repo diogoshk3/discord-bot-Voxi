@@ -1,4 +1,5 @@
 import Database from 'better-sqlite3';
+import { GUILD_CONFIG_COLUMNS } from './guildConfig';
 
 export function initDb(path: string): Database.Database {
   let db: Database.Database | undefined;
@@ -178,52 +179,17 @@ export function initDb(path: string): Database.Database {
       );
     `);
 
-    // Migracao idempotente para DBs criadas antes da coluna tts_role_id existir.
-    // O CREATE TABLE IF NOT EXISTS acima nao altera tabelas ja existentes, por isso
-    // verificamos o esquema e adicionamos a coluna so quando falta (no-op em DBs novas).
+    // Migracoes idempotentes de guild_config GUIADAS PELO DESCRITOR
+    // (GUILD_CONFIG_COLUMNS em ./guildConfig): qualquer coluna do descritor que falte
+    // numa DB antiga e adicionada com o MESMO tipo/default do CREATE TABLE — o ALTER com
+    // default CONSTANTE backfilla TODAS as linhas existentes (ex.: xsaid=1, autojoin=0).
+    // As 6 colunas originais estao sempre presentes -> essas iteracoes sao no-op. Acrescentar
+    // um campo novo ao descritor passa a migrar-se sozinho (era ~1 bloco if por campo).
     const cols = db.pragma('table_info(guild_config)') as Array<{ name: string }>;
-    if (!cols.some((c) => c.name === 'tts_role_id')) {
-      db.exec('ALTER TABLE guild_config ADD COLUMN tts_role_id TEXT');
-    }
-    // Migracao idempotente da coluna `locale` (P16.1): idioma da INTERFACE por
-    // guild. DEFAULT 'en' faz as linhas antigas lerem 'en' (ingles como base),
-    // nao NULL — ao contrario da migracao tts_role_id (que quer NULL). No-op em
-    // DBs novas (o CREATE TABLE ja inclui a coluna).
-    if (!cols.some((c) => c.name === 'locale')) {
-      db.exec("ALTER TABLE guild_config ADD COLUMN locale TEXT NOT NULL DEFAULT 'en'");
-    }
-    // Migracao idempotente do `xsaid` (Vaga 1): anuncia "{nome} disse" antes de cada
-    // mensagem. DEFAULT 1 (LIGADO) — e o ADD COLUMN com default CONSTANTE faz o SQLite
-    // preencher TODAS as linhas existentes com 1 (backfill), por isso as guilds atuais
-    // ficam com xsaid ON, nao NULL. No-op em DBs novas (o CREATE TABLE ja tem a coluna).
-    if (!cols.some((c) => c.name === 'xsaid')) {
-      db.exec('ALTER TABLE guild_config ADD COLUMN xsaid INTEGER NOT NULL DEFAULT 1');
-    }
-    // Migracao idempotente do `autojoin` (Vaga 2): o bot entra sozinho na call quando
-    // chega mensagem para ler. DEFAULT 0 (DESLIGADO) — opt-in, para nao surpreender
-    // (o bot so entra se o admin quiser). No-op em DBs novas.
-    if (!cols.some((c) => c.name === 'autojoin')) {
-      db.exec('ALTER TABLE guild_config ADD COLUMN autojoin INTEGER NOT NULL DEFAULT 0');
-    }
-    // Migracao idempotente do `read_bots` (Vaga 2): ler mensagens de outros bots/
-    // webhooks. DEFAULT 0 (NAO ler bots — o comportamento historico). No-op em DBs novas.
-    if (!cols.some((c) => c.name === 'read_bots')) {
-      db.exec('ALTER TABLE guild_config ADD COLUMN read_bots INTEGER NOT NULL DEFAULT 0');
-    }
-    // Migracao idempotente do `text_in_voice` (Vaga 2): ler tambem as mensagens do chat
-    // de texto DENTRO do canal de voz onde o Vozen esta. DEFAULT 0 (desligado). No-op novas.
-    if (!cols.some((c) => c.name === 'text_in_voice')) {
-      db.exec('ALTER TABLE guild_config ADD COLUMN text_in_voice INTEGER NOT NULL DEFAULT 0');
-    }
-    // Saudacao de voz ao entrar na call. DEFAULT 1 (LIGADO — pedido do Diogo: vem
-    // ligada por defeito, desligavel). greet_locale = lingua da saudacao (DEFAULT 'en',
-    // a principal e sempre ingles). ADD COLUMN com default constante backfilla as linhas
-    // existentes. No-op em DBs novas (o CREATE ja inclui as colunas).
-    if (!cols.some((c) => c.name === 'greet_on_join')) {
-      db.exec('ALTER TABLE guild_config ADD COLUMN greet_on_join INTEGER NOT NULL DEFAULT 1');
-    }
-    if (!cols.some((c) => c.name === 'greet_locale')) {
-      db.exec("ALTER TABLE guild_config ADD COLUMN greet_locale TEXT NOT NULL DEFAULT 'en'");
+    for (const col of GUILD_CONFIG_COLUMNS) {
+      if (!cols.some((c) => c.name === col.column)) {
+        db.exec(`ALTER TABLE guild_config ADD COLUMN ${col.column} ${col.sqlType}`);
+      }
     }
     // Migracao idempotente do `engine` no user_voice: motor por-utilizador (google/piper).
     // DEFAULT 'google' -> as vozes ja gravadas ficam no motor Google (backfill). No-op novas.

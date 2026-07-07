@@ -73,6 +73,140 @@ interface GuildConfigRow {
   greet_locale: string | null;
 }
 
+type SqlValue = string | number | null;
+
+/**
+ * Descritor de UMA coluna de guild_config. ACRESCENTAR UM CAMPO NOVO =
+ *   1) uma entrada aqui,
+ *   2) o campo em `GuildConfig`,
+ *   3) o campo em `GuildConfigRow`,
+ *   4) o default em `DEFAULTS`,
+ *   5) a coluna no CREATE TABLE de `db.ts`.
+ * Os testes de paridade em tests/store.test.ts rebentam se algum dos cinco
+ * faltar — é esse o objetivo. A migração idempotente (ALTER) e o UPSERT são
+ * DERIVADOS deste array; não há SQL escrito à mão por campo.
+ */
+interface GuildConfigColumn {
+  /** nome da propriedade em GuildConfig */
+  prop: keyof GuildConfig;
+  /** nome da coluna SQL */
+  column: string;
+  /** tipo+constraints para o ALTER de migração (idêntico ao CREATE TABLE) */
+  sqlType: string;
+  /** JS -> SQL (booleans viram 1/0; strings/números/null passam tal e qual) */
+  toDb: (v: unknown) => SqlValue;
+  /** SQL -> JS com o fallback defensivo por-coluna (DBs antigas podem ter null) */
+  fromDb: (raw: unknown) => unknown;
+}
+
+const asBool = (v: unknown): SqlValue => (v ? 1 : 0);
+const asIs = (v: unknown): SqlValue => v as SqlValue;
+
+// Ordem = ordem das colunas no CREATE TABLE (sem `guild_id`, que é a PK e é
+// tratada à parte no INSERT/migração). Manter a ordem para diffs legíveis.
+export const GUILD_CONFIG_COLUMNS: GuildConfigColumn[] = [
+  { prop: 'ttsChannelId', column: 'tts_channel_id', sqlType: 'TEXT', toDb: asIs, fromDb: (r) => r },
+  {
+    prop: 'autoread',
+    column: 'autoread',
+    sqlType: 'INTEGER NOT NULL DEFAULT 0',
+    toDb: asBool,
+    fromDb: (r) => r === 1,
+  },
+  {
+    prop: 'defaultVoice',
+    column: 'default_voice',
+    sqlType: "TEXT NOT NULL DEFAULT 'en_US-amy-medium'",
+    toDb: asIs,
+    fromDb: (r) => r,
+  },
+  {
+    prop: 'maxChars',
+    column: 'max_chars',
+    sqlType: 'INTEGER NOT NULL DEFAULT 300',
+    toDb: asIs,
+    fromDb: (r) => r,
+  },
+  {
+    prop: 'ratePerMin',
+    column: 'rate_per_min',
+    sqlType: 'INTEGER NOT NULL DEFAULT 5',
+    toDb: asIs,
+    fromDb: (r) => r,
+  },
+  {
+    prop: 'enabled',
+    column: 'enabled',
+    sqlType: 'INTEGER NOT NULL DEFAULT 1',
+    toDb: asBool,
+    fromDb: (r) => r === 1,
+  },
+  { prop: 'ttsRoleId', column: 'tts_role_id', sqlType: 'TEXT', toDb: asIs, fromDb: (r) => r },
+  {
+    prop: 'locale',
+    column: 'locale',
+    sqlType: "TEXT NOT NULL DEFAULT 'en'",
+    toDb: asIs,
+    fromDb: (r) => r ?? DEFAULT_LOCALE,
+  },
+  {
+    prop: 'xsaid',
+    column: 'xsaid',
+    sqlType: 'INTEGER NOT NULL DEFAULT 1',
+    toDb: asBool,
+    fromDb: (r) => (r == null ? DEFAULTS.xsaid : r === 1),
+  },
+  {
+    prop: 'autojoin',
+    column: 'autojoin',
+    sqlType: 'INTEGER NOT NULL DEFAULT 0',
+    toDb: asBool,
+    fromDb: (r) => (r == null ? DEFAULTS.autojoin : r === 1),
+  },
+  {
+    prop: 'readBots',
+    column: 'read_bots',
+    sqlType: 'INTEGER NOT NULL DEFAULT 0',
+    toDb: asBool,
+    fromDb: (r) => (r == null ? DEFAULTS.readBots : r === 1),
+  },
+  {
+    prop: 'textInVoice',
+    column: 'text_in_voice',
+    sqlType: 'INTEGER NOT NULL DEFAULT 0',
+    toDb: asBool,
+    fromDb: (r) => (r == null ? DEFAULTS.textInVoice : r === 1),
+  },
+  {
+    prop: 'greetOnJoin',
+    column: 'greet_on_join',
+    sqlType: 'INTEGER NOT NULL DEFAULT 1',
+    toDb: asBool,
+    fromDb: (r) => (r == null ? DEFAULTS.greetOnJoin : r === 1),
+  },
+  {
+    prop: 'greetLocale',
+    column: 'greet_locale',
+    sqlType: "TEXT NOT NULL DEFAULT 'en'",
+    toDb: asIs,
+    fromDb: (r) => r ?? DEFAULTS.greetLocale,
+  },
+];
+
+// UPSERT derivado do descritor (construído uma vez). Escreve TODAS as colunas em
+// cada set — a semântica byte-a-byte do handwritten anterior: cada coluna via
+// excluded.<coluna>, booleans já serializados a 1/0 pelo toDb.
+const UPSERT_SQL = (() => {
+  const cols = GUILD_CONFIG_COLUMNS.map((c) => c.column);
+  const placeholders = ['?', ...cols.map(() => '?')].join(', ');
+  const sets = cols.map((c) => `${c} = excluded.${c}`).join(',\n       ');
+  return `INSERT INTO guild_config
+       (guild_id, ${cols.join(', ')})
+     VALUES (${placeholders})
+     ON CONFLICT(guild_id) DO UPDATE SET
+       ${sets}`;
+})();
+
 export function getGuildConfig(db: Database.Database, guildId: string): GuildConfig {
   // Cópia rasa do valor cacheado: o chamador (ex.: setGuildConfig, /config show) não
   // deve mutar o objeto guardado na cache. O loader devolve o objeto imutável.
@@ -83,26 +217,14 @@ function loadGuildConfig(db: Database.Database, guildId: string): GuildConfig {
   const row = db.prepare('SELECT * FROM guild_config WHERE guild_id = ?').get(guildId) as
     GuildConfigRow | undefined;
   if (!row) return { ...DEFAULTS };
-  return {
-    ttsChannelId: row.tts_channel_id,
-    autoread: row.autoread === 1,
-    defaultVoice: row.default_voice,
-    maxChars: row.max_chars,
-    ratePerMin: row.rate_per_min,
-    enabled: row.enabled === 1,
-    ttsRoleId: row.tts_role_id,
-    // Belt-and-suspenders: a coluna e NOT NULL DEFAULT 'en', mas se por algum
-    // motivo vier null (ex. migracao antiga) caimos no default.
-    locale: row.locale ?? DEFAULT_LOCALE,
-    // NOT NULL DEFAULT 1; null defensivo (DB antiga) => default ON.
-    xsaid: row.xsaid == null ? DEFAULTS.xsaid : row.xsaid === 1,
-    // NOT NULL DEFAULT 0; null defensivo (DB antiga) => default OFF.
-    autojoin: row.autojoin == null ? DEFAULTS.autojoin : row.autojoin === 1,
-    readBots: row.read_bots == null ? DEFAULTS.readBots : row.read_bots === 1,
-    textInVoice: row.text_in_voice == null ? DEFAULTS.textInVoice : row.text_in_voice === 1,
-    greetOnJoin: row.greet_on_join == null ? DEFAULTS.greetOnJoin : row.greet_on_join === 1,
-    greetLocale: row.greet_locale ?? DEFAULTS.greetLocale,
-  };
+  // Mapeamento row->objeto guiado pelo descritor: cada coluna aplica o seu
+  // fromDb (com o fallback defensivo por-coluna para DBs antigas com null).
+  const out = {} as Record<string, unknown>;
+  const raw = row as unknown as Record<string, unknown>;
+  for (const col of GUILD_CONFIG_COLUMNS) {
+    out[col.prop] = col.fromDb(raw[col.column]);
+  }
+  return out as unknown as GuildConfig;
 }
 
 export function resetGuildConfig(db: Database.Database, guildId: string): void {
@@ -117,41 +239,8 @@ export function setGuildConfig(
 ): void {
   const current = getGuildConfig(db, guildId);
   const next: GuildConfig = { ...current, ...patch };
-  db.prepare(
-    `INSERT INTO guild_config
-       (guild_id, tts_channel_id, autoread, default_voice, max_chars, rate_per_min, enabled, tts_role_id, locale, xsaid, autojoin, read_bots, text_in_voice, greet_on_join, greet_locale)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-     ON CONFLICT(guild_id) DO UPDATE SET
-       tts_channel_id = excluded.tts_channel_id,
-       autoread       = excluded.autoread,
-       default_voice  = excluded.default_voice,
-       max_chars      = excluded.max_chars,
-       rate_per_min   = excluded.rate_per_min,
-       enabled        = excluded.enabled,
-       tts_role_id    = excluded.tts_role_id,
-       locale         = excluded.locale,
-       xsaid          = excluded.xsaid,
-       autojoin       = excluded.autojoin,
-       read_bots      = excluded.read_bots,
-       text_in_voice  = excluded.text_in_voice,
-       greet_on_join  = excluded.greet_on_join,
-       greet_locale   = excluded.greet_locale`,
-  ).run(
-    guildId,
-    next.ttsChannelId,
-    next.autoread ? 1 : 0,
-    next.defaultVoice,
-    next.maxChars,
-    next.ratePerMin,
-    next.enabled ? 1 : 0,
-    next.ttsRoleId,
-    next.locale,
-    next.xsaid ? 1 : 0,
-    next.autojoin ? 1 : 0,
-    next.readBots ? 1 : 0,
-    next.textInVoice ? 1 : 0,
-    next.greetOnJoin ? 1 : 0,
-    next.greetLocale,
-  );
+  // Args na ordem do descritor (= ordem das colunas no UPSERT_SQL). O toDb de
+  // cada coluna serializa (booleans -> 1/0; resto tal e qual).
+  db.prepare(UPSERT_SQL).run(guildId, ...GUILD_CONFIG_COLUMNS.map((c) => c.toDb(next[c.prop])));
   invalidate(db, 'guild_config', guildId);
 }

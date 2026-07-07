@@ -6,7 +6,12 @@ import BetterSqlite3 from 'better-sqlite3';
 import type Database from 'better-sqlite3';
 import { initDb } from '../src/store/db';
 import { getUserVoice, setUserVoice, resetUserVoice } from '../src/store/userVoice';
-import { getGuildConfig, setGuildConfig, resetGuildConfig } from '../src/store/guildConfig';
+import {
+  getGuildConfig,
+  setGuildConfig,
+  resetGuildConfig,
+  GUILD_CONFIG_COLUMNS,
+} from '../src/store/guildConfig';
 import { getBlocklist, addBlockword, removeBlockword } from '../src/store/blocklist';
 import {
   getPronunciations,
@@ -181,6 +186,102 @@ describe('store', () => {
       setGuildConfig(db, G, { ttsChannelId: 'chan-1' });
       setGuildConfig(db, G, { ttsChannelId: null });
       expect(getGuildConfig(db, G).ttsChannelId).toBeNull();
+    });
+
+    // ── Paridade descritor ↔ resto (plano 014): estes testes rebentam se alguém
+    // acrescentar/remover um campo sem sincronizar as 5 fontes de verdade.
+    it('descritor: props batem com as chaves de GuildConfig, sem colunas duplicadas', () => {
+      // getGuildConfig(absent) devolve o objeto DEFAULTS -> as suas chaves são o
+      // conjunto exato de props de GuildConfig.
+      const configKeys = Object.keys(getGuildConfig(db, 'no-such-guild')).sort();
+      const descriptorProps = GUILD_CONFIG_COLUMNS.map((c) => c.prop).sort();
+      expect(descriptorProps).toEqual(configKeys);
+      const columns = GUILD_CONFIG_COLUMNS.map((c) => c.column);
+      expect(new Set(columns).size).toBe(columns.length); // sem colunas repetidas
+    });
+
+    it('descritor: colunas batem com o CREATE TABLE (table_info)', () => {
+      const info = db.pragma('table_info(guild_config)') as Array<{ name: string }>;
+      const actual = new Set(info.map((c) => c.name));
+      const expected = new Set(['guild_id', ...GUILD_CONFIG_COLUMNS.map((c) => c.column)]);
+      expect(actual).toEqual(expected);
+    });
+
+    it('round-trip de TODOS os 14 campos com valores não-default', () => {
+      const full = {
+        ttsChannelId: 'c1',
+        autoread: true,
+        defaultVoice: 'pt_PT-x',
+        maxChars: 999,
+        ratePerMin: 42,
+        enabled: false,
+        ttsRoleId: 'r1',
+        locale: 'pt',
+        xsaid: false,
+        autojoin: true,
+        readBots: true,
+        textInVoice: true,
+        greetOnJoin: false,
+        greetLocale: 'pt',
+      };
+      setGuildConfig(db, G, full);
+      expect(getGuildConfig(db, G)).toEqual(full);
+    });
+
+    it('migra uma DB antiga (só as 8 colunas originais) — backfill dos defaults novos', () => {
+      const dir = mkdtempSync(join(tmpdir(), 'voxi-mig-'));
+      const path = join(dir, 'old.db');
+      // DB no formato pré-locale: guild_id … tts_role_id (as 8 originais), sem as 7 novas.
+      const raw = new BetterSqlite3(path);
+      raw.exec(`
+        CREATE TABLE guild_config (
+          guild_id       TEXT PRIMARY KEY,
+          tts_channel_id TEXT,
+          autoread       INTEGER NOT NULL DEFAULT 0,
+          default_voice  TEXT NOT NULL DEFAULT 'en_US-amy-medium',
+          max_chars      INTEGER NOT NULL DEFAULT 300,
+          rate_per_min   INTEGER NOT NULL DEFAULT 5,
+          enabled        INTEGER NOT NULL DEFAULT 1,
+          tts_role_id    TEXT
+        );
+      `);
+      raw
+        .prepare(
+          `INSERT INTO guild_config
+             (guild_id, tts_channel_id, autoread, default_voice, max_chars, rate_per_min, enabled, tts_role_id)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        )
+        .run('old-g', 'chan-old', 1, 'pt_PT-x', 777, 9, 0, 'role-old');
+      raw.close();
+
+      const migrated = initDb(path);
+      try {
+        // Valores antigos preservados; colunas novas = defaults (backfill via ADD COLUMN).
+        expect(getGuildConfig(migrated, 'old-g')).toEqual({
+          ttsChannelId: 'chan-old',
+          autoread: true,
+          defaultVoice: 'pt_PT-x',
+          maxChars: 777,
+          ratePerMin: 9,
+          enabled: false,
+          ttsRoleId: 'role-old',
+          locale: 'en',
+          xsaid: true,
+          autojoin: false,
+          readBots: false,
+          textInVoice: false,
+          greetOnJoin: true,
+          greetLocale: 'en',
+        });
+        // As 15 colunas passam a existir depois da migração.
+        const info = migrated.pragma('table_info(guild_config)') as Array<{ name: string }>;
+        const names = new Set(info.map((c) => c.name));
+        for (const col of GUILD_CONFIG_COLUMNS) expect(names.has(col.column)).toBe(true);
+        expect(names.has('guild_id')).toBe(true);
+      } finally {
+        migrated.close();
+        rmSync(dir, { recursive: true, force: true });
+      }
     });
   });
 
