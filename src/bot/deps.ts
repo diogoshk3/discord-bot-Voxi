@@ -6,6 +6,7 @@ import { GuildVoicePlayer } from '../voice/player';
 import { RateLimiter } from '../moderation/rateLimiter';
 import type { AloneWatcher } from '../voice/aloneWatcher';
 import type { GameManager } from '../games/manager';
+import { invalidateGuild } from '../store/cache';
 import { log } from '../logging/logger';
 
 export interface BotDeps {
@@ -80,7 +81,8 @@ export function removePlayer(
  * nao existir, `.delete` e removePlayer sao no-ops.
  */
 export function handleGuildDelete(
-  deps: Pick<BotDeps, 'players' | 'limiters' | 'aloneWatcher' | 'games'>,
+  deps: Pick<BotDeps, 'players' | 'limiters' | 'aloneWatcher' | 'games'> &
+    Partial<Pick<BotDeps, 'db'>>,
   guildId: string,
 ): void {
   try {
@@ -90,6 +92,8 @@ export function handleGuildDelete(
     // removePlayer/onVoiceLeft deixaria vivo se nao precisasse de voz — senao a sessao
     // ficava presa no mapa (leak) apos a guild sair.
     deps.games?.endGuild(guildId);
+    // Liberta as entradas de cache dos stores desta guild (bound de memória).
+    if (deps.db) invalidateGuild(deps.db, guildId);
   } catch (err) {
     log.warn('[client] falha ao libertar recursos da guild em guildDelete (ignorado)', err);
   }

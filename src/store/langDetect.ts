@@ -1,8 +1,12 @@
 import type Database from 'better-sqlite3';
+// Tabela CACHEADA (lida a cada mensagem): todo o setter TEM de chamar invalidate.
+import { cached, invalidate } from './cache';
 
 interface CountRow {
   n: number;
 }
+
+const keyOf = (guildId: string, userId: string): string => `${guildId}:${userId}`;
 
 /**
  * Toggle da DETECAO AUTOMATICA de lingua, por-(guild,user).
@@ -22,11 +26,13 @@ export function isDetectionOn(
   guildId: string,
   userId: string,
 ): boolean {
-  const row = db
-    .prepare('SELECT COUNT(*) AS n FROM tts_lang_detect_on WHERE guild_id = ? AND user_id = ?')
-    .get(guildId, userId) as CountRow;
-  // Ha linha => deteccao LIGADA (opt-in). Sem linha => desligada (default).
-  return row.n > 0;
+  return cached(db, 'tts_lang_detect_on', keyOf(guildId, userId), () => {
+    const row = db
+      .prepare('SELECT COUNT(*) AS n FROM tts_lang_detect_on WHERE guild_id = ? AND user_id = ?')
+      .get(guildId, userId) as CountRow;
+    // Ha linha => deteccao LIGADA (opt-in). Sem linha => desligada (default).
+    return row.n > 0;
+  });
 }
 
 /**
@@ -45,10 +51,12 @@ export function setDetection(
       `INSERT INTO tts_lang_detect_on (guild_id, user_id) VALUES (?, ?)
        ON CONFLICT(guild_id, user_id) DO NOTHING`,
     ).run(guildId, userId);
+    invalidate(db, 'tts_lang_detect_on', keyOf(guildId, userId));
     return;
   }
   db.prepare('DELETE FROM tts_lang_detect_on WHERE guild_id = ? AND user_id = ?').run(
     guildId,
     userId,
   );
+  invalidate(db, 'tts_lang_detect_on', keyOf(guildId, userId));
 }

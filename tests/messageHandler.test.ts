@@ -143,6 +143,20 @@ describe('handleMessage — ramos não cobertos pelos testes existentes', () => 
     db.close();
   });
 
+  // ── cache dos stores (plano 010) ──────────────────────────────────────────
+  it('cache write-through: a 2.ª mensagem NÃO re-consulta guild_config', async () => {
+    const deps = makeDeps(db, say);
+    // 1.ª mensagem: popula a cache de guild_config (e outras tabelas do hot-path).
+    await handleMessage(makeMessage({ content: 'primeira' }), deps);
+    // Espia o db a partir daqui: na 2.ª mensagem o guild_config vem da cache.
+    const spy = vi.spyOn(db, 'prepare');
+    await handleMessage(makeMessage({ content: 'segunda' }), deps);
+    const guildConfigSelects = spy.mock.calls.filter((c) => String(c[0]).includes('FROM guild_config'));
+    expect(guildConfigSelects).toHaveLength(0); // servido da cache, sem SQL
+    expect(say).toHaveBeenCalledTimes(2); // ambas foram lidas
+    spy.mockRestore();
+  });
+
   // ── 1. Autor é bot ────────────────────────────────────────────────────────
   it('mensagem de bot → ignorada por defeito (read_bots OFF)', async () => {
     const deps = makeDeps(db, say);

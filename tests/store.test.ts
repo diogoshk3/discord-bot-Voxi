@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
@@ -6,7 +6,7 @@ import BetterSqlite3 from 'better-sqlite3';
 import type Database from 'better-sqlite3';
 import { initDb } from '../src/store/db';
 import { getUserVoice, setUserVoice, resetUserVoice } from '../src/store/userVoice';
-import { getGuildConfig, setGuildConfig } from '../src/store/guildConfig';
+import { getGuildConfig, setGuildConfig, resetGuildConfig } from '../src/store/guildConfig';
 import { getBlocklist, addBlockword, removeBlockword } from '../src/store/blocklist';
 import {
   getPronunciations,
@@ -15,8 +15,15 @@ import {
 } from '../src/store/pronunciation';
 import { isOptedOut, setOptOut, setOptIn } from '../src/store/optout';
 import { getNickname, setNickname, clearNickname } from '../src/store/nickname';
-import { getVoiceEffect, setVoiceEffect } from '../src/store/voiceEffect';
-import { getClone } from '../src/store/voiceClone';
+import { getVoiceEffect, setVoiceEffect, clearVoiceEffect } from '../src/store/voiceEffect';
+import { isDetectionOn, setDetection } from '../src/store/langDetect';
+import {
+  getClone,
+  saveClone,
+  setCloneEnabled,
+  deleteClone,
+  deleteClonesByTarget,
+} from '../src/store/voiceClone';
 
 const G = 'guild-1';
 const U = 'user-1';
@@ -554,6 +561,138 @@ describe('initDb — migracao locale em DB de esquema antigo', () => {
       db2.close();
     } finally {
       rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+// ── cache write-through (plano 010) ──────────────────────────────────────────
+describe('store — cache write-through', () => {
+  let db: Database.Database;
+  beforeEach(() => {
+    db = initDb(':memory:');
+  });
+  afterEach(() => {
+    db.close();
+  });
+
+  // A prova mais forte: cada setter tem de fazer o get SEGUINTE devolver o valor novo.
+  // Se a invalidação faltasse, o get servia o valor cacheado velho e estes falhavam.
+  it('cada setter invalida — o get seguinte reflete a escrita', () => {
+    // guild_config
+    getGuildConfig(db, G);
+    setGuildConfig(db, G, { maxChars: 111 });
+    expect(getGuildConfig(db, G).maxChars).toBe(111);
+    resetGuildConfig(db, G);
+    expect(getGuildConfig(db, G).maxChars).toBe(300); // default
+
+    // blocklist
+    getBlocklist(db, G);
+    addBlockword(db, G, 'spam');
+    expect(getBlocklist(db, G)).toContain('spam');
+    removeBlockword(db, G, 'spam');
+    expect(getBlocklist(db, G)).not.toContain('spam');
+
+    // pronunciation
+    getPronunciations(db, G);
+    addPronunciation(db, G, 'gg', 'good game');
+    expect(getPronunciations(db, G)).toEqual([{ term: 'gg', replacement: 'good game' }]);
+    removePronunciation(db, G, 'gg');
+    expect(getPronunciations(db, G)).toHaveLength(0);
+
+    // user_voice
+    getUserVoice(db, G, U);
+    setUserVoice(db, G, U, 'en_US-amy-medium', 1);
+    expect(getUserVoice(db, G, U)?.model).toBe('en_US-amy-medium');
+    resetUserVoice(db, G, U);
+    expect(getUserVoice(db, G, U)).toBeNull();
+
+    // nickname
+    getNickname(db, G, U);
+    setNickname(db, G, U, 'Zé');
+    expect(getNickname(db, G, U)).toBe('Zé');
+    clearNickname(db, G, U);
+    expect(getNickname(db, G, U)).toBeNull();
+
+    // optout
+    isOptedOut(db, G, U);
+    setOptOut(db, G, U);
+    expect(isOptedOut(db, G, U)).toBe(true);
+    setOptIn(db, G, U);
+    expect(isOptedOut(db, G, U)).toBe(false);
+
+    // lang detect
+    isDetectionOn(db, G, U);
+    setDetection(db, G, U, true);
+    expect(isDetectionOn(db, G, U)).toBe(true);
+    setDetection(db, G, U, false);
+    expect(isDetectionOn(db, G, U)).toBe(false);
+
+    // voice effect
+    getVoiceEffect(db, G, U);
+    setVoiceEffect(db, G, U, 'robot');
+    expect(getVoiceEffect(db, G, U)).toBe('robot');
+    clearVoiceEffect(db, G, U);
+    expect(getVoiceEffect(db, G, U)).toBe('none');
+
+    // clone
+    getClone(db, U);
+    saveClone(db, U, '/a.wav', 1000);
+    expect(getClone(db, U)?.samplePath).toBe('/a.wav');
+    setCloneEnabled(db, U, true);
+    expect(getClone(db, U)?.enabled).toBe(true);
+    deleteClone(db, U);
+    expect(getClone(db, U)).toBeNull();
+  });
+
+  it('deleteClonesByTarget invalida a cache do DONO afetado', () => {
+    saveClone(db, 'owner', '/o.wav', 1000, 'target'); // owner grava a voz de target
+    getClone(db, 'owner'); // popula a cache
+    const removed = deleteClonesByTarget(db, 'target');
+    expect(removed.map((r) => r.ownerId)).toContain('owner');
+    expect(getClone(db, 'owner')).toBeNull(); // não serve o cacheado velho
+  });
+
+  it('caching NEGATIVO: um get sem linha não re-consulta no 2.º get, mas set invalida', () => {
+    const spy = vi.spyOn(db, 'prepare');
+    getNickname(db, G, U); // miss -> SELECT
+    getNickname(db, G, U); // hit -> sem novo SELECT
+    const selects = spy.mock.calls.filter((c) => String(c[0]).includes('FROM user_nickname')).length;
+    expect(selects).toBe(1); // só um SELECT apesar de dois gets (null foi cacheado)
+    spy.mockRestore();
+    setNickname(db, G, U, 'Ana');
+    expect(getNickname(db, G, U)).toBe('Ana');
+  });
+
+  it('isolamento entre instâncias de db (WeakMap): db1 não contamina db2', () => {
+    const db2 = initDb(':memory:');
+    try {
+      setNickname(db, G, U, 'só-no-db1');
+      getNickname(db, G, U);
+      expect(getNickname(db2, G, U)).toBeNull();
+    } finally {
+      db2.close();
+    }
+  });
+
+  it('objeto devolvido NÃO é aliased ao cacheado (cópia rasa)', () => {
+    setGuildConfig(db, G, { maxChars: 250 });
+    const a = getGuildConfig(db, G);
+    a.maxChars = 999; // mutação do chamador
+    expect(getGuildConfig(db, G).maxChars).toBe(250); // o cacheado não mudou
+  });
+
+  it('TTL do clone: staleness limitada a 60s (escrita out-of-band via SQL cru)', () => {
+    vi.useFakeTimers();
+    try {
+      saveClone(db, U, '/velha.wav', 1000);
+      expect(getClone(db, U)?.samplePath).toBe('/velha.wav'); // popula a cache
+      // Simula OUTRO processo (shard) a escrever, SEM passar pelo setter -> não invalida.
+      db.prepare('UPDATE user_clone SET sample_path = ? WHERE user_id = ?').run('/nova.wav', U);
+      expect(getClone(db, U)?.samplePath).toBe('/velha.wav'); // ainda cacheado
+      vi.advanceTimersByTime(61_000);
+      expect(getClone(db, U)?.samplePath).toBe('/nova.wav'); // TTL expirou -> re-lê
+    } finally {
+      vi.useRealTimers();
     }
   });
 });

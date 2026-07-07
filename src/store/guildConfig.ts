@@ -1,5 +1,7 @@
 import type Database from 'better-sqlite3';
 import { DEFAULT_LOCALE } from '../i18n/index';
+// Tabela CACHEADA (lida a cada mensagem): todo o setter TEM de chamar invalidate.
+import { cached, invalidate } from './cache';
 
 export interface GuildConfig {
   ttsChannelId: string | null;
@@ -72,6 +74,12 @@ interface GuildConfigRow {
 }
 
 export function getGuildConfig(db: Database.Database, guildId: string): GuildConfig {
+  // Cópia rasa do valor cacheado: o chamador (ex.: setGuildConfig, /config show) não
+  // deve mutar o objeto guardado na cache. O loader devolve o objeto imutável.
+  return { ...cached(db, 'guild_config', guildId, () => loadGuildConfig(db, guildId)) };
+}
+
+function loadGuildConfig(db: Database.Database, guildId: string): GuildConfig {
   const row = db
     .prepare('SELECT * FROM guild_config WHERE guild_id = ?')
     .get(guildId) as GuildConfigRow | undefined;
@@ -100,6 +108,7 @@ export function getGuildConfig(db: Database.Database, guildId: string): GuildCon
 
 export function resetGuildConfig(db: Database.Database, guildId: string): void {
   db.prepare('DELETE FROM guild_config WHERE guild_id = ?').run(guildId);
+  invalidate(db, 'guild_config', guildId);
 }
 
 export function setGuildConfig(
@@ -145,4 +154,5 @@ export function setGuildConfig(
     next.greetOnJoin ? 1 : 0,
     next.greetLocale,
   );
+  invalidate(db, 'guild_config', guildId);
 }

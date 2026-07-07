@@ -4,6 +4,8 @@ import { handleGuildDelete } from '../src/bot/deps';
 import type { BotDeps } from '../src/bot/deps';
 import type { GuildVoicePlayer } from '../src/voice/player';
 import { RateLimiter } from '../src/moderation/rateLimiter';
+import { initDb } from '../src/store/db';
+import { getGuildConfig, setGuildConfig } from '../src/store/guildConfig';
 
 function fakePlayer() {
   return { destroy: vi.fn() } as unknown as GuildVoicePlayer;
@@ -48,6 +50,22 @@ describe('handleGuildDelete', () => {
     expect(() => handleGuildDelete(deps, 'NOPE')).not.toThrow();
     expect(deps.limiters.has('NOPE')).toBe(false);
     expect(deps.players.has('NOPE')).toBe(false);
+  });
+
+  it('plano 010: evicta a cache dos stores da guild (o get seguinte re-consulta)', () => {
+    const db = initDb(':memory:');
+    try {
+      setGuildConfig(db, 'G', { maxChars: 123 });
+      getGuildConfig(db, 'G'); // popula a cache
+      handleGuildDelete({ ...fakeDeps(), db }, 'G'); // deve evictar a entrada de 'G'
+      const spy = vi.spyOn(db, 'prepare');
+      getGuildConfig(db, 'G'); // cache evictada -> re-lê da DB
+      const selects = spy.mock.calls.filter((c) => String(c[0]).includes('FROM guild_config'));
+      expect(selects.length).toBeGreaterThanOrEqual(1);
+      spy.mockRestore();
+    } finally {
+      db.close();
+    }
   });
 
   it('nao crasha se player.destroy() lancar; limiter ainda e removido', () => {

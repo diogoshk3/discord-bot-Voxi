@@ -1,4 +1,13 @@
 import type Database from 'better-sqlite3';
+// Tabela CACHEADA (lida a cada mensagem): todo o setter TEM de chamar invalidate.
+import { cached, invalidate } from './cache';
+
+/**
+ * TTL do clone: ÚNICA tabela cacheada com chave GLOBAL (userId, sem guild). Em modo
+ * sharded (processos separados) uma escrita noutro shard não invalida este processo;
+ * o TTL limita a janela de staleness (relevante p/ revogação RGPD) a 60s.
+ */
+const CLONE_TTL_MS = 60_000;
 
 // Clone de voz por-UTILIZADOR (GLOBAL, como as abreviaturas — a voz é da pessoa, não
 // do servidor). CONSENT-FIRST: a linha só existe depois de haver consentimento, e
@@ -16,18 +25,29 @@ export interface CloneRow {
 }
 
 export function getClone(db: Database.Database, userId: string): CloneRow | null {
-  const row = db
-    .prepare('SELECT sample_path, consent_at, enabled, target_id FROM user_clone WHERE user_id = ?')
-    .get(userId) as
-    | { sample_path: string; consent_at: number; enabled: number; target_id: string }
-    | undefined;
-  if (!row) return null;
-  return {
-    samplePath: row.sample_path,
-    consentAt: row.consent_at,
-    enabled: row.enabled === 1,
-    targetId: row.target_id,
-  };
+  const cachedRow = cached(
+    db,
+    'user_clone',
+    userId,
+    () => {
+      const row = db
+        .prepare(
+          'SELECT sample_path, consent_at, enabled, target_id FROM user_clone WHERE user_id = ?',
+        )
+        .get(userId) as
+        | { sample_path: string; consent_at: number; enabled: number; target_id: string }
+        | undefined;
+      if (!row) return null;
+      return {
+        samplePath: row.sample_path,
+        consentAt: row.consent_at,
+        enabled: row.enabled === 1,
+        targetId: row.target_id,
+      } as CloneRow;
+    },
+    CLONE_TTL_MS,
+  );
+  return cachedRow ? { ...cachedRow } : null; // cópia: o chamador não deve mutar o cacheado
 }
 
 /**
@@ -50,6 +70,7 @@ export function saveClone(
        consent_at  = excluded.consent_at,
        target_id   = excluded.target_id`,
   ).run(userId, samplePath, now, targetId);
+  invalidate(db, 'user_clone', userId);
 }
 
 /** Liga/desliga o uso do clone. Devolve false se a pessoa ainda não tem amostra. */
@@ -57,6 +78,7 @@ export function setCloneEnabled(db: Database.Database, userId: string, on: boole
   const res = db
     .prepare('UPDATE user_clone SET enabled = ? WHERE user_id = ?')
     .run(on ? 1 : 0, userId);
+  invalidate(db, 'user_clone', userId);
   return res.changes > 0;
 }
 
@@ -65,6 +87,7 @@ export function deleteClone(db: Database.Database, userId: string): string | nul
   const row = getClone(db, userId);
   if (!row) return null;
   db.prepare('DELETE FROM user_clone WHERE user_id = ?').run(userId);
+  invalidate(db, 'user_clone', userId);
   return row.samplePath;
 }
 
@@ -83,5 +106,7 @@ export function deleteClonesByTarget(
     .all(targetId, targetId) as { user_id: string; sample_path: string }[];
   if (rows.length === 0) return [];
   db.prepare('DELETE FROM user_clone WHERE target_id = ? AND user_id <> ?').run(targetId, targetId);
+  // Invalida a cache de CADA dono afetado (a DELETE apagou várias linhas).
+  for (const r of rows) invalidate(db, 'user_clone', r.user_id);
   return rows.map((r) => ({ ownerId: r.user_id, samplePath: r.sample_path }));
 }

@@ -22,7 +22,7 @@ Repo verification baseline at planning time: `npm run build` (tsc) exit 0;
 | 007 | Pin the Python clone-sidecar dependencies | P2 | S | — | DONE |
 | 008 | AudioCache: size counter instead of per-synthesis directory scan | P2 | S | — | DONE |
 | 009 | gTTS: bounded-concurrency chunk fetch (cap 3) | P2 | S-M | — | DONE |
-| 010 | Hot-path store cache (~10 SQLite reads/message → memory) | P1 | M | — | TODO |
+| 010 | Hot-path store cache (~10 SQLite reads/message → memory) | P1 | M | — | DONE |
 | 011 | Supervisor (`start-prod.mjs`) tests via extracted pure policy | P2 | M | 005* | TODO |
 | 012 | `createVoiceSession` tests (onIdle identity guard) | P2 | M | — | TODO |
 | 013 | Lint/format toolchain (ESLint flat + Prettier + editorconfig + CI) | P2 | M | — | TODO |
