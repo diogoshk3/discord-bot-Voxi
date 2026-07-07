@@ -31,13 +31,13 @@ function normalize(w) {
   return w
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '') // remove diacríticos combinados
+    .toLowerCase() // ANTES das ligaduras, para apanhar maiúsculas (Æ, Ø, Ł…)
     .replace(/ß/g, 'ss')
     .replace(/æ/g, 'ae')
     .replace(/œ/g, 'oe')
     .replace(/ø/g, 'o')
     .replace(/đ/g, 'd')
-    .replace(/ł/g, 'l')
-    .toLowerCase();
+    .replace(/ł/g, 'l');
 }
 
 // Profanidade/insultos a NUNCA aceitar (o bot lê as palavras em voz alta, por isso
