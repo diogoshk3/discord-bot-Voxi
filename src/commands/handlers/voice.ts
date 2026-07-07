@@ -54,7 +54,7 @@ async function handleVoiceDetection(
   // MOTOR opcional aqui também (o utilizador pediu-o neste comando): escreve no MESMO
   // sítio que o /voice set (user_voice.engine), preservando a voz e a velocidade atuais.
   // Omitido => não mexe no motor. Piper costuma soar melhor nalgumas línguas (ex. PT).
-  const engineOpt = i.options.getString('engine') as 'google' | 'piper' | null;
+  const engineOpt = i.options.getString('engine') as 'google' | 'piper' | 'kokoro' | null;
   if (engineOpt) {
     const cur = getUserVoice(deps.db, i.guildId!, i.user.id);
     setUserVoice(
@@ -67,7 +67,9 @@ async function handleVoiceDetection(
     );
     msg +=
       '\n' +
-      t('voice.detection.engine', locale, { engine: engineOpt === 'piper' ? 'Piper' : 'Google' });
+      t('voice.detection.engine', locale, {
+        engine: engineOpt === 'piper' ? 'Piper' : engineOpt === 'kokoro' ? 'Kokoro' : 'Google',
+      });
   }
   await reply(i, msg);
 }
@@ -451,7 +453,7 @@ export async function handleVoice(i: ChatInputCommandInteraction, deps: BotDeps)
     const clamped = Math.min(2.0, Math.max(0.5, speed));
     // Motor por-utilizador: opção nova (google/piper). Se OMITIDA, PRESERVA o motor
     // atual do user — senão mudar só a voz reporia o motor para Google (read-first).
-    const engineOpt = i.options.getString('engine') as 'google' | 'piper' | null;
+    const engineOpt = i.options.getString('engine') as 'google' | 'piper' | 'kokoro' | null;
     const currentEngine = getUserVoice(deps.db, i.guildId!, i.user.id)?.engine ?? 'google';
     const engine = engineOpt ?? currentEngine;
     setUserVoice(deps.db, i.guildId!, i.user.id, model, clamped, engine);
@@ -463,7 +465,7 @@ export async function handleVoice(i: ChatInputCommandInteraction, deps: BotDeps)
         name: makeLocalizedNamer(i.locale, deps.availableModels)(model),
         model,
         speed: clamped,
-        engine: engine === 'piper' ? 'Piper' : 'Google',
+        engine: engine === 'piper' ? 'Piper' : engine === 'kokoro' ? 'Kokoro' : 'Google',
       }),
     );
   } else if (sub === 'list') {

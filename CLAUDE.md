@@ -39,6 +39,10 @@ Guidance for AI coding agents working on Vozen (Discord TTS bot).
 - Optional voice-clone sidecar (Chatterbox, Python): installed by
   `tools/setup-clone.ps1` into `tools/clone-venv/` (gitignored). The bot
   auto-detects it — no `.env` change needed.
+- Optional Kokoro TTS sidecar (`kokoro-onnx`, ONNX/CPU, no PyTorch): installed by
+  `tools/setup-kokoro.ps1` into `tools/kokoro-venv/` (gitignored) + model/voices.
+  Auto-detected. It is an **opt-in** per-user engine (`/voice set engine:Kokoro`);
+  gTTS stays the default for everyone and without the sidecar Kokoro serves gTTS.
 
 ## Conventions
 

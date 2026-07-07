@@ -204,11 +204,12 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
           o
             .setName('engine')
             .setNameLocalizations({ 'pt-BR': 'motor' })
-            .setDescription('Voice engine: Google (default) or Piper')
+            .setDescription('Voice engine: Google (default), Piper, or Kokoro (neural, ~7 langs)')
             .setRequired(false)
             .addChoices(
               { name: 'Google (default)', value: 'google' },
               { name: 'Piper', value: 'piper' },
+              { name: 'Kokoro (neural)', value: 'kokoro' },
             ),
         ),
     )
@@ -252,12 +253,13 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
             .setName('engine')
             .setNameLocalizations({ 'pt-BR': 'motor' })
             .setDescription(
-              'Voice engine: Google (default) or Piper — Piper often sounds better in some languages',
+              'Voice engine: Google (default), Piper, or Kokoro (neural) — often sound better in some languages',
             )
             .setRequired(false)
             .addChoices(
               { name: 'Google (default)', value: 'google' },
               { name: 'Piper', value: 'piper' },
+              { name: 'Kokoro (neural)', value: 'kokoro' },
             ),
         ),
     )

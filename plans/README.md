@@ -11,24 +11,24 @@ Repo verification baseline at planning time: `npm run build` (tsc) exit 0;
 
 ## Execution order & status
 
-| Plan | Title                                                                                      | Priority | Effort | Depends on    | Status |
-| ---- | ------------------------------------------------------------------------------------------ | -------- | ------ | ------------- | ------ |
-| 001  | Clone sidecar warmup deadline (wedged sidecar can stall a guild's TTS)                     | P1       | S      | —             | DONE   |
-| 002  | Voice soft-recovery: handle the losing `entersState` rejection                             | P1       | S      | —             | DONE   |
-| 003  | `/game play`: deferReply before the thread-creation REST call                              | P1       | S      | —             | DONE   |
-| 004  | Security hardening trio (vote webhook secret · gate guild `/redeem` · scrub error webhook) | P1       | S      | 003*          | DONE   |
-| 005  | Typecheck the test suite + `engines` field                                                 | P1       | S      | —             | DONE   |
-| 006  | `CLAUDE.md` + `.env.example` in English                                                    | P2       | S      | —             | DONE   |
-| 007  | Pin the Python clone-sidecar dependencies                                                  | P2       | S      | —             | DONE   |
-| 008  | AudioCache: size counter instead of per-synthesis directory scan                           | P2       | S      | —             | DONE   |
-| 009  | gTTS: bounded-concurrency chunk fetch (cap 3)                                              | P2       | S-M    | —             | DONE   |
-| 010  | Hot-path store cache (~10 SQLite reads/message → memory)                                   | P1       | M      | —             | DONE   |
-| 011  | Supervisor (`start-prod.mjs`) tests via extracted pure policy                              | P2       | M      | 005*          | DONE   |
-| 012  | `createVoiceSession` tests (onIdle identity guard)                                         | P2       | M      | —             | DONE   |
-| 013  | Lint/format toolchain (ESLint flat + Prettier + editorconfig + CI)                         | P2       | M      | —             | DONE   |
-| 014  | `guild_config` descriptor-driven store (kill the 10-edit lockstep)                         | P2       | M      | 010           | DONE   |
-| 015  | Split `commands/index.ts` (2821 lines → handler modules)                                   | P3       | L      | 003, 004, 013 | DONE   |
-| 016  | Hybrid engine Phase 2 — Kokoro (kokoro-onnx) as opt-in per-user engine (gTTS stays default) | P2       | L      | 015           | Phase 0 DONE |
+| Plan | Title                                                                                       | Priority | Effort | Depends on    | Status       |
+| ---- | ------------------------------------------------------------------------------------------- | -------- | ------ | ------------- | ------------ |
+| 001  | Clone sidecar warmup deadline (wedged sidecar can stall a guild's TTS)                      | P1       | S      | —             | DONE         |
+| 002  | Voice soft-recovery: handle the losing `entersState` rejection                              | P1       | S      | —             | DONE         |
+| 003  | `/game play`: deferReply before the thread-creation REST call                               | P1       | S      | —             | DONE         |
+| 004  | Security hardening trio (vote webhook secret · gate guild `/redeem` · scrub error webhook)  | P1       | S      | 003*          | DONE         |
+| 005  | Typecheck the test suite + `engines` field                                                  | P1       | S      | —             | DONE         |
+| 006  | `CLAUDE.md` + `.env.example` in English                                                     | P2       | S      | —             | DONE         |
+| 007  | Pin the Python clone-sidecar dependencies                                                   | P2       | S      | —             | DONE         |
+| 008  | AudioCache: size counter instead of per-synthesis directory scan                            | P2       | S      | —             | DONE         |
+| 009  | gTTS: bounded-concurrency chunk fetch (cap 3)                                               | P2       | S-M    | —             | DONE         |
+| 010  | Hot-path store cache (~10 SQLite reads/message → memory)                                    | P1       | M      | —             | DONE         |
+| 011  | Supervisor (`start-prod.mjs`) tests via extracted pure policy                               | P2       | M      | 005*          | DONE         |
+| 012  | `createVoiceSession` tests (onIdle identity guard)                                          | P2       | M      | —             | DONE         |
+| 013  | Lint/format toolchain (ESLint flat + Prettier + editorconfig + CI)                          | P2       | M      | —             | DONE         |
+| 014  | `guild_config` descriptor-driven store (kill the 10-edit lockstep)                          | P2       | M      | 010           | DONE         |
+| 015  | Split `commands/index.ts` (2821 lines → handler modules)                                    | P3       | L      | 003, 004, 013 | DONE         |
+| 016  | Hybrid engine Phase 2 — Kokoro (kokoro-onnx) as opt-in per-user engine (gTTS stays default) | P2       | L      | 015           | DONE         |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale)
 

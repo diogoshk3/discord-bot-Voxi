@@ -92,7 +92,7 @@ Ran in a throwaway venv (`scratchpad/kokoro-spike/`, Python 3.12):
   label, and the persistence to include `'kokoro'`.
 - **`src/commands/index.ts`** — `commandDefsRaw` holds the `/voice set` `engine`
   string option with `.addChoices({name:'Google',value:'google'}, {name:'Piper',
-  value:'piper'})` (grep `addChoices` / `'engine'`). Add a `Kokoro` choice.
+value:'piper'})` (grep `addChoices` / `'engine'`). Add a `Kokoro` choice.
 - **`src/tts/cache.ts`** — `cacheKey(...)` folds `engine` in only when `'piper'`.
   Fold `'kokoro'` in the SAME way (so Kokoro audio doesn't collide with
   gTTS/Piper for the same text+model).
@@ -139,7 +139,7 @@ full suite is the primary gate (**1349** at plan-015 DONE); CI runs
 - The gTTS default path, `CircuitBreakerEngine`, Piper, `makePiper`, the `router`
   branch of `createEngine` (that is the OTHER, non-default engine mode).
 - Premium gating / entitlements. Any change to the `router`-mode wiring.
-- Kokoro voice *picking* UI beyond the single engine choice (one voice per lang
+- Kokoro voice _picking_ UI beyond the single engine choice (one voice per lang
   is chosen by the engine's internal map — no new `/voice` surface).
 
 ## Phases
@@ -161,7 +161,7 @@ full suite is the primary gate (**1349** at plan-015 DONE); CI runs
 - [ ] `.gitignore` += `tools/kokoro-venv/`, `tools/kokoro-v1.0.onnx`,
       `tools/voices-v1.0.bin`.
 - **Done**: `pwsh tools/setup-kokoro.ps1` succeeds; a hand-fed JSON line prints a
-      valid WAV path.
+  valid WAV path.
 
 ### Phase 2 — `KokoroEngine` (TS), implements `TTSEngine`
 
@@ -187,11 +187,11 @@ full suite is the primary gate (**1349** at plan-015 DONE); CI runs
 - [ ] `src/tts/cache.ts`: fold `'kokoro'` into `cacheKey` exactly like `'piper'`.
 - [ ] `src/tts/perUserRouter.ts`: `constructor(google, piper, kokoro)`;
       `synth` → `req.engine === 'kokoro' ? kokoro : req.engine === 'piper' ?
-      piper : google`.
+  piper : google`.
 - [ ] `src/tts/factory.ts` `createPerUserEngine`: after building `google` and
       `piper`, resolve the sidecar; `kokoroPath = resolveKokoroCmd(config.kokoroCmd)
-      ? new RouterEngine([{engine:new KokoroEngine(...), langs:config.kokoroLangs,
-      label:'kokoro'}, {engine:google, langs:null, label:'gtts'}]) : google`.
+  ? new RouterEngine([{engine:new KokoroEngine(...), langs:config.kokoroLangs,
+  label:'kokoro'}, {engine:google, langs:null, label:'gtts'}]) : google`.
       Return `new PerUserEngineRouter(google, piper, kokoroPath)`. When the sidecar
       is absent, `kokoroPath === google`, so choosing Kokoro transparently yields
       gTTS — no silence, no breakage.
@@ -203,9 +203,9 @@ full suite is the primary gate (**1349** at plan-015 DONE); CI runs
       verify against `langKeyOfModel`, e.g. `en,es,fr,hi,it,pt,ja,zh`),
       `kokoroChunkConcurrency` (numEnvPositive, default 2).
 - **Done (MVP)**: with the sidecar installed, `/voice set engine:kokoro` then a
-      message in a supported language is synthesized by Kokoro (logs show
-      `kokoro`); an unsupported language or a Kokoro failure falls to gTTS; users
-      who did not opt in are byte-identical to today. Suite ≥1349.
+  message in a supported language is synthesized by Kokoro (logs show
+  `kokoro`); an unsupported language or a Kokoro failure falls to gTTS; users
+  who did not opt in are byte-identical to today. Suite ≥1349.
 
 ### Phase 4 — `/voice set engine` choice + docs
 
@@ -213,13 +213,13 @@ full suite is the primary gate (**1349** at plan-015 DONE); CI runs
       `engine` option's `addChoices` in `commandDefsRaw`.
 - [ ] `src/commands/handlers/voice.ts`: extend the two `as 'google' | 'piper'`
       casts to include `'kokoro'`, the label ternary (`… : engine === 'kokoro' ?
-      'Kokoro' : …`), and persistence. (Optional nicety: in the confirmation copy,
+  'Kokoro' : …`), and persistence. (Optional nicety: in the confirmation copy,
       note Kokoro covers ~8 languages and falls back to Google otherwise.)
 - [ ] `.env.example` (KOKORO_* vars), `CLAUDE.md` (optional Kokoro sidecar note,
       parallel to the clone one), `docs/ARCHITECTURE.md` (per-user engine now
       google/piper/kokoro).
 - **Done**: `/voice set engine` lists Kokoro; docs updated; `.env.example` vars
-      match `src/config/index.ts`.
+  match `src/config/index.ts`.
 
 ### Phase 5 — Verification
 
@@ -228,7 +228,7 @@ full suite is the primary gate (**1349** at plan-015 DONE); CI runs
       gTTS; a NON-opted user → unchanged gTTS. Sidecar ABSENT: choosing Kokoro
       behaves as gTTS.
 - [ ] `npm run build && npm run typecheck && npm run lint && npm run format:check
-      && npx vitest run` all green (≥1349).
+  && npx vitest run` all green (≥1349).
 - **Done**: matrix passes; all gates green.
 
 ## Git workflow
