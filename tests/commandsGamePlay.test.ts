@@ -103,7 +103,8 @@ describe('/game play — deferReply antes do REST + respostas via editReply', ()
   });
 
   it('sem thread (canal de voz) joga no próprio canal e responde via editReply', async () => {
-    const start = vi.fn(() => 'started' as const);
+    // Params tipados (guildId, channelId, ...) p/ o typecheck ler calls[0][1].
+    const start = vi.fn((_guildId: string, _channelId: string, ..._rest: unknown[]) => 'started' as const);
     const games = { active: () => false, channelOf: () => null, start };
     // type:2 = GuildVoice -> createGameThread devolve null -> joga em chan-1
     const i = makePlayInteraction({ channel: { type: 2 } });

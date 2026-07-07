@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { GameManager } from '../src/games/manager';
-import type { Clock, GameEnv, TimerHandle } from '../src/games/types';
+import type { Clock, GameEnv, Sendable, TimerHandle } from '../src/games/types';
+import type { SynthRequest } from '../src/tts/engine';
 import { GAME_DEFS, gameById } from '../src/games/index';
 import { firstInteger, makeRng, jaccard } from '../src/games/util';
 
@@ -36,9 +37,10 @@ class FakeClock implements Clock {
 
 function harness(overrides: Partial<GameEnv> = {}) {
   const clock = new FakeClock();
-  const say = vi.fn(async () => true);
-  const send = vi.fn(async () => {});
-  const persistScores = vi.fn();
+  // Params tipados p/ o typecheck: sem eles, .mock.calls fica tuplo vazio (TS2493/2352).
+  const say = vi.fn(async (_req: SynthRequest) => true);
+  const send = vi.fn(async (_channelId: string, _content: Sendable) => {});
+  const persistScores = vi.fn((_guildId: string, _points: Map<string, number>) => {});
   const logError = vi.fn();
   const env: GameEnv = {
     clock,

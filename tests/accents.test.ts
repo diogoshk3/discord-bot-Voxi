@@ -77,14 +77,16 @@ describe('restoreAccents — repõe acentos da língua', () => {
 
 describe('prepareSpeech — integra o restauro de acentos', () => {
   const available = ['en_US-amy-medium', 'pt_PT-tugao-medium', 'es_ES-davefx-medium'];
+  // Sem `as const`: tornava `pronunciations` um readonly [] incompatível com o
+  // PronunciationEntry[] (mutável) do PrepareSpeechInput.
   const base = {
-    pronunciations: [],
+    pronunciations: [] as { term: string; replacement: string }[],
     userVoice: null,
     available,
     defaultVoice: 'en_US-amy-medium',
     defaultSpeed: 1,
     autoDetect: true,
-  } as const;
+  };
 
   it('língua-base PT (via memória) => o texto falado leva os acentos', () => {
     const r = prepareSpeech({ ...base, personal: 'nao quero fazer isto amanha', recentLang: 'por' });

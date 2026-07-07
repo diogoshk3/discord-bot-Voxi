@@ -1,8 +1,11 @@
 import { describe, it, expect, vi } from 'vitest';
 import { createErrorReporter, formatErrorMessage } from '../src/errorReporter';
 
+// Params tipados (url, opts) p/ o typecheck: sem eles .mock.calls fica tuplo vazio.
+// O mock é passado com cast `as unknown as typeof fetch`, por isso a forma do opts
+// pode ser a que o teste lê (method+body).
 function okFetch() {
-  return vi.fn(async () => ({ ok: true, status: 204 }) as Response);
+  return vi.fn(async (_url: string, _opts: { method: string; body: string }) => ({ ok: true, status: 204 }) as Response);
 }
 
 describe('formatErrorMessage', () => {

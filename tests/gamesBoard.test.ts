@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { GameManager } from '../src/games/manager';
-import type { Clock, GameEnv, TimerHandle } from '../src/games/types';
+import type { Clock, GameEnv, Sendable, TimerHandle } from '../src/games/types';
 import { gameById } from '../src/games/index';
 import { wordsForLocale } from '../src/games/content/words';
 import { pickWordleWords } from '../src/games/content/wordleWords';
@@ -39,8 +39,10 @@ class FakeClock implements Clock {
 
 function harness() {
   const clock = new FakeClock();
-  const send = vi.fn(async () => {});
-  const persistScores = vi.fn();
+  // Params tipados p/ o typecheck dos testes: sem eles, .mock.calls fica tuplo vazio
+  // e c[1] / calls[0][1] dão TS2493 (assinaturas reais no GameEnv).
+  const send = vi.fn(async (_channelId: string, _content: Sendable) => {});
+  const persistScores = vi.fn((_guildId: string, _points: Map<string, number>) => {});
   const logError = vi.fn();
   const env: GameEnv = {
     clock,

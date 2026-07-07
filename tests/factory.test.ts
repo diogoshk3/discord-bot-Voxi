@@ -20,6 +20,7 @@ function baseConfig(overrides: Partial<AppConfig> = {}): AppConfig {
     dbPath: './tts.db',
     defaultVoice: 'en_US-amy-medium',
     defaultSpeed: 1,
+    messageLeadMs: 200,
     inactivityMs: 300000,
     queueCap: 20,
     maxChars: 300,
@@ -27,6 +28,14 @@ function baseConfig(overrides: Partial<AppConfig> = {}): AppConfig {
     ttsEngine: 'piper',
     openaiApiKey: undefined,
     multilingualSegments: false,
+    topggWebhookAllowInsecure: false,
+    // Campos obrigatórios do AppConfig que o typecheck dos testes passou a exigir.
+    noiseScale: 0.667,
+    noiseW: 0.8,
+    sentenceSilence: 0.2,
+    gttsBreakerThreshold: 3,
+    gttsBreakerCooldownMs: 60_000,
+    supportUrl: 'https://discord.gg/V6PZYZmhcQ',
     ...overrides,
   };
 }

@@ -5,14 +5,16 @@ import type { SynthRequest } from '../src/tts/engine';
 // Catalogo: EN + PT + ES (mesmo dos testes de resolveSynth).
 const AVAILABLE = ['en_US-amy-medium', 'pt_PT-tugao-medium', 'es_ES-davefx-medium'];
 
+// Sem `as const`: mantê-lo tornava `pronunciations` um `readonly []` que não encaixa
+// no PronunciationEntry[] (mutável) esperado pelo PrepareSpeechInput.
 const BASE = {
-  pronunciations: [],
+  pronunciations: [] as { term: string; replacement: string }[],
   userVoice: null,
   available: AVAILABLE,
   defaultVoice: 'en_US-amy-medium',
   defaultSpeed: 1,
   autoDetect: true,
-} as const;
+};
 
 describe('prepareSpeech — texto sem girias (single voice)', () => {
   it('frase PT longa -> req sem `segments`, model pt_', () => {

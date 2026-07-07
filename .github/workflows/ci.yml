@@ -24,4 +24,5 @@ jobs:
       # sodium-native) build/fetch prebuilds on ubuntu for Node 20/22.
       - run: npm ci
       - run: npm run build
+      - run: npm run typecheck
       - run: npx vitest run

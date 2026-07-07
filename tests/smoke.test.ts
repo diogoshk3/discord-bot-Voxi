@@ -148,10 +148,13 @@ describe('smoke: boot sem token (monta deps reais sem ligar ao Discord)', () => 
       // Comandos slash (type ausente/1) têm description; os context-menu (USER=2,
       // MESSAGE=3) NÃO têm — a description é proibida nesses. Aceitamos ambos.
       const isContextMenu = def.type === 2 || def.type === 3;
+      // `description` só existe no ramo slash da união; o TS não estreita por def.type,
+      // por isso acedemos via forma estrutural (o context-menu não a tem).
+      const description = (def as { description?: string }).description;
       if (isContextMenu) {
-        expect(def.description ?? '').toBe('');
+        expect(description ?? '').toBe('');
       } else {
-        expect(typeof def.description).toBe('string');
+        expect(typeof description).toBe('string');
       }
     }
   });

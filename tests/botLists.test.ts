@@ -1,8 +1,14 @@
 import { describe, it, expect, vi } from 'vitest';
 import { postTopggStats, startBotListUpdater } from '../src/botLists';
 
+// Params tipados (url, opts) p/ o typecheck: sem eles .mock.calls fica tuplo vazio.
+// O mock é passado com cast `as unknown as typeof fetch`, por isso o opts pode ter a
+// forma que o teste lê (method+headers+body).
 function okFetch() {
-  return vi.fn(async () => ({ ok: true, status: 200 }) as Response);
+  return vi.fn(
+    async (_url: string, _opts: { method: string; headers: { Authorization: string }; body: string }) =>
+      ({ ok: true, status: 200 }) as Response,
+  );
 }
 
 describe('postTopggStats', () => {

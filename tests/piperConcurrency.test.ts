@@ -97,7 +97,7 @@ describe('PiperEngine — cap global de concorrencia de spawns', () => {
     const fakeWav = join(dir, 'seed.wav');
     writeFileSync(fakeWav, 'RIFFdummy');
     // Usa a API real da cache para semear a entrada.
-    const { cacheKey } = await import('../src/tts/cache');
+    const { cacheKey } = await import('../src/tts/cache.js');
     cache.put(cacheKey(hitReq), fakeWav);
 
     const sem = new Semaphore(1);

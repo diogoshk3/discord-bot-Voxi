@@ -63,7 +63,7 @@ describe('runShardLauncher — escolha manager vs single-process', () => {
 
   it('BOT_SHARDS="2": constroi ShardingManager com totalShards=2 e faz spawn', async () => {
     setEnv({ ...REQUIRED, BOT_SHARDS: '2' });
-    const { runShardLauncher } = await import('../src/shard');
+    const { runShardLauncher } = await import('../src/shard.js');
     runShardLauncher();
     expect(shardingManagerCtor).toHaveBeenCalledTimes(1);
     const [file, opts] = shardingManagerCtor.mock.calls[0] as [string, { token: string; totalShards: unknown }];
@@ -75,7 +75,7 @@ describe('runShardLauncher — escolha manager vs single-process', () => {
 
   it('BOT_SHARDS="auto": constroi ShardingManager com totalShards="auto"', async () => {
     setEnv({ ...REQUIRED, BOT_SHARDS: 'auto' });
-    const { runShardLauncher } = await import('../src/shard');
+    const { runShardLauncher } = await import('../src/shard.js');
     runShardLauncher();
     expect(shardingManagerCtor).toHaveBeenCalledTimes(1);
     const [, opts] = shardingManagerCtor.mock.calls[0] as [string, { totalShards: unknown }];

@@ -74,14 +74,16 @@ describe('detectLangDetailed — sinal de confiança', () => {
 
 describe('prepareSpeech — usa recentLang em ambíguo, memoriza confiante', () => {
   const available = ['en_US-amy-medium', 'pt_PT-tugao-medium', 'es_ES-davefx-medium'];
+  // Sem `as const`: tornava `pronunciations` um readonly [] incompatível com o
+  // PronunciationEntry[] (mutável) do PrepareSpeechInput.
   const base = {
-    pronunciations: [],
+    pronunciations: [] as { term: string; replacement: string }[],
     userVoice: null,
     available,
     defaultVoice: 'en_US-amy-medium',
     defaultSpeed: 1,
     autoDetect: true,
-  } as const;
+  };
 
   it('fragmento ambíguo + recentLang=por => usa voz pt_ (não o palpite espanhol)', () => {
     const r = prepareSpeech({ ...base, personal: 'isto ta a funcionar', recentLang: 'por' });

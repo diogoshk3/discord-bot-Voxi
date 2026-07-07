@@ -362,7 +362,7 @@ describe('/config blockword — validacao de palavra vazia', () => {
 
   it('blockword remove: aceita palavra valida', async () => {
     // Pre-adicionar via blocklist diretamente para depois remover
-    const { addBlockword } = await import('../src/store/blocklist');
+    const { addBlockword } = await import('../src/store/blocklist.js');
     addBlockword(db, GUILD, 'spam');
 
     const i = makeConfigInteraction({

@@ -4,6 +4,9 @@
   "private": true,
   "description": "Vozen — type it, hear it. Free neural TTS bot for Discord (Piper, self-host) with reliability.",
   "license": "AGPL-3.0-only",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
@@ -11,6 +14,7 @@
     "start:prod": "npm run build && node scripts/start-prod.mjs",
     "start:sharded": "node dist/shard.js",
     "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.test.json --noEmit",
     "register": "tsx src/bot/registerCommands.ts",
     "build:site": "node tools/minify-site.mjs"
   },
