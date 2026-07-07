@@ -105,6 +105,11 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
         content: message.content ?? '',
       })
     ) {
+      // Observabilidade do routing dos jogos: uma partida em THREAD só funciona se as
+      // mensagens da thread chegarem aqui (channelId == id da thread). Se um dia isto
+      // deixar de acontecer, os palpites falhariam em SILÊNCIO — este log torna o
+      // caminho visível (confirma que o jogo está a receber input).
+      log.info(`[game] mensagem consumida no canal ${message.channelId}`);
       return;
     }
 
