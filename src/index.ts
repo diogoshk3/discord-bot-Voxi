@@ -26,6 +26,7 @@ import { installSignalHandlers } from './bot/shutdown';
 import { startHealthServer } from './health';
 import { checkFfmpeg } from './health/ffmpeg';
 import { startLoopLagMonitor } from './health/loopLag';
+import { startEntitlementSync } from './premium/entitlementSync';
 import { startVoteWebhookServer } from './vote';
 
 function discoverModels(modelsDir: string): string[] {
@@ -231,6 +232,21 @@ async function main(): Promise<void> {
     // Carrega os emojis do tabuleiro de xadrez (preenche `boardEmojis` por referência).
     // Best-effort: falha => o xadrez usa ASCII.
     void loadBoardEmojis(client, boardEmojis);
+    // Premium Apps do Discord: sincroniza os entitlements (compras nativas) com o premium
+    // interno. INERTE se PREMIUM_*_SKU_ID não estiverem definidos — em produção hoje é
+    // no-op (só /redeem), ativa-se quando o operador criar os SKUs pós-verificação.
+    try {
+      startEntitlementSync({
+        client,
+        db,
+        sku: { guildSkuId: config.premiumGuildSkuId, userSkuId: config.premiumUserSkuId },
+        now: () => Date.now(),
+        logInfo: (m) => log.info(m),
+        logError: (m, err) => log.error(m, err),
+      });
+    } catch (err) {
+      log.error('[index] falha ao arrancar a sync de entitlements (ignorado)', err);
+    }
   });
 
   // Sincronizar os comandos NÃO é fatal: é um PUT global fortemente rate-limited

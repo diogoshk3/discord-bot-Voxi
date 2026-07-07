@@ -153,14 +153,17 @@ export function initDb(path: string): Database.Database {
         PRIMARY KEY (guild_id, user_id)
       );
 
-      -- Clone de voz por-UTILIZADOR (global): a propria pessoa gravou a SUA voz
-      -- (/voice clone record) — consent_at regista o consentimento. So o proprio
-      -- usa/apaga o seu clone. sample_path aponta para o WAV de referencia.
+      -- Clone de voz por-UTILIZADOR (global). O DONO (user_id) e quem gravou e vai FALAR
+      -- com esta voz; target_id e a pessoa cuja VOZ foi gravada (== user_id num auto-clone;
+      -- diferente quando A grava a voz de B com o consentimento de B). consent_at regista o
+      -- consentimento. O dono usa/apaga o seu clone; ALEM disso, a pessoa gravada (target_id)
+      -- pode SEMPRE revogar (apagar) qualquer clone feito a partir da sua voz (RGPD).
       CREATE TABLE IF NOT EXISTS user_clone (
         user_id     TEXT PRIMARY KEY,
         sample_path TEXT NOT NULL,
         consent_at  INTEGER NOT NULL,
-        enabled     INTEGER NOT NULL DEFAULT 0
+        enabled     INTEGER NOT NULL DEFAULT 0,
+        target_id   TEXT NOT NULL DEFAULT ''
       );
 
       -- Códigos de resgate (Ko-fi/Patreon): gerados offline, resgatados 1x com /redeem.
@@ -227,6 +230,15 @@ export function initDb(path: string): Database.Database {
     const uvCols = db.pragma('table_info(user_voice)') as Array<{ name: string }>;
     if (!uvCols.some((c) => c.name === 'engine')) {
       db.exec("ALTER TABLE user_voice ADD COLUMN engine TEXT NOT NULL DEFAULT 'google'");
+    }
+    // Migracao idempotente do `target_id` no user_clone (Fase 2 de compliance): a pessoa
+    // cuja voz foi gravada pode revogar o clone. Nas linhas ANTIGAS nao sabiamos o alvo,
+    // por isso o backfill assume auto-clone (target_id = user_id) — o dono continua a poder
+    // apagar, e como target == dono a revogacao coincide. No-op em DBs novas (CREATE ja tem).
+    const ucCols = db.pragma('table_info(user_clone)') as Array<{ name: string }>;
+    if (!ucCols.some((c) => c.name === 'target_id')) {
+      db.exec("ALTER TABLE user_clone ADD COLUMN target_id TEXT NOT NULL DEFAULT ''");
+      db.exec("UPDATE user_clone SET target_id = user_id WHERE target_id = ''");
     }
 
     return db;

@@ -63,6 +63,13 @@ export interface AppConfig {
   // este link satisfaz esse requisito. Default = servidor de suporte oficial do
   // Vozen; um self-hoster aponta o SEU via env SUPPORT_URL.
   supportUrl: string;
+  // Premium Apps do Discord (monetização nativa). IDs dos SKUs criados no Developer
+  // Portal DEPOIS de a app estar verificada e a onboarding de monetização feita.
+  // AUSENTES => o subsistema de entitlements fica INERTE (só /redeem). Env:
+  // PREMIUM_GUILD_SKU_ID (subscrição por-servidor ≙ Premium) e PREMIUM_USER_SKU_ID
+  // (subscrição por-utilizador ≙ Plus).
+  premiumGuildSkuId?: string;
+  premiumUserSkuId?: string;
 }
 
 function requireEnv(name: string): string {
@@ -214,5 +221,8 @@ export function loadConfig(): AppConfig {
     // Canal de suporte/denúncia (requisito da Política de Desenvolvedor do Discord).
     // Default = servidor de suporte oficial do Vozen; override por SUPPORT_URL.
     supportUrl: strEnv('SUPPORT_URL', 'https://discord.gg/V6PZYZmhcQ'),
+    // Premium Apps (monetização nativa). Ausentes => entitlements inertes (só /redeem).
+    premiumGuildSkuId: strEnv('PREMIUM_GUILD_SKU_ID', '') || undefined,
+    premiumUserSkuId: strEnv('PREMIUM_USER_SKU_ID', '') || undefined,
   };
 }

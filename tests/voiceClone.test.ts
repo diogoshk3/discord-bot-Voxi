@@ -5,7 +5,13 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type Database from 'better-sqlite3';
 import { initDb } from '../src/store/db';
-import { getClone, saveClone, setCloneEnabled, deleteClone } from '../src/store/voiceClone';
+import {
+  getClone,
+  saveClone,
+  setCloneEnabled,
+  deleteClone,
+  deleteClonesByTarget,
+} from '../src/store/voiceClone';
 import { VoicedCollector, pcmToWavFile } from '../src/voice/recorder';
 
 // PCM s16le 48kHz estéreo: 192 bytes/ms.
@@ -110,9 +116,14 @@ describe('store voiceClone — consent-first, por-utilizador', () => {
     expect(setCloneEnabled(db, 'u1', true)).toBe(false);
   });
 
-  it('saveClone regista amostra + consentimento; enabled começa off', () => {
+  it('saveClone regista amostra + consentimento; enabled off; targetId default = dono', () => {
     saveClone(db, 'u1', '/x/u1.wav', 123);
-    expect(getClone(db, 'u1')).toEqual({ samplePath: '/x/u1.wav', consentAt: 123, enabled: false });
+    expect(getClone(db, 'u1')).toEqual({
+      samplePath: '/x/u1.wav',
+      consentAt: 123,
+      enabled: false,
+      targetId: 'u1', // auto-clone: alvo == dono
+    });
   });
 
   it('toggle liga/desliga; regravar PRESERVA o enabled', () => {
@@ -136,5 +147,49 @@ describe('store voiceClone — consent-first, por-utilizador', () => {
   it('é por-utilizador (global, sem guild)', () => {
     saveClone(db, 'u1', '/x/a.wav', 1);
     expect(getClone(db, 'u2')).toBeNull();
+  });
+});
+
+describe('store voiceClone — revogação pela pessoa gravada (Fase 2 compliance)', () => {
+  let db: Database.Database;
+  beforeEach(() => {
+    db = initDb(':memory:');
+  });
+  afterEach(() => {
+    db.close();
+  });
+
+  it('saveClone guarda o targetId (A grava a voz de B)', () => {
+    saveClone(db, 'A', '/x/A.wav', 10, 'B'); // dono A, voz de B
+    expect(getClone(db, 'A')!.targetId).toBe('B');
+  });
+
+  it('a pessoa gravada (B) revoga o clone que A fez da sua voz', () => {
+    saveClone(db, 'A', '/x/A.wav', 10, 'B');
+    const revoked = deleteClonesByTarget(db, 'B');
+    expect(revoked).toEqual([{ ownerId: 'A', samplePath: '/x/A.wav' }]);
+    expect(getClone(db, 'A')).toBeNull(); // o clone de A desapareceu
+  });
+
+  it('revoga TODOS os clones feitos da voz de B (por várias pessoas)', () => {
+    saveClone(db, 'A', '/x/A.wav', 10, 'B');
+    saveClone(db, 'C', '/x/C.wav', 11, 'B');
+    saveClone(db, 'D', '/x/D.wav', 12, 'D'); // auto-clone de D — NÃO deve ser tocado
+    const revoked = deleteClonesByTarget(db, 'B');
+    expect(revoked.map((r) => r.ownerId).sort()).toEqual(['A', 'C']);
+    expect(getClone(db, 'A')).toBeNull();
+    expect(getClone(db, 'C')).toBeNull();
+    expect(getClone(db, 'D')).not.toBeNull(); // auto-clone intacto
+  });
+
+  it('deleteClonesByTarget NÃO apaga o auto-clone do próprio (esse é deleteClone)', () => {
+    saveClone(db, 'B', '/x/B.wav', 10, 'B'); // auto-clone de B
+    expect(deleteClonesByTarget(db, 'B')).toEqual([]); // dono == alvo -> excluído
+    expect(getClone(db, 'B')).not.toBeNull();
+    expect(deleteClone(db, 'B')).toBe('/x/B.wav'); // remove-se com deleteClone
+  });
+
+  it('sem clones da voz de X -> lista vazia', () => {
+    expect(deleteClonesByTarget(db, 'ninguem')).toEqual([]);
   });
 });

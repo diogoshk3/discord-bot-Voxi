@@ -89,6 +89,104 @@ export function grantUserPremium(
   return expiresAt;
 }
 
+// ── Discord Premium Apps (entitlements) ──────────────────────────────────────
+// Quando o operador liga a monetização nativa do Discord (SKUs), as compras chegam
+// como "entitlements". Reutilizamos as tabelas premium_* com source='discord' para
+// não duplicar a lógica de gating (isGuildPremium/isUserPremium já bastam). A sync
+// completa (sync*Entitlements) é reconciliadora: concede os ativos e revoga os
+// source='discord' que já não existem (reembolso/cancelamento). Nunca ENCURTA um
+// premium existente (usa o MÁXIMO) e nunca toca em linhas de outra origem (ex.: redeem):
+// se um redeem tiver expiry mais longo, a linha mantém source e é ignorada na revogação.
+
+/** Concede/estende premium de guild vindo de um entitlement do Discord (source='discord'). */
+export function upsertDiscordGuildPremium(
+  db: Database.Database,
+  guildId: string,
+  expiresAt: number,
+): void {
+  db.prepare(
+    `INSERT INTO premium_guild (guild_id, expires_at, source)
+     VALUES (?, ?, 'discord')
+     ON CONFLICT(guild_id) DO UPDATE SET
+       expires_at = MAX(excluded.expires_at, premium_guild.expires_at),
+       source = CASE WHEN premium_guild.expires_at > excluded.expires_at
+                     THEN premium_guild.source ELSE 'discord' END`,
+  ).run(guildId, expiresAt);
+}
+
+/** Igual, para o Vozen Plus por-utilizador. */
+export function upsertDiscordUserPremium(
+  db: Database.Database,
+  userId: string,
+  expiresAt: number,
+): void {
+  db.prepare(
+    `INSERT INTO premium_user (user_id, expires_at, source)
+     VALUES (?, ?, 'discord')
+     ON CONFLICT(user_id) DO UPDATE SET
+       expires_at = MAX(excluded.expires_at, premium_user.expires_at),
+       source = CASE WHEN premium_user.expires_at > excluded.expires_at
+                     THEN premium_user.source ELSE 'discord' END`,
+  ).run(userId, expiresAt);
+}
+
+export interface EntitlementGrant {
+  kind: PremiumKind;
+  id: string; // guildId (guild) ou userId (user)
+  expiresAt: number; // unix ms
+}
+
+export interface EntitlementSyncResult {
+  guildsActive: number;
+  usersActive: number;
+  revoked: number;
+}
+
+/**
+ * Reconcilia TODOS os entitlements ativos do Discord com as tabelas premium_*.
+ * `grants` tem de ser a lista COMPLETA de entitlements ativos (fetch total) — concede
+ * os ativos e revoga (apaga) as linhas source='discord' que já não constam. Transacional.
+ */
+export function syncDiscordEntitlements(
+  db: Database.Database,
+  grants: EntitlementGrant[],
+): EntitlementSyncResult {
+  const tx = db.transaction((): EntitlementSyncResult => {
+    const activeGuilds = new Set(grants.filter((g) => g.kind === 'guild').map((g) => g.id));
+    const activeUsers = new Set(grants.filter((g) => g.kind === 'user').map((g) => g.id));
+
+    // Revoga o que era 'discord' e já não está ativo (reembolso/cancelamento).
+    const staleGuilds = (
+      db.prepare("SELECT guild_id FROM premium_guild WHERE source = 'discord'").all() as {
+        guild_id: string;
+      }[]
+    ).filter((r) => !activeGuilds.has(r.guild_id));
+    const staleUsers = (
+      db.prepare("SELECT user_id FROM premium_user WHERE source = 'discord'").all() as {
+        user_id: string;
+      }[]
+    ).filter((r) => !activeUsers.has(r.user_id));
+    for (const r of staleGuilds) {
+      db.prepare("DELETE FROM premium_guild WHERE guild_id = ? AND source = 'discord'").run(r.guild_id);
+    }
+    for (const r of staleUsers) {
+      db.prepare("DELETE FROM premium_user WHERE user_id = ? AND source = 'discord'").run(r.user_id);
+    }
+
+    // Concede/estende os ativos.
+    for (const g of grants) {
+      if (g.kind === 'guild') upsertDiscordGuildPremium(db, g.id, g.expiresAt);
+      else upsertDiscordUserPremium(db, g.id, g.expiresAt);
+    }
+    return {
+      guildsActive: activeGuilds.size,
+      usersActive: activeUsers.size,
+      revoked: staleGuilds.length + staleUsers.length,
+    };
+  });
+  return tx();
+}
+
 /** Cria um código de resgate (gerado offline). Lança se o código já existir (PK). */
 export function createRedeemCode(
   db: Database.Database,

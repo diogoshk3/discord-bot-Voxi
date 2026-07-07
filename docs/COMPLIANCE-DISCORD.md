@@ -21,16 +21,20 @@
 
 ## 2. Pontos amarelos e plano
 
-### 2.1 Monetização (a regra mais importante — "Requisitos de Monetização")
+### 2.1 Monetização (a regra mais importante — "Requisitos de Monetização") — CÓDIGO PRONTO
 Quem vende features pagas é obrigado a (i) vendê-las **também via Premium Apps do Discord**
 e (ii) com **price parity** (não mais caro no Discord). O Vozen vende via Ko-fi/códigos.
 **Ainda não é violação** porque a regra só se aplica "na medida em que os Premium Apps
 suportem o locale e o tipo de oferta" — e os Premium Apps exigem app **Verificada** + Team,
 o que o Vozen ainda não é. Portugal está nos locales suportados.
-- **Plano (Fase 3, ~75 servidores):** criar Team → verificar a app → onboarding de Premium
-  Apps → SKUs em USD (user sub ≙ Plus €1.99, guild sub ≙ Premium €4) com price parity face
-  ao Ko-fi. Taxa do Discord: 15% no Growth Tier até $1M. O Ko-fi pode continuar desde que o
-  preço no Discord não seja superior.
+- **Fase 3 (feito no código):** `src/premium/entitlements.ts` + `syncDiscordEntitlements()`
+  mapeiam subscrições Premium Apps ativas para as tabelas `premium_*` (`source='discord'`),
+  reconciliando no ClientReady e em cada evento `Entitlement*`. **INERTE** até
+  `PREMIUM_GUILD_SKU_ID`/`PREMIUM_USER_SKU_ID` estarem definidos (hoje é no-op). Paridade de
+  preços documentada em `docs/MONETIZATION.md` (SKU USD ≤ preço externo).
+- **Passos manuais (só o Diogo, no Developer Portal):** criar Team → verificar a app (~75
+  servidores) → onboarding de monetização → criar SKUs (USD) → definir `PREMIUM_*_SKU_ID` na
+  env (a sync ativa-se sozinha). Taxa do Discord: 15% (Growth Tier até $1M).
 
 ### 2.2 Transparência dos dados — FECHADO na Fase 1
 `PRIVACY.md` estava desatualizado (faltavam tabelas, em especial o **clone de voz**).
@@ -41,15 +45,16 @@ Corrigido: todas as tabelas documentadas, secção 2.3 dedicada ao clone (WAVs, 
 Existe servidor de suporte (`discord.gg/V6PZYZmhcQ`). Ligado ao `/help` (env `SUPPORT_URL`),
 à Privacidade e aos Termos.
 
-### 2.4 Voice clone — zona cinzenta (parcialmente aberta)
+### 2.4 Voice clone — FECHADO (Fases 1 e 2)
 O consent flow é sólido (botão Permitir/Recusar que só o alvo carrega; grava só o SSRC do
-alvo; `consent_at`). Mas a amostra fica atribuída a **quem correu o comando**, e **só essa
-pessoa a pode apagar** — a pessoa gravada não consegue revogar. Amostras de voz podem ser
-"dados sensíveis/biométricos" (RGPD, regra 16).
+alvo; `consent_at`). A amostra fica atribuída a quem correu o comando. Amostras de voz podem
+ser "dados sensíveis/biométricos" (RGPD, regra 16).
 - **Fase 1 (feito):** documentado com verdade em toda a política (a antiga dizia "só a
   própria voz" — falso).
-- **Plano (Fase 2, código):** guardar `target_id` em `user_clone` e permitir que a pessoa
-  gravada apague a amostra a qualquer momento; guardar metadados do consentimento.
+- **Fase 2 (feito):** coluna `target_id` em `user_clone` (migração idempotente, backfill =
+  auto-clone); `deleteClonesByTarget()`; `/voice clone delete` agora **também revoga** todos
+  os clones que outras pessoas fizeram a partir da voz de quem corre o comando — a pessoa
+  gravada pode sempre retirar o consentimento (RGPD, direito ao apagamento).
 
 ## 3. Notas
 

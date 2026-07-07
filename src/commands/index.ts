@@ -76,7 +76,7 @@ import { GREET_LANGUAGE_CHOICES, GREET_LOCALES } from '../voice/greeting';
 import { log } from '../logging/logger';
 import { join, dirname } from 'node:path';
 import { unlinkSync } from 'node:fs';
-import { getClone, saveClone, setCloneEnabled, deleteClone } from '../store/voiceClone';
+import { getClone, saveClone, setCloneEnabled, deleteClone, deleteClonesByTarget } from '../store/voiceClone';
 import { recordUserSample, pcmToWavFile } from '../voice/recorder';
 import {
   t,
@@ -1433,15 +1433,26 @@ async function handleVoiceClone(
   }
 
   if (sub === 'delete') {
-    const samplePath = deleteClone(deps.db, userId);
-    if (samplePath) {
+    // Apaga o MEU clone (sou o dono) E revoga qualquer clone feito a partir da MINHA voz
+    // por outra pessoa (sou o alvo) — a pessoa gravada pode sempre retirar o consentimento.
+    const ownPath = deleteClone(deps.db, userId);
+    const revoked = deleteClonesByTarget(deps.db, userId);
+    for (const p of [ownPath, ...revoked.map((r) => r.samplePath)]) {
+      if (!p) continue;
       try {
-        unlinkSync(samplePath);
+        unlinkSync(p);
       } catch {
         // ficheiro já removido — o registo é o que importa
       }
     }
-    await reply(i, samplePath ? t('clone.deleted', locale) : t('clone.none', locale));
+    if (!ownPath && revoked.length === 0) {
+      await reply(i, t('clone.none', locale));
+      return;
+    }
+    const parts: string[] = [];
+    if (ownPath) parts.push(t('clone.deleted', locale));
+    if (revoked.length) parts.push(t('clone.revoked', locale, { count: revoked.length }));
+    await reply(i, parts.join('\n'));
     return;
   }
 
@@ -1667,7 +1678,9 @@ async function handleVoiceClone(
     const prev = getClone(deps.db, userId);
     const outPath = join(dirname(deps.config.dbPath), 'voice-clones', `${userId}-${stamp}.wav`);
     await pcmToWavFile(pcm, outPath);
-    saveClone(deps.db, userId, outPath, stamp);
+    // targetId = a pessoa cuja voz foi gravada (o próprio num auto-clone). Fica registado
+    // para que essa pessoa possa revogar o clone com /voice clone delete (Fase 2 compliance).
+    saveClone(deps.db, userId, outPath, stamp, targetId);
     if (prev && prev.samplePath !== outPath) {
       try {
         unlinkSync(prev.samplePath);

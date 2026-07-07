@@ -268,6 +268,11 @@ export const catalog: Record<string, Entry> = {
     en: '🗑️ Voice clone deleted — sample and consent record removed, no trace kept.',
     pt: '🗑️ Clone de voz apagado — amostra e registo de consentimento removidos, sem rasto.',
   },
+  // Revogação pela pessoa gravada: apagou clones que OUTROS tinham feito da voz dela.
+  'clone.revoked': {
+    en: '🛑 Consent withdrawn — removed {count} voice clone(s) other people had made from your voice.',
+    pt: '🛑 Consentimento retirado — removi {count} clone(s) que outras pessoas tinham feito da tua voz.',
+  },
   'clone.status': {
     en: '🧬 Voice clone: sample recorded {date} · currently **{state}**.',
     pt: '🧬 Clone de voz: amostra gravada {date} · neste momento **{state}**.',
