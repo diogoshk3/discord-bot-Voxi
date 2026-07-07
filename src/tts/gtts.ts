@@ -37,6 +37,33 @@ const GTTS_FFMPEG_TIMEOUT_MS = 15000;
 const GTTS_MAX_CHARS = 200;
 /** Tentativas EXTRA por pedido quando o erro é TRANSITÓRIO (rede/5xx/429). Default 2. */
 const GTTS_DEFAULT_RETRIES = 2;
+/** Máx. de pedaços buscados em paralelo à Google. Default 3; 1 = serial (antigo). */
+const GTTS_DEFAULT_CHUNK_CONCURRENCY = 3;
+
+/**
+ * map com CONCORRÊNCIA LIMITADA, PRESERVANDO A ORDEM: corre `fn` sobre `items` com
+ * no máximo `limit` invocações em voo, escrevendo cada resultado no índice do input
+ * (a ordem do array de saída é a do input, independente da ordem de conclusão — crítico
+ * para os frames MP3 concatenados na ordem certa). Se algum `fn` rejeita, o Promise.all
+ * rejeita (sem unhandled rejection — todas as promessas estão ligadas ao mesmo all).
+ */
+export async function mapWithConcurrency<T, R>(
+  items: readonly T[],
+  limit: number,
+  fn: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let next = 0;
+  const workers = Array.from({ length: Math.max(1, Math.min(limit, items.length)) }, async () => {
+    for (;;) {
+      const i = next++;
+      if (i >= items.length) return;
+      results[i] = await fn(items[i], i);
+    }
+  });
+  await Promise.all(workers);
+  return results;
+}
 /** Espera base entre tentativas (backoff linear: 300ms, 600ms, …). */
 const GTTS_RETRY_BASE_MS = 300;
 
@@ -170,6 +197,8 @@ export interface GttsOptions {
   sleepImpl?: (ms: number) => Promise<void>;
   /** tentativas EXTRA por pedido para erros transitórios. Default GTTS_DEFAULT_RETRIES. */
   retries?: number;
+  /** Máx. de pedaços buscados em paralelo. Default GTTS_DEFAULT_CHUNK_CONCURRENCY. */
+  chunkConcurrency?: number;
 }
 
 export class GTTSEngine implements TTSEngine {
@@ -177,12 +206,14 @@ export class GTTSEngine implements TTSEngine {
   private readonly fetchImpl: typeof fetch;
   private readonly sleep: (ms: number) => Promise<void>;
   private readonly retries: number;
+  private readonly chunkConcurrency: number;
 
   constructor(cache: AudioCache, opts: GttsOptions = {}) {
     this.cache = cache;
     this.fetchImpl = opts.fetchImpl ?? fetch;
     this.sleep = opts.sleepImpl ?? ((ms) => new Promise((r) => setTimeout(r, ms)));
     this.retries = opts.retries ?? GTTS_DEFAULT_RETRIES;
+    this.chunkConcurrency = opts.chunkConcurrency ?? GTTS_DEFAULT_CHUNK_CONCURRENCY;
   }
 
   async synth(req: SynthRequest): Promise<string> {
@@ -198,11 +229,13 @@ export class GTTSEngine implements TTSEngine {
     }
 
     // Um MP3 por pedaço; concatenam-se os bytes (frames MP3 do mesmo formato) e o
-    // ffmpeg demuxa o stream inteiro de uma vez.
-    const mp3s: Buffer[] = [];
-    for (const c of chunks) {
-      mp3s.push(await this.fetchChunk(c, lang));
-    }
+    // ffmpeg demuxa o stream inteiro de uma vez. Fan-out LIMITADO (default 3): pedaços
+    // em paralelo, ORDEM preservada no array. O retry/backoff por pedaço (fetchChunk)
+    // fica intacto; um pedaço que falhe (esgotadas as tentativas) rejeita a síntese
+    // inteira — exatamente como o loop serial antigo.
+    const mp3s = await mapWithConcurrency(chunks, this.chunkConcurrency, (c) =>
+      this.fetchChunk(c, lang),
+    );
     const mp3 = Buffer.concat(mp3s);
 
     let wav = await mp3ToWav(mp3, req.speed);

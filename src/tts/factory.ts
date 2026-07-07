@@ -26,7 +26,9 @@ import { log } from '../logging/logger';
  * — cada pessoa escolhe o seu motor em `/voice set`, com o Google por defeito.
  */
 export function createPerUserEngine(config: AppConfig, cache: AudioCache): TTSEngine {
-  const gtts = new GTTSEngine(cache.withNamespace('gtts'));
+  const gtts = new GTTSEngine(cache.withNamespace('gtts'), {
+    chunkConcurrency: config.gttsChunkConcurrency,
+  });
   const piper = makePiper(config, cache);
   // Circuit-breaker à volta do gTTS: após N falhas consecutivas (Google bloqueia/
   // timeout de ~15s), abre durante um cooldown e serve o Piper diretamente — sem
@@ -63,7 +65,9 @@ export function createEngine(config: AppConfig, cache: AudioCache): TTSEngine {
   if (config.ttsEngine === 'gtts') {
     // Google Translate TTS (grátis, sem API key, multilingue). Opt-in via
     // TTS_ENGINE=gtts. Endpoint não-oficial — pode ser limitado pela Google.
-    return new GTTSEngine(cache.withNamespace('gtts'));
+    return new GTTSEngine(cache.withNamespace('gtts'), {
+      chunkConcurrency: config.gttsChunkConcurrency,
+    });
   }
   if (config.ttsEngine === 'router') {
     // MOTOR HÍBRIDO (Vaga 2): combina vários motores por-língua com fallback-por-falha.
@@ -72,7 +76,13 @@ export function createEngine(config: AppConfig, cache: AudioCache): TTSEngine {
     // bloqueia/limita. Ambos apanha-tudo, por isso NENHUMA língua fica sem voz. O Kokoro
     // (Fase 2) entrará ANTES do gTTS para as suas ~8 línguas, sem perder cobertura.
     const routes = [
-      { engine: new GTTSEngine(cache.withNamespace('gtts')), langs: null, label: 'gtts' },
+      {
+        engine: new GTTSEngine(cache.withNamespace('gtts'), {
+          chunkConcurrency: config.gttsChunkConcurrency,
+        }),
+        langs: null,
+        label: 'gtts',
+      },
       { engine: makePiper(config, cache), langs: null, label: 'piper' },
     ];
     log.info(`[factory] motor 'router' ativo: ${routes.map((r) => r.label).join(' -> ')}`);

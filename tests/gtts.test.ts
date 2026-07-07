@@ -9,6 +9,7 @@ import {
   GTTSEngine,
   retryAsync,
   isRetryableStatus,
+  mapWithConcurrency,
 } from '../src/tts/gtts';
 import { createEngine } from '../src/tts/factory';
 import { AudioCache } from '../src/tts/cache';
@@ -204,6 +205,67 @@ describe('GTTSEngine.fetchChunk — retry no fetch (via fetchImpl injetado)', ()
       engine.synth({ text: 'ola', model: 'pt_BR-cadu-medium', speed: 1 }),
     ).rejects.toThrow(/403/);
     expect(fetchImpl).toHaveBeenCalledTimes(1); // sem retry
+  });
+
+  it('multi-pedaço: busca UM fetch por pedaço (fan-out), síntese resolve/falha na mesma', async () => {
+    dir = mkdtempSync(join(tmpdir(), 'gtts-multi-'));
+    // 3 "palavras" de ~150 chars -> 3 pedaços (cap 200, palavra não parte).
+    const text = `${'a'.repeat(150)} ${'b'.repeat(150)} ${'c'.repeat(150)}`;
+    expect(chunkText(deCapsForGoogle(text), 200).length).toBe(3);
+    const fetchImpl = vi.fn(async () => ({ ok: true, status: 200, arrayBuffer: async () => new Uint8Array([1, 2, 3, 4]).buffer }) as Response);
+    const engine = new GTTSEngine(new AudioCache(dir), { fetchImpl: fetchImpl as unknown as typeof fetch, sleepImpl: noSleep });
+    // ffmpeg dos bytes falsos pode falhar — só nos importa o nº de fetches (1 por pedaço).
+    await engine.synth({ text, model: 'pt_BR-cadu-medium', speed: 1 }).catch(() => {});
+    expect(fetchImpl).toHaveBeenCalledTimes(3);
+  });
+
+  it('multi-pedaço: um pedaço com 403 rejeita a síntese inteira (como no serial)', async () => {
+    dir = mkdtempSync(join(tmpdir(), 'gtts-multi403-'));
+    const text = `${'a'.repeat(150)} ${'b'.repeat(150)} ${'c'.repeat(150)}`;
+    let n = 0;
+    const fetchImpl = vi.fn(async () => {
+      n++;
+      if (n === 2) return { ok: false, status: 403, statusText: 'Forbidden' } as Response;
+      return { ok: true, status: 200, arrayBuffer: async () => new Uint8Array([1]).buffer } as Response;
+    });
+    const engine = new GTTSEngine(new AudioCache(dir), { fetchImpl: fetchImpl as unknown as typeof fetch, sleepImpl: noSleep });
+    await expect(engine.synth({ text, model: 'pt_BR-cadu-medium', speed: 1 })).rejects.toThrow(/403/);
+  });
+});
+
+describe('mapWithConcurrency — ordem preservada, cap respeitado, rejeição propaga', () => {
+  it('preserva a ORDEM do input mesmo com conclusões fora de ordem', async () => {
+    const items = [0, 1, 2, 3, 4, 5];
+    // item i resolve depois de (items.length - i) ticks: os últimos resolvem primeiro.
+    const out = await mapWithConcurrency(items, 3, async (n) => {
+      await new Promise((r) => setTimeout(r, (items.length - n) * 2));
+      return n * 10;
+    });
+    expect(out).toEqual([0, 10, 20, 30, 40, 50]);
+  });
+
+  it('nunca corre mais do que `limit` em voo', async () => {
+    let inFlight = 0;
+    let maxInFlight = 0;
+    const out = await mapWithConcurrency([1, 2, 3, 4, 5, 6, 7, 8], 3, async (n) => {
+      inFlight++;
+      maxInFlight = Math.max(maxInFlight, inFlight);
+      await new Promise((r) => setTimeout(r, 5));
+      inFlight--;
+      return n;
+    });
+    expect(out).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+    expect(maxInFlight).toBeLessThanOrEqual(3);
+    expect(maxInFlight).toBeGreaterThanOrEqual(2); // paralelizou mesmo
+  });
+
+  it('uma rejeição rejeita a chamada inteira', async () => {
+    await expect(
+      mapWithConcurrency([1, 2, 3, 4, 5], 2, async (n) => {
+        if (n === 2) throw tagged('pedaço 2 rebentou', false);
+        return n;
+      }),
+    ).rejects.toThrow(/pedaço 2 rebentou/);
   });
 });
 

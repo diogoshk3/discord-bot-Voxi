@@ -36,6 +36,7 @@ describe('loadConfig', () => {
       TOPGG_WEBHOOK_PORT: undefined,
       TOPGG_WEBHOOK_SECRET: undefined,
       TOPGG_WEBHOOK_ALLOW_INSECURE: undefined,
+      GTTS_CHUNK_CONCURRENCY: undefined,
       BOT_SHARDS: undefined,
       MULTILINGUAL_SEGMENTS: undefined,
       NOISE_SCALE: undefined,
@@ -66,6 +67,17 @@ describe('loadConfig', () => {
     const cfg = loadConfig();
     expect(cfg.token).toBe('tok-123');
     expect(cfg.clientId).toBe('client-123');
+  });
+
+  it('GTTS_CHUNK_CONCURRENCY: default 3; "5" -> 5; inválido/0 -> fallback 3', () => {
+    setEnv(REQUIRED); // ausente => default 3
+    expect(loadConfig().gttsChunkConcurrency).toBe(3);
+    setEnv({ ...REQUIRED, GTTS_CHUNK_CONCURRENCY: '5' });
+    expect(loadConfig().gttsChunkConcurrency).toBe(5);
+    for (const bad of ['0', 'abc', '-1']) {
+      setEnv({ ...REQUIRED, GTTS_CHUNK_CONCURRENCY: bad });
+      expect(loadConfig().gttsChunkConcurrency, `valor=${bad}`).toBe(3); // numEnvPositive cai no fallback
+    }
   });
 
   it('SEC-01: TOPGG_WEBHOOK_ALLOW_INSECURE — só "true" (case-insensitive) liga (opt-in)', () => {
