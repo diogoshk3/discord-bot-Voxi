@@ -10,11 +10,15 @@ import { type Client, Events } from 'discord.js';
 import type Database from 'better-sqlite3';
 import {
   activeEntitlementGrants,
+  collectPaged,
   entitlementsEnabled,
   type EntitlementLike,
   type EntitlementSkuConfig,
 } from './entitlements';
 import { syncDiscordEntitlements } from '../store/premium';
+
+/** Tamanho de página do endpoint /entitlements do Discord (máximo aceite). */
+const ENTITLEMENT_PAGE = 100;
 
 export interface EntitlementSyncDeps {
   client: Client;
@@ -41,14 +45,23 @@ export function startEntitlementSync(deps: EntitlementSyncDeps): void {
     try {
       const app = client.application;
       if (!app) return;
-      const raw = await app.entitlements.fetch();
-      const list: EntitlementLike[] = raw.map((e) => ({
-        skuId: e.skuId,
-        guildId: e.guildId ?? null,
-        userId: e.userId ?? null,
-        endsTimestamp: e.endsTimestamp ?? null,
-        deleted: e.deleted ?? false,
-      }));
+      // PAGINAÇÃO OBRIGATÓRIA: o /entitlements devolve ≤100 por chamada e NÃO auto-pagina.
+      // A reconciliação apaga o premium 'discord' ausente da lista, por isso a lista tem de
+      // ser COMPLETA — senão, com >100 subscrições, revogaríamos clientes pagantes.
+      const list = await collectPaged<EntitlementLike & { id: string }>(
+        async (after) => {
+          const page = await app.entitlements.fetch({ limit: ENTITLEMENT_PAGE, after });
+          return [...page.values()].map((e) => ({
+            id: e.id,
+            skuId: e.skuId,
+            guildId: e.guildId ?? null,
+            userId: e.userId ?? null,
+            endsTimestamp: e.endsTimestamp ?? null,
+            deleted: e.deleted ?? false,
+          }));
+        },
+        ENTITLEMENT_PAGE,
+      );
       const grants = activeEntitlementGrants(list, sku, now());
       const res = syncDiscordEntitlements(db, grants);
       logInfo(

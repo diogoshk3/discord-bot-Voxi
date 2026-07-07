@@ -16,6 +16,7 @@ import {
 import { isOptedOut, setOptOut, setOptIn } from '../src/store/optout';
 import { getNickname, setNickname, clearNickname } from '../src/store/nickname';
 import { getVoiceEffect, setVoiceEffect } from '../src/store/voiceEffect';
+import { getClone } from '../src/store/voiceClone';
 
 const G = 'guild-1';
 const U = 'user-1';
@@ -440,6 +441,60 @@ describe('initDb — migracao tts_role_id em DB de esquema antigo', () => {
       const db2 = initDb(file);
       const cols2 = db2.pragma('table_info(guild_config)') as Array<{ name: string }>;
       expect(cols2.filter((c) => c.name === 'tts_role_id')).toHaveLength(1);
+      db2.close();
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('initDb — migracao target_id (user_clone) em DB de esquema antigo', () => {
+  it('adiciona target_id e faz backfill = user_id (Fase 2: pessoa gravada pode revogar)', () => {
+    // O caminho real do restart: uma DB com user_clone SEM target_id (esquema antigo,
+    // como a tts.db de produção com 2 clones). A migracao adiciona a coluna e assume
+    // auto-clone (target_id = user_id) nas linhas existentes.
+    const dir = mkdtempSync(join(tmpdir(), 'migclone-'));
+    const file = join(dir, 'old-clone.sqlite');
+    try {
+      const old = new BetterSqlite3(file);
+      old.exec(`
+        CREATE TABLE user_clone (
+          user_id     TEXT PRIMARY KEY,
+          sample_path TEXT NOT NULL,
+          consent_at  INTEGER NOT NULL,
+          enabled     INTEGER NOT NULL DEFAULT 0
+        );
+      `);
+      old
+        .prepare('INSERT INTO user_clone (user_id, sample_path, consent_at, enabled) VALUES (?, ?, ?, ?)')
+        .run('u-old', '/x/u-old.wav', 111, 1);
+      old.close();
+
+      // Antes: sem target_id.
+      const before = new BetterSqlite3(file);
+      expect(
+        (before.pragma('table_info(user_clone)') as Array<{ name: string }>).some(
+          (c) => c.name === 'target_id',
+        ),
+      ).toBe(false);
+      before.close();
+
+      // initDb corre a migracao idempotente + backfill.
+      const db = initDb(file);
+      const row = getClone(db, 'u-old');
+      expect(row).not.toBeNull();
+      expect(row!.targetId).toBe('u-old'); // backfill: auto-clone
+      expect(row!.samplePath).toBe('/x/u-old.wav');
+      expect(row!.enabled).toBe(true); // preservado
+
+      // Idempotente: correr de novo nao rebenta nem duplica a coluna.
+      db.close();
+      const db2 = initDb(file);
+      expect(
+        (db2.pragma('table_info(user_clone)') as Array<{ name: string }>).filter(
+          (c) => c.name === 'target_id',
+        ),
+      ).toHaveLength(1);
       db2.close();
     } finally {
       rmSync(dir, { recursive: true, force: true });

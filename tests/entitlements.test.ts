@@ -6,6 +6,7 @@ import {
   activeEntitlementGrants,
   isEntitlementActive,
   entitlementsEnabled,
+  collectPaged,
   PERPETUAL_MS,
   type EntitlementLike,
 } from '../src/premium/entitlements';
@@ -65,6 +66,46 @@ describe('entitlements — mapeamento puro', () => {
     expect(entitlementsEnabled({})).toBe(false);
     expect(entitlementsEnabled({ guildSkuId: 'x' })).toBe(true);
     expect(entitlementsEnabled({ userSkuId: 'y' })).toBe(true);
+  });
+});
+
+describe('collectPaged — o /entitlements NÃO auto-pagina (cap 100/página)', () => {
+  it('junta TODAS as páginas (150 entitlements em páginas de 100 + 50)', async () => {
+    const all = Array.from({ length: 150 }, (_, k) => ({ id: `e${String(k).padStart(3, '0')}` }));
+    const pages: (string | undefined)[] = [];
+    const got = await collectPaged(
+      async (after) => {
+        pages.push(after);
+        const start = after ? all.findIndex((x) => x.id === after) + 1 : 0;
+        return all.slice(start, start + 100);
+      },
+      100,
+    );
+    expect(got.length).toBe(150); // sem paginação teria parado nos 100 -> revogava 50 pagantes
+    expect(pages).toEqual([undefined, 'e099']); // 2 chamadas: 1ª e cursor após o 100.º
+  });
+
+  it('uma só página incompleta -> uma chamada, pára', async () => {
+    const got = await collectPaged(async () => [{ id: 'a' }, { id: 'b' }], 100);
+    expect(got.map((x) => x.id)).toEqual(['a', 'b']);
+  });
+
+  it('página vazia -> lista vazia', async () => {
+    expect(await collectPaged(async () => [], 100)).toEqual([]);
+  });
+
+  it('maxPages trava um endpoint que nunca encolhe (guarda anti-loop)', async () => {
+    let calls = 0;
+    const got = await collectPaged(
+      async () => {
+        calls++;
+        return [{ id: `x${calls}` }, { id: `y${calls}` }]; // sempre "cheia" (pageSize=2)
+      },
+      2,
+      3, // maxPages
+    );
+    expect(calls).toBe(3);
+    expect(got.length).toBe(6);
   });
 });
 

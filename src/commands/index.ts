@@ -75,7 +75,7 @@ import { getLeaderboard, getUserScore, getUserRank } from '../store/gameScore';
 import { GREET_LANGUAGE_CHOICES, GREET_LOCALES } from '../voice/greeting';
 import { log } from '../logging/logger';
 import { join, dirname } from 'node:path';
-import { unlinkSync } from 'node:fs';
+import { unlinkSync, rmSync } from 'node:fs';
 import { getClone, saveClone, setCloneEnabled, deleteClone, deleteClonesByTarget } from '../store/voiceClone';
 import { recordUserSample, pcmToWavFile } from '../voice/recorder';
 import {
@@ -1448,6 +1448,19 @@ async function handleVoiceClone(
     if (!ownPath && revoked.length === 0) {
       await reply(i, t('clone.none', locale));
       return;
+    }
+    // "Sem rasto": além da amostra e do registo, purga a cache de ÁUDIO clonado gerado
+    // (audio-cache/clone/) — as chaves são hashes irreversíveis, não dá para apagar só as
+    // desta voz, por isso limpamos o namespace inteiro. É regenerável (re-sintetiza quando
+    // preciso) e o clone é a única feature que grava a voz real de alguém — direito ao
+    // apagamento (RGPD) exige não deixar áudio derivado para trás.
+    try {
+      rmSync(join(dirname(deps.config.dbPath), 'audio-cache', 'clone'), {
+        recursive: true,
+        force: true,
+      });
+    } catch {
+      // cache inexistente/bloqueada — regenerável, não é fatal
     }
     const parts: string[] = [];
     if (ownPath) parts.push(t('clone.deleted', locale));

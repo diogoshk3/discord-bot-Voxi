@@ -69,3 +69,28 @@ export function activeEntitlementGrants(
 export function entitlementsEnabled(sku: EntitlementSkuConfig): boolean {
   return !!(sku.guildSkuId || sku.userSkuId);
 }
+
+/**
+ * Junta TODAS as páginas de um endpoint cursor-based (o `/entitlements` do Discord NÃO
+ * auto-pagina: devolve no máximo `pageSize` por chamada). CRÍTICO para a reconciliação:
+ * a sync apaga o premium 'discord' que não vier na lista, por isso a lista TEM de ser
+ * completa — senão, ao passar de `pageSize` subscrições, revogaríamos clientes pagantes.
+ * `fetchPage(after)` devolve a próxima página (após o id `after`); paramos quando uma
+ * página vem incompleta (< pageSize) ou vazia. `maxPages` é uma guarda anti-loop.
+ */
+export async function collectPaged<T extends { id: string }>(
+  fetchPage: (after: string | undefined) => Promise<T[]>,
+  pageSize = 100,
+  maxPages = 1000,
+): Promise<T[]> {
+  const all: T[] = [];
+  let after: string | undefined;
+  for (let p = 0; p < maxPages; p++) {
+    const page = await fetchPage(after);
+    if (page.length === 0) break;
+    all.push(...page);
+    if (page.length < pageSize) break;
+    after = page[page.length - 1].id;
+  }
+  return all;
+}
