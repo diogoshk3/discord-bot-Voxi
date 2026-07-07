@@ -143,10 +143,11 @@
   }
 
   /* ── wordle mock ─────────────────────────────────────── */
+  // Solve to VOZEN: VOICE (V,O green) → TOKEN (O,E,N green) → VOZEN (all green).
   const WORD = [
-    [["V", "x"], ["O", "y"], ["I", "x"], ["C", "x"], ["E", "y"]],
-    [["S", "x"], ["O", "g"], ["U", "x"], ["N", "x"], ["D", "x"]],
-    [["V", "g"], ["O", "g"], ["X", "g"], ["E", "g"], ["L", "g"]],
+    [["V", "g"], ["O", "g"], ["I", "x"], ["C", "x"], ["E", "y"]],
+    [["T", "x"], ["O", "g"], ["K", "x"], ["E", "g"], ["N", "g"]],
+    [["V", "g"], ["O", "g"], ["Z", "g"], ["E", "g"], ["N", "g"]],
   ];
   const wordle = $("#wordle");
   if (wordle) {
