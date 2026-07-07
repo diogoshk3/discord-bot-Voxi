@@ -40,6 +40,40 @@
 
 * { box-sizing: border-box; }
 
+/* ── Scrollbar personalizada — condiz com a marca (blurple → aqua) ─────────────
+   Webkit (Chrome/Edge/embeds do Discord) + Firefox. Fina, arredondada, inset por
+   uma borda transparente, com brilho subtil ao passar o rato. */
+* {
+  scrollbar-width: thin;                          /* Firefox */
+  scrollbar-color: var(--aqua) transparent;       /* thumb / track (Firefox) */
+}
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--grad-brand);
+  background-clip: padding-box;                    /* respeita a borda transparente */
+  border: 3px solid transparent;                   /* afina o thumb e afasta-o das bordas */
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--grad-vivid);
+  background-clip: padding-box;
+  border-width: 2px;                               /* engrossa levemente no hover */
+  box-shadow: 0 0 10px rgba(46, 230, 200, 0.55);   /* brilho aqua */
+}
+::-webkit-scrollbar-thumb:active {
+  background: var(--aqua-2);
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 html { scroll-behavior: smooth; scroll-padding-top: 92px; }
 
 body {
