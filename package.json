@@ -15,6 +15,10 @@
     "start:sharded": "node dist/shard.js",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.test.json --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "register": "tsx src/bot/registerCommands.ts",
     "build:site": "node tools/minify-site.mjs"
   },
@@ -30,13 +34,18 @@
     "sodium-native": "^4.3.1"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/better-sqlite3": "^7.6.12",
     "@types/node": "^22.13.1",
     "clean-css": "^5.3.3",
+    "eslint": "^10.6.0",
+    "eslint-config-prettier": "^10.1.8",
     "html-minifier-terser": "^7.2.0",
+    "prettier": "^3.9.4",
     "terser": "^5.48.0",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
+    "typescript-eslint": "^8.63.0",
     "vitest": "^3.0.5"
   },
   "//overrides": "Correções de CVEs transitivos SEM breaking changes (mesma major). NÃO correr `npm audit fix --force` — baixaria o discord.js para v13 e o @discordjs/opus para uma major. undici<=6.26.0: 4 CVEs high (via @discordjs/rest) -> 6.27.0 (mesma 6.x). trim<0.0.3: ReDoS (via franc->trigram-utils, corre em texto do utilizador na deteção de língua) -> 0.0.3 (mesma 0.0.x, API igual). tar<=7.5.15: path-traversal só em INSTALL-time (via @discordjs/opus->node-pre-gyp) -> 7.5.19. Fica em aberto (breaking, baixo risco prático): @discordjs/opus DoS (GHSA-43wq-xrcm-3vgr) — o bot CODIFICA áudio, não descodifica opus não-fidedigno.",

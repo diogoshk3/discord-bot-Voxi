@@ -1,0 +1,9 @@
+dist/
+site/
+site-dist/
+logs/
+node_modules/
+tools/clone-venv/
+audio-cache/
+voice-clones/
+package-lock.json
