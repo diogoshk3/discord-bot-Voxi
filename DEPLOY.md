@@ -1,6 +1,6 @@
-# Deploy do Vozi (24/7)
+# Deploy do Vozen (24/7)
 
-Runbook curto para alojar o Vozi sempre-ligado, com `docker compose`, em qualquer
+Runbook curto para alojar o Vozen sempre-ligado, com `docker compose`, em qualquer
 das três opções abaixo. Os passos de Docker/Piper/modelos/`.env` são os mesmos do
 **[README §5 — Deploy em VPS (Docker)](README.md#5-deploy-em-vps-docker)**; este
 documento foca o que **difere por opção** (sobretudo a **arquitetura** do Piper) e
@@ -40,8 +40,8 @@ A imagem corre em ARM64, mas **o Piper tem de ser o build `aarch64`** — **não
    ```
 3. Clona o repositório:
    ```
-   git clone https://github.com/diogoshk3/discord-bot-Vozi.git
-   cd discord-bot-Vozi
+   git clone https://github.com/diogoshk3/discord-bot-Vozen.git
+   cd discord-bot-Vozen
    ```
 4. **Piper ARM64** — confirma `uname -m` (deve dar `aarch64`) e extrai para `./piper/`:
    ```
@@ -58,7 +58,7 @@ A imagem corre em ARM64, mas **o Piper tem de ser o build `aarch64`** — **não
 7. Arranca:
    ```
    docker compose up -d --build
-   docker compose logs -f vozi
+   docker compose logs -f vozen
    ```
 
 ---
@@ -69,7 +69,7 @@ Igual à Opção A, **mas com o Piper `x86_64`** (a máquina é Intel/AMD).
 
 1. Cria a VPS Linux (Ubuntu/Debian). SSH para dentro.
 2. Instala Docker + compose v2 (mesmos comandos da Opção A, passo 2).
-3. `git clone … && cd discord-bot-Vozi`.
+3. `git clone … && cd discord-bot-Vozen`.
 4. **Piper x86_64** — confirma `uname -m` (deve dar `x86_64`):
    ```
    curl -fsSLO https://github.com/rhasspy/piper/releases/latest/download/piper_linux_x86_64.tar.gz
@@ -144,7 +144,7 @@ abaixo). Tabela completa: README §5.4.
 ### Verificar que arrancou
 
 ```
-docker compose logs -f vozi
+docker compose logs -f vozen
 ```
 Esperado: uma linha tipo `[client] online como <bot>#<tag>`. Os slash commands são
 registados automaticamente no arranque — não corras `npm run register`.

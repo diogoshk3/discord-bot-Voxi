@@ -1,4 +1,4 @@
-# BENCHMARKS — Vozi (baseline)
+# BENCHMARKS — Vozen (baseline)
 
 Gerado por `npx tsx tools/bench.ts`. Piper real; cache temporária isolada.
 Hoje NÃO há streaming: tempo-até-1.ª-palavra == tempo total de síntese abaixo.

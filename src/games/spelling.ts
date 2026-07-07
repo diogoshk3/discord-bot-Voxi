@@ -6,7 +6,7 @@ import { normalizeAnswer, seededShuffle } from './util';
 const ROUNDS = 5;
 
 /**
- * "Ditado" (Spelling Bee) — o Vozi diz uma palavra e o 1o a ESCREVE-LA corretamente
+ * "Ditado" (Spelling Bee) — o Vozen diz uma palavra e o 1o a ESCREVE-LA corretamente
  * ganha. Palavras da lingua da voz default da guild (senao ingles). Aceita a palavra
  * normalizada (sem acentos/maiusculas), para nao ser cruel com acentos.
  */

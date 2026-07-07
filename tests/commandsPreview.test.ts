@@ -17,7 +17,7 @@ const GUILD = 'g-preview';
 const USER = 'u-preview';
 // Migrado PT->EN (P16.2): a frase-amostra falada pelo /voice preview passou a
 // ingles por defeito (t('preview.sample', 'en')).
-const SAMPLE = "Hi, I'm Vozi. type it, hear it.";
+const SAMPLE = "Hi, I'm Vozen. type it, hear it.";
 
 function makeDeps(db: Database.Database, player?: { say: ReturnType<typeof vi.fn> }): BotDeps {
   const deps = {

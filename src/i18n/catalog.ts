@@ -157,12 +157,12 @@ export const catalog: Record<string, Entry> = {
     pt: 'Voltas a ser lido automaticamente.',
   },
   'voice.nickname.set': {
-    en: '✅ Vozi will now call you **{name}** out loud.',
-    pt: '✅ O Vozi vai chamar-te **{name}** em voz alta.',
+    en: '✅ Vozen will now call you **{name}** out loud.',
+    pt: '✅ O Vozen vai chamar-te **{name}** em voz alta.',
   },
   'voice.nickname.cleared': {
-    en: '✅ Spoken nickname cleared — Vozi will use your server name.',
-    pt: '✅ Apelido falado removido — o Vozi vai usar o teu nome do servidor.',
+    en: '✅ Spoken nickname cleared — Vozen will use your server name.',
+    pt: '✅ Apelido falado removido — o Vozen vai usar o teu nome do servidor.',
   },
   'voice.nickname.invalid': {
     en: "That name has nothing readable to say out loud. Try letters or numbers.",
@@ -291,8 +291,8 @@ export const catalog: Record<string, Entry> = {
     pt: '✅ Voz clonada desligada — de volta à tua voz normal.',
   },
   'voice.effect.locked': {
-    en: '🔒 **{effect}** is a Premium effect. Free effects: 🤖 Robot and 🔊 Echo. Unlock all with Vozi Premium — see `/premium`.',
-    pt: '🔒 **{effect}** é um efeito Premium. Efeitos grátis: 🤖 Robot e 🔊 Echo. Desbloqueia todos com o Vozi Premium — vê `/premium`.',
+    en: '🔒 **{effect}** is a Premium effect. Free effects: 🤖 Robot and 🔊 Echo. Unlock all with Vozen Premium — see `/premium`.',
+    pt: '🔒 **{effect}** é um efeito Premium. Efeitos grátis: 🤖 Robot e 🔊 Echo. Desbloqueia todos com o Vozen Premium — vê `/premium`.',
   },
   // /voice detection — liga/desliga a deteccao AUTOMATICA de lingua para o proprio.
   // DEFAULT = OFF (voz UNICA fixa p/ todas as linguas — parece a mesma pessoa). ON e
@@ -321,9 +321,9 @@ export const catalog: Record<string, Entry> = {
   },
   // Frase-amostra falada pela voz escolhida no /voice preview. Curta e neutra.
   'preview.sample': {
-    en: "Hi, I'm Vozi. type it, hear it.",
+    en: "Hi, I'm Vozen. type it, hear it.",
     // FIX (auditoria i18n/locale — docs/I18N-LOCALE-AUDIT.md §2): a versao anterior
-    // tinha "Ola, eu sou o Vozi. type it, hear it." — a 2.a frase ficava por
+    // tinha "Ola, eu sou o Vozen. type it, hear it." — a 2.a frase ficava por
     // traduzir. Esta chave e FALADA pelo TTS (a unica excecao "falada" do
     // catalogo, ver comentario no topo do ficheiro), por isso uma frase
     // bilingue soa a erro de sintetizador, nao a escolha de marca — ao contrario
@@ -333,7 +333,7 @@ export const catalog: Record<string, Entry> = {
     // ja traduziram esta frase por inteiro (ex. es: "escríbelo, escúchalo"; ca:
     // "Escriu-ho i escolta'l") — pt (curado a mao na Fase A) era a UNICA excecao.
     // Alinhado ao mesmo padrao curto/imperativo.
-    pt: 'Ola, eu sou o Vozi. escreve, ouve.',
+    pt: 'Ola, eu sou o Vozen. escreve, ouve.',
   },
 
   // ── /laugh · /joke (diversao por-utilizador; tocam audio via player.say) ────
@@ -410,8 +410,8 @@ export const catalog: Record<string, Entry> = {
 
   // ── /premium & /redeem ─────────────────────────────────────────────────────
   'premium.title': {
-    en: '💎 **Vozi Premium status**',
-    pt: '💎 **Estado do Vozi Premium**',
+    en: '💎 **Vozen Premium status**',
+    pt: '💎 **Estado do Vozen Premium**',
   },
   'premium.lineServerActive': {
     en: '🖥️ **Server:** Premium until {date}',
@@ -434,12 +434,12 @@ export const catalog: Record<string, Entry> = {
     pt: 'Tudo o que já usas continua grátis. O Premium (€4/mês) acrescenta vozes premium, 24/7 na call, efeitos de voz completos e limites maiores. Apoio: https://ko-fi.com/',
   },
   'redeem.ok': {
-    en: '✅ Code redeemed! **{target}** now has Vozi Premium until {date}.',
-    pt: '✅ Código resgatado! **{target}** tem agora Vozi Premium até {date}.',
+    en: '✅ Code redeemed! **{target}** now has Vozen Premium until {date}.',
+    pt: '✅ Código resgatado! **{target}** tem agora Vozen Premium até {date}.',
   },
   'redeem.invalid': {
-    en: "That code doesn't exist. Check for typos (format: VOZI-XXXX-XXXX-XXXX).",
-    pt: 'Esse código não existe. Verifica se está bem escrito (formato: VOZI-XXXX-XXXX-XXXX).',
+    en: "That code doesn't exist. Check for typos (format: VOZEN-XXXX-XXXX-XXXX).",
+    pt: 'Esse código não existe. Verifica se está bem escrito (formato: VOZEN-XXXX-XXXX-XXXX).',
   },
   'redeem.used': {
     en: 'That code has already been used.',
@@ -584,36 +584,36 @@ export const catalog: Record<string, Entry> = {
     pt: 'TTS **desativado** neste servidor.',
   },
   'config.xsaidOn': {
-    en: 'Vozi will now announce **who spoke** before each message (e.g. "Alex said hi"). Turn off with `/config xsaid active:false`.',
-    pt: 'O Vozi vai anunciar **quem falou** antes de cada mensagem (ex.: "Alex disse olá"). Desliga com `/config xsaid active:false`.',
+    en: 'Vozen will now announce **who spoke** before each message (e.g. "Alex said hi"). Turn off with `/config xsaid active:false`.',
+    pt: 'O Vozen vai anunciar **quem falou** antes de cada mensagem (ex.: "Alex disse olá"). Desliga com `/config xsaid active:false`.',
   },
   'config.xsaidOff': {
-    en: 'Vozi will **no longer** announce who spoke — it reads only the message.',
-    pt: 'O Vozi **deixou de** anunciar quem falou — lê só a mensagem.',
+    en: 'Vozen will **no longer** announce who spoke — it reads only the message.',
+    pt: 'O Vozen **deixou de** anunciar quem falou — lê só a mensagem.',
   },
   'config.autojoinOn': {
-    en: '✅ Auto-join **on** — Vozi will join your voice channel when you type in the TTS channel.',
-    pt: '✅ Auto-entrada **ligada** — o Vozi entra no teu canal de voz quando escreves no canal de TTS.',
+    en: '✅ Auto-join **on** — Vozen will join your voice channel when you type in the TTS channel.',
+    pt: '✅ Auto-entrada **ligada** — o Vozen entra no teu canal de voz quando escreves no canal de TTS.',
   },
   'config.autojoinOff': {
-    en: 'Auto-join **off** — use `/join` to bring Vozi into voice.',
-    pt: 'Auto-entrada **desligada** — usa `/join` para trazer o Vozi para a voz.',
+    en: 'Auto-join **off** — use `/join` to bring Vozen into voice.',
+    pt: 'Auto-entrada **desligada** — usa `/join` para trazer o Vozen para a voz.',
   },
   'config.readBotsOn': {
-    en: '✅ Vozi will now read messages from **other bots and webhooks** too.',
-    pt: '✅ O Vozi passa a ler também mensagens de **outros bots e webhooks**.',
+    en: '✅ Vozen will now read messages from **other bots and webhooks** too.',
+    pt: '✅ O Vozen passa a ler também mensagens de **outros bots e webhooks**.',
   },
   'config.readBotsOff': {
-    en: 'Vozi will **ignore** other bots and webhooks (only real people are read).',
-    pt: 'O Vozi **ignora** outros bots e webhooks (só lê pessoas reais).',
+    en: 'Vozen will **ignore** other bots and webhooks (only real people are read).',
+    pt: 'O Vozen **ignora** outros bots e webhooks (só lê pessoas reais).',
   },
   'config.textInVoiceOn': {
-    en: "✅ Vozi will also read the **text chat inside its voice channel**.",
-    pt: '✅ O Vozi também vai ler o **chat de texto dentro do canal de voz** onde está.',
+    en: "✅ Vozen will also read the **text chat inside its voice channel**.",
+    pt: '✅ O Vozen também vai ler o **chat de texto dentro do canal de voz** onde está.',
   },
   'config.textInVoiceOff': {
-    en: 'Vozi will **not** read the voice channel text chat (only the TTS channel).',
-    pt: 'O Vozi **não** lê o chat de texto do canal de voz (só o canal de TTS).',
+    en: 'Vozen will **not** read the voice channel text chat (only the TTS channel).',
+    pt: 'O Vozen **não** lê o chat de texto do canal de voz (só o canal de TTS).',
   },
   'config.greetOn': {
     en: "✅ I'll greet people by name when they join the voice channel.",
@@ -741,8 +741,8 @@ export const catalog: Record<string, Entry> = {
     pt: 'O canal de auto-leitura tem de ser um canal de texto do servidor (nao voz nem categoria). Indica um na opcao "canal".',
   },
   'setup.done': {
-    en: '**All set — Vozi is ready.**',
-    pt: '**Setup do Vozi concluido.**',
+    en: '**All set — Vozen is ready.**',
+    pt: '**Setup do Vozen concluido.**',
   },
   'setup.channelLine': {
     en: 'Auto-read channel: {channel}',
@@ -785,8 +785,8 @@ export const catalog: Record<string, Entry> = {
     pt: '⏳ {label} — nao verificado (sera validado no /join)',
   },
   'setup.fixHint': {
-    en: "To fix what's missing: in your server settings open Vozi's role (or the channel's permissions) and enable the items marked with ❌.",
-    pt: 'Para corrigir o que falta: nas definicoes do servidor abre o role do Vozi (ou as permissoes do canal) e ativa as permissoes marcadas com ❌.',
+    en: "To fix what's missing: in your server settings open Vozen's role (or the channel's permissions) and enable the items marked with ❌.",
+    pt: 'Para corrigir o que falta: nas definicoes do servidor abre o role do Vozen (ou as permissoes do canal) e ativa as permissoes marcadas com ❌.',
   },
   'setup.voiceUncheckedNote': {
     en: "You're not in a voice channel, so I couldn't check Connect/Speak yet — I'll verify them when you run /join.",
@@ -828,8 +828,8 @@ export const catalog: Record<string, Entry> = {
 
   // ── /stats ────────────────────────────────────────────────────────────────
   'stats.title': {
-    en: '**Vozi stats**',
-    pt: '**Estatisticas do Vozi**',
+    en: '**Vozen stats**',
+    pt: '**Estatisticas do Vozen**',
   },
   'stats.messagesSpoken': {
     en: 'Messages spoken: {value}',
@@ -884,12 +884,12 @@ export const catalog: Record<string, Entry> = {
 
   // ── /uptime · /botstats (públicos) ────────────────────────────────────────
   'uptime.text': {
-    en: '🟢 Vozi has been online for **{uptime}**.',
-    pt: '🟢 O Vozi está online há **{uptime}**.',
+    en: '🟢 Vozen has been online for **{uptime}**.',
+    pt: '🟢 O Vozen está online há **{uptime}**.',
   },
   'botstats.title': {
-    en: '📊 **Vozi — stats**',
-    pt: '📊 **Vozi — estatísticas**',
+    en: '📊 **Vozen — stats**',
+    pt: '📊 **Vozen — estatísticas**',
   },
   'botstats.servers': {
     en: 'Servers: **{value}**',
@@ -910,38 +910,38 @@ export const catalog: Record<string, Entry> = {
 
   // ── /invite · /vote ───────────────────────────────────────────────────────
   'invite.noClientId': {
-    en: "Vozi's invite link isn't set up yet (CLIENT_ID is missing). Let the bot admin know.",
-    pt: 'O Vozi ainda nao tem o link de convite configurado (CLIENT_ID em falta). Avisa o admin do bot.',
+    en: "Vozen's invite link isn't set up yet (CLIENT_ID is missing). Let the bot admin know.",
+    pt: 'O Vozen ainda nao tem o link de convite configurado (CLIENT_ID em falta). Avisa o admin do bot.',
   },
   'invite.link': {
-    en: 'Add Vozi to your server:\n{url}',
-    pt: 'Adiciona o Vozi ao teu servidor:\n{url}',
+    en: 'Add Vozen to your server:\n{url}',
+    pt: 'Adiciona o Vozen ao teu servidor:\n{url}',
   },
   'vote.noClientId': {
-    en: "Vozi's vote link isn't set up yet (CLIENT_ID is missing). Let the bot admin know.",
-    pt: 'O Vozi ainda nao tem o link de voto configurado (CLIENT_ID em falta). Avisa o admin do bot.',
+    en: "Vozen's vote link isn't set up yet (CLIENT_ID is missing). Let the bot admin know.",
+    pt: 'O Vozen ainda nao tem o link de voto configurado (CLIENT_ID em falta). Avisa o admin do bot.',
   },
   'vote.link': {
-    en: 'Vote for Vozi (free, every 12h) and help more people find it:\n{url}',
-    pt: 'Vota no Vozi (grátis, a cada 12h) e ajuda mais gente a encontrá-lo:\n{url}',
+    en: 'Vote for Vozen (free, every 12h) and help more people find it:\n{url}',
+    pt: 'Vota no Vozen (grátis, a cada 12h) e ajuda mais gente a encontrá-lo:\n{url}',
   },
-  'invite.button': { en: 'Add Vozi', pt: 'Adicionar o Vozi' },
+  'invite.button': { en: 'Add Vozen', pt: 'Adicionar o Vozen' },
   'vote.button': { en: 'Vote on top.gg', pt: 'Votar no top.gg' },
 
   // ── /help chrome (tudo o que NAO e a lista de comandos, que vem de commandDefs) ──
   // O titulo vira DESCRICAO do embed (embeds nao renderizam markdown no titulo),
   // por isso 'help.title' e texto simpatico sem `**…**`.
   'help.title': {
-    en: 'Vozi — type it, hear it.',
+    en: 'Vozen — type it, hear it.',
     // Sem `pt`: a marca/tagline e a mesma em qualquer idioma (fallback a en).
   },
   'help.embedTitle': {
-    en: 'Vozi — Commands',
-    pt: 'Vozi — Comandos',
+    en: 'Vozen — Commands',
+    pt: 'Vozen — Comandos',
   },
   'help.intro': {
-    en: 'Vozi reads your text aloud in voice channels — free neural voices, dozens of languages.',
-    pt: 'O Vozi le o teu texto em voz alta nos canais de voz — vozes neurais gratis, dezenas de linguas.',
+    en: 'Vozen reads your text aloud in voice channels — free neural voices, dozens of languages.',
+    pt: 'O Vozen le o teu texto em voz alta nos canais de voz — vozes neurais gratis, dezenas de linguas.',
   },
 
   // Quick start (3 passos): o primeiro FIELD do embed. Curto, numerado, para um
@@ -1043,12 +1043,12 @@ export const catalog: Record<string, Entry> = {
   },
   'help.groupMoreBody': {
     en:
-      '• /invite — add Vozi to another server\n' +
-      '• /vote — vote for Vozi on top.gg\n' +
+      '• /invite — add Vozen to another server\n' +
+      '• /vote — vote for Vozen on top.gg\n' +
       '• /help — show this help',
     pt:
-      '• /invite — adiciona o Vozi a outro servidor\n' +
-      '• /vote — vota no Vozi no top.gg\n' +
+      '• /invite — adiciona o Vozen a outro servidor\n' +
+      '• /vote — vota no Vozen no top.gg\n' +
       '• /help — mostra esta ajuda',
   },
   'help.footer': {
@@ -1057,16 +1057,16 @@ export const catalog: Record<string, Entry> = {
   },
 
   // ── welcome embed (guildCreate) ────────────────────────────────────────────
-  // Enviado UMA vez quando o Vozi entra num servidor novo. Guild nova nao tem
+  // Enviado UMA vez quando o Vozen entra num servidor novo. Guild nova nao tem
   // config, por isso o locale e sempre o default ('en'). Beginner-friendly: diz
-  // o que o Vozi faz + como comecar (/setup) + onde ver a ajuda (/help).
+  // o que o Vozen faz + como comecar (/setup) + onde ver a ajuda (/help).
   'welcome.title': {
-    en: 'Thanks for adding Vozi! 👋',
-    pt: 'Obrigado por adicionares o Vozi! 👋',
+    en: 'Thanks for adding Vozen! 👋',
+    pt: 'Obrigado por adicionares o Vozen! 👋',
   },
   'welcome.description': {
-    en: "Vozi reads your chat out loud in voice channels — type it, hear it.\n\n**Get started in one step:** run {setup} and I'll set up auto-read and join your voice channel.\n\nNeed the full command list? Run {help}.",
-    pt: 'O Vozi le o teu chat em voz alta nos canais de voz — escreve e ouve.\n\n**Comeca num passo:** corre {setup} e eu configuro a auto-leitura e entro no teu canal de voz.\n\nQueres a lista completa de comandos? Corre {help}.',
+    en: "Vozen reads your chat out loud in voice channels — type it, hear it.\n\n**Get started in one step:** run {setup} and I'll set up auto-read and join your voice channel.\n\nNeed the full command list? Run {help}.",
+    pt: 'O Vozen le o teu chat em voz alta nos canais de voz — escreve e ouve.\n\n**Comeca num passo:** corre {setup} e eu configuro a auto-leitura e entro no teu canal de voz.\n\nQueres a lista completa de comandos? Corre {help}.',
   },
   // Field do welcome: o fluxo em 3 passos para os MEMBROS arrancarem. Curto e
   // concreto (join voz -> /join -> escrever/tts), a apontar para /help para a lista
@@ -1088,11 +1088,11 @@ export const catalog: Record<string, Entry> = {
       'Lista completa de comandos: /help',
   },
   'welcome.footer': {
-    en: 'Vozi — type it, hear it.',
+    en: 'Vozen — type it, hear it.',
     // Sem `pt`: a tagline e a mesma em qualquer idioma (fallback a en).
   },
   // Diferenciador vs. o lider pago do mercado ("TTS Bot", ~€5/mes): a voz neural do
-  // Vozi e gratuita e sem paywall. SO texto de posicionamento — NAO promete "mais
+  // Vozen e gratuita e sem paywall. SO texto de posicionamento — NAO promete "mais
   // facil"/"invite-and-go" (o projeto e self-host; os docs avisam para nao o dizer).
   'welcome.tagline': {
     en: 'Natural neural voice — free forever, no paywall.',
@@ -1163,7 +1163,7 @@ export const catalog: Record<string, Entry> = {
     en: "🏁 Game over — nobody scored this time. Next time!",
     pt: '🏁 Fim de jogo — ninguém pontuou desta vez. Para a próxima!',
   },
-  // FALADO (na voz da guild): o Vozi anuncia o vencedor em voz alta no fim.
+  // FALADO (na voz da guild): o Vozen anuncia o vencedor em voz alta no fim.
   'game.finish.winnerVoice': {
     en: '{user} wins!',
     pt: '{user} venceu!',
@@ -1314,25 +1314,25 @@ export const catalog: Record<string, Entry> = {
   'game.reflexes.win': { en: '⚡ **{user}** is the fastest! Point!', pt: '⚡ **{user}** foi o mais rápido! Ponto!' },
   'game.reflexes.tooSlow': { en: '😴 Nobody reacted in time. Next!', pt: '😴 Ninguém reagiu a tempo. Próxima!' },
 
-  // ── Vozi Diz (Simon Says) ─────────────────────────────────────────────────
-  'game.voziSays.name': { en: 'Vozi Says', pt: 'Vozi Diz' },
-  'game.voziSays.desc': {
-    en: "Only obey when the order starts with 'Vozi says'. Fall for a trap and you're caught!",
-    pt: "Só obedeces quando a ordem começa por 'Vozi diz'. Cais numa ratoeira e és apanhado!",
+  // ── Vozen Diz (Simon Says) ─────────────────────────────────────────────────
+  'game.vozenSays.name': { en: 'Vozen Says', pt: 'Vozen Diz' },
+  'game.vozenSays.desc': {
+    en: "Only obey when the order starts with 'Vozen says'. Fall for a trap and you're caught!",
+    pt: "Só obedeces quando a ordem começa por 'Vozen diz'. Cais numa ratoeira e és apanhado!",
   },
-  'game.voziSays.intro': {
-    en: "🫡 **Vozi Says** — {rounds} orders. Do it ONLY if I start with **'Vozi says'**. Otherwise, don't move!",
-    pt: "🫡 **Vozi Diz** — {rounds} ordens. Só cumpres se eu começar por **'Vozi diz'**. Caso contrário, não mexas!",
+  'game.vozenSays.intro': {
+    en: "🫡 **Vozen Says** — {rounds} orders. Do it ONLY if I start with **'Vozen says'**. Otherwise, don't move!",
+    pt: "🫡 **Vozen Diz** — {rounds} ordens. Só cumpres se eu começar por **'Vozen diz'**. Caso contrário, não mexas!",
   },
   // FALADOS (na voz da guild): o prefixo da ordem e o verbo.
-  'game.voziSays.prefix': { en: 'Vozi says', pt: 'Vozi diz' },
-  'game.voziSays.verb': { en: 'type', pt: 'escrevam' },
-  'game.voziSays.real': { en: '🗣️ Round {n}/{total} — “{command}”', pt: '🗣️ Ronda {n}/{total} — «{command}»' },
-  'game.voziSays.trap': { en: '🗣️ Round {n}/{total} — “{command}”', pt: '🗣️ Ronda {n}/{total} — «{command}»' },
-  'game.voziSays.obeyed': { en: '✅ **{user}** obeyed first — point!', pt: '✅ **{user}** obedeceu primeiro — ponto!' },
-  'game.voziSays.caught': { en: "🔴 **{user}** — I didn't say Vozi says! Caught!", pt: '🔴 **{user}** — eu não disse Vozi diz! Apanhado!' },
-  'game.voziSays.nobody': { en: '😴 Nobody obeyed **{word}** in time. Next!', pt: '😴 Ninguém obedeceu a **{word}** a tempo. Próxima!' },
-  'game.voziSays.trapCleared': { en: '😌 It was a trap — well spotted, nobody fell for **{word}**.', pt: '😌 Era uma ratoeira — bem visto, ninguém caiu em **{word}**.' },
+  'game.vozenSays.prefix': { en: 'Vozen says', pt: 'Vozen diz' },
+  'game.vozenSays.verb': { en: 'type', pt: 'escrevam' },
+  'game.vozenSays.real': { en: '🗣️ Round {n}/{total} — “{command}”', pt: '🗣️ Ronda {n}/{total} — «{command}»' },
+  'game.vozenSays.trap': { en: '🗣️ Round {n}/{total} — “{command}”', pt: '🗣️ Ronda {n}/{total} — «{command}»' },
+  'game.vozenSays.obeyed': { en: '✅ **{user}** obeyed first — point!', pt: '✅ **{user}** obedeceu primeiro — ponto!' },
+  'game.vozenSays.caught': { en: "🔴 **{user}** — I didn't say Vozen says! Caught!", pt: '🔴 **{user}** — eu não disse Vozen diz! Apanhado!' },
+  'game.vozenSays.nobody': { en: '😴 Nobody obeyed **{word}** in time. Next!', pt: '😴 Ninguém obedeceu a **{word}** a tempo. Próxima!' },
+  'game.vozenSays.trapCleared': { en: '😌 It was a trap — well spotted, nobody fell for **{word}**.', pt: '😌 Era uma ratoeira — bem visto, ninguém caiu em **{word}**.' },
 
   // ── Roleta (Verdade ou Consequência) ──────────────────────────────────────
   'game.roulette.name': { en: 'Truth or Dare Roulette', pt: 'Roleta (Verdade ou Consequência)' },

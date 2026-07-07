@@ -1,6 +1,6 @@
 /**
  * Context-menu "Speak" (Vaga 2·I): botão direito numa mensagem -> Apps -> Speak ->
- * o Vozi lê essa mensagem com a voz de quem clicou (mesmo pipeline do /tts).
+ * o Vozen lê essa mensagem com a voz de quem clicou (mesmo pipeline do /tts).
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type Database from 'better-sqlite3';
@@ -94,7 +94,7 @@ describe('context-menu "Speak"', () => {
 
   // Bug-hunt 2026-07: o handler do context-menu é despachado com `void ...` SEM catch
   // e não tinha try/catch próprio. Um throw no speakRawText (ex.: player.say rejeita)
-  // deixava o utilizador preso em "Vozi is thinking…" para sempre + unhandledRejection.
+  // deixava o utilizador preso em "Vozen is thinking…" para sempre + unhandledRejection.
   // Agora tem que apanhar o erro e responder com a mensagem genérica.
   it('se a síntese/say lança, responde erro (não fica preso em "thinking…") e não rejeita', async () => {
     const boom = vi.fn().mockRejectedValue(new Error('synth boom'));

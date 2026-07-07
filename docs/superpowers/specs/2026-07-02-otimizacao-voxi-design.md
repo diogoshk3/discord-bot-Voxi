@@ -1,4 +1,4 @@
-# Plano de Otimização do Vozi — Design (2026-07-02)
+# Plano de Otimização do Vozen — Design (2026-07-02)
 
 **Estado:** aprovado pelo Diogo (abordagem "Medir → Otimizar", com T3.2 incluído).
 **Âmbito:** velocidade, qualidade (voz+deteção), escala/recursos, robustez de hosting — plano completo priorizado.

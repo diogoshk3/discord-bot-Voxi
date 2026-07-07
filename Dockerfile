@@ -1,4 +1,4 @@
-# Vozi — type it, hear it.
+# Vozen — type it, hear it.
 # Imagem Docker multi-stage para deploy hosted (invite-and-go) numa VPS Linux.
 #
 # Notas importantes:

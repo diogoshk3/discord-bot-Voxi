@@ -10,7 +10,7 @@ interface Sequence {
 }
 
 /**
- * "Contagem Sabotada" — o Vozi conta em voz alta mas SALTA um numero de proposito; o
+ * "Contagem Sabotada" — o Vozen conta em voz alta mas SALTA um numero de proposito; o
  * 1o a apanhar o numero em falta ganha. Conteudo GERADO (seeded), independente de
  * lingua (a voz da guild diz os digitos). Resposta = o numero saltado.
  */

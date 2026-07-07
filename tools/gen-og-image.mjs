@@ -1,7 +1,7 @@
 // tools/gen-og-image.mjs
 //
 // Rasteriza site/assets/og-image.svg -> site/assets/og-image.png (1200x630), o
-// og:image que aparece quando um link do Vozi e' partilhado no Discord/Twitter.
+// og:image que aparece quando um link do Vozen e' partilhado no Discord/Twitter.
 // SVG nao e' aceite de forma fiavel como og:image, por isso comitamos o PNG.
 //
 // Regenerar (o rasterizador NAO esta em package.json, e' so uma ferramenta de build):

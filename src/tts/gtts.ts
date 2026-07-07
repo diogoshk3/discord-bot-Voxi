@@ -2,7 +2,7 @@
 //
 // Porquê: o Piper (self-host) lê palavras estrangeiras de forma mecânica. As vozes
 // da Google (neurais, multilingues) leem texto MISTO com naturalidade numa só voz —
-// é o que o Discord-TTS usa por defeito. Este motor traz essa qualidade ao Vozi SEM
+// é o que o Discord-TTS usa por defeito. Este motor traz essa qualidade ao Vozen SEM
 // API key nem custo, atrás da flag TTS_ENGINE=gtts.
 //
 // AVISO (fragilidade honesta): o endpoint translate_tts é NÃO-OFICIAL. A Google
@@ -148,7 +148,7 @@ export function chunkText(text: string, max: number): string[] {
  * O Google translate_tts SOLETRA palavras TODO-MAIÚSCULAS (interpreta-as como siglas):
  * "VOLTEI" -> "V-O-L-T-E-I", em vez de ler a palavra. Confirmado empiricamente em 22
  * das ~34 línguas do bot (es, en, fr, de, it, nl, pl, ro, tr, ar, sv, el, cs, da, lv,
- * ne, sk, sr, sw, vi, ca, cy; NÃO acontece em pt, ru, uk, zh, fi, hu, is). Para o Vozi
+ * ne, sk, sr, sw, vi, ca, cy; NÃO acontece em pt, ru, uk, zh, fi, hu, is). Para o Vozen
  * LER a palavra em vez de a soletrar, baixamos RUNS de 2+ maiúsculas para minúsculas
  * antes de enviar à Google.
  *

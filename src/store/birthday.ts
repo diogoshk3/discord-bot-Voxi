@@ -1,7 +1,7 @@
 import type Database from 'better-sqlite3';
 
 // Aniversário por-(guild,user): mês + dia (SEM ano — só interessa o dia do ano). Quando a
-// pessoa ENTRA na call do Vozi no seu dia de anos, o Vozi diz "Parabéns {nome}" em vez da
+// pessoa ENTRA na call do Vozen no seu dia de anos, o Vozen diz "Parabéns {nome}" em vez da
 // saudação normal (reaproveita o greetOnJoin — sem agendador). Ausente => sem parabéns.
 
 export interface Birthday {

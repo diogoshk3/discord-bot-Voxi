@@ -2,7 +2,7 @@ import { EmbedBuilder, PermissionFlagsBits, ChannelType } from 'discord.js';
 import { t, DEFAULT_LOCALE } from '../i18n/index';
 
 /**
- * Welcome embed no guildCreate — beginner onboarding quando o Vozi entra num
+ * Welcome embed no guildCreate — beginner onboarding quando o Vozen entra num
  * servidor novo. Toda a logica *testavel* vive aqui em funcoes PURAS; o handler
  * do evento (em client.ts) so as liga (guarda de perms + try/catch). Assim os
  * testes exercitam a escolha de canal e a construcao do embed com objetos fake,
@@ -71,11 +71,11 @@ export function pickWelcomeChannel(guild: WelcomeGuildLike): WelcomeChannelLike 
 
 /**
  * Constroi o welcome embed no `locale` dado (default 'en'). PURO: nao envia nada.
- * Menciona o que o Vozi faz, /setup como 1.º passo e /help para a lista completa.
+ * Menciona o que o Vozen faz, /setup como 1.º passo e /help para a lista completa.
  */
 export function buildWelcomeEmbed(locale: string = DEFAULT_LOCALE): EmbedBuilder {
   // Reforca o diferenciador (voz neural gratis, sem paywall) logo no welcome: e o
-  // que separa o Vozi do lider pago do mercado. Anexado a descricao para nao
+  // que separa o Vozen do lider pago do mercado. Anexado a descricao para nao
   // colidir com o footer da marca ('welcome.footer').
   const description = `${t('welcome.description', locale, { setup: '`/setup`', help: '`/help`' })}\n\n${t('welcome.tagline', locale)}`;
   return new EmbedBuilder()
@@ -83,7 +83,7 @@ export function buildWelcomeEmbed(locale: string = DEFAULT_LOCALE): EmbedBuilder
     .setTitle(t('welcome.title', locale))
     .setDescription(description)
     // Field com o fluxo em 3 passos para os MEMBROS: a descricao fica com o
-    // posicionamento (o que o Vozi faz + /setup + /help), o field da o "como usar"
+    // posicionamento (o que o Vozen faz + /setup + /help), o field da o "como usar"
     // passo a passo. Field (nao descricao) para caber no cap de 1024 e nao colidir
     // com o pointer para /help ja na descricao.
     .addFields({ name: t('welcome.stepsTitle', locale), value: t('welcome.stepsBody', locale) })

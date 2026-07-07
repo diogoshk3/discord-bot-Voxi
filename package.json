@@ -1,8 +1,8 @@
 {
-  "name": "vozi",
+  "name": "vozen",
   "version": "0.0.0",
   "private": true,
-  "description": "Vozi — type it, hear it. Bot de TTS para Discord com voz neural gratis (Piper self-host) e fiabilidade.",
+  "description": "Vozen — type it, hear it. Bot de TTS para Discord com voz neural gratis (Piper self-host) e fiabilidade.",
   "license": "AGPL-3.0-only",
   "scripts": {
     "dev": "tsx watch src/index.ts",

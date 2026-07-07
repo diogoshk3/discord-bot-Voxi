@@ -1,5 +1,5 @@
 /**
- * Desafios da Roleta (Verdade ou Consequência / o que preferes): o Vozi le UM em voz
+ * Desafios da Roleta (Verdade ou Consequência / o que preferes): o Vozen le UM em voz
  * alta. Conteudo leve e amigavel. Por locale de INTERFACE da guild (ctx.locale); cai
  * em ingles se a lingua nao tiver banco.
  */

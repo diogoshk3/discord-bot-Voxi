@@ -6,7 +6,7 @@ import { normalizeAnswer, seededShuffle } from './util';
 const ROUNDS = 5;
 
 /**
- * "Soletrado ao Contrario" — o Vozi SOLETRA uma palavra letra a letra ("v, o, l, t, e,
+ * "Soletrado ao Contrario" — o Vozen SOLETRA uma palavra letra a letra ("v, o, l, t, e,
  * i") e o 1o a escrever a palavra INTEIRA ganha. Piada interna: e o inverso do bug do
  * gTTS que soletrava CAPS — aqui soletrar E a feature.
  *

@@ -8,7 +8,7 @@ import { spellOutDef } from './spellOut';
 import { fastSpeechDef } from './fastSpeech';
 import { accentSwapDef } from './accentSwap';
 import { reflexesDef } from './reflexes';
-import { voziSaysDef } from './voziSays';
+import { vozenSaysDef } from './vozenSays';
 import { rouletteDef } from './roulette';
 import { hangmanDef } from './hangman';
 import { wordleDef } from './wordle';
@@ -29,7 +29,7 @@ export const GAME_DEFS: readonly GameDefinition[] = [
   fastSpeechDef,
   accentSwapDef,
   reflexesDef,
-  voziSaysDef,
+  vozenSaysDef,
   rouletteDef,
   hangmanDef,
   wordleDef,

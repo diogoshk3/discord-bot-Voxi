@@ -1,15 +1,15 @@
 /* ═══════════════════════════════════════════════════════════
-   Vozi site — main.js
+   Vozen site — main.js
    ═══════════════════════════════════════════════════════════ */
 (function () {
   "use strict";
 
   /* ── config ──────────────────────────────────────────────
      CLIENT_ID é público (está em qualquer link de convite).
-     SUPPORT_URL é o convite do servidor de suporte do Vozi. */
+     SUPPORT_URL é o convite do servidor de suporte do Vozen. */
   const CLIENT_ID = "1523826014935842997";
   const INVITE_PERMISSIONS = "3230720"; // Connect+Speak+ViewChannel+SendMessages+ReadMessageHistory+EmbedLinks
-  const SUPPORT_URL = "https://discord.gg/V6PZYZmhcQ"; // servidor de suporte do Vozi
+  const SUPPORT_URL = "https://discord.gg/V6PZYZmhcQ"; // servidor de suporte do Vozen
   const INVITE_URL =
     CLIENT_ID && CLIENT_ID !== "YOUR_CLIENT_ID"
       ? `https://discord.com/oauth2/authorize?client_id=${CLIENT_ID}&scope=bot%20applications.commands&permissions=${INVITE_PERMISSIONS}`
@@ -37,12 +37,12 @@
   });
 
   /* ── i18n ────────────────────────────────────────────── */
-  const DICT = window.VOZI_I18N;
+  const DICT = window.VOZEN_I18N;
   // Idioma por defeito: INGLÊS. NÃO fazemos sniffing do navigator (senão um browser PT
   // abria o site em português). Só respeitamos uma escolha EXPLÍCITA (guardada quando o
-  // utilizador carrega no toggle EN/PT). Chave nova ("vozi.lang") para ignorar o valor que
+  // utilizador carrega no toggle EN/PT). Chave nova ("vozen.lang") para ignorar o valor que
   // a versão anterior auto-guardava a partir do navigator — assim toda a gente recomeça em EN.
-  const LS_KEY = "vozi.lang";
+  const LS_KEY = "vozen.lang";
   let lang = localStorage.getItem(LS_KEY) || "en";
 
   function applyLang(l) {
@@ -163,7 +163,7 @@
   let activeTab = "general";
   function renderCommands() {
     if (!cmdList) return;
-    const rows = window.VOZI_COMMANDS[activeTab] || [];
+    const rows = window.VOZEN_COMMANDS[activeTab] || [];
     cmdList.innerHTML = rows
       .map(([cmd, desc]) => `<div class="cmd"><code>${cmd}</code><span>${desc[lang] || desc.en}</span></div>`)
       .join("");
@@ -180,7 +180,7 @@
   const faqList = $("#faq-list");
   function renderFaq() {
     if (!faqList) return;
-    faqList.innerHTML = window.VOZI_FAQ.map(
+    faqList.innerHTML = window.VOZEN_FAQ.map(
       ([q, a], i) => `
       <div class="qa">
         <button class="qa__q" aria-expanded="false" aria-controls="qa-${i}">
@@ -216,18 +216,18 @@
       <div class="msg__b">
         <div class="msg__name">${m.name}</div>
         <div class="msg__text">${textHtml}</div>
-        ${speaking ? `<div class="speaking"><span class="eq"><i></i><i></i><i></i><i></i><i></i></span> Vozi is speaking…</div>` : ""}
+        ${speaking ? `<div class="speaking"><span class="eq"><i></i><i></i><i></i><i></i><i></i></span> Vozen is speaking…</div>` : ""}
       </div>`;
     return el;
   }
 
-  function voziBubble() {
+  function vozenBubble() {
     const el = document.createElement("div");
     el.className = "msg";
     el.innerHTML = `
       <div class="msg__av msg__av--v"><span class="eq" style="height:16px"><i></i><i></i><i></i><i></i><i></i></span></div>
       <div class="msg__b">
-        <div class="msg__name"><b>Vozi</b><span class="tag">APP</span></div>
+        <div class="msg__name"><b>Vozen</b><span class="tag">APP</span></div>
         <div class="speaking"><span class="eq"><i></i><i></i><i></i><i></i><i></i></span> reading it out loud…</div>
       </div>`;
     return el;
@@ -247,7 +247,7 @@
     if (reduce) {
       // static: show one exchange, no loop
       chat.appendChild(bubble(SCRIPT[0], SCRIPT[0].text, false));
-      chat.appendChild(voziBubble());
+      chat.appendChild(vozenBubble());
       return;
     }
     let i = 0;
@@ -259,7 +259,7 @@
       await sleep(300);
       await typeInto(b, m.text);
       await sleep(450);
-      chat.appendChild(voziBubble());
+      chat.appendChild(vozenBubble());
       await sleep(2600);
       i++;
     }

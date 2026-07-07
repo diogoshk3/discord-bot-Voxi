@@ -2,7 +2,7 @@ import { baseCodeOf } from '../util';
 
 /**
  * Frases CURTAS (3-6 palavras) por lingua-base, para o jogo da Velocidade Estupida: o
- * Vozi le-as MUITO depressa e o 1o a escrever o que ouviu ganha. Curtas de proposito —
+ * Vozen le-as MUITO depressa e o 1o a escrever o que ouviu ganha. Curtas de proposito —
  * a graca e decifrar, nao transcrever um paragrafo. Ditas na voz default da guild.
  */
 export const SHORT_PHRASES: Record<string, string[]> = {

@@ -1,11 +1,11 @@
-# Tornar o Vozi público e sempre-ligado (24/7)
+# Tornar o Vozen público e sempre-ligado (24/7)
 
-Este documento descreve **o que é preciso fazer** para o Vozi deixar de ser um
+Este documento descreve **o que é preciso fazer** para o Vozen deixar de ser um
 bot privado de uso pessoal e passar a poder ser convidado por qualquer pessoa,
 a correr de forma contínua (24/7). É um guia de **operações**, não uma mudança
 de código.
 
-> **Estas são decisões do dono da instância** (tu). O Vozi continua a ser
+> **Estas são decisões do dono da instância** (tu). O Vozen continua a ser
 > **self-host**: tornar o bot público significa que qualquer um pode **convidá-lo**
 > para o seu servidor, mas a instância continua a correr no teu hardware/VPS e
 > sob a tua responsabilidade. O repositório está **privado por agora** — nada
@@ -22,13 +22,13 @@ próprio dono**. Para abrir o convite a qualquer pessoa, ativa o toggle
 Passos:
 
 1. Vai ao [Discord Developer Portal](https://discord.com/developers/applications)
-   e abre a tua aplicação (a do Vozi).
+   e abre a tua aplicação (a do Vozen).
 2. Menu lateral → **Bot**.
 3. Em **Authorization Flow**, ativa o toggle **PUBLIC BOT**.
-   - **Ligado**: qualquer pessoa com o link de convite pode adicionar o Vozi ao
+   - **Ligado**: qualquer pessoa com o link de convite pode adicionar o Vozen ao
      seu servidor.
    - **Desligado** (default): só tu (o dono) podes adicioná-lo.
-4. Mantém **REQUIRES OAUTH2 CODE GRANT** **desligado** — o Vozi não usa esse fluxo.
+4. Mantém **REQUIRES OAUTH2 CODE GRANT** **desligado** — o Vozen não usa esse fluxo.
 
 > **O que isto significa, em concreto:** com "Public Bot" ligado, o link de
 > convite que geras (e o comando `/invite` do próprio bot) passa a funcionar para
@@ -41,7 +41,7 @@ Passos:
 
 ## 2. MESSAGE CONTENT intent
 
-O Vozi precisa de **ler o conteúdo de texto** das mensagens para as conseguir
+O Vozen precisa de **ler o conteúdo de texto** das mensagens para as conseguir
 ler em voz alta — nomeadamente na **auto-leitura** de um canal de TTS
 configurado (e em menções/replies ao bot). Para isso, a aplicação precisa do
 privileged intent **MESSAGE CONTENT**.
@@ -68,7 +68,7 @@ ativa o intent logo, é o que permite a auto-leitura.
 > **Rascunho da justificação** (guarda este parágrafo para quando o Discord
 > pedir a justificação do intent na janela de review):
 >
-> > O Vozi é um bot de Text-to-Speech (TTS) para Discord. Precisa do MESSAGE
+> > O Vozen é um bot de Text-to-Speech (TTS) para Discord. Precisa do MESSAGE
 > > CONTENT intent para ler o **conteúdo de texto** das mensagens publicadas no
 > > canal de TTS configurado pelo servidor (auto-leitura) e em menções/replies
 > > diretas ao bot, e convertê-lo em **voz** reproduzida no canal de voz. O
@@ -91,7 +91,7 @@ tem de estar **sempre a correr**. O teu PC pessoal serve para testar, mas para
 Opções económicas:
 
 - **VPS Linux ~€5/mês** (Hetzner, Contabo, DigitalOcean, etc.). Suficiente para o
-  Vozi: o bot é um cliente websocket de saída e o Piper corre em CPU.
+  Vozen: o bot é um cliente websocket de saída e o Piper corre em CPU.
 - **Oracle Cloud free tier** — instâncias *Always Free* (ex.: ARM Ampere) que
   podem correr o bot a custo zero, se conseguires provisionar uma.
 
@@ -108,7 +108,7 @@ exatamente o que "24/7" exige. Para atualizar: `git pull` e `docker compose up -
 
 ### Monitorização de uptime (health endpoint)
 
-O Vozi expõe um **health endpoint HTTP opcional** para uptime monitors (ex.:
+O Vozen expõe um **health endpoint HTTP opcional** para uptime monitors (ex.:
 [UptimeRobot](https://uptimerobot.com/)). É **opcional** e está **desligado por
 defeito**:
 
@@ -124,7 +124,7 @@ defeito**:
 > **Nota (deploy Docker):** o `docker-compose.yml` recomendado (README §5) **não**
 > publica portas — o container não expõe `HEALTH_PORT` para fora por defeito. Para
 > um monitor **externo** alcançar o endpoint num deploy Docker, acrescenta
-> `ports: ["<HEALTH_PORT>:<HEALTH_PORT>"]` ao serviço `vozi` no `docker-compose.yml`
+> `ports: ["<HEALTH_PORT>:<HEALTH_PORT>"]` ao serviço `vozen` no `docker-compose.yml`
 > (ou faz bind apenas à loopback/rede interna se só monitorizares a partir da
 > própria máquina). Em **deploy nativo** (sem Docker) o processo já escuta no host,
 > por isso não é preciso passo extra.

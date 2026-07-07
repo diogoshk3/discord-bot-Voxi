@@ -268,7 +268,7 @@ export class GuildVoicePlayer {
   }
 
   private armIdleTimer(): void {
-    // SAÍDA-POR-INATIVIDADE REMOVIDA: o Vozi já NÃO sai só porque não há TTS. A única
+    // SAÍDA-POR-INATIVIDADE REMOVIDA: o Vozen já NÃO sai só porque não há TTS. A única
     // saída discricionária é "sozinho na call 5 min" (ver AloneWatcher, fora do
     // player). Este método é agora um NO-OP — mantido (com os call-sites) para não
     // remexer no lifecycle; `onIdle` continua a ser usado no caminho de

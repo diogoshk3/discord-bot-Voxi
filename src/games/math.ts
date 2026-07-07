@@ -13,7 +13,7 @@ interface Problem {
 }
 
 /**
- * "Matematica Falada" — o Vozi diz uma conta em voz alta (na voz da guild) e o 1o a
+ * "Matematica Falada" — o Vozen diz uma conta em voz alta (na voz da guild) e o 1o a
  * escrever o resultado ganha. Conteudo GERADO (seeded), independente de lingua a menos
  * das palavras "mais/menos/vezes" (localizadas). A resposta e um numero (aceita o
  * primeiro inteiro da mensagem, para "= 51" ou "51" funcionarem).

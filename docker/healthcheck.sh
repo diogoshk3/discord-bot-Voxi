@@ -1,5 +1,5 @@
 #!/bin/sh
-# Vozi — Docker HEALTHCHECK.
+# Vozen — Docker HEALTHCHECK.
 #
 # O servidor de health (src/health.ts) so arranca quando HEALTH_PORT esta
 # definido. Por isso o check tem de ser um NO-OP saudavel quando HEALTH_PORT

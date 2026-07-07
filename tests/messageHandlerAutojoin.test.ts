@@ -1,5 +1,5 @@
 /**
- * Autojoin (Vaga 2): quando o Vozi não está em call e o autor está num canal de voz,
+ * Autojoin (Vaga 2): quando o Vozen não está em call e o autor está num canal de voz,
  * entra sozinho (se autojoin ON e tiver Connect/Speak). `createVoiceSession` (que abre
  * a ligação real de voz) é MOCKADA — aqui testamos só a DECISÃO + o encaminhamento.
  */

@@ -1,5 +1,5 @@
 /**
- * tools/bench.ts — Régua de performance do Vozi (spec Fase 0 / T0.1).
+ * tools/bench.ts — Régua de performance do Vozen (spec Fase 0 / T0.1).
  *
  * Corre com:  npx tsx tools/bench.ts
  *
@@ -68,7 +68,7 @@ async function main(): Promise<void> {
     console.log(s);
   };
 
-  log('# BENCHMARKS — Vozi (baseline)');
+  log('# BENCHMARKS — Vozen (baseline)');
   log('');
   log('Gerado por `npx tsx tools/bench.ts`. Piper real; cache temporária isolada.');
   log('Hoje NÃO há streaming: tempo-até-1.ª-palavra == tempo total de síntese abaixo.');
@@ -100,7 +100,7 @@ async function main(): Promise<void> {
   log(`- Voz PT: \`${voicePt}\` · Voz EN: \`${voiceEn}\``);
   log('');
 
-  const cacheDir = mkdtempSync(join(tmpdir(), 'vozi-bench-'));
+  const cacheDir = mkdtempSync(join(tmpdir(), 'vozen-bench-'));
   const engine = new PiperEngine(config.piperPath, config.modelsDir, new AudioCache(cacheDir, 0), {
     noiseScale: config.noiseScale,
     noiseW: config.noiseW,

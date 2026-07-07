@@ -1,6 +1,6 @@
 // src/ui/theme.ts
 //
-// Tema visual do Vozi: paleta de marca + fábrica de embeds. Um sítio ÚNICO para as
+// Tema visual do Vozen: paleta de marca + fábrica de embeds. Um sítio ÚNICO para as
 // cores, para todas as superfícies (comandos, jogos, placares) terem o mesmo aspeto
 // em vez de hex soltos espalhados. Mantém-se propositadamente pequeno.
 

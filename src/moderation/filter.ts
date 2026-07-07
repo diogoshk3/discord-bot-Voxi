@@ -23,7 +23,7 @@ export function isBlocked(text: string, blocklist: string[]): boolean {
 
 /**
  * REDIGE (remove) as palavras da blocklist do texto, mantendo o resto legível — para o
- * Vozi NÃO FALAR essas palavras mas continuar a ler a mensagem (em vez de saltar a
+ * Vozen NÃO FALAR essas palavras mas continuar a ler a mensagem (em vez de saltar a
  * mensagem inteira). Match por PALAVRA COMPLETA (mesmas fronteiras unicode do
  * isBlocked), case-insensitive. Usa lookbehind/lookahead ZERO-WIDTH (não consome as
  * fronteiras) para o replace GLOBAL funcionar mesmo em palavras bloqueadas consecutivas.

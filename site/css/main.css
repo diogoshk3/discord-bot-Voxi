@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   Vozi — main.css · "SOUND MADE VISIBLE"
+   Vozen — main.css · "SOUND MADE VISIBLE"
    Dark neon stage. Baked-gradient atmosphere (no runtime blur
    filters → renders crisp & fast everywhere). Signature: a live
    oscilloscope waveform in the hero.
@@ -443,7 +443,7 @@ body > *:not(.grain):not(.orbs) { position: relative; z-index: 2; }
 }
 .price-card--pro .price-card__price b { background: linear-gradient(115deg, #ffc24b, #ff9d5c); -webkit-background-clip: text; background-clip: text; color: transparent; }
 /* Chip ESTÁTICO acima do nome do plano (era absolute top-right e sobrepunha o
-   título "Vozi Premium" em larguras intermédias — tablet/mobile). */
+   título "Vozen Premium" em larguras intermédias — tablet/mobile). */
 .price-card__badge {
   display: inline-flex; align-items: center; gap: 5px; margin-bottom: 14px;
   font-family: var(--f-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.08em;

@@ -1,5 +1,5 @@
 /**
- * tools/premium-codes.ts — gera códigos de resgate do Vozi Premium/Plus (offline).
+ * tools/premium-codes.ts — gera códigos de resgate do Vozen Premium/Plus (offline).
  *
  * Corre com tsx (dev dep): abre a MESMA BD do bot (DB_PATH ou ./tts.db), garante as
  * tabelas (initDb) e insere N códigos, imprimindo-os para colares no Ko-fi/Patreon.
@@ -24,9 +24,9 @@ function group(n: number): string {
   return s;
 }
 
-/** Código no formato VOZI-XXXX-XXXX-XXXX (fácil de ler/escrever). */
+/** Código no formato VOZEN-XXXX-XXXX-XXXX (fácil de ler/escrever). */
 function makeCode(): string {
-  return `VOZI-${group(4)}-${group(4)}-${group(4)}`;
+  return `VOZEN-${group(4)}-${group(4)}-${group(4)}`;
 }
 
 function main(): void {

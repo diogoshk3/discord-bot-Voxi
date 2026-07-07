@@ -19,7 +19,7 @@ export interface BotDeps {
   /** Vigia "sozinho na call 5 min" -> sai. Injetado no bootstrap; opcional p/ testes. */
   aloneWatcher?: AloneWatcher;
   /**
-   * Último autor que o Vozi leu em VOZ ALTA, por guild (guildId -> userId). Serve ao
+   * Último autor que o Vozen leu em VOZ ALTA, por guild (guildId -> userId). Serve ao
    * xsaid para NÃO repetir "{nome} disse" em mensagens SEGUIDAS do mesmo autor. Limpo
    * quando o bot sai (removePlayer) para que ao voltar volte a anunciar. Opcional: sem
    * o mapa (ex. testes antigos) não há supressão (anuncia sempre).
@@ -69,7 +69,7 @@ export function removePlayer(
 }
 
 /**
- * O Vozi saiu (ou perdeu acesso a) uma guild — Events.GuildDelete. Liberta os
+ * O Vozen saiu (ou perdeu acesso a) uma guild — Events.GuildDelete. Liberta os
  * recursos retidos por guildId para evitar crescimento monotonico de heap em
  * uptime longo com muitas guilds:
  *  - apaga a entrada de `limiters` (e todos os buckets do RateLimiter dentro);

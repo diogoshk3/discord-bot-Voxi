@@ -127,7 +127,7 @@ async function main(): Promise<void> {
     cloneAvailable: cloneEngine.available,
   };
 
-  // Regra de saída: o Vozi só sai da call quando fica SOZINHO (zero humanos no seu
+  // Regra de saída: o Vozen só sai da call quando fica SOZINHO (zero humanos no seu
   // canal) — e por defeito sai IMEDIATAMENTE (ALONE_LEAVE_MS=0). NUNCA sai por
   // inatividade de TTS: com pelo menos 1 humano, fica na call para sempre. O
   // AloneWatcher é reavaliado no

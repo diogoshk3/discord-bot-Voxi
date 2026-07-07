@@ -1,4 +1,4 @@
-# Vozi — Monetization Plan
+# Vozen — Monetization Plan
 
 > Status: **plan / decided pricing**. Nothing is gated yet unless a commit says so.
 > Guiding rule: **never take anything out of Free that already exists.** The site says
@@ -9,9 +9,9 @@
 
 | Tier | Price | Scope | Notes |
 |------|-------|-------|-------|
-| **Vozi Premium** | **€4.00 / month** | per **server** | A touch under TTS Bot Premium (~$4.99). Pitch: "cheaper — and our games are free." |
-| **Vozi Premium (annual)** | **€40 / year** | per server | 2 months free (€48 → €40) |
-| **Vozi Plus** | **€1.99 / month** | per **user** | Personal perks that follow you across servers |
+| **Vozen Premium** | **€4.00 / month** | per **server** | A touch under TTS Bot Premium (~$4.99). Pitch: "cheaper — and our games are free." |
+| **Vozen Premium (annual)** | **€40 / year** | per server | 2 months free (€48 → €40) |
+| **Vozen Plus** | **€1.99 / month** | per **user** | Personal perks that follow you across servers |
 
 Payment: ideally Discord **App Subscriptions** (native, in-app) — requires a **verified**
 bot (~75 servers) + team-owned app. Until then: **Ko-fi / Patreon + `/redeem` codes**.
@@ -46,7 +46,7 @@ bot (~75 servers) + team-owned app. Until then: **Ko-fi / Patreon + `/redeem` co
 | **Multiple read channels** | Free: 1 tts-channel; Premium: several. |
 | **Priority synthesis queue** | Under load, Premium servers synthesize first. |
 | **Full soundboard + uploads** | Server's own custom sounds (⚠️ uploads = moderation risk, decide later). |
-| **Custom game-winner announcement** | Cosmetic: Vozi announces the winner with the server's own line. |
+| **Custom game-winner announcement** | Cosmetic: Vozen announces the winner with the server's own line. |
 | **Automatic roles for weekly top** | The Premium slice of the (otherwise free) leaderboard. |
 
 ---

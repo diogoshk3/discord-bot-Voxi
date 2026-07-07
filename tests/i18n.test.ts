@@ -16,7 +16,7 @@ describe('i18n — t(key, locale, params)', () => {
 
   it('devolve a string EN por defeito (locale="en")', () => {
     // help.title existe no catalogo com um valor EN conhecido.
-    expect(t('help.title', 'en')).toContain('Vozi');
+    expect(t('help.title', 'en')).toContain('Vozen');
   });
 
   it('devolve a string PT quando locale="pt"', () => {

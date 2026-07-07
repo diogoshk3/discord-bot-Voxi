@@ -1,4 +1,4 @@
-// scripts/start-prod.mjs — supervisor de PRODUÇÃO do Vozi (spec T1.2).
+// scripts/start-prod.mjs — supervisor de PRODUÇÃO do Vozen (spec T1.2).
 //
 // Corre com:  npm run start:prod   (faz build primeiro; ver package.json)
 //
@@ -25,7 +25,7 @@ const log = (m) => console.log(`[start-prod] ${m}`);
 // guild; correr vários processos com o MESMO token fá-los expulsar-se uns aos outros
 // do canal de voz → o bot fica MUDO na call (foi exatamente o incidente das 5
 // instâncias acumuladas por reinícios). Aqui prendemos uma porta de loopback: se já
-// estiver ocupada, OUTRO supervisor Vozi está vivo → recusamos arrancar. O SO liberta
+// estiver ocupada, OUTRO supervisor Vozen está vivo → recusamos arrancar. O SO liberta
 // a porta quando o processo morre, por isso não há lock preso (ao contrário de um
 // PID-file). Porta configurável (SINGLE_INSTANCE_PORT); 0/"off" desliga o guard (para
 // quem corre vários bots diferentes na mesma máquina, cada um com o seu token).
@@ -40,7 +40,7 @@ function acquireSingleInstanceLock() {
     const server = createServer();
     server.once('error', (err) => {
       if (err && err.code === 'EADDRINUSE') {
-        log('ABORTADO: já há um Vozi a correr (porta de lock ' + port + ' ocupada).');
+        log('ABORTADO: já há um Vozen a correr (porta de lock ' + port + ' ocupada).');
         log('Mata a instância existente antes de arrancar outra — vários bots com o');
         log('mesmo token lutam pela ligação de voz e o bot fica mudo. (Desliga este');
         log('guard com SINGLE_INSTANCE_PORT=off se corres bots diferentes na máquina.)');
@@ -164,7 +164,7 @@ for (const sig of ['SIGINT', 'SIGTERM']) {
   });
 }
 
-// Recusa arrancar se já houver outro Vozi vivo (evita o incidente das instâncias
+// Recusa arrancar se já houver outro Vozen vivo (evita o incidente das instâncias
 // duplicadas). Corre ANTES do prewarm/arranque para falhar cedo e barato.
 await acquireSingleInstanceLock();
 prewarmDavey();

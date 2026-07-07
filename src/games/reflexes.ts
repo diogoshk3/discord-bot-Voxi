@@ -8,7 +8,7 @@ const MAX_EXTRA_MS = 4_000; // atraso aleatorio 2..6s antes do "JÁ!"
 const OPEN_WINDOW_MS = 10_000; // tempo para reagir depois do "JÁ!"
 
 /**
- * "Reflexos" — o Vozi conta "3, 2, 1…", espera um tempo ALEATORIO e grita "JÁ!"; o 1o
+ * "Reflexos" — o Vozen conta "3, 2, 1…", espera um tempo ALEATORIO e grita "JÁ!"; o 1o
  * a escrever qualquer coisa depois disso ganha a ronda. Escrever ANTES do "JÁ!" e um
  * false-start (avisado, nao pontua). Best-of-3. Nao assenta no QuizGame (nao ha
  * "resposta certa" — e puro timing), mas reutiliza o placar partilhado (finish.ts).

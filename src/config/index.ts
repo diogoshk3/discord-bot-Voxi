@@ -35,7 +35,7 @@ export interface AppConfig {
   errorWebhookUrl?: string;
   // Sintese multi-lingua por-segmento (default ON). Quando ON, textos com mais do
   // que uma lingua sao sintetizados POR-SEGMENTO (voz certa por lingua) e os WAVs
-  // concatenados — o Vozi mistura vozes como uma pessoa real. Pode ser FORCADA a
+  // concatenados — o Vozen mistura vozes como uma pessoa real. Pode ser FORCADA a
   // OFF globalmente via env MULTILINGUAL_SEGMENTS=false (voz unica por frase).
   multilingualSegments: boolean;
   // Params de QUALIDADE de sintese do Piper, configuraveis globalmente. Defaults =
@@ -190,7 +190,7 @@ export function loadConfig(): AppConfig {
     topggToken: strEnv('TOPGG_TOKEN', '') || undefined,
     errorWebhookUrl: strEnv('ERROR_WEBHOOK_URL', '') || undefined,
     // Sintese multi-lingua por-segmento — LIGADA por defeito: sem esta env (ou com
-    // qualquer valor != 'false'), o Vozi mistura vozes por lingua. Kill-switch
+    // qualquer valor != 'false'), o Vozen mistura vozes por lingua. Kill-switch
     // global: MULTILINGUAL_SEGMENTS=false forca voz unica por frase.
     multilingualSegments: boolEnvDefaultOn('MULTILINGUAL_SEGMENTS'),
     // Params de qualidade Piper. Defaults = preset ORGANICO (fonte unica em

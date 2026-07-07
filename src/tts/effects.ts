@@ -107,7 +107,7 @@ export function applyEffect(inputWav: string, filter: string, deps: ApplyEffectD
   const spawnImpl = deps.spawnImpl ?? spawn;
   if (!ff) return Promise.reject(new Error('fx: ffmpeg-static não encontrado'));
 
-  const workDir = mkdtempSync(join(tmpdir(), 'vozi-fx-'));
+  const workDir = mkdtempSync(join(tmpdir(), 'vozen-fx-'));
   const outPath = join(workDir, 'out.wav');
   const args = [
     '-hide_banner', '-loglevel', 'error', '-i', inputWav,

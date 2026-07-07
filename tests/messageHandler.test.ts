@@ -158,7 +158,7 @@ describe('handleMessage — ramos não cobertos pelos testes existentes', () => 
     expect(say.mock.calls[0][0].text).toBe('sou um bot');
   });
 
-  it('read_bots ON → o PRÓPRIO Vozi continua a NÃO ser lido (anti-loop)', async () => {
+  it('read_bots ON → o PRÓPRIO Vozen continua a NÃO ser lido (anti-loop)', async () => {
     setGuildConfig(db, GUILD, { readBots: true });
     const deps = makeDeps(db, say);
     await handleMessage(makeMessage({ bot: true, authorId: BOT_ID, content: 'eco' }), deps);

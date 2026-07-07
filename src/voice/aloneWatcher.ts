@@ -1,6 +1,6 @@
 // src/voice/aloneWatcher.ts
 //
-// Regra de saída do Vozi: SÓ sai do canal de voz quando fica SOZINHO — zero membros
+// Regra de saída do Vozen: SÓ sai do canal de voz quando fica SOZINHO — zero membros
 // humanos (não-bots) no seu canal. Por DEFEITO sai IMEDIATAMENTE (ALONE_LEAVE_MS=0).
 // Já NÃO sai por inatividade de TTS (essa saída foi removida do player): por mais tempo
 // que passe sem falar, fica na call enquanto houver pelo menos 1 humano. Reage a

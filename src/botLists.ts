@@ -2,7 +2,7 @@
 //
 // Auto-post da contagem de servidores para o top.gg. As listas de bots ordenam por
 // popularidade e usam o server_count para descoberta; publicá-lo periodicamente ajuda
-// o Vozi a subir e a aparecer. OPT-IN: só arranca se TOPGG_TOKEN estiver definido.
+// o Vozen a subir e a aparecer. OPT-IN: só arranca se TOPGG_TOKEN estiver definido.
 //
 // Endpoint (oficial): POST https://top.gg/api/bots/{botId}/stats
 //   headers: { Authorization: <token>, Content-Type: application/json }

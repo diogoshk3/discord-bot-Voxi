@@ -24,7 +24,7 @@ Ambos são **opt-in**: sem eles, o bot corre exatamente como agora. Reinicia o b
 
 ## 1. ⚠️ Verificação do Discord — a barreira dos 100 servidores (PRIORIDADE)
 
-**O Vozi lê mensagens, por isso usa o `Message Content Intent` — que é PRIVILEGIADO.**
+**O Vozen lê mensagens, por isso usa o `Message Content Intent` — que é PRIVILEGIADO.**
 Sem verificação, um bot só pode crescer até **~100 servidores**. Depois disso, o Discord
 **bloqueia** a entrada em servidores novos até estar verificado. A verificação demora
 semanas, por isso **candidata-te AO APROXIMARES-TE dos 75 servidores**, não aos 99.
@@ -39,7 +39,7 @@ semanas, por isso **candidata-te AO APROXIMARES-TE dos 75 servidores**, não aos
       reprova — sê explícito e honesto.)
 - [ ] Descrever os outros intents: `GuildVoiceStates` (saber onde falar), `GuildMembers`
       (nome de quem falou no xsaid).
-- [ ] Confirmar que **NÃO** guardas conteúdo de mensagens (o Vozi não guarda — só cache de
+- [ ] Confirmar que **NÃO** guardas conteúdo de mensagens (o Vozen não guarda — só cache de
       áudio efémera). Diz isto na política de privacidade.
 
 > Nota: enquanto não verificado, o Message Content Intent tem de estar **ligado à mão** no
@@ -54,18 +54,18 @@ nossa é neural e grátis; e falamos 34 línguas.**
 
 ### Short description (tagline, ~200 caracteres)
 ```
-Vozes neurais GRÁTIS em 34 línguas — o Vozi lê o chat em voz alta para quem não tem
+Vozes neurais GRÁTIS em 34 línguas — o Vozen lê o chat em voz alta para quem não tem
 microfone. Deteta a língua, anuncia quem falou, e soa natural. Sem paywall.
 ```
 
 ### Long description (corpo da listagem, markdown)
 ```
-# 🔊 Vozi — Text-to-Speech com voz natural, grátis
+# 🔊 Vozen — Text-to-Speech com voz natural, grátis
 
-O Vozi lê as mensagens do teu servidor em voz alta — perfeito para quem não tem
+O Vozen lê as mensagens do teu servidor em voz alta — perfeito para quem não tem
 microfone, para acessibilidade, ou só para não parares de jogar para escrever.
 
-## Porquê o Vozi?
+## Porquê o Vozen?
 - 🎙️ **Voz natural GRÁTIS** — nada de vozes robóticas atrás de paywall.
 - 🌍 **34 línguas** — deteta a língua da mensagem e fala com a voz certa.
 - 🗣️ **"Fulano disse…"** — sabes sempre quem falou (podes desligar).
@@ -77,7 +77,7 @@ microfone, para acessibilidade, ou só para não parares de jogar para escrever.
 
 ## Começar
 1. `/setup` — escolhe o canal a ser lido.
-2. `/join` — o Vozi entra na tua call.
+2. `/join` — o Vozen entra na tua call.
 3. Escreve no canal — ele lê!
 
 Precisas de ajuda? `/help` lista tudo.

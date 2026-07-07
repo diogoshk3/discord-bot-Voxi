@@ -51,7 +51,7 @@ async function main(): Promise<void> {
 
   const pick = (...p: string[]) => p.find((x) => models.includes(x)) ?? models[0];
   const voices = [pick('en_US-amy-medium'), pick('pt_PT-tugao-medium', 'pt_PT-tugão-medium')];
-  const cacheDir = mkdtempSync(join(tmpdir(), 'vozi-load-'));
+  const cacheDir = mkdtempSync(join(tmpdir(), 'vozen-load-'));
   const engine = new PiperEngine(config.piperPath, config.modelsDir, new AudioCache(cacheDir, 0), {
     noiseScale: config.noiseScale, noiseW: config.noiseW, sentenceSilence: config.sentenceSilence,
   });

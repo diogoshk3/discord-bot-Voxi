@@ -1,14 +1,14 @@
-# Arquitetura — Vozi
+# Arquitetura — Vozen
 
-> Vozi — *type it, hear it.*
+> Vozen — *type it, hear it.*
 
-Este documento descreve a arquitetura real do Vozi tal como está no código (`src/`).
+Este documento descreve a arquitetura real do Vozen tal como está no código (`src/`).
 Para a spec de design original ver `docs/superpowers/specs/2026-06-30-tts-bot-design.md`;
 quando este documento e a spec divergem, **este reflete o código** (a spec é histórica).
 
 ## Visão geral
 
-O Vozi é um bot de TTS (text-to-speech) para Discord. Lê em voz alta o que os
+O Vozen é um bot de TTS (text-to-speech) para Discord. Lê em voz alta o que os
 utilizadores escrevem num canal de texto, num único processo Node.js + TypeScript.
 
 O wedge (o cruzamento que os bots dominantes não servem bem) é:
@@ -79,8 +79,8 @@ Cada pasta de `src/` e a sua responsabilidade (o que está realmente no código)
 | `games/manager.ts` | `GameManager`: **1 jogo ativo por guild** (lock; há 1 só ligação de voz por guild). `handleMessage` encaminha as mensagens do **canal do jogo** para a partida e devolve `true` (consumida → o `handleMessage` do TTS salta essa mensagem). Possui os timers da sessão (cancelados **sempre** no fim); persiste pontos no fim **normal** (`end`), descarta no fim **forçado** (`stop`/`endGuild`). Desacoplado de discord.js/SQLite via `GameEnv`. | `games/types` |
 | `games/types.ts` | `Clock` (relógio + timers **injetáveis**, `systemClock`; testes deterministas), `GameContext` (`say`/`send`/`t`/`after`/`award`/`end` + `seed`/`locale`/`defaultVoice`), `Game`, `GameDefinition`, `GameEnv`. | — |
 | `games/quizGame.ts` | Base `QuizGame` dos 7 jogos "voz → 1º a acertar" (loop de N rondas, timeout com **guarda de ronda**, placar local, resumo final `game.finish.*`). Cada jogo concreto só implementa `prepare`/`makeRound`/`emptyMessage`. | `games/types` |
-| `games/finish.ts` | `bump`/`sendStandings`: placar partilhado pelos jogos que **não** assentam no `QuizGame` (Reflexos, Vozi Diz). | `games/types` |
-| `games/*.ts` | Os 14 jogos: `guessLanguage`, `math`, `skipCount`, `spelling`, `spellOut`, `fastSpeech`, `accentSwap` (voz, sobre `QuizGame`); `reflexes`, `voziSays`, `roulette` (timing/one-shot); `hangman`, `wordle`, `tictactoe`, `chess` (tabuleiro, texto — `chess` é 💎 Premium, `GameDefinition.premium`, tabuleiro em **application emojis** cburnett via `games/boardEmojis.ts` carregados no `ClientReady` para `GameEnv.boardEmojis`, com fallback ASCII; assets em `assets/chess/`, upload one-off via `tools/upload-app-emojis.mjs`; `wordle` desenha a grelha em tiles-emoji A–Z coloridos com fallback ANSI). Conteúdo *seeded* em `games/content/*`. | `games/*`, `content` |
+| `games/finish.ts` | `bump`/`sendStandings`: placar partilhado pelos jogos que **não** assentam no `QuizGame` (Reflexos, Vozen Diz). | `games/types` |
+| `games/*.ts` | Os 14 jogos: `guessLanguage`, `math`, `skipCount`, `spelling`, `spellOut`, `fastSpeech`, `accentSwap` (voz, sobre `QuizGame`); `reflexes`, `vozenSays`, `roulette` (timing/one-shot); `hangman`, `wordle`, `tictactoe`, `chess` (tabuleiro, texto — `chess` é 💎 Premium, `GameDefinition.premium`, tabuleiro em **application emojis** cburnett via `games/boardEmojis.ts` carregados no `ClientReady` para `GameEnv.boardEmojis`, com fallback ASCII; assets em `assets/chess/`, upload one-off via `tools/upload-app-emojis.mjs`; `wordle` desenha a grelha em tiles-emoji A–Z coloridos com fallback ANSI). Conteúdo *seeded* em `games/content/*`. | `games/*`, `content` |
 | `games/index.ts` | Registo `GAME_DEFS` (14 jogos) + `gameById`/`filterGameChoices` (autocomplete com nomes na língua do utilizador). Adicionar um jogo = criar o ficheiro e listá-lo aqui. | todos os jogos |
 | `store/gameScore.ts` | Leaderboard SQLite (tabela `game_score`): `addPoints`/`addWin`/`persistGameScores` (transação: soma pontos + `+1 vitória` a quem mais pontuou), `getLeaderboard`/`getUserScore`/`getUserRank`. | `db` |
 | `bot/welcome.ts` | `pickWelcomeChannel(guild)` + `buildWelcomeEmbed(locale)` (puros): escolha do canal e embed de boas-vindas no `guildCreate` (onboarding). | `i18n`, `discord.js` |
@@ -97,7 +97,7 @@ Cada pasta de `src/` e a sua responsabilidade (o que está realmente no código)
 `/help` (embed agrupado — Geral / Voz / Admin — derivado de `commandDefs`),
 `/setup` (onboarding guiado, admin; auto-join via `joinUserVoice`),
 `/join`, `/leave`, `/tts <texto>`, `/skip`,
-`/laugh` (o Vozi ri na voz atual do utilizador; `content/laughter.ts`),
+`/laugh` (o Vozen ri na voz atual do utilizador; `content/laughter.ts`),
 `/joke <idioma> <risos>` (piada curta na língua escolhida — `idioma` por autocomplete
 sobre 35 línguas; `risos` acrescenta o riso da língua no fim; `content/jokes.ts`),
 `/voice set|list|reset|optout|optin|preview`,
@@ -125,13 +125,13 @@ relacionada); a guild ser **removida** (`handleGuildDelete` → `endGuild`) term
 jogo (sem leak). Famílias:
 - **Voz → 1º a acertar** (base `QuizGame`): Adivinha a Língua, Matemática Falada,
   Contagem Sabotada, Ditado, Soletrado ao Contrário, Velocidade Estúpida, Sotaque Trocado.
-- **Timing / one-shot**: Reflexos, Vozi Diz, Roleta (Verdade ou Consequência).
+- **Timing / one-shot**: Reflexos, Vozen Diz, Roleta (Verdade ou Consequência).
 - **Tabuleiro (texto, jogadas por letra/palavra/número)**: Forca, Termo/Wordle, Galo —
   `needsVoice=false`, com timeout de inatividade (3 min).
 
 Todo o texto passa por `t()` (chaves `game.*`; `en` fonte + `pt`); o conteúdo *seeded*
 (bancos de palavras/frases/desafios) vive em `games/content/*`. No **fim** de cada
-partida com vencedor, o Vozi anuncia-o **em voz alta** (`announceWinner`, chave
+partida com vencedor, o Vozen anuncia-o **em voz alta** (`announceWinner`, chave
 `game.finish.winnerVoice`) — on-brand; é no-op se o bot não estiver numa call (jogos
 de tabuleiro sem voz).
 

@@ -92,20 +92,20 @@ describe('Reflexos', () => {
   });
 });
 
-describe('Vozi Diz', () => {
+describe('Vozen Diz', () => {
   it('obedecer numa ordem real pontua; cair numa ratoeira e apanhado (sem ponto)', async () => {
     const { env, say, send, persistScores } = harness();
     const mgr = new GameManager(env);
-    mgr.start(G, C, gameById('vozi-says')!.create());
+    mgr.start(G, C, gameById('vozen-says')!.create());
     await flush();
 
     let realObeyed = 0;
     for (let r = 0; r < 6; r++) {
       // Ultimo announce indica real vs trap; a palavra e o ultimo token do ctx.say.
       const announce = [...send.mock.calls].reverse().find((c) =>
-        String(c[1]).startsWith('game.voziSays.real') || String(c[1]).startsWith('game.voziSays.trap'),
+        String(c[1]).startsWith('game.vozenSays.real') || String(c[1]).startsWith('game.vozenSays.trap'),
       );
-      const isReal = String(announce![1]).startsWith('game.voziSays.real');
+      const isReal = String(announce![1]).startsWith('game.vozenSays.real');
       const spoken = (say.mock.calls[say.mock.calls.length - 1][0] as { text: string }).text;
       const word = spoken.split(' ').pop()!;
       const before = send.mock.calls.length;
@@ -113,10 +113,10 @@ describe('Vozi Diz', () => {
       await flush();
       const newKeys = send.mock.calls.slice(before).map((c) => String(c[1]).split(' ')[0]);
       if (isReal) {
-        expect(newKeys).toContain('game.voziSays.obeyed');
+        expect(newKeys).toContain('game.vozenSays.obeyed');
         realObeyed++;
       } else {
-        expect(newKeys).toContain('game.voziSays.caught');
+        expect(newKeys).toContain('game.vozenSays.caught');
         // Ratoeira nao avanca a ronda -> força o timeout para seguir.
         env.clock && (env.clock as FakeClock).advance(12_000);
         await flush();

@@ -72,16 +72,16 @@ describe('premium — códigos de resgate', () => {
 
   it('código de guild: resgata, concede à guild e marca-se usado', () => {
     const now = 1_000_000;
-    createRedeemCode(db, 'VOZI-AAAA', 'guild', 30, now);
-    const res = redeemCode(db, 'VOZI-AAAA', { guildId: G, userId: U }, now);
+    createRedeemCode(db, 'VOZEN-AAAA', 'guild', 30, now);
+    const res = redeemCode(db, 'VOZEN-AAAA', { guildId: G, userId: U }, now);
     expect(res).toEqual({ status: 'ok', kind: 'guild', days: 30, expiresAt: now + 30 * DAY });
     expect(isGuildPremium(db, G, now + 1)).toBe(true);
   });
 
   it('código de user: concede ao invocador, não à guild', () => {
     const now = 1_000_000;
-    createRedeemCode(db, 'VOZI-BBBB', 'user', 30, now);
-    const res = redeemCode(db, 'VOZI-BBBB', { guildId: G, userId: U }, now);
+    createRedeemCode(db, 'VOZEN-BBBB', 'user', 30, now);
+    const res = redeemCode(db, 'VOZEN-BBBB', { guildId: G, userId: U }, now);
     expect(res.status).toBe('ok');
     expect(res.kind).toBe('user');
     expect(isUserPremium(db, U, now + 1)).toBe(true);
@@ -89,22 +89,22 @@ describe('premium — códigos de resgate', () => {
   });
 
   it('código inexistente -> invalid', () => {
-    expect(redeemCode(db, 'VOZI-NOPE', { guildId: G, userId: U }, 1).status).toBe('invalid');
+    expect(redeemCode(db, 'VOZEN-NOPE', { guildId: G, userId: U }, 1).status).toBe('invalid');
   });
 
   it('segundo resgate do MESMO código -> used (check-and-set numa transação)', () => {
     const now = 1_000_000;
-    createRedeemCode(db, 'VOZI-CCCC', 'guild', 30, now);
-    expect(redeemCode(db, 'VOZI-CCCC', { guildId: G, userId: U }, now).status).toBe('ok');
-    expect(redeemCode(db, 'VOZI-CCCC', { guildId: G, userId: U }, now).status).toBe('used');
+    createRedeemCode(db, 'VOZEN-CCCC', 'guild', 30, now);
+    expect(redeemCode(db, 'VOZEN-CCCC', { guildId: G, userId: U }, now).status).toBe('ok');
+    expect(redeemCode(db, 'VOZEN-CCCC', { guildId: G, userId: U }, now).status).toBe('used');
   });
 
   it('código de guild sem guild-alvo -> invalid (não rebenta)', () => {
     const now = 1_000_000;
-    createRedeemCode(db, 'VOZI-DDDD', 'guild', 30, now);
-    const res = redeemCode(db, 'VOZI-DDDD', { userId: U }, now);
+    createRedeemCode(db, 'VOZEN-DDDD', 'guild', 30, now);
+    const res = redeemCode(db, 'VOZEN-DDDD', { userId: U }, now);
     expect(res.status).toBe('invalid');
     // e o código NÃO foi consumido (continua resgatável com uma guild)
-    expect(redeemCode(db, 'VOZI-DDDD', { guildId: G, userId: U }, now).status).toBe('ok');
+    expect(redeemCode(db, 'VOZEN-DDDD', { guildId: G, userId: U }, now).status).toBe('ok');
   });
 });

@@ -10,7 +10,7 @@ const FAST_SPEED = 2.0;
 const ACCEPT_RATIO = 0.7;
 
 /**
- * "Velocidade Estupida" — o Vozi le uma frase curta MUITO depressa (speed 2.0) e o 1o
+ * "Velocidade Estupida" — o Vozen le uma frase curta MUITO depressa (speed 2.0) e o 1o
  * a escrever o que ouviu ganha. Aceita respostas quase-certas (Jaccard >= 0.7) para
  * uma gralha nao invalidar. Frases da lingua da voz default da guild (senao ingles).
  */

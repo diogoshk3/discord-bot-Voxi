@@ -16,7 +16,7 @@ const SGR = { g: '1;30;42', y: '1;30;43', x: '1;37;40' } as const;
 type CellState = 'g' | 'y' | 'x';
 
 /**
- * "Termo/Wordle" — colaborativo: qualquer um escreve uma palavra de 5 letras; o Vozi
+ * "Termo/Wordle" — colaborativo: qualquer um escreve uma palavra de 5 letras; o Vozen
  * responde com as LETRAS COLORIDAS (verde=certa no sítio, amarelo=existe/sítio errado,
  * cinza=não existe) num bloco ```ansi. Quem acertar a palavra ganha o ponto; {MAX}
  * tentativas partilhadas. Jogo de TEXTO. Só mensagens com EXATAMENTE 5 letras contam.

@@ -1,16 +1,16 @@
-# Termos de Serviço — Vozi
+# Termos de Serviço — Vozen
 
 > _type it, hear it._
 
 **Última atualização:** 2026-07-04
 
-O Vozi é um bot de Text-to-Speech (TTS) para Discord, **open-source** e **self-host**: cada instância é corrida por um **operador** independente. Ao usar uma instância do Vozi, concordas com estes Termos. Como o software é self-host, o **operador da instância** é o responsável pelo seu funcionamento e pelo cumprimento das regras aplicáveis.
+O Vozen é um bot de Text-to-Speech (TTS) para Discord, **open-source** e **self-host**: cada instância é corrida por um **operador** independente. Ao usar uma instância do Vozen, concordas com estes Termos. Como o software é self-host, o **operador da instância** é o responsável pelo seu funcionamento e pelo cumprimento das regras aplicáveis.
 
 ---
 
 ## 1. Uso aceitável
 
-Ao usar o Vozi concordas em **não**:
+Ao usar o Vozen concordas em **não**:
 
 - Usar o bot para **assédio**, intimidação, discurso de ódio ou para visar pessoas.
 - Enviar **spam** ou abusar do serviço (ex.: contornar os limites de mensagens/caracteres, sobrecarregar a instância de propósito).
@@ -23,19 +23,19 @@ O operador da instância e os administradores de cada servidor podem aplicar reg
 
 ## 2. Sem garantias
 
-O Vozi é fornecido **"tal como está" ("as is")**, sem garantias de qualquer tipo, expressas ou implícitas, incluindo (mas não limitado a) garantias de comerciabilidade, adequação a um fim específico, disponibilidade, ou ausência de erros. Sendo self-host, **não há qualquer garantia de disponibilidade (uptime)**, de qualidade da síntese de voz, nem de preservação de dados — o serviço depende inteiramente da instância que cada operador corre.
+O Vozen é fornecido **"tal como está" ("as is")**, sem garantias de qualquer tipo, expressas ou implícitas, incluindo (mas não limitado a) garantias de comerciabilidade, adequação a um fim específico, disponibilidade, ou ausência de erros. Sendo self-host, **não há qualquer garantia de disponibilidade (uptime)**, de qualidade da síntese de voz, nem de preservação de dados — o serviço depende inteiramente da instância que cada operador corre.
 
 ---
 
 ## 3. Limitação de responsabilidade
 
-Na medida máxima permitida por lei, **os autores do projeto Vozi não são responsáveis** por quaisquer danos diretos, indiretos, incidentais ou consequentes resultantes do uso ou da impossibilidade de uso do software, nem pelo conteúdo gerado, processado ou difundido por qualquer instância. O **operador de cada instância** é o único responsável pela forma como a corre, pelos dados que processa e pelo cumprimento das leis e dos termos de terceiros (Discord e, se aplicável, OpenAI).
+Na medida máxima permitida por lei, **os autores do projeto Vozen não são responsáveis** por quaisquer danos diretos, indiretos, incidentais ou consequentes resultantes do uso ou da impossibilidade de uso do software, nem pelo conteúdo gerado, processado ou difundido por qualquer instância. O **operador de cada instância** é o único responsável pela forma como a corre, pelos dados que processa e pelo cumprimento das leis e dos termos de terceiros (Discord e, se aplicável, OpenAI).
 
 ---
 
 ## 4. Responsabilidade do operador
 
-Quem corre uma instância do Vozi (o **operador**) é responsável por:
+Quem corre uma instância do Vozen (o **operador**) é responsável por:
 
 - Cumprir os Termos de Serviço e a Política de Programador do Discord.
 - Garantir o tratamento adequado dos dados que a instância guarda (ver [PRIVACY.md](PRIVACY.md)).
@@ -46,7 +46,7 @@ Quem corre uma instância do Vozi (o **operador**) é responsável por:
 
 ## 5. Licença
 
-O Vozi é software livre distribuído sob a licença **GNU AGPL-3.0** (ficheiro [`LICENSE`](LICENSE); declarada no campo `license` do `package.json`). O uso, cópia, modificação e distribuição do código-fonte regem-se por essa licença. Em particular, a AGPL exige que quem **corra uma versão modificada acessível pela rede** disponibilize o respetivo código-fonte aos utilizadores.
+O Vozen é software livre distribuído sob a licença **GNU AGPL-3.0** (ficheiro [`LICENSE`](LICENSE); declarada no campo `license` do `package.json`). O uso, cópia, modificação e distribuição do código-fonte regem-se por essa licença. Em particular, a AGPL exige que quem **corra uma versão modificada acessível pela rede** disponibilize o respetivo código-fonte aos utilizadores.
 
 ---
 
@@ -58,4 +58,4 @@ Estes Termos podem ser atualizados. A versão em vigor é a presente neste repos
 
 ## Note (EN)
 
-_Vozi is a self-hosted, open-source Discord TTS bot. Each instance is run by an independent operator. Acceptable use: no harassment, spam, or illegal content; respect Discord's Terms and Community Guidelines. The software is provided "as is" with no warranties (no uptime/quality/data guarantees). To the maximum extent permitted by law, the project authors are not liable for any damages or for content processed by any instance. The instance operator is solely responsible for running it lawfully, for the data it stores (see PRIVACY.md), and for complying with third-party terms (Discord; Google if `TTS_ENGINE=gtts`/`router`; OpenAI if `TTS_ENGINE=neural`). Licensed under GNU AGPL-3.0 (see LICENSE / package.json)._
+_Vozen is a self-hosted, open-source Discord TTS bot. Each instance is run by an independent operator. Acceptable use: no harassment, spam, or illegal content; respect Discord's Terms and Community Guidelines. The software is provided "as is" with no warranties (no uptime/quality/data guarantees). To the maximum extent permitted by law, the project authors are not liable for any damages or for content processed by any instance. The instance operator is solely responsible for running it lawfully, for the data it stores (see PRIVACY.md), and for complying with third-party terms (Discord; Google if `TTS_ENGINE=gtts`/`router`; OpenAI if `TTS_ENGINE=neural`). Licensed under GNU AGPL-3.0 (see LICENSE / package.json)._

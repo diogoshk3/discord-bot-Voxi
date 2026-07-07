@@ -239,7 +239,7 @@ describe('loadConfig', () => {
 
   // MULTILINGUAL_SEGMENTS — sintese multi-lingua por-segmento. Passou a estar
   // LIGADA por defeito: sem a env (ou com valor "vazio"/nao-'false'), fica true —
-  // o Vozi mistura vozes por lingua tal como uma pessoa real. A env pode FORCAR o
+  // o Vozen mistura vozes por lingua tal como uma pessoa real. A env pode FORCAR o
   // desligamento GLOBAL com o valor exato 'false' (case-insensitive). So 'false'
   // desliga; qualquer outra coisa (ausente, vazio, 'true', typo) fica ON.
   it('multilingualSegments defaults to TRUE when MULTILINGUAL_SEGMENTS missing', () => {

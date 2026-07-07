@@ -1,4 +1,4 @@
-# Hospedar o Vozi (produção)
+# Hospedar o Vozen (produção)
 
 ## Arranque num comando
 
@@ -47,7 +47,7 @@ pré-aquecimento), **não é recomendado**.
 ## Síntese: pool persistente + concorrência
 
 **Pool persistente (ON por defeito).** Em vez de arrancar um `piper.exe` novo por
-síntese (~372ms de overhead de arranque+carregamento de modelo), o Vozi mantém
+síntese (~372ms de overhead de arranque+carregamento de modelo), o Vozen mantém
 processos piper QUENTES e reutiliza-os — a 2.ª síntese de uma voz passa de ~410ms para
 ~110ms (~4× mais rápido), com áudio idêntico. Qualquer falha do pool cai
 automaticamente no arranque one-shot (nunca se perde uma síntese).

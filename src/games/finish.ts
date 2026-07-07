@@ -13,7 +13,7 @@ export function bump(tally: Tally, userId: string, name: string, points = 1): vo
 }
 
 /**
- * O Vozi ANUNCIA o vencedor em VOZ ALTA (on-brand — é um bot de voz). Best-effort:
+ * O Vozen ANUNCIA o vencedor em VOZ ALTA (on-brand — é um bot de voz). Best-effort:
  * `ctx.say` é no-op se o bot não estiver numa call (jogos de tabuleiro sem voz), por
  * isso é seguro chamar em qualquer jogo. Uma linha curta, só no FIM (nunca por ronda).
  */
@@ -23,7 +23,7 @@ export function announceWinner(ctx: GameContext, name: string): void {
 
 /**
  * Envia o resumo final partilhado (game.finish.*) ordenado por pontos desc. Usado
- * pelos jogos que NAO assentam no QuizGame (Reflexos, Vozi Diz). Sem pontos ->
+ * pelos jogos que NAO assentam no QuizGame (Reflexos, Vozen Diz). Sem pontos ->
  * mensagem "ninguem pontuou".
  */
 export async function sendStandings(ctx: GameContext, tally: Tally): Promise<void> {

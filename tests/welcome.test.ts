@@ -103,16 +103,16 @@ describe('buildWelcomeEmbed', () => {
     expect(() => embed.toJSON()).not.toThrow();
   });
 
-  it('usa o default (en) quando o locale e omitido e menciona a marca Vozi', () => {
+  it('usa o default (en) quando o locale e omitido e menciona a marca Vozen', () => {
     const embed = buildWelcomeEmbed();
     const json = embed.toJSON();
     const text = `${json.title}\n${json.description}\n${json.footer?.text ?? ''}`;
-    expect(text).toContain('Vozi');
+    expect(text).toContain('Vozen');
     expect(text).toContain('/setup');
   });
 
   // Posicionamento: o welcome tem de reforcar o diferenciador (voz neural gratis,
-  // sem paywall) — e o que separa o Vozi do lider pago do mercado. Afirmamos
+  // sem paywall) — e o que separa o Vozen do lider pago do mercado. Afirmamos
   // substrings distintivas (nao a frase inteira) para tolerar ajustes de wording.
   it('reforca o diferenciador "voz neural gratis, sem paywall" (en)', () => {
     const json = buildWelcomeEmbed('en').toJSON();

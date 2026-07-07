@@ -105,7 +105,7 @@ export function initDb(path: string): Database.Database {
       );
 
       -- Aniversário por-(guild,user): mês + dia (sem ano). Quando a pessoa entra na call
-      -- do Vozi no seu dia de anos, ele diz "Parabéns {nome}". Tabela NOVA (CREATE IF NOT
+      -- do Vozen no seu dia de anos, ele diz "Parabéns {nome}". Tabela NOVA (CREATE IF NOT
       -- EXISTS cobre DBs novas e antigas).
       CREATE TABLE IF NOT EXISTS user_birthday (
         guild_id TEXT NOT NULL,
@@ -115,7 +115,7 @@ export function initDb(path: string): Database.Database {
         PRIMARY KEY (guild_id, user_id)
       );
 
-      -- "Tagarelas": quantas mensagens de cada pessoa o Vozi leu (auto-read) + streak de
+      -- "Tagarelas": quantas mensagens de cada pessoa o Vozen leu (auto-read) + streak de
       -- dias seguidos. Alimenta o /topspeakers. last_date = chave 'YYYY-MM-DD' do dia local
       -- da última mensagem. Tabela NOVA (CREATE IF NOT EXISTS cobre DBs novas e antigas).
       CREATE TABLE IF NOT EXISTS talk_stats (
@@ -128,7 +128,7 @@ export function initDb(path: string): Database.Database {
         PRIMARY KEY (guild_id, user_id)
       );
 
-      -- Vozi Premium por-servidor: expira em expires_at (unix ms). Sem linha OU expirado
+      -- Vozen Premium por-servidor: expira em expires_at (unix ms). Sem linha OU expirado
       -- => Free. source regista a origem (redeem/kofi/manual). Só features NOVAS sao
       -- gated por isto; nada do que ja e gratis passa a pago.
       CREATE TABLE IF NOT EXISTS premium_guild (
@@ -137,7 +137,7 @@ export function initDb(path: string): Database.Database {
         source     TEXT NOT NULL DEFAULT ''
       );
 
-      -- Vozi Plus por-utilizador (perks pessoais que seguem a pessoa entre servidores).
+      -- Vozen Plus por-utilizador (perks pessoais que seguem a pessoa entre servidores).
       CREATE TABLE IF NOT EXISTS premium_user (
         user_id    TEXT PRIMARY KEY,
         expires_at INTEGER NOT NULL,
@@ -208,7 +208,7 @@ export function initDb(path: string): Database.Database {
       db.exec('ALTER TABLE guild_config ADD COLUMN read_bots INTEGER NOT NULL DEFAULT 0');
     }
     // Migracao idempotente do `text_in_voice` (Vaga 2): ler tambem as mensagens do chat
-    // de texto DENTRO do canal de voz onde o Vozi esta. DEFAULT 0 (desligado). No-op novas.
+    // de texto DENTRO do canal de voz onde o Vozen esta. DEFAULT 0 (desligado). No-op novas.
     if (!cols.some((c) => c.name === 'text_in_voice')) {
       db.exec('ALTER TABLE guild_config ADD COLUMN text_in_voice INTEGER NOT NULL DEFAULT 0');
     }

@@ -1,4 +1,4 @@
-# Vozi — Site oficial · Plano de design & layout
+# Vozen — Site oficial · Plano de design & layout
 
 > **Estado:** plano aprovado para implementação (planeado com Fable 5; implementação: Opus)
 > **Referência de estilo:** https://quantum-bot.net/ (analisado 2026-07-05 via CSS/JS bundle — screenshots bloqueados pela política de Controlo de Aplicações do Windows)
@@ -13,7 +13,7 @@ Extraído do bundle CSS/JS real (Tailwind + React/Vite SPA):
 | Elemento | Quantum | Herdar? |
 |---|---|---|
 | Tema | Escuro quase-preto (`#141414`, `#2a2a2a`, `#000`) | ✅ sim |
-| Acentos | Blurple Discord `#5865f2` + indigo `#6366f1`/`#4f46e5`, gradientes indigo→cyan, indigo→purple/pink | ✅ a base; ver §2 para a variação Vozi |
+| Acentos | Blurple Discord `#5865f2` + indigo `#6366f1`/`#4f46e5`, gradientes indigo→cyan, indigo→purple/pink | ✅ a base; ver §2 para a variação Vozen |
 | Glass | `backdrop-blur` 8–24px em nav/cards, bordas translúcidas | ✅ sim |
 | Atmosfera | Glow orbs desfocados (blur 40–64px) atrás do hero | ✅ sim |
 | Radius | Generoso: 0.75–2rem em cards, pill (9999px) em botões | ✅ sim |
@@ -22,12 +22,12 @@ Extraído do bundle CSS/JS real (Tailwind + React/Vite SPA):
 | i18n | Site multilingue (EN/PT/ES/FR/IT/DE) | ✅ EN + toggle PT (V1) |
 | Fontes | system-ui (fraco!) | ❌ NÃO herdar — ver §3 |
 
-**O que NÃO copiar:** o quantum usa fontes de sistema e indigo genérico. O Vozi precisa de identidade própria (regra da skill frontend-design: nada de "AI slop", tipografia com carácter).
+**O que NÃO copiar:** o quantum usa fontes de sistema e indigo genérico. O Vozen precisa de identidade própria (regra da skill frontend-design: nada de "AI slop", tipografia com carácter).
 
-## 2. Conceito & identidade visual do Vozi
+## 2. Conceito & identidade visual do Vozen
 
 **Conceito: “SOUND ON” — um palco escuro onde texto vira som.**
-O Vozi é um bot de VOZ. O motivo visual assinatura é o **equalizador/onda sonora**: barras que pulsam, ondas que atravessam secções, um chat do Discord onde uma mensagem escrita se transforma em áudio. É a única coisa que o visitante tem de recordar: *escreves → ouves*.
+O Vozen é um bot de VOZ. O motivo visual assinatura é o **equalizador/onda sonora**: barras que pulsam, ondas que atravessam secções, um chat do Discord onde uma mensagem escrita se transforma em áudio. É a única coisa que o visitante tem de recordar: *escreves → ouves*.
 
 ### Paleta (CSS custom properties)
 
@@ -70,7 +70,7 @@ Regra: **blurple domina, aqua é o som, amber só aparece na secção de jogos.*
 
 1. **Load do hero (o momento):** revelação em cascata — badge → H1 (palavra a palavra, `animation-delay` escalonado) → sub → CTAs → mock do chat. ~900ms total.
 2. **Assinatura permanente:** equalizador de 5–7 barras a pulsar (CSS `@keyframes`, alturas dessincronizadas) no logo/nav e no chat mock.
-3. **Chat mock animado (hero, direita):** mensagem “gostas de música? 🎵” escreve-se (typing), aparece o avatar Vozi com **onda sonora animada** + legenda “🔊 Vozi is speaking…”. Loop com 2–3 mensagens (uma em PT, uma em EN — mostra a deteção de língua!).
+3. **Chat mock animado (hero, direita):** mensagem “gostas de música? 🎵” escreve-se (typing), aparece o avatar Vozen com **onda sonora animada** + legenda “🔊 Vozen is speaking…”. Loop com 2–3 mensagens (uma em PT, uma em EN — mostra a deteção de língua!).
 4. **Scroll-reveal:** `IntersectionObserver` + classe `.in-view` (fade+rise 24px). Uma vez, não repetir.
 5. **Marquee de línguas:** faixa contínua de chips (🇵🇹 Português · 🇬🇧 English · 🇪🇸 Español · …34) em `animation: scroll linear infinite`, pausa on-hover.
 6. `prefers-reduced-motion: reduce` → desligar tudo (obrigatório).
@@ -78,7 +78,7 @@ Regra: **blurple domina, aqua é o som, amber só aparece na secção de jogos.*
 ## 3. Estrutura da página (single-page, ordem exata)
 
 ### 3.0 Navbar (sticky, glass)
-- Esq.: logo (equalizador SVG animado + wordmark “Vozi” em Unbounded).
+- Esq.: logo (equalizador SVG animado + wordmark “Vozen” em Unbounded).
 - Centro: Features · Games · Commands · Languages · FAQ (âncoras, scroll suave).
 - Dir.: toggle **EN/PT** (pill) + CTA primário **“Add to Discord”** (pill, grad-brand).
 - On-scroll: encolhe (padding) e ganha `backdrop-blur` + borda inferior.
@@ -89,8 +89,8 @@ Regra: **blurple domina, aqua é o som, amber só aparece na secção de jogos.*
 - Badge pill: `🔊 Free forever · No paywall`
 - H1 (Unbounded): **“Type it. Hear it.”** com “Hear it.” em gradiente brand.
   - PT: “Escreve. Ouve.”
-- Sub (Outfit, --text-1): “Vozi reads your Discord chat out loud with natural neural voices — in 34 languages, with games, laughter and zero paywalls.”
-  - PT: “O Vozi lê o teu chat do Discord em voz alta com vozes neurais naturais — em 34 línguas, com jogos, risos e zero paywalls.”
+- Sub (Outfit, --text-1): “Vozen reads your Discord chat out loud with natural neural voices — in 34 languages, with games, laughter and zero paywalls.”
+  - PT: “O Vozen lê o teu chat do Discord em voz alta com vozes neurais naturais — em 34 línguas, com jogos, risos e zero paywalls.”
 - CTAs: **Add to Discord** (primário, grad) + **Join support server** (ghost/glass). Ícones Discord inline SVG.
 - Micro-stats strip por baixo (mono): `34 languages · 38 voices · 13 minigames · 100% free`
 
@@ -101,7 +101,7 @@ Regra: **blurple domina, aqua é o som, amber só aparece na secção de jogos.*
 
 ### 3.3 Features — “Everything your server needs” (grid 3×2)
 Cards glass com ícone (SVG inline, traço 1.5px, cor aqua):
-1. **Auto-read channel** — “Pick a channel; Vozi reads every message out loud. Set it once with /setup.”
+1. **Auto-read channel** — “Pick a channel; Vozen reads every message out loud. Set it once with /setup.”
 2. **Your voice, your language** — “Each member picks their own voice from 34 languages — Google or local neural engine.”
 3. **Speaks like a human** — “Detects the language of each message and even mixes voices in one sentence.”
 4. **13 voice minigames** — “Guess the language, spelling bees, Wordle, reflex duels — with a server leaderboard.” *(badge amber “NEW”)*
@@ -119,7 +119,7 @@ Cards glass com ícone (SVG inline, traço 1.5px, cor aqua):
 - Visual: mock do Wordle ANSI (letras coloridas em bloco mono — recriar com spans verde/amarelo/cinza) + pills dos jogos (Guess the Language, Fast Talk, Reflexes…).
 
 ### 3.6 Showcase C — “Ready in 30 seconds” (3 passos horizontais)
-1. **Invite** — botão Add to Discord. 2. **/join** — entra na tua call. 3. **Type** — o Vozi fala. Cada passo num card numerado (números Unbounded gigantes, meio-transparentes atrás).
+1. **Invite** — botão Add to Discord. 2. **/join** — entra na tua call. 3. **Type** — o Vozen fala. Cada passo num card numerado (números Unbounded gigantes, meio-transparentes atrás).
 
 ### 3.7 Commands (tabs + lista)
 Tabs pill: General · Voice · Fun · Admin. Cada comando numa linha glass: `/comando` (mono, aqua) + descrição curta. Conteúdo real:
@@ -129,14 +129,14 @@ Tabs pill: General · Voice · Fun · Admin. Cada comando numa linha glass: `/co
 - Admin: /config (tts-channel, autoread, language, greet, greet-language, xsaid, autojoin, read-bots, text-in-voice, default-voice, max-chars, rate-limit, role, enabled, blockword, pronunciation, show, reset), /stats
 
 ### 3.8 FAQ (accordion, 6 itens)
-1. Is Vozi really free? → “Yes. Every feature, every voice, every game — free forever. No premium tier.”
-2. How do I add Vozi? / 3. Which languages? (34 + lista no marquee) / 4. Do I need to configure anything? (/setup faz tudo) / 5. Can each person have a different voice? / 6. How do I turn features off? (/config …)
+1. Is Vozen really free? → “Yes. Every feature, every voice, every game — free forever. No premium tier.”
+2. How do I add Vozen? / 3. Which languages? (34 + lista no marquee) / 4. Do I need to configure anything? (/setup faz tudo) / 5. Can each person have a different voice? / 6. How do I turn features off? (/config …)
 
 ### 3.9 CTA final (banner full-width)
 Fundo grad-brand suave + orbs; H2 “Give your server a voice.” + botão gigante Add to Discord + linha “Free forever · 34 languages · Set up in 30 seconds”.
 
 ### 3.10 Footer
-3 colunas: logo+tagline (“Vozi — type it, hear it.”) · Product (âncoras) · Community (Support server, Vote on top.gg, GitHub). Linha final: © 2026 Vozi · Not affiliated with Discord.
+3 colunas: logo+tagline (“Vozen — type it, hear it.”) · Product (âncoras) · Community (Support server, Vote on top.gg, GitHub). Linha final: © 2026 Vozen · Not affiliated with Discord.
 
 ## 4. i18n do site (V1)
 
@@ -146,7 +146,7 @@ Fundo grad-brand suave + orbs; H2 “Give your server a voice.” + botão gigan
 ## 5. Especificação técnica
 
 - **Stack:** estático puro — `site/index.html` + `site/css/main.css` + `site/js/main.js` (+ `site/js/i18n.js`). **Zero build, zero dependências** (o quantum é React, mas para 1 página estática é peso morto). Deployável em GitHub Pages/Netlify tal-e-qual.
-- **Assets:** logo/ícones SVG inline (equalizador, ícones das features, marca Discord); noise em data-URI; fontes via Google Fonts. Nada de imagens raster (a não ser o avatar do Vozi se o Diogo fornecer — senão desenhar avatar SVG: quadrado arredondado grad-brand com equalizador branco).
+- **Assets:** logo/ícones SVG inline (equalizador, ícones das features, marca Discord); noise em data-URI; fontes via Google Fonts. Nada de imagens raster (a não ser o avatar do Vozen se o Diogo fornecer — senão desenhar avatar SVG: quadrado arredondado grad-brand com equalizador branco).
 - **Links (constantes no topo do main.js):**
   - `INVITE_URL` — `https://discord.com/oauth2/authorize?client_id=<CLIENT_ID>&scope=bot+applications.commands&permissions=274881137664` (o repo já deriva estas permissions em INVITE_PERMISSIONS; confirmar o inteiro no código ao implementar)
   - `SUPPORT_URL` (placeholder até o Diogo dar o link), `TOPGG_URL` = `https://top.gg/bot/<CLIENT_ID>/vote`.

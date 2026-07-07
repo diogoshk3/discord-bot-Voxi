@@ -33,7 +33,7 @@ function hashError(error: unknown): string {
 /** Formata o erro como content de webhook (cabeçalho + stack num code block, truncado). */
 export function formatErrorMessage(error: unknown, context: string): string {
   const e = error as { stack?: string; message?: string };
-  const head = `⚠️ **Vozi** — erro em \`${context}\``;
+  const head = `⚠️ **Vozen** — erro em \`${context}\``;
   const body = e?.stack || e?.message || String(error);
   const full = `${head}\n\`\`\`\n${body}\n\`\`\``;
   if (full.length <= MAX_CONTENT) return full;

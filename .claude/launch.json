@@ -2,7 +2,7 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "vozi-site",
+      "name": "vozen-site",
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "5177", "--directory", "site"],
       "port": 5177

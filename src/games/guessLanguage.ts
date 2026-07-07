@@ -35,7 +35,7 @@ export function guessableLanguages(availableModels: string[]): Candidate[] {
 
 /**
  * Línguas em que se aceita o NOME da língua adivinhada — as mais faladas nos servidores
- * do Vozi. Assim um jogador escreve na SUA língua: "espanhol" (pt), "spanish" (en),
+ * do Vozen. Assim um jogador escreve na SUA língua: "espanhol" (pt), "spanish" (en),
  * "español" (es), "espagnol" (fr), "spanisch" (de), "spagnolo" (it), etc. — todos contam.
  */
 const ANSWER_LOCALES = ['en', 'pt', 'es', 'fr', 'de', 'it', 'nl'] as const;
@@ -60,7 +60,7 @@ export function acceptableAnswers(base: string, locale: string): Set<string> {
 }
 
 /**
- * "Adivinha a Lingua" — o Vozi le uma frase numa lingua aleatoria (das que tem voz
+ * "Adivinha a Lingua" — o Vozen le uma frase numa lingua aleatoria (das que tem voz
  * instalada) e o 1o a escrever o nome da lingua ganha o ponto. Best-of-5 rondas.
  * Assenta na base QuizGame (loop de rondas, timeout, placar, resumo final); aqui so
  * vive o CONTEUDO: escolher as linguas e reconhecer o nome da lingua.

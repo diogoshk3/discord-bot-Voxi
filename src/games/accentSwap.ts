@@ -6,7 +6,7 @@ import { baseCodeOf, normalizeAnswer, seededShuffle } from './util';
 const ROUNDS = 5;
 
 /**
- * "Sotaque Trocado" — o Vozi diz uma palavra da lingua da guild mas com a voz de OUTRA
+ * "Sotaque Trocado" — o Vozen diz uma palavra da lingua da guild mas com a voz de OUTRA
  * lingua (sotaque estrangeiro engracado); o 1o a escrever a palavra ganha. Reutiliza o
  * banco de palavras; a "voz do sotaque" e o 1o modelo instalado de uma base diferente
  * (se nao houver outra lingua instalada, cai na propria voz — sem sotaque, mas jogavel).

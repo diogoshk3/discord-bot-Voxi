@@ -114,7 +114,7 @@ describe('Matemática Falada — acerto', () => {
     expect(persistScores).toHaveBeenCalledTimes(1);
     const [, points] = persistScores.mock.calls[0];
     expect(points.get('u')).toBe(5);
-    // On-brand: o Vozi anuncia o vencedor em VOZ ALTA no fim.
+    // On-brand: o Vozen anuncia o vencedor em VOZ ALTA no fim.
     expect(
       say.mock.calls.some((c) => String((c[0] as { text: string }).text).startsWith('game.finish.winnerVoice')),
     ).toBe(true);

@@ -1,10 +1,10 @@
-<p align="center"><img src="assets/vozi-banner.png" alt="Vozi — type it, hear it." width="640"></p>
+<p align="center"><img src="assets/vozen-banner.png" alt="Vozen — type it, hear it." width="640"></p>
 
-# Vozi
+# Vozen
 
 > type it, hear it.
 
-[![CI](https://github.com/diogoshk3/discord-bot-Vozi/actions/workflows/ci.yml/badge.svg)](https://github.com/diogoshk3/discord-bot-Vozi/actions/workflows/ci.yml)
+[![CI](https://github.com/diogoshk3/discord-bot-Vozen/actions/workflows/ci.yml/badge.svg)](https://github.com/diogoshk3/discord-bot-Vozen/actions/workflows/ci.yml)
 ![License](https://img.shields.io/badge/license-AGPL--3.0-blue)
 ![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)
 ![Docker ready](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)
@@ -12,19 +12,19 @@
 
 **Pronto para ir live? Ver [GO-LIVE.md](GO-LIVE.md).**
 
-**Voz neural (não robótica) que não cai do canal — e cuja qualidade nunca fica atrás de paywall.** O Vozi é um bot de Text-to-Speech para Discord que lê texto em canais de voz com voz **neural** (Piper): comando `/tts`, auto-leitura de um canal configurado e leitura de menções/replies ao bot. Deteta a língua de cada mensagem e escolhe a voz sozinho, e cada utilizador pode fixar a sua própria voz.
+**Voz neural (não robótica) que não cai do canal — e cuja qualidade nunca fica atrás de paywall.** O Vozen é um bot de Text-to-Speech para Discord que lê texto em canais de voz com voz **neural** (Piper): comando `/tts`, auto-leitura de um canal configurado e leitura de menções/replies ao bot. Deteta a língua de cada mensagem e escolhe a voz sozinho, e cada utilizador pode fixar a sua própria voz.
 
-A maioria dos bots de TTS força-te a escolher: ou é grátis-mas-robótico, ou natural-mas-atrás de paywall — e o líder de mercado "desconecta durante horas". O Vozi tem tudo o que o líder tem (auto-leitura, `/setup` de um comando, deteta a língua sozinho) — e ainda os **dois** trunfos que o líder não reúne para línguas ocidentais (PT/EN/europeu):
+A maioria dos bots de TTS força-te a escolher: ou é grátis-mas-robótico, ou natural-mas-atrás de paywall — e o líder de mercado "desconecta durante horas". O Vozen tem tudo o que o líder tem (auto-leitura, `/setup` de um comando, deteta a língua sozinho) — e ainda os **dois** trunfos que o líder não reúne para línguas ocidentais (PT/EN/europeu):
 
 - **Voz neural genuinamente natural, grátis** — Piper, não a voz robótica do gTTS/eSpeak do plano gratuito.
 - **Qualidade NUNCA atrás de paywall** — sem vozes premium pagas, sem "vota para desbloquear". O líder esconde as boas vozes atrás de ~€5/mês; aqui a melhor voz é a de fábrica.
 - **Não cai do canal de voz** — auto-reconexão à voz (mata o "desconecta durante horas" do líder).
 
-Estes dois (voz neural grátis + fiabilidade) são o que distingue o Vozi. O resto é **paridade** — o líder também o faz, mas o Vozi não fica atrás: auto-leitura sem prefixo (lê um canal configurado e menções/replies, configurável em um passo com `/setup`) e deteção automática de língua por mensagem em PT, EN e línguas europeias.
+Estes dois (voz neural grátis + fiabilidade) são o que distingue o Vozen. O resto é **paridade** — o líder também o faz, mas o Vozen não fica atrás: auto-leitura sem prefixo (lê um canal configurado e menções/replies, configurável em um passo com `/setup`) e deteção automática de língua por mensagem em PT, EN e línguas europeias.
 
 A par disto: moderação (blocklist, rate-limit, limite de chars, gating por canal), fila FIFO com `/skip`, auto-saída por inatividade e cache de áudio.
 
-> Estado: **v0** (núcleo competitivo). Motor neural pago, streaming e monetização estão **fora** deste v0. O Vozi é **self-host**: corre no teu PC ou podes **alojá-lo tu** num VPS via Docker (continua a exigir setup — não é um bot já alojado que se convida) — ver secção **Deploy em VPS (Docker)** no fim.
+> Estado: **v0** (núcleo competitivo). Motor neural pago, streaming e monetização estão **fora** deste v0. O Vozen é **self-host**: corre no teu PC ou podes **alojá-lo tu** num VPS via Docker (continua a exigir setup — não é um bot já alojado que se convida) — ver secção **Deploy em VPS (Docker)** no fim.
 
 ---
 
@@ -33,7 +33,7 @@ A par disto: moderação (blocklist, rate-limit, limite de chars, gating por can
 Já tens o Node (>= 20), o binário do Piper e pelo menos um modelo de voz `.onnx`? Então o mínimo para arrancar é:
 
 ```bash
-git clone https://github.com/diogoshk3/discord-bot-Vozi.git vozi && cd vozi
+git clone https://github.com/diogoshk3/discord-bot-Vozen.git vozen && cd vozen
 npm install                       # deps + bindings nativos
 cp .env.example .env              # edita: DISCORD_TOKEN, CLIENT_ID, PIPER_PATH, MODELS_DIR; depois: npm run register && npm run dev
 ```
@@ -123,11 +123,11 @@ Edita `.env`:
 
 ### 1.5 Modelos de voz (línguas)
 
-O Vozi **deteta a língua de cada mensagem** e escolhe automaticamente um modelo cujo nome começa pelo **prefixo de locale** dessa língua. Basta colocares o modelo certo em `models/`.
+O Vozen **deteta a língua de cada mensagem** e escolhe automaticamente um modelo cujo nome começa pelo **prefixo de locale** dessa língua. Basta colocares o modelo certo em `models/`.
 
 **Onde obter modelos.** Todos os modelos Piper vivem em **https://huggingface.co/rhasspy/piper-voices** (pasta por língua/país/voz). Cada voz são sempre **2 ficheiros**: `<voz>.onnx` + `<voz>.onnx.json`. Descarrega **ambos** e põe-nos em `models/`.
 
-**Como o nome do ficheiro mapeia para a deteção.** O Vozi olha apenas para o **prefixo de locale** no início do nome do ficheiro (`pt_`, `en_`, `es_`, ...). Por isso `pt_PT-tugão-medium` **e** `pt_BR-faber-medium` contam ambos como Português — se só tiveres um, é esse que toca; se tiveres os dois, toca o primeiro por ordem. Se não houver nenhum modelo da língua detetada, o Vozi cai no `DEFAULT_VOICE`.
+**Como o nome do ficheiro mapeia para a deteção.** O Vozen olha apenas para o **prefixo de locale** no início do nome do ficheiro (`pt_`, `en_`, `es_`, ...). Por isso `pt_PT-tugão-medium` **e** `pt_BR-faber-medium` contam ambos como Português — se só tiveres um, é esse que toca; se tiveres os dois, toca o primeiro por ordem. Se não houver nenhum modelo da língua detetada, o Vozen cai no `DEFAULT_VOICE`.
 
 Línguas mapeadas (código de deteção → prefixo do nome de ficheiro):
 
@@ -172,7 +172,7 @@ Faz esta checklist com o bot a correr (`npm run dev`) e tu num servidor Discord 
 
 ### 3.1 Criar e configurar a aplicação Discord
 
-- [ ] Em https://discord.com/developers/applications → **New Application** → dá o nome **Vozi** (recomendado para consistência de marca).
+- [ ] Em https://discord.com/developers/applications → **New Application** → dá o nome **Vozen** (recomendado para consistência de marca).
 - [ ] Separador **Bot** → **Reset Token** → copia o token para `DISCORD_TOKEN` no `.env`.
 - [ ] **General Information** → copia o **Application ID** para `CLIENT_ID` no `.env`.
 - [ ] Separador **Bot** → secção **Privileged Gateway Intents** → ativa:
@@ -269,7 +269,7 @@ Com autoread ligado, escreve cada um e confirma o comportamento ouvido:
 
 ## 5. Deploy em VPS (Docker)
 
-Caminho **self-host alojado** (alojas tu numa VPS): corres o Vozi numa VPS Linux com `docker compose`, sem instalar Node nem build tools à mão. O bot é um cliente websocket de saída — **não** expõe portas nem precisa de domínio/reverse-proxy.
+Caminho **self-host alojado** (alojas tu numa VPS): corres o Vozen numa VPS Linux com `docker compose`, sem instalar Node nem build tools à mão. O bot é um cliente websocket de saída — **não** expõe portas nem precisa de domínio/reverse-proxy.
 
 > Estado: o build da imagem e a síntese real do Piper são **(verificação ao vivo pendente)** — não foram corridos neste ambiente.
 
@@ -330,7 +330,7 @@ Preenche **apenas** os segredos e tunables — **não** definas `DB_PATH`, `MODE
 
 ```
 docker compose up -d --build   # constrói a imagem e arranca em background
-docker compose logs -f vozi    # segue os logs (esperado: [client] online como ...)
+docker compose logs -f vozen    # segue os logs (esperado: [client] online como ...)
 docker compose down            # pára e remove o container (os dados persistem no volume)
 ```
 
@@ -353,8 +353,8 @@ docker compose down            # pára e remove o container (os dados persistem 
 
 > **Nota para o registo/verificação no Discord.** O Discord Developer Portal pede um **Privacy Policy URL** e um **Terms of Service URL** (ex.: para *Public Bot* / verificação). Quando este repositório for **público**, os URLs a colar nesses campos são os ficheiros aqui no repo:
 >
-> - Privacy Policy URL: `https://github.com/diogoshk3/discord-bot-Vozi/blob/main/PRIVACY.md`
-> - Terms of Service URL: `https://github.com/diogoshk3/discord-bot-Vozi/blob/main/TERMS.md`
+> - Privacy Policy URL: `https://github.com/diogoshk3/discord-bot-Vozen/blob/main/PRIVACY.md`
+> - Terms of Service URL: `https://github.com/diogoshk3/discord-bot-Vozen/blob/main/TERMS.md`
 >
 > O repositório está **privado** por agora, por isso estes links só ficam acessíveis (e válidos para o Discord) depois de o tornares público. Antes de publicar, preenche o campo de contacto/responsável no fim de `PRIVACY.md`.
 
@@ -374,12 +374,12 @@ Topics a aplicar ao repositório (para descoberta no GitHub), quando for públic
 
 Copyright (C) 2026 Diogo Cabral.
 
-O Vozi é software livre: podes redistribuí-lo e/ou modificá-lo nos termos da **GNU Affero
+O Vozen é software livre: podes redistribuí-lo e/ou modificá-lo nos termos da **GNU Affero
 General Public License, versão 3** (AGPL-3.0), conforme publicada pela Free Software
 Foundation. Ver o ficheiro [`LICENSE`](LICENSE) para o texto completo.
 
 A AGPL-3.0 acrescenta ao GPL uma condição-chave: **quem correr uma versão modificada do
-Vozi acessível pela rede tem de disponibilizar o código-fonte dessa versão aos
-utilizadores**. Isto mantém o Vozi aberto mesmo quando corrido como serviço.
+Vozen acessível pela rede tem de disponibilizar o código-fonte dessa versão aos
+utilizadores**. Isto mantém o Vozen aberto mesmo quando corrido como serviço.
 
-O Vozi é fornecido SEM QUALQUER GARANTIA; ver a secção 15 da licença.
+O Vozen é fornecido SEM QUALQUER GARANTIA; ver a secção 15 da licença.

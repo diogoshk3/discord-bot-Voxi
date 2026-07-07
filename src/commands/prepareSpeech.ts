@@ -20,7 +20,7 @@ export function hasReadableText(s: string): boolean {
 /**
  * Aplica a REDAÇÃO da blocklist a um SynthRequest: remove as palavras bloqueadas do
  * texto a sintetizar (req.text) e de cada segmento (síntese multi-voz), mantendo o
- * resto — o Vozi lê a mensagem SEM dizer as palavras banidas. Segmentos que ficam sem
+ * resto — o Vozen lê a mensagem SEM dizer as palavras banidas. Segmentos que ficam sem
  * nada legível são retirados. Blocklist vazia -> req inalterado. Se o resultado ficar
  * sem nada legível, o chamador deteta (hasReadableText) e não fala. PURA.
  */

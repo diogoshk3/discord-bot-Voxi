@@ -1,14 +1,14 @@
-# Vozi — type it, hear it.
+# Vozen — type it, hear it.
 # Stack de deploy hosted para VPS. Constroi a imagem a partir do Dockerfile,
 # le os segredos/tunables do .env, e monta volumes persistentes para os dados e
 # read-only para o Piper + modelos.
 #
 # Arranque:   docker compose up -d --build
-# Logs:       docker compose logs -f vozi
+# Logs:       docker compose logs -f vozen
 # Parar:      docker compose down
 
 services:
-  vozi:
+  vozen:
     build: .
     # Reinicia sempre (excepto se for parado a mao). Suporta a promessa de
     # fiabilidade: se o processo morrer ou a VPS reiniciar, o bot volta a subir.

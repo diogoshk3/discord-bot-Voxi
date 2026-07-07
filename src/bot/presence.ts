@@ -3,7 +3,7 @@ import type { AppConfig } from '../config/index';
 
 /**
  * Texto por defeito da presenca — auto-marketing subtil. Cada vez que alguem ve
- * o Vozi online, ve a marca ("type it, hear it.") + um CTA para um comando real
+ * o Vozen online, ve a marca ("type it, hear it.") + um CTA para um comando real
  * (/setup). Curto de proposito: o cliente Discord trunca atividades compridas.
  */
 export const DEFAULT_PRESENCE_TEXT = 'type it, hear it. • /setup';

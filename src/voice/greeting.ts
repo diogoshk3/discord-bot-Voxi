@@ -1,7 +1,7 @@
 import type { SynthRequest } from '../tts/engine';
 
 /**
- * Saudação "Olá {name}" por lingua-base, para o Vozi dizer quando alguém ENTRA na call.
+ * Saudação "Olá {name}" por lingua-base, para o Vozen dizer quando alguém ENTRA na call.
  * A principal é sempre o inglês ('en'); as outras são escolhíveis em /config
  * greet-language. `{name}` é substituído pelo nome (já sanitizado) de quem entra; sem
  * nome, o {name} sai vazio e fica só a saudação ("Hello"). Fallback: lingua sem entrada
@@ -53,7 +53,7 @@ export const GREET_LANGUAGE_CHOICES: { name: string; value: string }[] = [
 ];
 
 /**
- * Parabéns "Feliz aniversário {name}" por lingua-base, para o Vozi dizer quando alguém
+ * Parabéns "Feliz aniversário {name}" por lingua-base, para o Vozen dizer quando alguém
  * ENTRA na call no seu dia de anos (em vez da saudação normal). Mesmas línguas do
  * GREETINGS; fallback ao inglês. `{name}` já sanitizado.
  */

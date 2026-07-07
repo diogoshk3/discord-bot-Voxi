@@ -10,7 +10,7 @@ import { locales } from './locales/index';
 
 export const DEFAULT_LOCALE = 'en' as const;
 /**
- * Linguas da INTERFACE suportadas: as MESMAS 34 linguas de voz do Vozi. Em Fase A
+ * Linguas da INTERFACE suportadas: as MESMAS 34 linguas de voz do Vozen. Em Fase A
  * so `en`/`pt` estao realmente traduzidas (inline no catalogo); as outras 32 estao
  * na lista mas caem no fallback `en` via t() ate um ficheiro `locales/<code>.ts`
  * ser adicionado (Fase B). Como sao 34 (> 25, o cap de choices estaticas do

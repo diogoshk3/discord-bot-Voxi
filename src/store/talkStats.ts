@@ -1,6 +1,6 @@
 import type Database from 'better-sqlite3';
 
-// "Tagarelas do servidor": conta quantas mensagens de cada pessoa o Vozi LEU (auto-read)
+// "Tagarelas do servidor": conta quantas mensagens de cada pessoa o Vozen LEU (auto-read)
 // por-(guild,user) e um STREAK de dias seguidos com pelo menos uma mensagem lida. Alimenta
 // o /topspeakers. O streak baseia-se no dia LOCAL do servidor (chave 'YYYY-MM-DD').
 

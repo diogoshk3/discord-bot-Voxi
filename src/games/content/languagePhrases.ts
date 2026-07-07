@@ -1,6 +1,6 @@
 /**
  * Frases curtas e neutras em cada lingua-base, para o jogo "Adivinha a Lingua": o
- * Vozi le a frase COM A VOZ dessa lingua e os jogadores adivinham QUE lingua e. Cada
+ * Vozen le a frase COM A VOZ dessa lingua e os jogadores adivinham QUE lingua e. Cada
  * frase e uma saudacao + convite a conversa (conteudo inofensivo, boa cobertura
  * fonetica). Sao lidas via gTTS/Piper na lingua correspondente, por isso o texto tem
  * de estar CORRETO nessa lingua (acentos incluidos).

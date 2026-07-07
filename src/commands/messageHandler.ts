@@ -39,7 +39,7 @@ function collectMessageMedia(message: Message): MediaItem[] {
 }
 
 /**
- * Autojoin: quando o Vozi ainda não está numa call e o autor está num canal de voz,
+ * Autojoin: quando o Vozen ainda não está numa call e o autor está num canal de voz,
  * entra sozinho nesse canal (se autojoin ON e o bot tiver Connect/Speak). Devolve o
  * player criado, ou undefined se não deu para entrar (autojoin OFF, autor fora de voz,
  * sem permissões). Falha silenciosa via try/catch — nunca crasha o handler.
@@ -80,7 +80,7 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     // abaixo, que contradizia este guard e lançava se chegasse uma mensagem pré-READY).
     const me = deps.client.user;
     if (!me) return;
-    // O Vozi NUNCA se lê a si próprio — anti-loop, independentemente do read_bots.
+    // O Vozen NUNCA se lê a si próprio — anti-loop, independentemente do read_bots.
     if (message.author.id === me.id) return;
 
     // Kill-switch da guild e gate de bots ANTES do hook dos jogos. O kill-switch
@@ -123,7 +123,7 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
       message.reference?.messageId != null &&
       message.mentions.repliedUser?.id === me.id;
     // text-in-voice: mensagem enviada no chat de texto DENTRO do canal de voz onde o
-    // Vozi está agora (o texto do canal de voz tem channelId == id do canal de voz).
+    // Vozen está agora (o texto do canal de voz tem channelId == id do canal de voz).
     const botVoiceChannelId = message.guild.members?.me?.voice?.channelId ?? null;
     const isTextInVoice =
       cfg.textInVoice && botVoiceChannelId != null && botVoiceChannelId === message.channelId;
@@ -152,7 +152,7 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
       return;
     }
 
-    // gating: jogador ativo nesta guild. Com autojoin ON, se o Vozi ainda não está
+    // gating: jogador ativo nesta guild. Com autojoin ON, se o Vozen ainda não está
     // numa call e o autor está num canal de voz (e o bot tem Connect/Speak), entra
     // sozinho no canal do autor — em vez de exigir um /join manual.
     let player = getPlayer(deps, message.guildId);
@@ -239,7 +239,7 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     req.engine = userVoice?.engine;
 
     // Blocklist: em vez de saltar a mensagem inteira, REDIGE as palavras bloqueadas do
-    // texto REALMENTE falado (req.text + segmentos) — o Vozi lê a mensagem SEM dizer
+    // texto REALMENTE falado (req.text + segmentos) — o Vozen lê a mensagem SEM dizer
     // essas palavras. Se depois de redigir não sobra nada legível (a mensagem era só
     // palavra(s) bloqueada(s)), não fala. (`blocklist` já foi buscada no guard acima.)
     const redacted = redactRequest(req, blocklist);

@@ -115,7 +115,7 @@ export class CloneEngine implements TTSEngine {
   private enqueue(text: string, ref: string, lang: string): Promise<string> {
     return new Promise<string>((resolve, reject) => {
       // O sidecar escreve o WAV neste temp; o cache.put copia-o e depois apagamo-lo.
-      const outPath = join(tmpdir(), `vozi-clone-${process.pid}-${this.tmpSeq++}.wav`);
+      const outPath = join(tmpdir(), `vozen-clone-${process.pid}-${this.tmpSeq++}.wav`);
       const line = JSON.stringify({ text, ref, out: outPath, lang }) + '\n';
       this.queue.push({ line, outPath, resolve, reject });
       this.pump();

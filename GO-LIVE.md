@@ -1,6 +1,6 @@
-# Go-live do Vozi — checklist
+# Go-live do Vozen — checklist
 
-Checklist curto e ordenado para pôr o Vozi a sério (público + 24/7). Cada passo
+Checklist curto e ordenado para pôr o Vozen a sério (público + 24/7). Cada passo
 resume o essencial e **liga** para o detalhe; não repete os guias completos.
 
 > **Os passos 1-4 são TEUS** (precisam das tuas contas Discord/cloud); o código e
@@ -16,8 +16,8 @@ resume o essencial e **liga** para o detalhe; não repete os guias completos.
 
 ## 1. Ativar "Public Bot"
 
-- [ ] No Developer Portal → Bot, liga o toggle **PUBLIC BOT** para qualquer pessoa poder convidar o Vozi; **verifica:** o toggle fica **ON**. _~1 min — detalhe: [docs/GO-PUBLIC.md §1](docs/GO-PUBLIC.md#1-ativar-public-bot)._
-- [ ] Carrega o **ícone/avatar da app** no Developer Portal (General Information → App Icon, e Bot → Avatar): usa **`assets/vozi-icon.png`** (no repo — também disponível em `vozi-brand-assets-refined/vozi-icon.png`). _~1 min._
+- [ ] No Developer Portal → Bot, liga o toggle **PUBLIC BOT** para qualquer pessoa poder convidar o Vozen; **verifica:** o toggle fica **ON**. _~1 min — detalhe: [docs/GO-PUBLIC.md §1](docs/GO-PUBLIC.md#1-ativar-public-bot)._
+- [ ] Carrega o **ícone/avatar da app** no Developer Portal (General Information → App Icon, e Bot → Avatar): usa **`assets/vozen-icon.png`** (no repo — também disponível em `vozen-brand-assets-refined/vozen-icon.png`). _~1 min._
 
 ## 2. Ativar o MESSAGE CONTENT intent
 
@@ -29,11 +29,11 @@ resume o essencial e **liga** para o detalhe; não repete os guias completos.
 
 ## 4. Adicionar a um servidor de teste
 
-- [ ] Convida o Vozi ao teu servidor de testes (1.ª vez: usa o **link OAuth2** do [README §3.2](README.md#32-convidar-o-bot); já dentro de um servidor podes reutilizar o comando `/invite`) e corre **`/setup`** lá para ligar a auto-leitura; **verifica:** o bot entra no canal de voz e lê uma mensagem. _~2 min._
+- [ ] Convida o Vozen ao teu servidor de testes (1.ª vez: usa o **link OAuth2** do [README §3.2](README.md#32-convidar-o-bot); já dentro de um servidor podes reutilizar o comando `/invite`) e corre **`/setup`** lá para ligar a auto-leitura; **verifica:** o bot entra no canal de voz e lê uma mensagem. _~2 min._
 
 ## 5. (Opcional) Listar e pedir reviews
 
-- [ ] Só **depois de estável**, lista o Vozi em bot lists (top.gg e afins) e pede reviews a utilizadores satisfeitos — apenas quando quiseres crescer. _Contexto: [docs/GO-PUBLIC.md §4](docs/GO-PUBLIC.md#4-recapitulação-isto-é-decisão-tua)._
+- [ ] Só **depois de estável**, lista o Vozen em bot lists (top.gg e afins) e pede reviews a utilizadores satisfeitos — apenas quando quiseres crescer. _Contexto: [docs/GO-PUBLIC.md §4](docs/GO-PUBLIC.md#4-recapitulação-isto-é-decisão-tua)._
 
 ---
 

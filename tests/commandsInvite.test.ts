@@ -96,7 +96,7 @@ describe('/invite — gera o link de convite OAuth2', () => {
     const text = i.replies.join('\n');
     expect(text).toContain('https://discord.com/oauth2/authorize');
     // mensagem de marca em PT
-    expect(text).toMatch(/Vozi/);
+    expect(text).toMatch(/Vozen/);
   });
 
   it('(d) CLIENT_ID ausente → mensagem clara, sem link partido', async () => {

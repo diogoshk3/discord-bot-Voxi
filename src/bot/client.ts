@@ -37,7 +37,7 @@ export function createClient(): Client {
 }
 
 /**
- * Saudação de voz: o Vozi diz "Olá {nome}" quando um HUMANO entra no canal de voz onde
+ * Saudação de voz: o Vozen diz "Olá {nome}" quando um HUMANO entra no canal de voz onde
  * ele está. LIGADA por defeito (guild_config.greet_on_join); língua em greet_locale
  * (default inglês). Best-effort e defensiva: nunca crasha o gateway. Ignora bots (incl.
  * o próprio), respeita o kill-switch (enabled) e exige um player ativo. O nome é
@@ -55,7 +55,7 @@ function greetOnJoin(deps: BotDeps, oldState: VoiceState, newState: VoiceState):
     if (!isJoinIntoChannel(oldState.channelId, newState.channelId, botChannelId)) return;
     const cfg = getGuildConfig(deps.db, guildId);
     if (!cfg.enabled) return; // kill-switch do servidor
-    // Dia de anos? Se a pessoa faz anos hoje, o Vozi diz "Parabéns {nome}" em vez do "Olá".
+    // Dia de anos? Se a pessoa faz anos hoje, o Vozen diz "Parabéns {nome}" em vez do "Olá".
     const bd = getBirthday(deps.db, guildId, member.id);
     const isBirthday = bd !== null && isBirthdayToday(bd, new Date());
     // Os PARABÉNS são opt-in individual e intencional (a própria pessoa registou a data),
@@ -122,7 +122,7 @@ export function bindEvents(deps: BotDeps): void {
     greetOnJoin(deps, oldState, newState);
   });
 
-  // guildCreate — o Vozi entrou num servidor novo. Enviamos UMA vez um welcome
+  // guildCreate — o Vozen entrou num servidor novo. Enviamos UMA vez um welcome
   // embed (beginner onboarding) a um canal adequado. O evento ja e 1x por entrada,
   // por isso nao precisa de dedup. Toda a decisao testavel esta em welcome.ts
   // (pickWelcomeChannel/buildWelcomeEmbed); aqui so ligamos as pecas: null -> nao
@@ -145,7 +145,7 @@ export function bindEvents(deps: BotDeps): void {
     })();
   });
 
-  // guildDelete — o Vozi saiu (kick/leave) ou perdeu acesso a uma guild. Libertar
+  // guildDelete — o Vozen saiu (kick/leave) ou perdeu acesso a uma guild. Libertar
   // os recursos retidos por guildId (limiter + player) para nao vazar memoria em
   // uptime longo. Toda a logica testavel esta em handleGuildDelete (deps.ts).
   // IMPORTANTE: o Discord dispara isto TAMBEM em OUTAGES transitorios da guild

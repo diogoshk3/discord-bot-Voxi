@@ -17,17 +17,17 @@ export interface GuildConfig {
   // por defeito (decisão do Diogo); desligável com /config xsaid. O anúncio é
   // localizado na língua da voz (spokenPhrases.said).
   xsaid: boolean;
-  // autojoin: o Vozi entra sozinho no canal de voz do autor quando chega uma mensagem
+  // autojoin: o Vozen entra sozinho no canal de voz do autor quando chega uma mensagem
   // para ler e ele ainda não está numa call. DESLIGADO por defeito (opt-in).
   autojoin: boolean;
   // readBots: ler mensagens de OUTROS bots/webhooks (ex.: bridges, notificações).
-  // DESLIGADO por defeito (comportamento histórico: ignora bots). O próprio Vozi NUNCA
+  // DESLIGADO por defeito (comportamento histórico: ignora bots). O próprio Vozen NUNCA
   // se lê a si mesmo, independentemente disto (anti-loop).
   readBots: boolean;
   // textInVoice: ler também as mensagens do chat de texto EMBUTIDO no canal de voz onde
-  // o Vozi está (o texto dos canais de voz do Discord). DESLIGADO por defeito.
+  // o Vozen está (o texto dos canais de voz do Discord). DESLIGADO por defeito.
   textInVoice: boolean;
-  // greetOnJoin: o Vozi diz "Olá {nome}" quando alguém ENTRA no canal de voz onde ele
+  // greetOnJoin: o Vozen diz "Olá {nome}" quando alguém ENTRA no canal de voz onde ele
   // está. LIGADO por defeito (desligável com /config greet). greetLocale = língua da
   // saudação (a principal é sempre inglês, 'en').
   greetOnJoin: boolean;

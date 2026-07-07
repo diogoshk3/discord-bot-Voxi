@@ -1,6 +1,6 @@
 import type Database from 'better-sqlite3';
 
-// Vozi Premium / Plus: assinaturas baseadas em EXPIRY (unix ms). Sem linha ou expirado =>
+// Vozen Premium / Plus: assinaturas baseadas em EXPIRY (unix ms). Sem linha ou expirado =>
 // Free. As features NOVAS (efeitos completos, soundboard, etc.) consultam isGuildPremium/
 // isUserPremium; nada do que já é grátis passa a pago. Códigos de resgate (Ko-fi/Patreon)
 // são gerados offline (tools/premium-codes.ts) e resgatados 1x com /redeem.
@@ -68,7 +68,7 @@ export function grantGuildPremium(
   return expiresAt;
 }
 
-/** Igual ao grantGuildPremium mas para o Vozi Plus (por-utilizador). */
+/** Igual ao grantGuildPremium mas para o Vozen Plus (por-utilizador). */
 export function grantUserPremium(
   db: Database.Database,
   userId: string,
