@@ -28,6 +28,7 @@ Repo verification baseline at planning time: `npm run build` (tsc) exit 0;
 | 013  | Lint/format toolchain (ESLint flat + Prettier + editorconfig + CI)                         | P2       | M      | —             | DONE   |
 | 014  | `guild_config` descriptor-driven store (kill the 10-edit lockstep)                         | P2       | M      | 010           | DONE   |
 | 015  | Split `commands/index.ts` (2821 lines → handler modules)                                   | P3       | L      | 003, 004, 013 | DONE   |
+| 016  | Hybrid engine Phase 2 — Kokoro (kokoro-onnx) as top router engine (task #60)                | P2       | L      | 015           | TODO   |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale)
 
@@ -52,7 +53,7 @@ Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJE
 ## Direction findings (decisions for the maintainer — not planned)
 
 - **Activate Discord Premium Apps**: entitlement sync is shipped but inert (no `PREMIUM_*_SKU_ID`); the site already sells €3.99. Remaining work is external (portal SKUs, verification gates), not code.
-- **Kokoro engine (backlog task #60)**: RouterEngine was designed for a third engine; free-voice quality is the product differentiator. Effort L.
+- **Kokoro engine (backlog task #60)**: RouterEngine was designed for a third engine; free-voice quality is the product differentiator. Effort L. → **Promoted to plan 016** (runtime `kokoro-onnx`, free-for-all; decisions locked with the maintainer).
 - **24/7 in-call mode**: sold on the site's Premium card as "coming soon" with zero code behind it. Either build it (M) or remove it from the card — selling vapor is a trust risk.
 
 ## Note on plan 004 (product decision embedded)
