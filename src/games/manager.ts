@@ -21,7 +21,16 @@ interface Session {
   needsVoice: boolean;
   /** Locale do jogo (o de QUEM iniciou) — decide o idioma do texto E do conteúdo. */
   locale: string;
+  /**
+   * Canal-PAI quando o jogo corre numa THREAD descartável (channelId = id da thread).
+   * undefined = jogo no próprio canal (sem thread). Ao terminar, o resumo do vencedor
+   * vai para o pai (sobrevive) e a thread é apagada 5s depois.
+   */
+  parentChannelId?: string;
 }
+
+/** Atraso (ms) entre o fim do jogo e apagar a thread — dá tempo de ver o resultado. */
+const THREAD_DELETE_DELAY_MS = 5000;
 
 /** Mensagem crua que chega ao manager a partir do handler de mensagens. */
 export interface IncomingMessage {
@@ -78,6 +87,7 @@ export class GameManager {
     game: Game,
     needsVoice = true,
     locale?: string,
+    parentChannelId?: string,
   ): StartResult {
     if (this.sessions.has(guildId)) return 'already-active';
     const session: Session = {
@@ -91,6 +101,8 @@ export class GameManager {
       needsVoice,
       // Locale de quem iniciou (ex.: 'pt'); sem ele cai no locale da guild.
       locale: locale || this.env.localeOf(guildId),
+      // Se channelId é uma thread, parentChannelId é o canal onde o /game play foi dado.
+      parentChannelId,
     };
     this.sessions.set(guildId, session);
     const ctx = this.makeContext(session);
@@ -170,6 +182,36 @@ export class GameManager {
       } catch (err) {
         this.env.logError('[game] persistScores', err);
       }
+    }
+    // Jogo em THREAD: o resumo vai para o canal-PAI (a thread vai desaparecer) e a
+    // thread é apagada com um pequeno atraso, para dar tempo de ver o resultado.
+    if (s.parentChannelId) this.finishThread(s, persist);
+  }
+
+  /**
+   * Fecho de um jogo em thread: anuncia no canal-pai (vencedor por pontos, ou "terminou"
+   * se não houve pontos/foi abortado) e agenda o apagar da thread. O timer do delete é
+   * DELIBERADAMENTE independente da sessão (que já foi removida e teve os timers limpos):
+   * um one-shot no clock do env, não rastreado. Tudo best-effort — nunca lança.
+   */
+  private finishThread(s: Session, persist: boolean): void {
+    const parent = s.parentChannelId!;
+    const threadId = s.channelId;
+    // Vencedor = quem mais pontuou (o mention <@id> renderiza o nome sem o precisarmos).
+    let summary: Sendable;
+    if (persist && s.points.size > 0) {
+      let winnerId = '';
+      let best = -Infinity;
+      for (const [id, pts] of s.points) if (pts > best) ((best = pts), (winnerId = id));
+      summary = this.env.translate('game.thread.winner', s.locale, { winner: `<@${winnerId}>` });
+    } else {
+      summary = this.env.translate('game.thread.ended', s.locale);
+    }
+    void this.env.sendToChannel(parent, summary).catch(() => {});
+    if (this.env.deleteChannel) {
+      this.env.clock.setTimeout(() => {
+        void this.env.deleteChannel!(threadId);
+      }, THREAD_DELETE_DELAY_MS);
     }
   }
 

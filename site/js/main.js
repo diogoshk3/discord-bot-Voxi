@@ -8,7 +8,7 @@
      CLIENT_ID é público (está em qualquer link de convite).
      SUPPORT_URL é o convite do servidor de suporte do Vozen. */
   const CLIENT_ID = "1523826014935842997";
-  const INVITE_PERMISSIONS = "3230720"; // Connect+Speak+ViewChannel+SendMessages+ReadMessageHistory+EmbedLinks
+  const INVITE_PERMISSIONS = "326420745216"; // Connect+Speak+ViewChannel+SendMessages+ReadMessageHistory+EmbedLinks + threads dos jogos (CreatePublicThreads+SendMessagesInThreads+ManageThreads)
   const SUPPORT_URL = "https://discord.gg/V6PZYZmhcQ"; // servidor de suporte do Vozen
   const INVITE_URL =
     CLIENT_ID && CLIENT_ID !== "YOUR_CLIENT_ID"

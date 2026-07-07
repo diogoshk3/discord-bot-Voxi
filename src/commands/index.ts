@@ -71,6 +71,7 @@ import {
   type FunLocale,
 } from '../content/microfun';
 import { GAME_DEFS, gameById, filterGameChoices, filterWordChainLanguages } from '../games/index';
+import { createGameThread, deleteChannelSafe } from '../games/thread';
 import { getLeaderboard, getUserScore, getUserRank } from '../store/gameScore';
 import { GREET_LANGUAGE_CHOICES, GREET_LOCALES } from '../voice/greeting';
 import { log } from '../logging/logger';
@@ -155,6 +156,13 @@ export const INVITE_PERMISSIONS: string = new PermissionsBitField([
   // @everyone não a tenha. Reações/anexos NÃO entram: o código não usa .react() nem
   // envia ficheiros (auditado).
   PermissionFlagsBits.EmbedLinks,
+  // Threads dos jogos (/game): o Vozen cria uma thread descartável por partida, escreve
+  // nela e apaga-a no fim. Sem estas, o jogo cai no fallback (joga no próprio canal);
+  // sem ManageThreads a thread não é apagada (auto-arquiva). Servidores já convidados
+  // não têm estas permissões até re-convidarem — o fallback trata disso.
+  PermissionFlagsBits.CreatePublicThreads,
+  PermissionFlagsBits.SendMessagesInThreads,
+  PermissionFlagsBits.ManageThreads,
 ])
   .bitfield.toString();
 
@@ -2331,6 +2339,21 @@ async function handleGame(i: ChatInputCommandInteraction, deps: BotDeps): Promis
         return;
       }
     }
+    // Verifica o lock ANTES de criar a thread (evita uma thread órfã no caso comum de
+    // já haver jogo). Há uma janela minúscula até ao start real (que é o gate a sério);
+    // se a perdermos, apagamos a thread órfã abaixo.
+    if (deps.games.active(i.guildId!)) {
+      const ch = deps.games.channelOf(i.guildId!) ?? i.channelId;
+      await reply(i, t('game.start.alreadyActive', locale, { channel: ch }));
+      return;
+    }
+    // Servidores grandes afogam o canal com as mensagens do jogo — corremo-lo numa
+    // THREAD descartável criada a partir deste canal. Fallback (canal de voz/DM, sem
+    // permissões): joga no próprio canal, como antes.
+    const gameName = t(def.nameKey, locale);
+    const threadId = await createGameThread(i.channel, `🎮 ${gameName}`);
+    const gameChannelId = threadId ?? i.channelId;
+
     // Locale do jogo = o de QUEM inicia (localeForUser), não o da guild — assim um
     // servidor sem /config language joga na língua de quem clicou (ex.: PT).
     // A opção `language` só é usada pelo word-chain; se omitida, cai no locale de quem
@@ -2339,17 +2362,25 @@ async function handleGame(i: ChatInputCommandInteraction, deps: BotDeps): Promis
     const chosenLang = i.options.getString('language') ?? undefined;
     const res = deps.games.start(
       i.guildId!,
-      i.channelId,
+      gameChannelId,
       def.create({ language: chosenLang ?? locale }),
       def.needsVoice,
       locale,
+      threadId ? i.channelId : undefined, // canal-pai só quando corre em thread
     );
     if (res === 'already-active') {
+      // Perdemos a race após o active() acima — limpa a thread que acabámos de criar.
+      if (threadId) void deleteChannelSafe(i.client, threadId);
       const ch = deps.games.channelOf(i.guildId!) ?? i.channelId;
       await reply(i, t('game.start.alreadyActive', locale, { channel: ch }));
       return;
     }
-    await reply(i, t('game.start.started', locale, { game: t(def.nameKey, locale) }));
+    await reply(
+      i,
+      threadId
+        ? t('game.start.startedThread', locale, { game: gameName, channel: threadId })
+        : t('game.start.started', locale, { game: gameName }),
+    );
     return;
   }
 

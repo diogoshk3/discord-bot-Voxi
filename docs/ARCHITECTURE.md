@@ -110,16 +110,22 @@ default-voice, **language**, show, reset, + subgrupos `blockword` e `pronunciati
 
 ### Minijogos (`/game`)
 
-**14 jogos** de grupo, geridos pelo `GameManager` (`src/games/`): **1 jogo ativo por
+**15 jogos** de grupo, geridos pelo `GameManager` (`src/games/`): **1 jogo ativo por
 guild** de cada vez. O comando `/game play <jogo>` arranca (autocomplete com os nomes
 na língua de quem invoca; jogos de **voz** exigem o bot numa call — `needsVoice`),
 `/game stop` pára, `/game list` lista, `/game leaderboard` mostra o top do servidor e
 `/game stats` as estatísticas do próprio (pontos, vitórias, posição). O leaderboard
 persiste em `game_score` (`store/gameScore.ts`).
 
-Os jogadores respondem no **canal onde o jogo foi aberto**; o `GameManager.handleMessage`
-consome essas mensagens (não são lidas em voz alta). Os timers usam um `Clock` injetável
-e são cancelados no fim. Uma saída de **voz** (`removePlayer` → `onVoiceLeft`) só termina
+Cada partida corre numa **thread descartável** criada a partir do canal do `/game play`
+(`games/thread.ts`): os palpites ficam contidos na thread (não afogam o canal em
+servidores grandes), o `channelId` da sessão passa a ser o da thread e o `parentChannelId`
+guarda o canal original. No fim, o **vencedor** (por pontos) é anunciado no **canal-pai**
+(sobrevive) e a thread é apagada `THREAD_DELETE_DELAY_MS` depois. **Fallback**: canais sem
+threads (voz/DM) ou sem permissões → joga no próprio canal, como antes. Os jogadores
+respondem na thread (ou no canal, no fallback); o `GameManager.handleMessage` consome essas
+mensagens (não são lidas em voz alta). Os timers usam um `Clock` injetável e são cancelados
+no fim (o timer do apagar-thread é independente da sessão, um one-shot no clock). Uma saída de **voz** (`removePlayer` → `onVoiceLeft`) só termina
 jogos que **precisam de voz** (um jogo de tabuleiro sobrevive a uma saída de voz não
 relacionada); a guild ser **removida** (`handleGuildDelete` → `endGuild`) termina qualquer
 jogo (sem leak). Famílias:

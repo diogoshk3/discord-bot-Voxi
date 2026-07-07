@@ -24,6 +24,10 @@ const EXPECTED_PERMISSIONS = new PermissionsBitField([
   PermissionFlagsBits.SendMessages,
   PermissionFlagsBits.ReadMessageHistory,
   PermissionFlagsBits.EmbedLinks,
+  // Threads dos jogos (/game): criar/escrever/apagar a thread descartável por partida.
+  PermissionFlagsBits.CreatePublicThreads,
+  PermissionFlagsBits.SendMessagesInThreads,
+  PermissionFlagsBits.ManageThreads,
 ]).bitfield.toString();
 
 interface FakeInteraction {
@@ -83,7 +87,7 @@ describe('/invite — gera o link de convite OAuth2', () => {
     expect(text).toContain('applications.commands');
   });
 
-  it('(c) permissions corresponde ao inteiro derivado dos 5 bits', async () => {
+  it('(c) permissions corresponde ao inteiro derivado dos bits do INVITE_PERMISSIONS', async () => {
     const i = makeInviteInteraction();
     await handleInteraction(i as any, makeDeps(CLIENT_ID));
     const text = i.replies.join('\n');

@@ -132,6 +132,12 @@ export interface GameEnv {
   getPlayer(guildId: string): { say(req: SynthRequest): Promise<boolean> } | undefined;
   /** Envia conteudo ao canal de texto. */
   sendToChannel(channelId: string, content: Sendable): Promise<void>;
+  /**
+   * Apaga um canal (a THREAD descartavel de um jogo). OPCIONAL: sem ele (ou em envs
+   * de teste antigos), o jogo em thread nao apaga a thread no fim (degradacao: a thread
+   * auto-arquiva). Best-effort — nunca lanca.
+   */
+  deleteChannel?(channelId: string): Promise<void>;
   /** Locale da interface da guild. */
   localeOf(guildId: string): string;
   /** Traducao. */

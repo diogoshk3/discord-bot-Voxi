@@ -17,6 +17,7 @@ import { removePlayer } from './bot/deps';
 import { GameManager } from './games/manager';
 import { systemClock } from './games/types';
 import { loadBoardEmojis } from './games/boardEmojis';
+import { deleteChannelSafe } from './games/thread';
 import { getGuildConfig } from './store/guildConfig';
 import { persistGameScores } from './store/gameScore';
 import { t, DEFAULT_LOCALE } from './i18n/index';
@@ -182,6 +183,8 @@ async function main(): Promise<void> {
         await (ch as { send: (c: unknown) => Promise<unknown> }).send(content);
       }
     },
+    // Apaga a thread descartável de um jogo no fim (via games/thread — best-effort).
+    deleteChannel: (channelId) => deleteChannelSafe(client, channelId),
     localeOf: (guildId) => {
       try {
         return getGuildConfig(db, guildId).locale;

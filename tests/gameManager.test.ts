@@ -243,3 +243,94 @@ describe('GameManager', () => {
     expect(env.logError).toHaveBeenCalled();
   });
 });
+
+// ── Jogos em THREAD descartável (servidores grandes) ──────────────────────────
+const THREAD = 't1';
+const PARENT = 'c1';
+describe('GameManager — jogo em thread descartável', () => {
+  let env: GameEnv;
+  let clock: FakeClock;
+  let deleteChannel: ReturnType<typeof vi.fn>;
+  let mgr: GameManager;
+  beforeEach(() => {
+    deleteChannel = vi.fn(async () => {});
+    // translate que inclui os params, para conseguirmos verificar o vencedor no resumo.
+    env = makeEnv({
+      deleteChannel,
+      translate: (key, _loc, params) => (params ? `${key} ${JSON.stringify(params)}` : key),
+    });
+    clock = env.clock as FakeClock;
+    mgr = new GameManager(env);
+  });
+
+  it('o jogo corre no channelId da THREAD; as mensagens da thread são encaminhadas', async () => {
+    const g = new SpyGame();
+    mgr.start(GUILD, THREAD, g, false, 'en', PARENT);
+    await flush();
+    expect(mgr.channelOf(GUILD)).toBe(THREAD);
+    // Mensagem NA thread -> consumida; no canal-pai -> NÃO (é o chat normal).
+    expect(mgr.handleMessage({ guildId: GUILD, channelId: THREAD, authorId: 'u', authorName: 'U', content: 'ola' })).toBe(true);
+    expect(mgr.handleMessage({ guildId: GUILD, channelId: PARENT, authorId: 'u', authorName: 'U', content: 'oi' })).toBe(false);
+    await flush();
+    expect(g.messages).toEqual(['ola']);
+  });
+
+  it('fim normal: resumo do VENCEDOR vai ao canal-pai e a thread é apagada 5s depois', async () => {
+    const g = new SpyGame();
+    mgr.start(GUILD, THREAD, g, false, 'en', PARENT);
+    await flush();
+    g.ctx!.award('a', 2);
+    g.ctx!.award('b', 9); // b vence
+    g.ctx!.end();
+
+    // Resumo no PAI (não na thread), com o mention do vencedor 'b'.
+    const send = env.sendToChannel as ReturnType<typeof vi.fn>;
+    const parentCall = send.mock.calls.find((c) => c[0] === PARENT);
+    expect(parentCall).toBeDefined();
+    expect(String(parentCall![1])).toContain('game.thread.winner');
+    expect(String(parentCall![1])).toContain('<@b>');
+    // A thread ainda NÃO foi apagada.
+    expect(deleteChannel).not.toHaveBeenCalled();
+    clock.advance(5000);
+    expect(deleteChannel).toHaveBeenCalledWith(THREAD);
+    // Pontos persistidos (fim normal).
+    expect(env.persistScores).toHaveBeenCalledTimes(1);
+  });
+
+  it('abortado (stop, sem pontos): resumo "terminou" no pai + apaga a thread', async () => {
+    const g = new SpyGame();
+    mgr.start(GUILD, THREAD, g, false, 'en', PARENT);
+    await flush();
+    mgr.stop(GUILD);
+    const send = env.sendToChannel as ReturnType<typeof vi.fn>;
+    const parentCall = send.mock.calls.find((c) => c[0] === PARENT);
+    expect(String(parentCall![1])).toContain('game.thread.ended');
+    clock.advance(5000);
+    expect(deleteChannel).toHaveBeenCalledWith(THREAD);
+    expect(env.persistScores).not.toHaveBeenCalled();
+  });
+
+  it('SEM thread (parentChannelId undefined): não anuncia no pai nem apaga canal', async () => {
+    const g = new SpyGame();
+    mgr.start(GUILD, PARENT, g, false, 'en'); // sem parentChannelId
+    await flush();
+    g.ctx!.award('a', 1);
+    g.ctx!.end();
+    // O único send seria do próprio jogo (aqui não envia nada); nenhum delete agendado.
+    clock.advance(5000);
+    expect(deleteChannel).not.toHaveBeenCalled();
+  });
+
+  it('degrada sem env.deleteChannel: anuncia no pai mas não tenta apagar', async () => {
+    const noDelete = makeEnv({ translate: (k, _l, p) => (p ? `${k} ${JSON.stringify(p)}` : k) });
+    const c = noDelete.clock as FakeClock;
+    const m = new GameManager(noDelete);
+    const g = new SpyGame();
+    m.start(GUILD, THREAD, g, false, 'en', PARENT);
+    await flush();
+    g.ctx!.end();
+    expect(noDelete.sendToChannel).toHaveBeenCalled();
+    // Sem deleteChannel no env, nenhum timer de delete foi agendado.
+    expect(c.pending()).toBe(0);
+  });
+});

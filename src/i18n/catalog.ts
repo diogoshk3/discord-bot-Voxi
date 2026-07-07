@@ -1129,6 +1129,20 @@ export const catalog: Record<string, Entry> = {
     en: '🎮 Starting **{game}**! Watch the channel — good luck!',
     pt: '🎮 A começar **{game}**! Atenção ao canal — boa sorte!',
   },
+  // Jogo iniciado numa THREAD descartável (servidores grandes: não afoga o canal).
+  'game.start.startedThread': {
+    en: '🎮 **{game}** started in <#{channel}> — join there! The thread self-deletes when the game ends.',
+    pt: '🎮 **{game}** começou em <#{channel}> — joguem lá! A thread apaga-se sozinha quando o jogo acaba.',
+  },
+  // Resumo no canal-PAI quando um jogo em thread termina (a thread vai desaparecer).
+  'game.thread.winner': {
+    en: '🏆 {winner} won the game!',
+    pt: '🏆 {winner} venceu o jogo!',
+  },
+  'game.thread.ended': {
+    en: '🎮 The game ended.',
+    pt: '🎮 A partida terminou.',
+  },
   'game.unknownGame': {
     en: "I don't know that game. Pick one from the list.",
     pt: 'Não conheço esse jogo. Escolhe um da lista.',
