@@ -10,6 +10,10 @@
   const CLIENT_ID = "1523826014935842997";
   const INVITE_PERMISSIONS = "326420745216"; // Connect+Speak+ViewChannel+SendMessages+ReadMessageHistory+EmbedLinks + threads dos jogos (CreatePublicThreads+SendMessagesInThreads+ManageThreads)
   const SUPPORT_URL = "https://discord.gg/V6PZYZmhcQ"; // servidor de suporte do Vozen
+  // Painel Premium: base HTTPS da API do bot (GET /api/me/premium). VAZIO => o painel fica
+  // escondido (a feature ainda não está no ar). Preenche com o teu host quando tiveres o
+  // domínio/túnel + PREMIUM_API_ENABLED=true no bot. Ex.: "https://api.vozen.xyz".
+  const PREMIUM_API_BASE = "";
   const INVITE_URL =
     CLIENT_ID && CLIENT_ID !== "YOUR_CLIENT_ID"
       ? `https://discord.com/oauth2/authorize?client_id=${CLIENT_ID}&scope=bot%20applications.commands&permissions=${INVITE_PERMISSIONS}`
@@ -111,6 +115,7 @@
     localizeHear(lang);
     renderCommands();
     renderFaq();
+    renderPanel(); // re-renderiza o painel Premium na língua atual (sem novo fetch)
   }
 
   // Dropdown custom de idioma (estilo MEE6): botão-trigger + painel role="listbox".
@@ -195,6 +200,186 @@
       $$(".bill-toggle__btn").forEach((x) => x.classList.toggle("is-active", x === b));
     }),
   );
+
+  /* ── Painel Premium (login com Discord + estado da conta) ─────────────
+     OAuth2 implicit (scope identify): 100% client-side, sem segredo. O token vem no
+     fragment (#access_token), guardamo-lo em sessionStorage, limpamos o fragment, e
+     chamamos GET {API_BASE}/api/me/premium. A API valida o token na Discord e devolve só
+     o estado DESTE utilizador. Escondido enquanto PREMIUM_API_BASE estiver vazio. */
+  const TOK_KEY = "vozen.dtoken";
+  const STATE_KEY = "vozen.oauthstate";
+  const OAUTH_REDIRECT = location.origin + location.pathname;
+  let panelState = { mode: "hidden" };
+
+  const t = (k) => (DICT[lang] && DICT[lang][k]) || (DICT.en && DICT.en[k]) || k;
+  const esc = (s) =>
+    String(s).replace(
+      /[&<>"']/g,
+      (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
+    );
+  const fmtDate = (ts) => {
+    try {
+      return new Date(ts).toLocaleDateString(lang, { year: "numeric", month: "short", day: "numeric" });
+    } catch {
+      return new Date(ts).toISOString().slice(0, 10);
+    }
+  };
+  const DISCORD_MARK =
+    '<svg viewBox="0 0 24 18" width="20" height="15" aria-hidden="true" fill="currentColor"><path d="M20.3 1.6A19.8 19.8 0 0 0 15.4.1a14 14 0 0 0-.6 1.3 18.3 18.3 0 0 0-5.5 0A13 13 0 0 0 8.6.1 19.7 19.7 0 0 0 3.7 1.6C.6 6.3-.3 10.8.2 15.3a19.9 19.9 0 0 0 6 3 14.7 14.7 0 0 0 1.3-2.1 12.9 12.9 0 0 1-2-1c.2-.1.3-.3.5-.4a14.2 14.2 0 0 0 12 0l.5.4a12.8 12.8 0 0 1-2 1 14.5 14.5 0 0 0 1.3 2.1 19.8 19.8 0 0 0 6-3c.6-5.2-.8-9.7-3.5-13.7ZM8 12.6c-1.2 0-2.1-1.1-2.1-2.4S6.8 7.8 8 7.8s2.2 1.1 2.1 2.4c0 1.3-.9 2.4-2.1 2.4Zm8 0c-1.2 0-2.1-1.1-2.1-2.4s.9-2.4 2.1-2.4 2.2 1.1 2.1 2.4c0 1.3-.9 2.4-2.1 2.4Z"/></svg>';
+
+  function randState() {
+    const a = new Uint8Array(16);
+    (window.crypto || {}).getRandomValues?.(a);
+    return [...a].map((b) => b.toString(16).padStart(2, "0")).join("");
+  }
+
+  function login() {
+    const state = randState();
+    try {
+      sessionStorage.setItem(STATE_KEY, state);
+    } catch {}
+    const u = new URL("https://discord.com/oauth2/authorize");
+    u.searchParams.set("client_id", CLIENT_ID);
+    u.searchParams.set("redirect_uri", OAUTH_REDIRECT);
+    u.searchParams.set("response_type", "token");
+    u.searchParams.set("scope", "identify");
+    u.searchParams.set("state", state);
+    location.href = u.toString();
+  }
+
+  function logout() {
+    try {
+      sessionStorage.removeItem(TOK_KEY);
+    } catch {}
+    setPanel({ mode: "anon" });
+  }
+
+  // Lê o token do fragment no regresso do OAuth, valida o `state` (CSRF) e LIMPA o fragment.
+  function readTokenFromHash() {
+    if (!location.hash || location.hash.length < 2) return null;
+    const p = new URLSearchParams(location.hash.slice(1));
+    const tok = p.get("access_token");
+    if (!tok) return null;
+    const st = p.get("state");
+    let expected = null;
+    try {
+      expected = sessionStorage.getItem(STATE_KEY);
+      sessionStorage.removeItem(STATE_KEY);
+    } catch {}
+    history.replaceState(null, "", location.pathname + location.search); // fragment fora do URL
+    // CSRF: exige um `state` guardado que bata certo. Sem ele (ou diferente) => descarta o
+    // token — nunca aceitamos um fragment que não conseguimos verificar como nosso.
+    if (!expected || st !== expected) return null;
+    return tok;
+  }
+
+  function setPanel(s) {
+    panelState = s;
+    renderPanel();
+  }
+
+  async function loadPanel() {
+    if (!PREMIUM_API_BASE) {
+      setPanel({ mode: "hidden" });
+      return;
+    }
+    const fromHash = readTokenFromHash();
+    if (fromHash) {
+      try {
+        sessionStorage.setItem(TOK_KEY, fromHash);
+      } catch {}
+    }
+    let tok = null;
+    try {
+      tok = sessionStorage.getItem(TOK_KEY);
+    } catch {}
+    if (!tok) {
+      setPanel({ mode: "anon" });
+      return;
+    }
+    setPanel({ mode: "loading" });
+    try {
+      const res = await fetch(PREMIUM_API_BASE + "/api/me/premium", {
+        headers: { Authorization: "Bearer " + tok },
+      });
+      if (res.status === 401) {
+        try {
+          sessionStorage.removeItem(TOK_KEY);
+        } catch {}
+        setPanel({ mode: "anon" });
+        return;
+      }
+      if (!res.ok) throw new Error("http " + res.status);
+      setPanel({ mode: "ok", data: await res.json() });
+    } catch {
+      setPanel({ mode: "error" });
+    }
+  }
+
+  function planChip(label, cls) {
+    return `<span class="ppanel__chip ppanel__chip--${cls}">${label}</span>`;
+  }
+
+  function renderOk(d) {
+    const u = d.user || {};
+    const av = u.avatar
+      ? `<img class="ppanel__av" src="https://cdn.discordapp.com/avatars/${esc(u.id)}/${esc(u.avatar)}.png?size=64" alt="" width="40" height="40" referrerpolicy="no-referrer">`
+      : `<span class="ppanel__av ppanel__av--none">${esc((u.username || "?").slice(0, 1).toUpperCase())}</span>`;
+    let plans = "";
+    const plus = d.plus || {};
+    const pass = d.pass;
+    if (plus.active) {
+      plans += `<div class="ppanel__plan">${planChip("Vozen Plus", "plus")}<span class="ppanel__meta">${t("panel.activeUntil")} ${fmtDate(plus.expiresAt)}</span></div>`;
+    }
+    if (pass) {
+      const dateLbl = pass.active ? t("panel.activeUntil") : t("panel.expiredOn");
+      let servers = "";
+      if (pass.servers && pass.servers.length) {
+        const items = pass.servers
+          .map((s) => `<li>${s.name ? esc(s.name) : "<code>" + esc(s.id) + "</code>"}</li>`)
+          .join("");
+        servers = `<div class="ppanel__servers"><span class="ppanel__meta">${t("panel.servers")}</span><ul>${items}</ul></div>`;
+      } else {
+        servers = `<p class="ppanel__meta">${t("panel.noServers")}</p>`;
+      }
+      plans += `<div class="ppanel__plan">${planChip("Vozen Premium", "pro")}<span class="ppanel__meta">${pass.used} / ${pass.seats} ${t("panel.seatsUsed")} · ${dateLbl} ${fmtDate(pass.expiresAt)}</span>${servers}</div>`;
+    }
+    if (!plus.active && !pass) {
+      plans = `<div class="ppanel__none"><b>${t("panel.none")}</b><span class="ppanel__meta">${t("panel.noneSub")}</span></div>`;
+    }
+    return (
+      `<div class="ppanel__user">${av}<span class="ppanel__name">${esc(u.username || "")}</span>` +
+      `<button type="button" class="ppanel__logout" id="ppLogout">${t("panel.logout")}</button></div>` +
+      `<div class="ppanel__plans">${plans}</div>`
+    );
+  }
+
+  function renderPanel() {
+    const el = document.getElementById("premiumPanel");
+    if (!el) return;
+    if (!PREMIUM_API_BASE || panelState.mode === "hidden") {
+      el.hidden = true;
+      el.innerHTML = "";
+      return;
+    }
+    el.hidden = false;
+    const head = `<div class="ppanel__head"><span class="ppanel__title">💎 ${t("panel.title")}</span></div>`;
+    let body = "";
+    if (panelState.mode === "anon") {
+      body = `<button type="button" class="btn--discord" id="ppLogin">${DISCORD_MARK}<span>${t("panel.login")}</span></button>`;
+    } else if (panelState.mode === "loading") {
+      body = `<p class="ppanel__meta">${t("panel.loading")}</p>`;
+    } else if (panelState.mode === "error") {
+      body = `<p class="ppanel__meta">${t("panel.error")}</p><button type="button" class="btn--ghost" id="ppRetry">${t("panel.retry")}</button>`;
+    } else if (panelState.mode === "ok") {
+      body = renderOk(panelState.data || {});
+    }
+    el.innerHTML = head + body;
+    const byId = (id) => el.querySelector("#" + id);
+    byId("ppLogin")?.addEventListener("click", login);
+    byId("ppLogout")?.addEventListener("click", logout);
+    byId("ppRetry")?.addEventListener("click", loadPanel);
+  }
 
   /* ── navbar ──────────────────────────────────────────── */
   const nav = $("#nav");
@@ -542,4 +727,5 @@
   applyLang(lang);
   runChat();
   initHear();
+  loadPanel();
 })();

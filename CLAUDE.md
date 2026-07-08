@@ -22,7 +22,7 @@ Guidance for AI coding agents working on Vozen (Discord TTS bot).
 - Code comments in this repo are written in Portuguese. Write new comments in
   Portuguese too.
 - Never read or commit `.env`. Use `.env.example` as the reference.
-- NEVER edit file *content* with PowerShell `Get-Content`/`Set-Content` (or
+- NEVER edit file _content_ with PowerShell `Get-Content`/`Set-Content` (or
   `-replace` pipelines) on this repo. Windows PowerShell 5.1 reads UTF-8-without-BOM
   as Windows-1252 and rewrites it corrupted (mojibake: `€`→`â‚¬`, emojis/acentos
   broken). Use the Edit/Write tools instead. `tools/minify-site.mjs` has a

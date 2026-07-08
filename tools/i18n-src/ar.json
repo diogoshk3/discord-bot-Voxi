@@ -110,7 +110,20 @@
     "price.plus.perYear": "/ سنويًا · لكل مستخدم",
     "price.pro.perYear": "/ سنويًا · خادمان",
     "price.billMonthly": "شهري",
-    "price.billYearly": "سنوي"
+    "price.billYearly": "سنوي",
+    "panel.title": "بريميوم الخاص بك",
+    "panel.login": "تسجيل الدخول عبر Discord",
+    "panel.loading": "جارٍ التحقق من حسابك…",
+    "panel.logout": "تسجيل الخروج",
+    "panel.retry": "أعد المحاولة",
+    "panel.error": "تعذّر الوصول إلى الخادم. حاول مرة أخرى بعد قليل.",
+    "panel.none": "لا توجد خطة نشطة بعد",
+    "panel.noneSub": "سجّل الدخول وسيظهر هنا اشتراك Plus أو Premium الخاص بك.",
+    "panel.activeUntil": "نشط حتى",
+    "panel.expiredOn": "انتهى في",
+    "panel.seatsUsed": "تراخيص قيد الاستخدام",
+    "panel.servers": "نشط في:",
+    "panel.noServers": "لم يُفعَّل في أي خادم بعد — استخدم /premium activate."
   },
   "commands": {
     "general": [

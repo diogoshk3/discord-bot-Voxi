@@ -40,6 +40,8 @@ function baseConfig(overrides: Partial<AppConfig> = {}): AppConfig {
     supportUrl: 'https://discord.gg/V6PZYZmhcQ',
     kofiUrl: 'https://ko-fi.com/',
     kofiWebhookPort: 3001,
+    premiumApiEnabled: false,
+    premiumApiOrigin: 'https://rexy40407.github.io',
     kokoroCmd: undefined,
     kokoroLangs: new Set(['en', 'es', 'fr', 'hi', 'it', 'pt', 'ja']),
     ...overrides,

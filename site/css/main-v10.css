@@ -568,6 +568,57 @@ body > *:not(.grain):not(.orbs):not(.nav) { position: relative; z-index: 2; }
   .pricing.is-annual .was--y { animation: none; }
 }
 
+/* ── Painel Premium (login com Discord + estado da conta) ───────────────────── */
+.premium-panel {
+  max-width: 1180px; margin: 0 auto 22px; padding: 20px 24px; border-radius: var(--radius);
+  background: var(--glass); border: 1px solid var(--line); box-shadow: inset 0 1px 0 var(--hi);
+}
+.ppanel__head { margin-bottom: 14px; }
+.ppanel__title { font-family: var(--f-display); font-weight: 700; font-size: 16px; color: var(--text-0); letter-spacing: -0.01em; }
+/* Botão "Login with Discord" — blurple da marca do Discord, com o logo. */
+.btn--discord {
+  display: inline-flex; align-items: center; gap: 10px; padding: 12px 20px; border-radius: 12px;
+  border: 1px solid transparent; background: var(--blurple); color: #fff; font-weight: 700; font-size: 15px;
+  cursor: pointer; transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+.btn--discord:hover { background: #7782ff; box-shadow: 0 10px 30px -12px rgba(102, 114, 255, 0.8); transform: translateY(-1px); }
+.btn--discord svg { display: block; }
+.btn--ghost {
+  margin-top: 10px; padding: 9px 16px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px;
+  color: var(--text-0); background: rgba(255, 255, 255, 0.045); border: 1px solid var(--line-2);
+}
+.btn--ghost:hover { background: rgba(255, 255, 255, 0.08); }
+.ppanel__user { display: flex; align-items: center; gap: 12px; }
+.ppanel__av { border-radius: 50%; object-fit: cover; }
+.ppanel__av--none {
+  width: 40px; height: 40px; display: grid; place-items: center; font-weight: 800;
+  background: var(--blurple); color: #fff; font-family: var(--f-display);
+}
+.ppanel__name { font-weight: 700; color: var(--text-0); font-size: 15px; }
+.ppanel__logout {
+  margin-left: auto; padding: 7px 14px; border-radius: 9px; cursor: pointer; font-weight: 600; font-size: 13px;
+  color: var(--text-1); background: rgba(255, 255, 255, 0.04); border: 1px solid var(--line-2);
+}
+.ppanel__logout:hover { color: var(--text-0); background: rgba(255, 255, 255, 0.08); }
+.ppanel__plans { margin-top: 16px; display: flex; flex-direction: column; gap: 14px; }
+.ppanel__plan { display: flex; flex-direction: column; gap: 6px; }
+.ppanel__chip {
+  align-self: flex-start; display: inline-flex; align-items: center; padding: 4px 11px; border-radius: 999px;
+  font-family: var(--f-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; color: #1a1500;
+}
+.ppanel__chip--pro { background: var(--amber); }
+.ppanel__chip--plus { background: linear-gradient(115deg, #6672ff, #8a97ff); color: #f6f7fe; }
+.ppanel__meta { color: var(--text-2); font-size: 13.5px; }
+.ppanel__servers { margin-top: 4px; }
+.ppanel__servers ul { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.ppanel__servers li {
+  font-size: 13px; color: var(--text-1); padding: 4px 10px; border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04); border: 1px solid var(--line);
+}
+.ppanel__servers li code { font-family: var(--f-mono); color: var(--text-2); }
+.ppanel__none { display: flex; flex-direction: column; gap: 4px; }
+.ppanel__none b { color: var(--text-0); font-size: 15px; }
+
 .pricing { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; max-width: 1180px; margin: 0 auto; }
 .price-card {
   position: relative; padding: 38px 34px; border-radius: var(--radius);

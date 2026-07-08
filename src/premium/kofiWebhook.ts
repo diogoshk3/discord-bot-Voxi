@@ -19,6 +19,7 @@ import {
   type KofiEvent,
   type KofiGrant,
 } from './kofi';
+import type { StatusApi } from './statusApi';
 
 export interface KofiWebhookDeps {
   db: Database.Database;
@@ -27,6 +28,20 @@ export interface KofiWebhookDeps {
   now: () => number;
   logInfo: (m: string) => void;
   logError: (m: string, err: unknown) => void;
+  // Painel Premium: API de leitura opcional montada no MESMO servidor (GET /api/me/premium).
+  // Ausente => só o webhook. Presente => também responde à API com CORS restrito a `apiOrigin`.
+  statusApi?: StatusApi;
+  apiOrigin?: string;
+}
+
+// Rate-limit simples por IP para a API do painel (janela deslizante). Sem dependências:
+// um Map em memória chega — reinicia com o processo, é best-effort anti-abuso.
+const API_RATE_MAX = 30; // pedidos
+const API_RATE_WINDOW_MS = 10_000; // por 10s
+
+interface RateState {
+  count: number;
+  reset: number;
 }
 
 /**
@@ -61,16 +76,110 @@ export function resolveKofiDiscordId(
   return event.email ? lookupKofiSupporter(db, event.email) : null;
 }
 
-/** Arranca o servidor de webhook (ou no-op se não houver token). Devolve o Server ou null. */
+/** IP do pedido (respeita o X-Forwarded-For do reverse proxy; senão o socket). */
+function clientIp(req: import('node:http').IncomingMessage): string {
+  const xff = req.headers['x-forwarded-for'];
+  if (typeof xff === 'string' && xff.length) return xff.split(',')[0].trim();
+  return req.socket.remoteAddress ?? 'unknown';
+}
+
+/** true se o IP passou do limite na janela atual (e regista o pedido). */
+function isRateLimited(rate: Map<string, RateState>, ip: string, now: number): boolean {
+  const cur = rate.get(ip);
+  if (!cur || cur.reset <= now) {
+    rate.set(ip, { count: 1, reset: now + API_RATE_WINDOW_MS });
+    return false;
+  }
+  cur.count += 1;
+  return cur.count > API_RATE_MAX;
+}
+
+interface ApiCtx {
+  statusApi: StatusApi;
+  apiOrigin: string;
+  now: () => number;
+  rate: Map<string, RateState>;
+  logError: (m: string, err: unknown) => void;
+}
+
+/** Trata GET/OPTIONS /api/me/premium: CORS restrito, rate-limit, e delega ao statusApi. */
+function handleApiRequest(
+  req: import('node:http').IncomingMessage,
+  res: import('node:http').ServerResponse,
+  ctx: ApiCtx,
+): void {
+  const cors: Record<string, string> = {
+    'Access-Control-Allow-Origin': ctx.apiOrigin,
+    Vary: 'Origin',
+  };
+  // Preflight do browser.
+  if (req.method === 'OPTIONS') {
+    res
+      .writeHead(204, {
+        ...cors,
+        'Access-Control-Allow-Methods': 'GET, OPTIONS',
+        'Access-Control-Allow-Headers': 'Authorization',
+        'Access-Control-Max-Age': '600',
+      })
+      .end();
+    return;
+  }
+  if (req.method !== 'GET') {
+    res.writeHead(405, cors).end('method not allowed');
+    return;
+  }
+  if (isRateLimited(ctx.rate, clientIp(req), ctx.now())) {
+    res.writeHead(429, cors).end('{"error":"rate_limited"}');
+    return;
+  }
+  const auth = req.headers['authorization'];
+  const bearer =
+    typeof auth === 'string' && auth.startsWith('Bearer ') ? auth.slice(7).trim() : null;
+  ctx.statusApi
+    .getStatus(bearer || null)
+    .then(({ code, body }) => {
+      res
+        .writeHead(code, { ...cors, 'Content-Type': 'application/json' })
+        .end(JSON.stringify(body));
+    })
+    .catch((err) => {
+      ctx.logError('[premium-api] erro a servir /api/me/premium', err);
+      try {
+        res
+          .writeHead(500, { ...cors, 'Content-Type': 'application/json' })
+          .end('{"error":"internal"}');
+      } catch {
+        /* resposta já enviada */
+      }
+    });
+}
+
+/**
+ * Arranca o servidor HTTP do Premium. Roteia:
+ *   - GET/OPTIONS /api/me/premium -> Painel Premium (se `statusApi` presente), com CORS
+ *   - POST (qualquer outro caminho) -> webhook do Ko-fi (se `token` presente)
+ * No-op (devolve null) se NÃO houver nem token do Ko-fi nem API do painel. Devolve o Server.
+ */
 export function startKofiWebhook(deps: KofiWebhookDeps): Server | null {
-  const { db, token, port, now, logInfo, logError } = deps;
-  if (!token) {
-    logInfo('[kofi] webhook inativo (sem KOFI_WEBHOOK_TOKEN) — vendas só por /vozengrant.');
+  const { db, token, port, now, logInfo, logError, statusApi, apiOrigin } = deps;
+  if (!token && !statusApi) {
+    logInfo('[premium] servidor HTTP inativo (sem webhook Ko-fi nem API do painel).');
     return null;
   }
+  const rate = new Map<string, RateState>();
+
   const server = createServer((req, res) => {
-    if (req.method !== 'POST') {
-      res.writeHead(405).end('method not allowed');
+    const path = (req.url ?? '').split('?')[0];
+
+    // ── Painel Premium: GET/OPTIONS /api/me/premium ────────────────────────────────
+    if (statusApi && apiOrigin && path === '/api/me/premium') {
+      handleApiRequest(req, res, { statusApi, apiOrigin, now, rate, logError });
+      return;
+    }
+
+    // ── Webhook do Ko-fi: POST ─────────────────────────────────────────────────────
+    if (req.method !== 'POST' || !token) {
+      res.writeHead(404).end('not found');
       return;
     }
     let body = '';

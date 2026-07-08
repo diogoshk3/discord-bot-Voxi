@@ -110,7 +110,20 @@
     "price.plus.perYear": "/ año · por usuario",
     "price.pro.perYear": "/ año · 3 servidores",
     "price.billMonthly": "Mensual",
-    "price.billYearly": "Anual"
+    "price.billYearly": "Anual",
+    "panel.title": "Tu Premium",
+    "panel.login": "Iniciar sesión con Discord",
+    "panel.loading": "Comprobando tu cuenta…",
+    "panel.logout": "Cerrar sesión",
+    "panel.retry": "Reintentar",
+    "panel.error": "No se pudo contactar con el servidor. Inténtalo de nuevo en un momento.",
+    "panel.none": "Sin plan activo",
+    "panel.noneSub": "Inicia sesión y tu Plus o Premium aparecerá aquí.",
+    "panel.activeUntil": "Activo hasta",
+    "panel.expiredOn": "Caducó el",
+    "panel.seatsUsed": "licencias en uso",
+    "panel.servers": "Activo en:",
+    "panel.noServers": "Aún no activado en ningún servidor — usa /premium activate."
   },
   "commands": {
     "general": [

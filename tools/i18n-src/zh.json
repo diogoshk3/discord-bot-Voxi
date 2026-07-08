@@ -110,7 +110,20 @@
     "price.plus.perYear": "/ 每年 · 每位使用者",
     "price.pro.perYear": "/ 每年 · 3 個伺服器",
     "price.billMonthly": "每月",
-    "price.billYearly": "每年"
+    "price.billYearly": "每年",
+    "panel.title": "你的 Premium",
+    "panel.login": "用 Discord 登入",
+    "panel.loading": "正在檢查你的帳號…",
+    "panel.logout": "登出",
+    "panel.retry": "重試",
+    "panel.error": "無法連線到伺服器，請稍後再試。",
+    "panel.none": "尚無使用中的方案",
+    "panel.noneSub": "登入後，你帳號上的 Plus 或 Premium 會顯示在這裡。",
+    "panel.activeUntil": "有效期至",
+    "panel.expiredOn": "過期於",
+    "panel.seatsUsed": "個授權使用中",
+    "panel.servers": "已啟用於：",
+    "panel.noServers": "尚未在任何伺服器啟用 — 請使用 /premium activate。"
   },
   "commands": {
     "general": [

@@ -110,7 +110,20 @@
     "price.plus.perYear": "/ 년 · 사용자당",
     "price.pro.perYear": "/ 년 · 3개 서버",
     "price.billMonthly": "월간",
-    "price.billYearly": "연간"
+    "price.billYearly": "연간",
+    "panel.title": "내 프리미엄",
+    "panel.login": "Discord로 로그인",
+    "panel.loading": "계정을 확인하는 중…",
+    "panel.logout": "로그아웃",
+    "panel.retry": "다시 시도",
+    "panel.error": "서버에 연결할 수 없습니다. 잠시 후 다시 시도하세요.",
+    "panel.none": "활성 플랜이 없습니다",
+    "panel.noneSub": "로그인하면 계정의 Plus 또는 Premium이 여기에 표시됩니다.",
+    "panel.activeUntil": "유효 기간:",
+    "panel.expiredOn": "만료일:",
+    "panel.seatsUsed": "개 라이선스 사용 중",
+    "panel.servers": "활성화된 서버:",
+    "panel.noServers": "아직 어떤 서버에도 활성화되지 않았습니다 — /premium activate를 사용하세요."
   },
   "commands": {
     "general": [

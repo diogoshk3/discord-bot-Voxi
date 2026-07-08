@@ -31,6 +31,7 @@ import { checkFfmpeg } from './health/ffmpeg';
 import { startLoopLagMonitor } from './health/loopLag';
 import { startEntitlementSync } from './premium/entitlementSync';
 import { startKofiWebhook } from './premium/kofiWebhook';
+import { createStatusApi } from './premium/statusApi';
 import { startVoteWebhookServer } from './vote';
 
 function discoverModels(modelsDir: string): string[] {
@@ -240,6 +241,19 @@ async function main(): Promise<void> {
   // gateway: arranca já (não espera o ClientReady) para não perder eventos. try/catch para
   // nunca derrubar o arranque (ex.: porta ocupada).
   try {
+    // Painel Premium (opt-in): API de leitura no MESMO servidor. resolveGuildName lê o cache
+    // de guilds do cliente AO PEDIDO (já preenchido quando um browser chama), por isso pode
+    // ser criada aqui, antes do ClientReady.
+    const statusApi = config.premiumApiEnabled
+      ? createStatusApi({
+          db,
+          now: () => Date.now(),
+          // Encapsulado (não `fetch` cru) para o `this` ficar certo — evita "Illegal invocation".
+          fetchImpl: (u, i) => fetch(u, i),
+          resolveGuildName: (id) => client.guilds.cache.get(id)?.name ?? null,
+          logError: (m, err) => log.error(m, err),
+        })
+      : undefined;
     startKofiWebhook({
       db,
       token: config.kofiWebhookToken,
@@ -247,9 +261,11 @@ async function main(): Promise<void> {
       now: () => Date.now(),
       logInfo: (m) => log.info(m),
       logError: (m, err) => log.error(m, err),
+      statusApi,
+      apiOrigin: config.premiumApiEnabled ? config.premiumApiOrigin : undefined,
     });
   } catch (err) {
-    log.error('[index] falha ao arrancar o webhook do Ko-fi (ignorado)', err);
+    log.error('[index] falha ao arrancar o servidor HTTP do Premium (ignorado)', err);
   }
 
   // Vaga 3 — auto-post da contagem de servidores para o top.gg. OPT-IN (TOPGG_TOKEN).

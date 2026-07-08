@@ -42,7 +42,7 @@
       href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/main-v9.css" />
+    <link rel="stylesheet" href="css/main-v10.css" />
 
     <!-- FAQ structured data (Google rich results). Mantém em sincronia com
          window.VOZEN_FAQ (js/i18n.js) — o JSON-LD tem de ser ESTÁTICO porque os
@@ -418,6 +418,9 @@
             <h2 data-i18n="price.title">Free core. Fair Premium.</h2>
             <p data-i18n="price.sub">Everything Vozen does today stays free — forever. Premium adds the extras that cost us real compute.</p>
           </header>
+          <!-- Painel Premium: login com Discord + estado da conta. Preenchido/mostrado pelo
+               main.js só quando a API está configurada (PREMIUM_API_BASE); senão fica hidden. -->
+          <div class="premium-panel" id="premiumPanel" aria-live="polite" hidden></div>
           <div class="bill-toggle reveal" role="group" aria-label="Billing period">
             <button type="button" class="bill-toggle__btn is-active" data-bill="month" data-i18n="price.billMonthly">Monthly</button>
             <button type="button" class="bill-toggle__btn" data-bill="year">
@@ -536,7 +539,7 @@
       </div>
     </footer>
 
-    <script src="js/i18n-v5.js"></script>
-    <script src="js/main-v11.js"></script>
+    <script src="js/i18n-v6.js"></script>
+    <script src="js/main-v12.js"></script>
   </body>
 </html>

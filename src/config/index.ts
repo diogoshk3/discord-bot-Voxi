@@ -99,6 +99,11 @@ export interface AppConfig {
   // AUSENTE => o servidor de webhook NÃO arranca (inerte). Porta do endpoint HTTP local.
   kofiWebhookToken?: string;
   kofiWebhookPort: number;
+  // Painel Premium do site (login com Discord -> GET /api/me/premium no MESMO servidor HTTP).
+  // OPT-IN: PREMIUM_API_ENABLED=true monta a API. PREMIUM_API_ORIGIN é a origem do site
+  // permitida no CORS (só ela pode chamar a API do browser). Sem enable => inerte.
+  premiumApiEnabled: boolean;
+  premiumApiOrigin: string;
 }
 
 function requireEnv(name: string): string {
@@ -287,5 +292,8 @@ export function loadConfig(): AppConfig {
     // Webhook do Ko-fi: sem token => não arranca. Porta local do endpoint.
     kofiWebhookToken: strEnv('KOFI_WEBHOOK_TOKEN', '') || undefined,
     kofiWebhookPort: numEnvPositive('KOFI_WEBHOOK_PORT', 3001, { integer: true }),
+    // Painel Premium: opt-in explícito (default off). Origem = página do site (GitHub Pages).
+    premiumApiEnabled: boolEnvDefaultOff('PREMIUM_API_ENABLED'),
+    premiumApiOrigin: strEnv('PREMIUM_API_ORIGIN', 'https://rexy40407.github.io'),
   };
 }

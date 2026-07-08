@@ -110,7 +110,20 @@
     "price.plus.perYear": "/ год · за пользователя",
     "price.pro.perYear": "/ год · 3 сервера",
     "price.billMonthly": "Ежемесячно",
-    "price.billYearly": "Ежегодно"
+    "price.billYearly": "Ежегодно",
+    "panel.title": "Ваш Premium",
+    "panel.login": "Войти через Discord",
+    "panel.loading": "Проверяем ваш аккаунт…",
+    "panel.logout": "Выйти",
+    "panel.retry": "Повторить",
+    "panel.error": "Не удалось связаться с сервером. Повторите попытку чуть позже.",
+    "panel.none": "Активного плана пока нет",
+    "panel.noneSub": "Войдите — ваш Plus или Premium появится здесь.",
+    "panel.activeUntil": "Активно до",
+    "panel.expiredOn": "Истёк",
+    "panel.seatsUsed": "лицензий используется",
+    "panel.servers": "Активно на:",
+    "panel.noServers": "Пока не активировано ни на одном сервере — используйте /premium activate."
   },
   "commands": {
     "general": [

@@ -222,6 +222,45 @@ export function deactivateSeat(db: Database.Database, userId: string, guildId: s
   return res.changes > 0;
 }
 
+// ── Vista do estado premium (para o Painel Premium do site) ───────────────────────────
+// Monta, para UM utilizador, tudo o que o painel mostra: Plus (por-utilizador) + passe de
+// Premium (licenças usadas/total, fim, servidores ativados). Função PURA de leitura — a API
+// HTTP (statusApi.ts) só a chama depois de validar a identidade na Discord. Nunca por ID
+// arbitrário: o chamador tem de provar que é o dono do token.
+
+export interface PremiumStatusView {
+  plus: { active: boolean; expiresAt: number | null };
+  pass: {
+    seats: number;
+    used: number;
+    expiresAt: number;
+    active: boolean;
+    guilds: string[];
+  } | null;
+}
+
+/** Estado premium completo de um utilizador (para exibição no painel). */
+export function buildPremiumStatus(
+  db: Database.Database,
+  userId: string,
+  now: number,
+): PremiumStatusView {
+  const plusExp = getUserPremiumExpiry(db, userId);
+  const pass = getPremiumPass(db, userId);
+  return {
+    plus: { active: !!plusExp && plusExp > now, expiresAt: plusExp },
+    pass: pass
+      ? {
+          seats: pass.seats,
+          used: countActiveSeats(db, userId),
+          expiresAt: pass.expiresAt,
+          active: pass.expiresAt > now,
+          guilds: listPassActivations(db, userId),
+        }
+      : null,
+  };
+}
+
 // ── Ko-fi: mapa email -> Discord ID (para as renovações) ──────────────────────────────
 // A 1.ª compra traz o Discord ID na mensagem; guardamo-lo por email. As renovações não
 // reenviam a mensagem, por isso reencontramos o Discord ID pelo email do pagamento.
