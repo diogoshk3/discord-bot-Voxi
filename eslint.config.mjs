@@ -58,4 +58,12 @@ export default tseslint.config(
       '@typescript-eslint/no-require-imports': 'off',
     },
   },
+  {
+    // Scripts CommonJS de operações (ex.: tools/register-guild.cjs): `require()` é
+    // o idioma nativo do .cjs (importam o dist compilado, que também é CommonJS).
+    files: ['tools/**/*.cjs'],
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+    },
+  },
 );
