@@ -219,20 +219,48 @@ body > *:not(.grain):not(.orbs):not(.nav) { position: relative; z-index: 2; }
 .nav__actions { display: flex; align-items: center; gap: 14px; }
 .nav__gh { display: grid; place-items: center; color: var(--text-1); transition: color 0.2s, transform 0.2s; }
 .nav__gh:hover { color: var(--text-0); transform: scale(1.12); }
-/* Seletor de idioma do site (10 línguas). Native <select> estilizado p/ o tema. */
-.lang-select {
-  appearance: none; -webkit-appearance: none;
+/* ── Seletor de idioma: dropdown custom estilo MEE6 (10 línguas, com bandeiras) ──
+   Native <select> não desenha bandeiras (o <option> é renderizado pelo SO), por isso
+   é um trigger + painel role="listbox". Estética glass/dark com os tokens do site. */
+.lang { position: relative; }
+.lang__btn {
+  display: inline-flex; align-items: center; gap: 7px;
   font-family: var(--f-body); font-weight: 600; font-size: 13.5px; color: var(--text-0);
   background: rgba(255, 255, 255, 0.05); border: 1px solid var(--line); border-radius: 999px;
-  padding: 6px 30px 6px 14px; cursor: pointer; transition: border-color 0.2s, background 0.2s;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a3a9c4' stroke-width='2.5' stroke-linecap='round'><path d='M6 9l6 6 6-6'/></svg>");
-  background-repeat: no-repeat; background-position: right 11px center;
+  padding: 6px 12px; cursor: pointer; transition: border-color 0.2s, background 0.2s;
 }
-.lang-select:hover { border-color: rgba(255, 255, 255, 0.22); background-color: rgba(255, 255, 255, 0.08); }
-.lang-select:focus-visible { outline: 2px solid var(--blurple); outline-offset: 2px; }
-.lang-select option { background: var(--panel); color: var(--text-0); }
-/* RTL (árabe): o layout espelha via dir="rtl". A seta do seletor fica à direita
-   (o Chromium fixa background-position-x sob RTL) — a base já dá folga p/ ela. */
+.lang__btn:hover { border-color: var(--line-2); background: rgba(255, 255, 255, 0.08); }
+.lang__btn:focus-visible { outline: 2px solid var(--blurple); outline-offset: 2px; }
+.lang__flag { font-size: 15px; line-height: 1; }
+.lang__chev { color: var(--text-1); transition: transform 0.22s ease; flex: none; }
+.lang.is-open .lang__chev { transform: rotate(180deg); }
+
+.lang__panel {
+  position: absolute; top: calc(100% + 8px); right: 0; z-index: 120;
+  min-width: 208px; max-height: min(60vh, 420px); overflow-y: auto;
+  margin: 0; padding: 6px; list-style: none;
+  background: var(--glass-2); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--line-2); border-radius: 16px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45), inset 0 1px 0 var(--hi);
+  opacity: 0; visibility: hidden; transform: translateY(-6px);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
+}
+.lang.is-open .lang__panel { opacity: 1; visibility: visible; transform: translateY(0); }
+
+.lang__opt {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; min-height: 44px; box-sizing: border-box;
+  border-radius: 10px; cursor: pointer; color: var(--text-1);
+  font-size: 14px; transition: background 0.15s, color 0.15s;
+}
+.lang__opt:hover { background: rgba(102, 114, 255, 0.14); color: var(--text-0); }
+.lang__opt:focus-visible { outline: none; background: rgba(102, 114, 255, 0.14); color: var(--text-0); }
+.lang__opt.is-active { background: rgba(102, 114, 255, 0.2); color: var(--text-0); font-weight: 600; }
+.lang__opt .lang__flag { font-size: 17px; }
+.lang__optname { flex: 1 1 auto; }
+.lang__check { color: var(--blurple-2); opacity: 0; flex: none; }
+.lang__opt.is-active .lang__check { opacity: 1; }
+
 .nav__burger { display: none; }
 
 /* ── hero ───────────────────────────────────────────────── */
@@ -355,6 +383,9 @@ body > *:not(.grain):not(.orbs):not(.nav) { position: relative; z-index: 2; }
   .hear__stage { flex-direction: column; text-align: center; gap: 14px; }
   .hear__nowrow { flex-wrap: wrap; justify-content: center; }
   .hear__eq { margin-left: 0; }
+  /* Nav apertado: o trigger de idioma mostra só bandeira + chevron (nome só no painel). */
+  .lang__name { display: none; }
+  .lang__btn { padding: 6px 10px; gap: 5px; }
 }
 
 /* ── sections ───────────────────────────────────────────── */

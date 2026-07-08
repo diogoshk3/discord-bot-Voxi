@@ -67,33 +67,123 @@
     if (active && langEl) langEl.textContent = hearLangName(active.dataset.sample, siteLang);
   }
 
-  // Línguas que se leem da direita para a esquerda.
-  const RTL_LANGS = new Set(["ar", "he", "fa", "ur"]);
+  // As 10 línguas do seletor: [código, bandeira, autónimo (nome na própria língua)].
+  // Sem RTL — todas usam layout normal LTR (o texto árabe alinha à esquerda; o bidi do
+  // Unicode continua a renderizar os caracteres na direção certa dentro da linha).
+  const LANG_UI = [
+    ["en", "🇬🇧", "English"],
+    ["pt", "🇵🇹", "Português"],
+    ["fr", "🇫🇷", "Français"],
+    ["es", "🇪🇸", "Español"],
+    ["de", "🇩🇪", "Deutsch"],
+    ["tr", "🇹🇷", "Türkçe"],
+    ["ar", "🇸🇦", "العربية"],
+    ["zh", "🇹🇼", "繁體中文"],
+    ["ru", "🇷🇺", "Русский"],
+    ["ko", "🇰🇷", "한국어"],
+  ];
+  const LANG_META = Object.fromEntries(LANG_UI.map(([c, flag, name]) => [c, { flag, name }]));
+
+  // Sincroniza o dropdown custom com a língua ativa: trigger (bandeira+nome) e o item ativo.
+  function syncLangMenu(code) {
+    const m = LANG_META[code];
+    if (!m) return;
+    const bf = $("#langBtnFlag"),
+      bn = $("#langBtnName");
+    if (bf) bf.textContent = m.flag;
+    if (bn) bn.textContent = m.name;
+    $$(".lang__opt").forEach((o) => {
+      const on = o.dataset.lang === code;
+      o.classList.toggle("is-active", on);
+      o.setAttribute("aria-selected", on ? "true" : "false");
+    });
+  }
 
   function applyLang(l) {
     lang = DICT[l] ? l : "en";
     document.documentElement.lang = lang;
-    // RTL: o árabe (e afins) espelha todo o layout via dir="rtl" no <html>.
-    document.documentElement.dir = RTL_LANGS.has(lang) ? "rtl" : "ltr";
     const d = DICT[lang];
     $$("[data-i18n]").forEach((el) => {
       const k = el.getAttribute("data-i18n");
       if (d[k] != null) el.textContent = d[k];
     });
-    const sel = $("#langSelect");
-    if (sel && sel.value !== lang) sel.value = lang;
+    syncLangMenu(lang);
     localizeHear(lang);
     renderCommands();
     renderFaq();
   }
 
-  const langSelect = $("#langSelect");
-  if (langSelect) {
-    langSelect.addEventListener("change", () => {
-      localStorage.setItem(LS_KEY, langSelect.value); // escolha explícita persiste
-      applyLang(langSelect.value);
+  // Dropdown custom de idioma (estilo MEE6): botão-trigger + painel role="listbox".
+  // Nativo <select> não mostra bandeiras (o <option> é desenhado pelo SO), daí o custom.
+  function buildLangMenu() {
+    const menu = $("#langMenu"),
+      btn = $("#langBtn"),
+      panel = $("#langPanel");
+    if (!menu || !btn || !panel) return;
+    panel.innerHTML = LANG_UI.map(
+      ([code, flag, name]) =>
+        `<li class="lang__opt" role="option" data-lang="${code}" aria-selected="false" tabindex="-1">` +
+        `<span class="lang__flag">${flag}</span><span class="lang__optname">${name}</span>` +
+        `<svg class="lang__check" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg></li>`,
+    ).join("");
+    const opts = $$(".lang__opt", panel);
+    const isOpen = () => menu.classList.contains("is-open");
+    const open = () => {
+      menu.classList.add("is-open");
+      btn.setAttribute("aria-expanded", "true");
+      const cur = panel.querySelector('[aria-selected="true"]') || opts[0];
+      if (cur) cur.focus();
+    };
+    const close = (focusBtn) => {
+      menu.classList.remove("is-open");
+      btn.setAttribute("aria-expanded", "false");
+      if (focusBtn) btn.focus();
+    };
+    const choose = (code) => {
+      localStorage.setItem(LS_KEY, code); // escolha explícita persiste
+      applyLang(code);
+    };
+    btn.addEventListener("click", () => (isOpen() ? close(false) : open()));
+    btn.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        open();
+      }
+    });
+    opts.forEach((o, i) => {
+      o.addEventListener("click", () => {
+        choose(o.dataset.lang);
+        close(true);
+      });
+      o.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          choose(o.dataset.lang);
+          close(true);
+        } else if (e.key === "ArrowDown") {
+          e.preventDefault();
+          (opts[i + 1] || opts[0]).focus();
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          (opts[i - 1] || opts[opts.length - 1]).focus();
+        } else if (e.key === "Home") {
+          e.preventDefault();
+          opts[0].focus();
+        } else if (e.key === "End") {
+          e.preventDefault();
+          opts[opts.length - 1].focus();
+        } else if (e.key === "Escape") {
+          e.preventDefault();
+          close(true);
+        }
+      });
+    });
+    // clique fora fecha
+    document.addEventListener("click", (e) => {
+      if (isOpen() && !menu.contains(e.target)) close(false);
     });
   }
+  buildLangMenu();
 
   /* ── navbar ──────────────────────────────────────────── */
   const nav = $("#nav");
