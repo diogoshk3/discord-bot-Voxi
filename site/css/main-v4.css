@@ -559,7 +559,8 @@ body > *:not(.grain):not(.orbs):not(.nav) { position: relative; z-index: 2; }
   background: linear-gradient(180deg, rgba(255, 194, 75, 0.08), transparent 55%), var(--glass);
   box-shadow: inset 0 1px 0 var(--hi), 0 24px 60px -30px rgba(255, 194, 75, 0.25);
 }
-.price-card--pro .price-card__price b { background: linear-gradient(115deg, #ffc24b, #ff9d5c); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.price-card--pro .price-card__price b,
+.price-card--pro .price-card__price .amt { background: linear-gradient(115deg, #ffc24b, #ff9d5c); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; }
 /* Plus — tier PESSOAL (por-utilizador). Sotaque azul da marca, para distinguir do
    Premium (âmbar, por-servidor). */
 .price-card--plus {
@@ -567,7 +568,8 @@ body > *:not(.grain):not(.orbs):not(.nav) { position: relative; z-index: 2; }
   background: linear-gradient(180deg, rgba(102, 114, 255, 0.09), transparent 55%), var(--glass);
   box-shadow: inset 0 1px 0 var(--hi), 0 24px 60px -30px rgba(102, 114, 255, 0.28);
 }
-.price-card--plus .price-card__price b { background: var(--grad-brand); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.price-card--plus .price-card__price b,
+.price-card--plus .price-card__price .amt { background: var(--grad-brand); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; }
 /* Chip ESTÁTICO acima do nome do plano (era absolute top-right e sobrepunha o
    título "Vozen Premium" em larguras intermédias — tablet/mobile). */
 .price-card__badge {
