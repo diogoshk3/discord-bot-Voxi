@@ -23,7 +23,7 @@ SAMPLES = {
     "pt": ("Olá! Escreva qualquer coisa e eu leio em voz alta.", "pt-br", "pf_dora"),
     "es": ("¡Hola! Escribe lo que quieras y lo leeré en voz alta.", "es", "ef_dora"),
     "fr": ("Salut ! Écris ce que tu veux, je le lis à voix haute.", "fr-fr", "ff_siwis"),
-    "ja": ("こんにちは！メッセージを読み上げます。", "ja", "jf_alpha"),
+    "it": ("Ciao! Scrivi quello che vuoi e lo leggerò ad alta voce.", "it", "if_sara"),
 }
 
 

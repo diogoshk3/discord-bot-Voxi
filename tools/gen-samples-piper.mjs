@@ -47,9 +47,9 @@ const SAMPLES = [
     text: 'Salut ! Écris ce que tu veux, je le lis à voix haute.',
   },
   {
-    lang: 'de',
-    model: 'de_DE-thorsten-medium',
-    text: 'Hallo! Schreib irgendwas und ich lese es laut vor.',
+    lang: 'it',
+    model: 'it_IT-paola-medium',
+    text: 'Ciao! Scrivi quello che vuoi e lo leggerò ad alta voce.',
   },
 ];
 

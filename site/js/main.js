@@ -321,14 +321,15 @@
   // Cada amostra: bandeira, nome da lingua e a frase EXATA que foi sintetizada
   // (tem de bater certo com o audio) + o mp3 gerado por tools/gen-samples.mjs.
   const SAMPLES = {
-    // engines: motores com clipe para esta lingua. O japones so tem Google (o Piper
-    // standard nao tem modelo japones). Google = <lang>.mp3, Piper = <lang>-piper.mp3.
+    // SÓ línguas audíveis nos 3 motores (Google + Piper + Kokoro) — cada uma tem clipe
+    // em todos, por isso NENHUM chip fica desativado. de saiu (sem voz Kokoro) e ja saiu
+    // (Kokoro partido + sem Piper). Ver plano 018. Ficheiros: <lang>.mp3 (Google),
+    // <lang>-piper.mp3 (Piper), <lang>-kokoro.mp3 (Kokoro).
     en: { flag: "🇬🇧", lang: "English", phrase: "Hey! Welcome to the server. Type anything and I'll read it out loud.", engines: ["google", "piper", "kokoro"] },
     pt: { flag: "🇵🇹", lang: "Português", phrase: "Olá! Escreva qualquer coisa e eu leio em voz alta.", engines: ["google", "piper", "kokoro"] },
     es: { flag: "🇪🇸", lang: "Español", phrase: "¡Hola! Escribe lo que quieras y lo leeré en voz alta.", engines: ["google", "piper", "kokoro"] },
     fr: { flag: "🇫🇷", lang: "Français", phrase: "Salut ! Écris ce que tu veux, je le lis à voix haute.", engines: ["google", "piper", "kokoro"] },
-    de: { flag: "🇩🇪", lang: "Deutsch", phrase: "Hallo! Schreib irgendwas und ich lese es laut vor.", engines: ["google", "piper"] },
-    ja: { flag: "🇯🇵", lang: "日本語", phrase: "こんにちは！メッセージを読み上げます。", engines: ["google"] },
+    it: { flag: "🇮🇹", lang: "Italiano", phrase: "Ciao! Scrivi quello che vuoi e lo leggerò ad alta voce.", engines: ["google", "piper", "kokoro"] },
   };
 
   function initHear() {

@@ -23,8 +23,7 @@ const SAMPLES = [
   { lang: 'pt', text: 'Olá! Escreva qualquer coisa e eu leio em voz alta.' },
   { lang: 'es', text: '¡Hola! Escribe lo que quieras y lo leeré en voz alta.' },
   { lang: 'fr', text: 'Salut ! Écris ce que tu veux, je le lis à voix haute.' },
-  { lang: 'de', text: 'Hallo! Schreib irgendwas und ich lese es laut vor.' },
-  { lang: 'ja', text: 'こんにちは！メッセージを読み上げます。' },
+  { lang: 'it', text: 'Ciao! Scrivi quello che vuoi e lo leggerò ad alta voce.' },
 ];
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');

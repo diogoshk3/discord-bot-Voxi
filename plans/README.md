@@ -30,6 +30,7 @@ Repo verification baseline at planning time: `npm run build` (tsc) exit 0;
 | 015  | Split `commands/index.ts` (2821 lines → handler modules)                                    | P3       | L      | 003, 004, 013 | DONE         |
 | 016  | Hybrid engine Phase 2 — Kokoro (kokoro-onnx) as opt-in per-user engine (gTTS stays default) | P2       | L      | 015           | DONE         |
 | 017  | Anti-spam de leitura (toggle por guild) + cooldown 5 min da saudação (pedido do Diogo)      | P2       | M      | —             | DONE         |
+| 018  | Site "Hear it": 5 línguas (en/es/fr/it/pt) audíveis nos 3 motores — fora de/ja               | P3       | S-M    | —             | DONE         |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale)
 
