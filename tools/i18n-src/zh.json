@@ -1,0 +1,295 @@
+{
+  "ui": {
+    "nav.features": "功能",
+    "nav.games": "遊戲",
+    "nav.commands": "指令",
+    "nav.languages": "語言",
+    "nav.premium": "Premium",
+    "nav.faq": "常見問題",
+    "cta.add": "加入 Discord",
+    "cta.support": "加入支援伺服器",
+    "hero.badge": "核心功能永久免費 · 開放原始碼",
+    "hero.title1": "打出來。",
+    "hero.title2": "聽出來。",
+    "hero.sub": "Vozen 用自然的神經網路語音，把你的 Discord 聊天內容大聲朗讀出來——支援 35 種語言，內建遊戲與歡笑，核心功能永久免費。",
+    "hero.mini": "35 種語言 · 38 種語音 · 15 款小遊戲 · 免費核心功能",
+    "hear.eyebrow": "聽聽看",
+    "hear.title": "按下播放。這就是真正的 Vozen 語音。",
+    "hear.sub": "每一段音訊都由 Vozen 親自生成。切換引擎，比較 Google、Piper 與 Kokoro 的效果。",
+    "stat.langs": "種語言",
+    "stat.voices": "種神經網路語音",
+    "stat.games": "款小遊戲",
+    "stat.free": "核心功能永久免費",
+    "feat.eyebrow": "功能",
+    "feat.title": "你的伺服器所需的一切",
+    "feat.sub": "一個機器人，涵蓋你一直希望 Discord 擁有的所有語音功能——而且核心功能永久免費。",
+    "feat.new": "NEW",
+    "feat.1.t": "自動朗讀頻道",
+    "feat.1.d": "選定一個頻道，Vozen 就會大聲朗讀每一則訊息。用 /setup 一次設定完成。",
+    "feat.2.t": "你的語音，你的語言",
+    "feat.2.d": "每位成員都能從 35 種語言中挑選自己的語音——Google 或本地神經網路引擎皆可。",
+    "feat.3.t": "說起話來像真人",
+    "feat.3.d": "偵測每則訊息的語言，在同一句話中混合多種語音，並在你使用 ! 或全大寫時提高音量。",
+    "feat.4.t": "15 款語音小遊戲",
+    "feat.4.d": "猜語言、拼字比賽、Wordle、反應對決——還有伺服器排行榜。",
+    "feat.5.t": "自帶個性",
+    "feat.5.d": "向加入的成員打招呼——而且不會重複同樣的話——送上生日祝福、講笑話、回答神奇八號球，還會追蹤伺服器中最愛講話的成員。",
+    "feat.6.t": "讓管理員安心",
+    "feat.6.d": "封鎖清單、速率限制、會將洗版訊息靜音的反垃圾訊息過濾器、身分組權限控管、退出選項與緊急停用開關。一切盡在你的掌控中。",
+    "feat.7.t": "語音特效",
+    "feat.7.d": "機器人、回音、低沉、花栗鼠、廣播、惡魔……你的訊息，隨心變換。免費提供兩種特效，升級 Premium 即可享用全部八種。",
+    "feat.8.t": "公道的 Premium",
+    "feat.8.d": "每月 €3.99 即可解鎖額外功能。今天免費的一切，永遠免費——這是承諾，不是花招。",
+    "feat.9.t": "開放原始碼",
+    "feat.9.d": "Vozen 的所有程式碼都公開在 GitHub 上。你可以稽核、學習，或發起 PR——沒有秘密，沒有間諜軟體。",
+    "lang.eyebrow": "語言",
+    "lang.title": "一個伺服器，通行所有語言。",
+    "lang.sub": "Vozen 會聽出每則訊息的語言，並以道地的母語語音回應。中文、英文、日文、阿拉伯文——甚至在同一句話中混用也沒問題。每個人都能設定自己的語音，並以各自的語言顯示名稱。",
+    "lang.t1": "自動偵測語言",
+    "lang.t2": "每種語言都有道地母語語音",
+    "lang.t3": "語音名稱依使用者在地化顯示",
+    "games.eyebrow": "小遊戲",
+    "games.title": "大聲玩出來。",
+    "games.sub": "15 款為語音打造的小遊戲：以你的語言進行輪流接龍的文字接龍（Vozen 會大聲朗讀每個詞）、猜出所說的語言、破解超快速的語音、拼字比賽、反應對決，還有 Wordle、猜字遊戲、井字遊戲與真正圖形棋盤上的西洋棋。每個伺服器都保留自己的排行榜。",
+    "games.t1": "語音＋文字遊戲，搶答制",
+    "games.t2": "伺服器排行榜與個人統計",
+    "games.t3": "Vozen 會大聲宣布贏家",
+    "setup.eyebrow": "開始使用",
+    "setup.title": "30 秒即可就緒",
+    "setup.1.t": "邀請",
+    "setup.1.d": "只要一鍵，即可將 Vozen 加入你的伺服器。",
+    "setup.2.t": "/join",
+    "setup.2.d": "Vozen 會加入你的語音頻道。",
+    "setup.3.t": "輸入",
+    "setup.3.d": "打一則訊息——然後大聲聽它唸出來。",
+    "cmd.eyebrow": "指令",
+    "cmd.title": "簡單的斜線指令",
+    "cmd.general": "一般",
+    "cmd.voice": "語音",
+    "cmd.fun": "趣味",
+    "cmd.admin": "管理",
+    "price.eyebrow": "定價",
+    "price.title": "核心功能免費，Premium 公道實惠。",
+    "price.sub": "Vozen 今天所做的一切，永遠免費。Premium 新增的是那些會消耗我們實際運算資源的額外功能。",
+    "price.free.name": "Free",
+    "price.free.price": "€0",
+    "price.free.per": "永久",
+    "price.free.1": "35 種語言中的全部 38 種語音",
+    "price.free.2": "自動朗讀、15 款遊戲、笑話與問候",
+    "price.free.3": "機器人與回音語音特效",
+    "price.free.4": "所有管理控制項與每週排行榜",
+    "price.plus.badge": "個人",
+    "price.plus.name": "Vozen Plus",
+    "price.plus.per": "/ 每月 · 每位使用者",
+    "price.plus.1": "全部 8 種語音特效——專屬於你",
+    "price.plus.2": "用 /voice clone 複製你自己的聲音",
+    "price.plus.3": "你的專屬權益，跟著你走遍每個伺服器",
+    "price.plus.4": "優先合成佇列",
+    "price.plus.note": "€19.90/年（免費兩個月） · 使用 /redeem 兌換",
+    "price.pro.badge": "PREMIUM",
+    "price.pro.name": "Vozen Premium",
+    "price.pro.per": "/ 每月 · 2 個伺服器",
+    "price.pro.deal": "🎁 付一份，享兩份——一份訂閱涵蓋 2 個伺服器",
+    "price.pro.1": "全部 8 種語音特效（低沉、惡魔、廣播……）",
+    "price.pro.2": "為整個伺服器提供語音複製功能",
+    "price.pro.3": "語音頻道 24/7 全天候待命（即將推出）",
+    "price.pro.4": "更高的上限與優先佇列",
+    "price.pro.note": "€40/年（免費兩個月） · 在 Discord 中用 /redeem 兌換",
+    "faq.eyebrow": "常見問題",
+    "faq.title": "問題，一次解答",
+    "finale.title": "讓你的伺服器發聲。",
+    "finale.note": "核心功能永久免費 · 35 種語言 · 30 秒完成設定",
+    "foot.tag": "打出來，聽出來。",
+    "foot.product": "產品",
+    "foot.community": "社群",
+    "foot.support": "支援伺服器",
+    "foot.vote": "在 top.gg 上投票",
+    "foot.privacy": "隱私權",
+    "foot.terms": "服務條款",
+    "foot.legal": "與 Discord 並無隸屬關係。"
+  },
+  "commands": {
+    "general": [
+      [
+        "/help",
+        "顯示 Vozen 的指令清單"
+      ],
+      [
+        "/join",
+        "加入你的語音頻道"
+      ],
+      [
+        "/leave",
+        "離開語音頻道"
+      ],
+      [
+        "/tts",
+        "大聲朗讀一段文字"
+      ],
+      [
+        "/skip",
+        "略過目前的音訊"
+      ],
+      [
+        "/shutup",
+        "立刻讓 Vozen 安靜（清空佇列）"
+      ],
+      [
+        "/setup",
+        "一步到位的引導式設定"
+      ],
+      [
+        "/invite",
+        "取得邀請連結"
+      ],
+      [
+        "/vote",
+        "在 top.gg 上為 Vozen 投票"
+      ],
+      [
+        "/uptime",
+        "Vozen 已上線多久"
+      ],
+      [
+        "/premium",
+        "你的伺服器與你的 Premium 狀態"
+      ],
+      [
+        "/redeem",
+        "兌換 Premium 代碼"
+      ]
+    ],
+    "voice": [
+      [
+        "/voice set",
+        "選擇你的語音、語言與引擎"
+      ],
+      [
+        "/voice list",
+        "瀏覽所有語音"
+      ],
+      [
+        "/voice preview",
+        "試聽語音範例"
+      ],
+      [
+        "/voice clone",
+        "複製你自己的聲音（Premium）"
+      ],
+      [
+        "/voice effect",
+        "機器人、回音、惡魔……語音特效"
+      ],
+      [
+        "/voice detection",
+        "每種語言的道地母語語音"
+      ],
+      [
+        "/voice nickname",
+        "Vozen 大聲稱呼你的方式"
+      ],
+      [
+        "/voice optout",
+        "停止被自動朗讀"
+      ]
+    ],
+    "fun": [
+      [
+        "/game play",
+        "開始 15 款小遊戲之一"
+      ],
+      [
+        "/game leaderboard",
+        "伺服器上的頂尖玩家"
+      ],
+      [
+        "/game stats",
+        "你的分數、勝場與排名"
+      ],
+      [
+        "/joke",
+        "任何語言的一則短笑話"
+      ],
+      [
+        "/laugh",
+        "Vozen 用你的聲音大笑"
+      ],
+      [
+        "/8ball",
+        "大聲詢問神奇八號球"
+      ],
+      [
+        "/fact · /fortune · /wyr",
+        "趣味知識、運勢與兩難抉擇"
+      ],
+      [
+        "/birthday set",
+        "Vozen 在你生日時獻唱"
+      ],
+      [
+        "/topspeakers",
+        "誰講話最多＋連續紀錄"
+      ]
+    ],
+    "admin": [
+      [
+        "/config greet",
+        "向加入通話的成員打招呼"
+      ],
+      [
+        "/config language",
+        "設定介面語言"
+      ],
+      [
+        "/config default-voice",
+        "設定伺服器的預設語音"
+      ],
+      [
+        "/config autoread",
+        "開啟／關閉自動朗讀"
+      ],
+      [
+        "/config blockword",
+        "管理封鎖清單"
+      ],
+      [
+        "/config pronunciation",
+        "自訂發音"
+      ]
+    ]
+  },
+  "faq": [
+    [
+      "Vozen 真的免費嗎？",
+      "是的——Vozen 今天所做的一切都免費，而且永遠免費：所有語音、全部 15 款遊戲、問候功能、管理工具。Vozen Premium（每個伺服器每月 €3.99）只新增選用的額外功能，例如完整的語音特效包。你正在使用的功能，絕不會被移到付費牆之後。"
+    ],
+    [
+      "Premium 包含哪些內容？",
+      "全部 8 種語音特效（低沉、惡魔、廣播、水中……），並提供 premium 神經網路語音，24/7 全天候通話模式也即將推出。每個伺服器每月 €3.99 或每年 €40，或選擇 Vozen Plus（每月 €1.99），享有跨伺服器隨你而行的個人專屬權益。使用 /redeem 兌換代碼。"
+    ],
+    [
+      "我要怎麼把 Vozen 加入我的伺服器？",
+      "點擊「加入 Discord」，選擇你的伺服器（你需要具備管理伺服器權限），然後執行 /setup。就這麼簡單。"
+    ],
+    [
+      "它支援哪些語言？",
+      "35 種語言搭配 38 種神經網路語音——中文、英文、西班牙文、法文、德文、日文、阿拉伯文、俄文以及更多語言，每一種都配有道地的母語語音。"
+    ],
+    [
+      "我需要設定任何東西嗎？",
+      "不需要。/setup 一步就能搞定。之後一切都會以合理的預設值運作——你日後可以用 /config 進行細部調整。"
+    ],
+    [
+      "每個人都能使用不同的語音嗎？",
+      "可以。每位成員都能用 /voice set 設定自己的語音與語言，Vozen 甚至能自動偵測每則訊息的語言。"
+    ],
+    [
+      "Google 還是 Piper——該選哪個語音引擎？",
+      "兩者都免費。Google（預設）即時涵蓋全部 35 種語言；Piper 在我們自己的伺服器上運行，在某些語言（例如葡萄牙文）中往往聽起來更好。隨時可用 /voice set 或 /voice detection 切換——而且是每個人各自設定。"
+    ],
+    [
+      "我要怎麼關閉功能？",
+      "一切都能透過 /config 切換——問候、自動朗讀、發話者宣告、反垃圾訊息過濾器等等。也有一個完整的緊急停用開關。"
+    ]
+  ]
+}

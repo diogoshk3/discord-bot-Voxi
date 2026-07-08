@@ -1,0 +1,295 @@
+{
+  "ui": {
+    "nav.features": "Özellikler",
+    "nav.games": "Oyunlar",
+    "nav.commands": "Komutlar",
+    "nav.languages": "Diller",
+    "nav.premium": "Premium",
+    "nav.faq": "SSS",
+    "cta.add": "Discord'a Ekle",
+    "cta.support": "Destek sunucusuna katıl",
+    "hero.badge": "Temel sürüm sonsuza dek ücretsiz · Açık kaynak",
+    "hero.title1": "Yaz.",
+    "hero.title2": "Dinle.",
+    "hero.sub": "Vozen, Discord sohbetini doğal nöral seslerle yüksek sesle okur — 35 dilde, oyunlar, kahkahalar ve sonsuza dek ücretsiz bir temel sürümle.",
+    "hero.mini": "35 dil · 38 ses · 15 mini oyun · ücretsiz temel sürüm",
+    "hear.eyebrow": "Dinle",
+    "hear.title": "Oynat'a bas. Bu gerçek bir Vozen sesi.",
+    "hear.sub": "Her klip Vozen'in kendisi tarafından üretilir. Google, Piper ve Kokoro'yu karşılaştırmak için motorları değiştir.",
+    "stat.langs": "dil",
+    "stat.voices": "nöral ses",
+    "stat.games": "mini oyun",
+    "stat.free": "temel sürüm sonsuza dek ücretsiz",
+    "feat.eyebrow": "Özellikler",
+    "feat.title": "Sunucunun ihtiyacı olan her şey",
+    "feat.sub": "Tek bot. Discord'da olmasını istediğin her ses özelliği — ve temel sürüm sonsuza dek ücretsiz.",
+    "feat.new": "NEW",
+    "feat.1.t": "Otomatik okuma kanalı",
+    "feat.1.d": "Bir kanal seç, Vozen her mesajı yüksek sesle okusun. /setup ile bir kez ayarla.",
+    "feat.2.t": "Senin sesin, senin dilin",
+    "feat.2.d": "Her üye 35 dil arasından kendi sesini seçer — Google ya da yerel bir nöral motor.",
+    "feat.3.t": "İnsan gibi konuşur",
+    "feat.3.d": "Her mesajın dilini algılar, tek bir cümlenin içinde sesleri harmanlar ve ! ya da BÜYÜK HARF kullandığında sesini yükseltir.",
+    "feat.4.t": "15 sesli mini oyun",
+    "feat.4.d": "Dil tahmin et, heceleme yarışları, Wordle, refleks düelloları — sunucu lider tablosuyla birlikte.",
+    "feat.5.t": "Kişilik dahil",
+    "feat.5.d": "Katılanları selamlar — kendini tekrar etmeden — doğum günlerini kutlar, şaka yapar, sihirli 8 topu yanıtlar ve sunucunun en çok konuşanlarını takip eder.",
+    "feat.6.t": "Yöneticiye gönül rahatlığı",
+    "feat.6.d": "Engel listeleri, hız sınırları, taşkın mesajları susturan bir anti-spam filtresi, rol kısıtlaması, devre dışı bırakma ve bir acil durdurma. Kontrol sende.",
+    "feat.7.t": "Ses efektleri",
+    "feat.7.d": "Robot, yankı, kalın, sincap, radyo, iblis… mesajların, dönüştürülmüş halde. İki efekt ücretsiz, sekizinin tamamı Premium ile.",
+    "feat.8.t": "Adil Premium",
+    "feat.8.d": "€3.99/ay ekstraların kilidini açar. Bugün ücretsiz olan her şey ücretsiz kalır — bu bir söz, oyun değil.",
+    "feat.9.t": "Açık kaynak",
+    "feat.9.d": "Vozen'in tüm kodu GitHub'da herkese açık. İncele, öğren ya da bir PR aç — gizli bir şey yok, casus yazılım yok.",
+    "lang.eyebrow": "Diller",
+    "lang.title": "Tek sunucu, her dil.",
+    "lang.sub": "Vozen her mesajın dilini algılar ve ana dilde bir sesle yanıtlar. Portekizce, İngilizce, Japonca, Arapça — hatta aynı cümlede karışık halde. Herkes kendi sesini ayarlar, isimler de kendi dilinde gösterilir.",
+    "lang.t1": "Otomatik dil algılama",
+    "lang.t2": "Her dil için ana dilde bir ses",
+    "lang.t3": "Her kullanıcıya göre yerelleştirilmiş ses isimleri",
+    "games.eyebrow": "Mini oyunlar",
+    "games.title": "Yüksek sesle oyna.",
+    "games.sub": "Ses için tasarlanmış 15 mini oyun: kendi dilinde sıra tabanlı bir kelime zinciri (Vozen her kelimeyi yüksek sesle okur), konuşulan dili tahmin et, süper hızlı konuşmayı çöz, heceleme yarışları, refleks düelloları, ayrıca gerçek grafiksel tahtalarda Wordle, adam asmaca, XOX ve satranç. Her sunucu bir lider tablosu tutar.",
+    "games.t1": "Ses + metin oyunları, ilk cevaplayan kazanır",
+    "games.t2": "Sunucu lider tablosu ve kişisel istatistikler",
+    "games.t3": "Vozen kazananı yüksek sesle duyurur",
+    "setup.eyebrow": "Başla",
+    "setup.title": "30 saniyede hazır",
+    "setup.1.t": "Davet et",
+    "setup.1.d": "Vozen'i tek tıkla sunucuna ekle.",
+    "setup.2.t": "/join",
+    "setup.2.d": "Vozen ses kanalına atlar.",
+    "setup.3.t": "Yaz",
+    "setup.3.d": "Bir mesaj yaz — ve onu yüksek sesle dinle.",
+    "cmd.eyebrow": "Komutlar",
+    "cmd.title": "Basit eğik çizgi komutları",
+    "cmd.general": "Genel",
+    "cmd.voice": "Ses",
+    "cmd.fun": "Eğlence",
+    "cmd.admin": "Yönetici",
+    "price.eyebrow": "Fiyatlandırma",
+    "price.title": "Ücretsiz temel sürüm. Adil Premium.",
+    "price.sub": "Vozen'in bugün yaptığı her şey ücretsiz kalır — sonsuza dek. Premium, bize gerçek işlem gücüne mal olan ekstraları ekler.",
+    "price.free.name": "Free",
+    "price.free.price": "€0",
+    "price.free.per": "sonsuza dek",
+    "price.free.1": "35 dilde 38 sesin tamamı",
+    "price.free.2": "Otomatik okuma, 15 oyun, şakalar ve selamlamalar",
+    "price.free.3": "Robot ve Yankı ses efektleri",
+    "price.free.4": "Tüm yönetici kontrolleri ve haftalık lider tablosu",
+    "price.plus.badge": "KİŞİSEL",
+    "price.plus.name": "Vozen Plus",
+    "price.plus.per": "/ ay · kullanıcı başına",
+    "price.plus.1": "8 ses efektinin tamamı — yalnızca sana özel",
+    "price.plus.2": "/voice clone ile kendi sesini klonla",
+    "price.plus.3": "Ayrıcalıkların her sunucuda seninle gelir",
+    "price.plus.4": "Öncelikli sentez kuyruğu",
+    "price.plus.note": "€19.90/yıl (2 ay ücretsiz) · /redeem ile kullan",
+    "price.pro.badge": "PREMIUM",
+    "price.pro.name": "Vozen Premium",
+    "price.pro.per": "/ ay · 2 sunucu",
+    "price.pro.deal": "🎁 1 öde, 2 al — tek abonelik 2 sunucuyu kapsar",
+    "price.pro.1": "8 ses efektinin tamamı (kalın, iblis, radyo…)",
+    "price.pro.2": "Tüm sunucu için ses klonlama",
+    "price.pro.3": "Ses kanalında 7/24 (yakında)",
+    "price.pro.4": "Daha yüksek limitler ve öncelikli kuyruk",
+    "price.pro.note": "€40/yıl (2 ay ücretsiz) · Discord'da /redeem ile kullan",
+    "faq.eyebrow": "SSS",
+    "faq.title": "Sorular, yanıtlandı",
+    "finale.title": "Sunucuna bir ses ver.",
+    "finale.note": "Temel sürüm sonsuza dek ücretsiz · 35 dil · 30 saniyede kur",
+    "foot.tag": "Yaz, dinle.",
+    "foot.product": "Ürün",
+    "foot.community": "Topluluk",
+    "foot.support": "Destek sunucusu",
+    "foot.vote": "top.gg'de oy ver",
+    "foot.privacy": "Gizlilik",
+    "foot.terms": "Koşullar",
+    "foot.legal": "Discord ile bağlantılı değildir."
+  },
+  "commands": {
+    "general": [
+      [
+        "/help",
+        "Vozen'in komut listesini göster"
+      ],
+      [
+        "/join",
+        "Ses kanalına katıl"
+      ],
+      [
+        "/leave",
+        "Ses kanalından ayrıl"
+      ],
+      [
+        "/tts",
+        "Bir metni yüksek sesle oku"
+      ],
+      [
+        "/skip",
+        "Mevcut sesi atla"
+      ],
+      [
+        "/shutup",
+        "Vozen'i hemen sustur (kuyruğu temizler)"
+      ],
+      [
+        "/setup",
+        "Tek adımlı rehberli kurulum"
+      ],
+      [
+        "/invite",
+        "Davet bağlantısını al"
+      ],
+      [
+        "/vote",
+        "top.gg'de Vozen'e oy ver"
+      ],
+      [
+        "/uptime",
+        "Vozen ne kadardır çevrimiçi"
+      ],
+      [
+        "/premium",
+        "Sunucunun ve senin Premium durumun"
+      ],
+      [
+        "/redeem",
+        "Bir Premium kodu kullan"
+      ]
+    ],
+    "voice": [
+      [
+        "/voice set",
+        "Sesini, dilini ve motorunu seç"
+      ],
+      [
+        "/voice list",
+        "Tüm seslere göz at"
+      ],
+      [
+        "/voice preview",
+        "Bir ses örneği dinle"
+      ],
+      [
+        "/voice clone",
+        "Kendi sesini klonla (Premium)"
+      ],
+      [
+        "/voice effect",
+        "Robot, yankı, iblis… ses efektleri"
+      ],
+      [
+        "/voice detection",
+        "Her dil için ana dilde ses"
+      ],
+      [
+        "/voice nickname",
+        "Vozen sana yüksek sesle nasıl seslenir"
+      ],
+      [
+        "/voice optout",
+        "Otomatik okunmayı durdur"
+      ]
+    ],
+    "fun": [
+      [
+        "/game play",
+        "15 mini oyundan birini başlat"
+      ],
+      [
+        "/game leaderboard",
+        "Sunucudaki en iyi oyuncular"
+      ],
+      [
+        "/game stats",
+        "Puanların, galibiyetlerin ve sıralaman"
+      ],
+      [
+        "/joke",
+        "Herhangi bir dilde kısa bir şaka"
+      ],
+      [
+        "/laugh",
+        "Vozen senin sesinle güler"
+      ],
+      [
+        "/8ball",
+        "Sihirli 8 topa sor, yüksek sesle"
+      ],
+      [
+        "/fact · /fortune · /wyr",
+        "Eğlenceli bilgiler, kehanetler ve ikilemler"
+      ],
+      [
+        "/birthday set",
+        "Vozen doğum gününde şarkı söyler"
+      ],
+      [
+        "/topspeakers",
+        "En çok konuşan kim + seriler"
+      ]
+    ],
+    "admin": [
+      [
+        "/config greet",
+        "Aramaya katılanları selamla"
+      ],
+      [
+        "/config language",
+        "Arayüz dilini ayarla"
+      ],
+      [
+        "/config default-voice",
+        "Sunucunun varsayılan sesini ayarla"
+      ],
+      [
+        "/config autoread",
+        "Otomatik okumayı aç/kapat"
+      ],
+      [
+        "/config blockword",
+        "Engel listesini yönet"
+      ],
+      [
+        "/config pronunciation",
+        "Özel telaffuzlar"
+      ]
+    ]
+  },
+  "faq": [
+    [
+      "Vozen gerçekten ücretsiz mi?",
+      "Evet — Vozen'in bugün yaptığı her şey ücretsiz ve ücretsiz kalıyor: tüm sesler, 15 oyunun tamamı, selamlamalar, yönetici araçları. Vozen Premium (sunucu başına €3.99/ay) yalnızca tam ses efekti paketi gibi isteğe bağlı ekstralar ekler. Kullandığın hiçbir şey asla ücretli duvarın ardına geçmez."
+    ],
+    [
+      "Premium neleri içerir?",
+      "8 ses efektinin tamamı (kalın, iblis, radyo, su altı…), premium nöral seslerle ve yolda olan 7/24 arama içi mod. Sunucu başına €3.99/ay ya da €40/yıl veya sunucular arasında seninle gelen kişisel ayrıcalıklar için Vozen Plus (€1.99/ay). Kodları /redeem ile kullan."
+    ],
+    [
+      "Vozen'i sunucuma nasıl eklerim?",
+      "\"Discord'a Ekle\"ye tıkla, sunucunu seç (Sunucuyu Yönet yetkisi gerekir) ve /setup çalıştır. Hepsi bu."
+    ],
+    [
+      "Hangi dilleri destekliyor?",
+      "38 nöral sesle 35 dil — Portekizce, İngilizce, İspanyolca, Fransızca, Almanca, Japonca, Arapça, Rusça ve çok daha fazlası, her biri ana dilde bir sesle."
+    ],
+    [
+      "Bir şey yapılandırmam gerekiyor mu?",
+      "Hayır. /setup bunu tek adımda yapar. Ardından her şey mantıklı varsayılanlarla çalışır — daha sonra /config ile ince ayar yapabilirsin."
+    ],
+    [
+      "Herkesin farklı bir sesi olabilir mi?",
+      "Evet. Her üye /voice set ile kendi sesini ve dilini ayarlar, üstelik Vozen her mesajın dilini otomatik olarak bile algılayabilir."
+    ],
+    [
+      "Google mı Piper mı — hangi ses motoru?",
+      "İkisi de ücretsiz. Google (varsayılan) 35 dilin tamamını anında kapsar; Piper kendi sunucumuzda çalışır ve bazı dillerde, örneğin Portekizce'de, çoğu zaman daha iyi ses verir. /voice set ya da /voice detection ile istediğin zaman değiştir — kişiye özeldir."
+    ],
+    [
+      "Özellikleri nasıl kapatırım?",
+      "Her şey /config ile açılıp kapatılabilir — selamlama, otomatik okuma, kim-söyledi duyuruları, anti-spam filtresi ve daha fazlası. Ayrıca tam bir acil durdurma da var."
+    ]
+  ]
+}

@@ -1,0 +1,295 @@
+{
+  "ui": {
+    "nav.features": "Funcionalidades",
+    "nav.games": "Jogos",
+    "nav.commands": "Comandos",
+    "nav.languages": "Línguas",
+    "nav.premium": "Premium",
+    "nav.faq": "FAQ",
+    "cta.add": "Adicionar ao Discord",
+    "cta.support": "Servidor de suporte",
+    "hero.badge": "Essencial grátis para sempre · Open source",
+    "hero.title1": "Escreve.",
+    "hero.title2": "Ouve.",
+    "hero.sub": "O Vozen lê o teu chat do Discord em voz alta com vozes neurais naturais — em 35 línguas, com jogos, risos e um essencial grátis para sempre.",
+    "hero.mini": "35 línguas · 38 vozes · 15 minijogos · essencial grátis",
+    "hear.eyebrow": "Ouve",
+    "hear.title": "Carrega em play. É mesmo a voz do Vozen.",
+    "hear.sub": "Cada clipe é gerado pelo próprio Vozen. Troca de motor para comparar o Google, o Piper e o Kokoro.",
+    "stat.langs": "línguas",
+    "stat.voices": "vozes neurais",
+    "stat.games": "minijogos",
+    "stat.free": "essencial grátis p/ sempre",
+    "feat.eyebrow": "Funcionalidades",
+    "feat.title": "Tudo o que o teu servidor precisa",
+    "feat.sub": "Um bot. Todas as funcionalidades de voz que querias no Discord — e o essencial é grátis para sempre.",
+    "feat.new": "NOVO",
+    "feat.1.t": "Canal de leitura automática",
+    "feat.1.d": "Escolhe um canal e o Vozen lê cada mensagem em voz alta. Configura uma vez com /setup.",
+    "feat.2.t": "A tua voz, a tua língua",
+    "feat.2.d": "Cada membro escolhe a sua voz de 35 línguas — motor Google ou neural local.",
+    "feat.3.t": "Fala como um humano",
+    "feat.3.d": "Deteta a língua de cada mensagem, mistura vozes na mesma frase e fala mais alto quando usas ! ou MAIÚSCULAS.",
+    "feat.4.t": "15 minijogos de voz",
+    "feat.4.d": "Adivinha a língua, ditados, Wordle, duelos de reflexos — com leaderboard do servidor.",
+    "feat.5.t": "Personalidade incluída",
+    "feat.5.d": "Cumprimenta quem entra — sem se repetir — dá os parabéns no teu dia, conta piadas, responde à bola 8 e mostra os tagarelas do servidor.",
+    "feat.6.t": "Descanso para os admins",
+    "feat.6.d": "Blocklists, limites de taxa, filtro anti-spam que silencia mensagens spamadas, restrição por role, opt-out e kill-switch. O controlo é teu.",
+    "feat.7.t": "Efeitos de voz",
+    "feat.7.d": "Robô, eco, grave, esquilo, rádio, demónio… as tuas mensagens, transformadas. Dois efeitos grátis, os oito com Premium.",
+    "feat.8.t": "Premium justo",
+    "feat.8.d": "€3,99/mês desbloqueia os extras. Tudo o que hoje é grátis continua grátis — é uma promessa, não um truque.",
+    "feat.9.t": "Open source",
+    "feat.9.d": "Todo o código do Vozen é público no GitHub. Audita-o, aprende com ele ou abre um PR — sem segredos, sem spyware.",
+    "lang.eyebrow": "Línguas",
+    "lang.title": "Um servidor, todas as línguas.",
+    "lang.sub": "O Vozen ouve a língua de cada mensagem e responde numa voz nativa. Português, inglês, japonês, árabe — até misturados na mesma frase. Cada um define a sua voz, com os nomes na sua própria língua.",
+    "lang.t1": "Deteção automática de língua",
+    "lang.t2": "Uma voz nativa por língua",
+    "lang.t3": "Nomes das vozes na língua de cada um",
+    "games.eyebrow": "Minijogos",
+    "games.title": "Joga em voz alta.",
+    "games.sub": "15 minijogos feitos para voz: uma cadeia de palavras por turnos na tua língua (o Vozen lê cada palavra em voz alta), adivinha a língua falada, decifra fala super-rápida, ditados, duelos de reflexos, e ainda Wordle, forca, galo e xadrez em tabuleiros gráficos. Cada servidor tem leaderboard.",
+    "games.t1": "Jogos de voz + texto, 1º a acertar",
+    "games.t2": "Leaderboard do servidor e stats pessoais",
+    "games.t3": "O Vozen anuncia o vencedor em voz alta",
+    "setup.eyebrow": "Começar",
+    "setup.title": "Pronto em 30 segundos",
+    "setup.1.t": "Convidar",
+    "setup.1.d": "Adiciona o Vozen ao teu servidor com um clique.",
+    "setup.2.t": "/join",
+    "setup.2.d": "O Vozen entra no teu canal de voz.",
+    "setup.3.t": "Escrever",
+    "setup.3.d": "Escreve uma mensagem — e ouve-a em voz alta.",
+    "cmd.eyebrow": "Comandos",
+    "cmd.title": "Comandos slash simples",
+    "cmd.general": "Geral",
+    "cmd.voice": "Voz",
+    "cmd.fun": "Diversão",
+    "cmd.admin": "Admin",
+    "price.eyebrow": "Preços",
+    "price.title": "Essencial grátis. Premium justo.",
+    "price.sub": "Tudo o que o Vozen faz hoje continua grátis — para sempre. O Premium acrescenta os extras que nos custam computação a sério.",
+    "price.free.name": "Free",
+    "price.free.price": "€0",
+    "price.free.per": "para sempre",
+    "price.free.1": "As 38 vozes em 35 línguas",
+    "price.free.2": "Leitura automática, 15 jogos, piadas e saudações",
+    "price.free.3": "Efeitos de voz Robot e Echo",
+    "price.free.4": "Todos os controlos de admin e leaderboard semanal",
+    "price.plus.badge": "PESSOAL",
+    "price.plus.name": "Vozen Plus",
+    "price.plus.per": "/ mês · por utilizador",
+    "price.plus.1": "Os 8 efeitos de voz — só para ti",
+    "price.plus.2": "Clona a tua própria voz com /voice clone",
+    "price.plus.3": "As tuas vantagens seguem-te em todos os servidores",
+    "price.plus.4": "Fila de síntese prioritária",
+    "price.plus.note": "€19,90/ano (2 meses grátis) · resgata com /redeem",
+    "price.pro.badge": "PREMIUM",
+    "price.pro.name": "Vozen Premium",
+    "price.pro.per": "/ mês · 2 servidores",
+    "price.pro.deal": "🎁 Paga 1, leva 2 — uma subscrição cobre 2 servidores",
+    "price.pro.1": "Os 8 efeitos de voz (grave, demónio, rádio…)",
+    "price.pro.2": "Clone de voz para todo o servidor",
+    "price.pro.3": "24/7 no canal de voz (em breve)",
+    "price.pro.4": "Limites maiores e fila prioritária",
+    "price.pro.note": "€40/ano (2 meses grátis) · resgata no Discord com /redeem",
+    "faq.eyebrow": "FAQ",
+    "faq.title": "Perguntas, respondidas",
+    "finale.title": "Dá uma voz ao teu servidor.",
+    "finale.note": "Essencial grátis para sempre · 35 línguas · Configura em 30 segundos",
+    "foot.tag": "Escreve, ouve.",
+    "foot.product": "Produto",
+    "foot.community": "Comunidade",
+    "foot.support": "Servidor de suporte",
+    "foot.vote": "Votar no top.gg",
+    "foot.privacy": "Privacidade",
+    "foot.terms": "Termos",
+    "foot.legal": "Sem afiliação com o Discord."
+  },
+  "commands": {
+    "general": [
+      [
+        "/help",
+        "Mostra a lista de comandos"
+      ],
+      [
+        "/join",
+        "Entra no teu canal de voz"
+      ],
+      [
+        "/leave",
+        "Sai do canal de voz"
+      ],
+      [
+        "/tts",
+        "Lê um texto em voz alta"
+      ],
+      [
+        "/skip",
+        "Salta o áudio atual"
+      ],
+      [
+        "/shutup",
+        "Cala o Vozen já (esvazia a fila)"
+      ],
+      [
+        "/setup",
+        "Configuração guiada num passo"
+      ],
+      [
+        "/invite",
+        "Obtém o link de convite"
+      ],
+      [
+        "/vote",
+        "Vota no Vozen no top.gg"
+      ],
+      [
+        "/uptime",
+        "Há quanto tempo o Vozen está online"
+      ],
+      [
+        "/premium",
+        "Estado Premium do servidor e teu"
+      ],
+      [
+        "/redeem",
+        "Resgata um código Premium"
+      ]
+    ],
+    "voice": [
+      [
+        "/voice set",
+        "Escolhe a tua voz, língua e motor"
+      ],
+      [
+        "/voice list",
+        "Vê todas as vozes"
+      ],
+      [
+        "/voice preview",
+        "Ouve uma amostra de voz"
+      ],
+      [
+        "/voice clone",
+        "Clona a tua própria voz (Premium)"
+      ],
+      [
+        "/voice effect",
+        "Robô, eco, demónio… efeitos de voz"
+      ],
+      [
+        "/voice detection",
+        "Voz nativa por língua"
+      ],
+      [
+        "/voice nickname",
+        "Como o Vozen te chama em voz alta"
+      ],
+      [
+        "/voice optout",
+        "Deixa de ser lido automaticamente"
+      ]
+    ],
+    "fun": [
+      [
+        "/game play",
+        "Começa 1 dos 15 minijogos"
+      ],
+      [
+        "/game leaderboard",
+        "Melhores jogadores do servidor"
+      ],
+      [
+        "/game stats",
+        "Os teus pontos, vitórias e posição"
+      ],
+      [
+        "/joke",
+        "Uma piada curta em qualquer língua"
+      ],
+      [
+        "/laugh",
+        "O Vozen ri na tua voz"
+      ],
+      [
+        "/8ball",
+        "Pergunta à bola 8, em voz alta"
+      ],
+      [
+        "/fact · /fortune · /wyr",
+        "Factos, sortes e dilemas falados"
+      ],
+      [
+        "/birthday set",
+        "O Vozen dá-te os parabéns no teu dia"
+      ],
+      [
+        "/topspeakers",
+        "Quem mais fala + streaks"
+      ]
+    ],
+    "admin": [
+      [
+        "/config greet",
+        "Saudar quem entra na call"
+      ],
+      [
+        "/config language",
+        "Define a língua da interface"
+      ],
+      [
+        "/config default-voice",
+        "Define a voz padrão do servidor"
+      ],
+      [
+        "/config autoread",
+        "Liga/desliga a leitura automática"
+      ],
+      [
+        "/config blockword",
+        "Gere a blocklist"
+      ],
+      [
+        "/config pronunciation",
+        "Pronúncias personalizadas"
+      ]
+    ]
+  },
+  "faq": [
+    [
+      "O Vozen é mesmo grátis?",
+      "Sim — tudo o que o Vozen faz hoje é grátis e continua grátis: todas as vozes, os 15 jogos, saudações, ferramentas de admin. O Vozen Premium (€3,99/mês por servidor) só acrescenta extras opcionais, como o pack completo de efeitos de voz. Nada do que usas passa para trás de um paywall."
+    ],
+    [
+      "O que inclui o Premium?",
+      "Os 8 efeitos de voz (grave, demónio, rádio, debaixo de água…), com vozes neurais premium e modo 24/7 na call a caminho. €3,99/mês ou €40/ano por servidor, ou Vozen Plus (€1,99/mês) para vantagens pessoais que te seguem entre servidores. Resgata códigos com /redeem."
+    ],
+    [
+      "Como adiciono o Vozen ao meu servidor?",
+      "Clica em \"Adicionar ao Discord\", escolhe o servidor (precisas de Gerir Servidor) e corre /setup. É só isso."
+    ],
+    [
+      "Que línguas suporta?",
+      "35 línguas com 38 vozes neurais — português, inglês, espanhol, francês, alemão, japonês, árabe, russo e muitas mais, cada uma com voz nativa."
+    ],
+    [
+      "Preciso de configurar alguma coisa?",
+      "Não. O /setup faz tudo num passo. Depois funciona com defaults sensatos — podes afinar mais tarde com /config."
+    ],
+    [
+      "Cada pessoa pode ter uma voz diferente?",
+      "Sim. Cada membro define a sua voz e língua com /voice set, e o Vozen pode até detetar a língua de cada mensagem automaticamente."
+    ],
+    [
+      "Google ou Piper — que motor de voz?",
+      "Os dois são grátis. O Google (padrão) cobre as 35 línguas na hora; o Piper corre no nosso servidor e costuma soar melhor nalgumas línguas, como o português. Troca quando quiseres com /voice set ou /voice detection — é por pessoa."
+    ],
+    [
+      "Como desligo funcionalidades?",
+      "Tudo é desligável com /config — a saudação, a leitura automática, os anúncios de quem falou, o filtro anti-spam, e mais. Há também um kill-switch completo."
+    ]
+  ]
+}

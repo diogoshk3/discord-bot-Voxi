@@ -67,27 +67,33 @@
     if (active && langEl) langEl.textContent = hearLangName(active.dataset.sample, siteLang);
   }
 
+  // Línguas que se leem da direita para a esquerda.
+  const RTL_LANGS = new Set(["ar", "he", "fa", "ur"]);
+
   function applyLang(l) {
     lang = DICT[l] ? l : "en";
     document.documentElement.lang = lang;
+    // RTL: o árabe (e afins) espelha todo o layout via dir="rtl" no <html>.
+    document.documentElement.dir = RTL_LANGS.has(lang) ? "rtl" : "ltr";
     const d = DICT[lang];
     $$("[data-i18n]").forEach((el) => {
       const k = el.getAttribute("data-i18n");
       if (d[k] != null) el.textContent = d[k];
     });
-    $$(".lang-toggle button").forEach((b) => b.classList.toggle("is-active", b.dataset.lang === lang));
+    const sel = $("#langSelect");
+    if (sel && sel.value !== lang) sel.value = lang;
     localizeHear(lang);
     renderCommands();
     renderFaq();
   }
 
-  $$(".lang-toggle button").forEach((b) =>
-    b.addEventListener("click", () => {
-      // Só uma escolha EXPLÍCITA persiste (o default EN não escreve nada).
-      localStorage.setItem(LS_KEY, b.dataset.lang);
-      applyLang(b.dataset.lang);
-    }),
-  );
+  const langSelect = $("#langSelect");
+  if (langSelect) {
+    langSelect.addEventListener("change", () => {
+      localStorage.setItem(LS_KEY, langSelect.value); // escolha explícita persiste
+      applyLang(langSelect.value);
+    });
+  }
 
   /* ── navbar ──────────────────────────────────────────── */
   const nav = $("#nav");
