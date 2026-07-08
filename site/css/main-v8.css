@@ -540,9 +540,13 @@ body > *:not(.grain):not(.orbs):not(.nav) { position: relative; z-index: 2; }
    (`.price-card__price span { font-size:14px }`) e ficavam pequenos. font:inherit devolve
    o tamanho/peso/família do <b> (46px display, 800). A cor vem das regras de gradiente. */
 .price-card__price .amt { font: inherit; }
-.amt--y, .per--y { display: none; }
+.amt--y, .per--y, .was--y { display: none; }
 .pricing.is-annual .amt--m, .pricing.is-annual .per--m { display: none; }
 .pricing.is-annual .amt--y, .pricing.is-annual .per--y { display: inline; }
+.pricing.is-annual .was--y { display: inline; }
+/* Preço + preço "cheio" (12× mensal) riscado na MESMA linha; o riscado só no anual. */
+.price-line { display: flex; align-items: baseline; gap: 12px; }
+.price-card__price .was { font-family: var(--f-display); font-weight: 700; font-size: 22px; color: var(--text-2); text-decoration: line-through; text-decoration-thickness: 2px; }
 
 .pricing { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; max-width: 1180px; margin: 0 auto; }
 .price-card {
