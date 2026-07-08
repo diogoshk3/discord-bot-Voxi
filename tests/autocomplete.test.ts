@@ -10,7 +10,7 @@ import { modelDisplayName } from '../src/language/voiceMap';
 describe('modelDisplayName', () => {
   it('mostra a lingua escrita na propria lingua (autonimo)', () => {
     expect(modelDisplayName('pt_PT-tugao-medium')).toBe('Português (Portugal)');
-    expect(modelDisplayName('pt_BR-faber-medium')).toBe('Português'); // pt_BR mostra-se só "Português"
+    expect(modelDisplayName('pt_BR-faber-medium')).toBe('Português (Brasil)'); // simétrico com pt_PT
     expect(modelDisplayName('en_US-amy-medium')).toBe('English (US)');
     expect(modelDisplayName('fr_FR-siwis-medium')).toBe('Français');
     expect(modelDisplayName('de_DE-thorsten-medium')).toBe('Deutsch');
