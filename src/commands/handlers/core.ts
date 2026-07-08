@@ -95,7 +95,7 @@ export async function handleLeave(i: ChatInputCommandInteraction, deps: BotDeps)
 }
 
 /** Resultado (discriminado) de tentar LER um texto em voz alta com a voz do user. */
-type SpeakOutcome =
+export type SpeakOutcome =
   | { status: 'no-player' }
   | { status: 'rate-limited' }
   | { status: 'empty' }
@@ -108,9 +108,10 @@ type SpeakOutcome =
  * ser reutilizado pelo context-menu "Speak". Faz TUDO (gating de player, rate-limit,
  * limpeza, media, gírias/pronúncia, escolha de voz, blocklist, say) MENOS responder à
  * interação — devolve um SpeakOutcome que o chamador traduz. Assim /tts e "Speak"
- * partilham o comportamento sem divergir.
+ * partilham o comportamento sem divergir. EXPORTADO também para o /randomizer (fala o
+ * resultado do sorteio com a voz de quem o correu).
  */
-async function speakRawText(
+export async function speakRawText(
   deps: BotDeps,
   guildId: string,
   userId: string,

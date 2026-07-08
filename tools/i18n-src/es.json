@@ -12,7 +12,7 @@
     "hero.title1": "Escríbelo.",
     "hero.title2": "Escúchalo.",
     "hero.sub": "Vozen lee tu chat de Discord en voz alta con voces neuronales naturales — en 35 idiomas, con juegos, risas y un núcleo que es gratis para siempre.",
-    "hero.mini": "35 idiomas · 38 voces · 15 minijuegos · núcleo gratis",
+    "hero.mini": "35 idiomas · 38 voces · 16 minijuegos · núcleo gratis",
     "hear.eyebrow": "Escúchalo",
     "hear.title": "Dale al play. Esa es una voz real de Vozen.",
     "hear.sub": "Cada clip lo genera el propio Vozen. Cambia de motor para comparar Google, Piper y Kokoro.",
@@ -30,7 +30,7 @@
     "feat.2.d": "Cada miembro elige su propia voz entre 35 idiomas — Google o un motor neuronal local.",
     "feat.3.t": "Habla como una persona",
     "feat.3.d": "Detecta el idioma de cada mensaje, mezcla voces dentro de una misma frase y sube el volumen cuando usas ! o MAYÚSCULAS.",
-    "feat.4.t": "15 minijuegos de voz",
+    "feat.4.t": "16 minijuegos de voz",
     "feat.4.d": "Adivina el idioma, concursos de deletreo, Wordle, duelos de reflejos — con una clasificación del servidor.",
     "feat.5.t": "Personalidad incluida",
     "feat.5.d": "Saluda a quien entra — sin repetirse —, felicita cumpleaños, cuenta chistes, responde a la bola 8 mágica y sigue a los que más hablan en tu servidor.",
@@ -50,7 +50,7 @@
     "lang.t3": "Nombres de voces localizados para cada usuario",
     "games.eyebrow": "Minijuegos",
     "games.title": "Juega en voz alta.",
-    "games.sub": "15 minijuegos pensados para la voz: una cadena de palabras por turnos en tu idioma (Vozen lee cada palabra en voz alta), adivina el idioma hablado, descifra habla ultrarrápida, concursos de deletreo, duelos de reflejos, además de Wordle, ahorcado, tres en raya y ajedrez en tableros gráficos reales. Cada servidor mantiene su clasificación.",
+    "games.sub": "16 minijuegos pensados para la voz: una cadena de palabras por turnos en tu idioma (Vozen lee cada palabra en voz alta), adivina el idioma hablado, descifra habla ultrarrápida, concursos de deletreo, duelos de reflejos, además de Wordle, ahorcado, tres en raya y ajedrez en tableros gráficos reales. Cada servidor mantiene su clasificación.",
     "games.t1": "Juegos de voz y texto, gana quien responde primero",
     "games.t2": "Clasificación del servidor y estadísticas personales",
     "games.t3": "Vozen anuncia al ganador en voz alta",
@@ -75,7 +75,7 @@
     "price.free.price": "€0",
     "price.free.per": "para siempre",
     "price.free.1": "Las 38 voces en 35 idiomas",
-    "price.free.2": "Lectura automática, 15 juegos, chistes y saludos",
+    "price.free.2": "Lectura automática, 16 juegos, chistes y saludos",
     "price.free.3": "Efectos de voz Robot y Eco",
     "price.free.4": "Todos los controles de admin y clasificación semanal",
     "price.plus.badge": "PERSONAL",
@@ -148,10 +148,11 @@
       ["/voice effect", "Robot, eco, demonio… efectos de voz"],
       ["/voice detection", "Voz nativa por idioma"],
       ["/voice nickname", "Cómo te llama Vozen en voz alta"],
-      ["/voice optout", "Deja de que te lean automáticamente"]
+      ["/voice optout", "Deja de que te lean automáticamente"],
+      ["/pronunciation", "Enseña a Vozen a decir una palabra (solo tuya)"]
     ],
     "fun": [
-      ["/game play", "Empieza uno de los 15 minijuegos"],
+      ["/game play", "Empieza uno de los 16 minijuegos"],
       ["/game leaderboard", "Mejores jugadores del servidor"],
       ["/game stats", "Tus puntos, victorias y rango"],
       ["/joke", "Un chiste corto en cualquier idioma"],
@@ -159,7 +160,8 @@
       ["/8ball", "Pregunta a la bola 8 mágica, en voz alta"],
       ["/fact · /fortune · /wyr", "Curiosidades, fortunas y dilemas"],
       ["/birthday set", "Vozen canta en tu cumpleaños"],
-      ["/topspeakers", "Quién habla más + rachas"]
+      ["/topspeakers", "Quién habla más + rachas"],
+      ["/randomizer", "Vozen elige una opción al azar y la dice"]
     ],
     "admin": [
       ["/config greet", "Saluda a quien entra en la llamada"],

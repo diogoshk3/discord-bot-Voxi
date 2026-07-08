@@ -35,6 +35,7 @@ import {
   handlePremium,
   handleVozenGrant,
 } from './handlers/meta';
+import { handlePronunciation, handleRandomizer } from './handlers/personal';
 import { localeFor } from './helpers';
 
 // Re-exports: mantêm os caminhos de import públicos inalterados para quem já importa daqui.
@@ -660,8 +661,9 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
           o
             .setName('game')
             .setNameLocalizations({ 'pt-BR': 'jogo' })
-            .setDescription('Which game to play')
-            .setRequired(true)
+            // OPCIONAL de propósito (beginner-friendly, plano v4): /game play "vazio"
+            // mostra um select menu com os jogos em vez de o Discord exigir a opção.
+            .setDescription('Which game to play (leave empty to pick from a menu)')
             .setAutocomplete(true),
         )
         .addStringOption((o) =>
@@ -734,6 +736,68 @@ export const ownerCommandDefs: RESTPostAPIApplicationCommandsJSONBody[] = [
         .setDescription('Premium only: number of server licences (default 3)')
         .setMinValue(1)
         .setMaxValue(50),
+    )
+    .toJSON(),
+  // /pronunciation — dicionário de pronúncia PESSOAL (só afeta as mensagens de quem o
+  // criou; segue o utilizador entre servidores). Limite 3 Free / 50 Premium (Plus ou
+  // servidor Premium). `add` sem opções abre um MODAL (beginner-friendly, plano v4).
+  new SlashCommandBuilder()
+    .setName('pronunciation')
+    .setDescription('Teach Vozen how to say a word — only affects YOUR messages')
+    .addSubcommand((s) =>
+      s
+        .setName('add')
+        .setDescription('Add or edit a personal pronunciation (leave empty for a form)')
+        .addStringOption((o) =>
+          o
+            .setName('term')
+            .setNameLocalizations({ 'pt-BR': 'termo' })
+            .setDescription('The word as people type it (e.g. "gg")')
+            .setMaxLength(100),
+        )
+        .addStringOption((o) =>
+          o
+            .setName('say')
+            .setNameLocalizations({ 'pt-BR': 'dizer' })
+            .setDescription('How Vozen should say it (e.g. "good game")')
+            .setMaxLength(200),
+        ),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName('remove')
+        .setDescription('Remove one of your personal pronunciations')
+        .addStringOption((o) =>
+          o
+            .setName('term')
+            .setNameLocalizations({ 'pt-BR': 'termo' })
+            .setDescription('The word to remove')
+            .setRequired(true)
+            .setMaxLength(100),
+        ),
+    )
+    .addSubcommand((s) => s.setName('list').setDescription('List your personal pronunciations'))
+    .toJSON(),
+  // /randomizer — sorteio falado: escolhe o nº de opções (2–5, modal) OU passa uma lista
+  // separada por vírgulas; o Vozen escolhe uma ao acaso e di-la na call. Sem opções
+  // nenhumas -> select do nº (beginner-friendly).
+  new SlashCommandBuilder()
+    .setName('randomizer')
+    .setDescription('Vozen picks one option at random and says it out loud')
+    .addIntegerOption((o) =>
+      o
+        .setName('amount')
+        .setNameLocalizations({ 'pt-BR': 'quantidade' })
+        .setDescription('How many options to fill in (2–5, opens a form)')
+        .setMinValue(2)
+        .setMaxValue(5),
+    )
+    .addStringOption((o) =>
+      o
+        .setName('options')
+        .setNameLocalizations({ 'pt-BR': 'opcoes' })
+        .setDescription('Or type them here, separated by commas (e.g. "pizza, sushi, tacos")')
+        .setMaxLength(1000),
     )
     .toJSON(),
 ];
@@ -970,6 +1034,10 @@ export async function handleInteraction(
         return await handleVote(i, deps);
       case 'help':
         return await handleHelp(i, deps);
+      case 'pronunciation':
+        return await handlePronunciation(i, deps);
+      case 'randomizer':
+        return await handleRandomizer(i, deps);
     }
   } catch (err) {
     log.error('[command] erro em', i.commandName, err);

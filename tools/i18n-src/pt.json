@@ -12,7 +12,7 @@
     "hero.title1": "Escreve.",
     "hero.title2": "Ouve.",
     "hero.sub": "O Vozen lê o teu chat do Discord em voz alta com vozes neurais naturais — em 35 línguas, com jogos, risos e um essencial grátis para sempre.",
-    "hero.mini": "35 línguas · 38 vozes · 15 minijogos · essencial grátis",
+    "hero.mini": "35 línguas · 38 vozes · 16 minijogos · essencial grátis",
     "hear.eyebrow": "Ouve",
     "hear.title": "Carrega em play. É mesmo a voz do Vozen.",
     "hear.sub": "Cada clipe é gerado pelo próprio Vozen. Troca de motor para comparar o Google, o Piper e o Kokoro.",
@@ -30,7 +30,7 @@
     "feat.2.d": "Cada membro escolhe a sua voz de 35 línguas — motor Google ou neural local.",
     "feat.3.t": "Fala como um humano",
     "feat.3.d": "Deteta a língua de cada mensagem, mistura vozes na mesma frase e fala mais alto quando usas ! ou MAIÚSCULAS.",
-    "feat.4.t": "15 minijogos de voz",
+    "feat.4.t": "16 minijogos de voz",
     "feat.4.d": "Adivinha a língua, ditados, Wordle, duelos de reflexos — com leaderboard do servidor.",
     "feat.5.t": "Personalidade incluída",
     "feat.5.d": "Cumprimenta quem entra — sem se repetir — dá os parabéns no teu dia, conta piadas, responde à bola 8 e mostra os tagarelas do servidor.",
@@ -50,7 +50,7 @@
     "lang.t3": "Nomes das vozes na língua de cada um",
     "games.eyebrow": "Minijogos",
     "games.title": "Joga em voz alta.",
-    "games.sub": "15 minijogos feitos para voz: uma cadeia de palavras por turnos na tua língua (o Vozen lê cada palavra em voz alta), adivinha a língua falada, decifra fala super-rápida, ditados, duelos de reflexos, e ainda Wordle, forca, galo e xadrez em tabuleiros gráficos. Cada servidor tem leaderboard.",
+    "games.sub": "16 minijogos feitos para voz: uma cadeia de palavras por turnos na tua língua (o Vozen lê cada palavra em voz alta), adivinha a língua falada, decifra fala super-rápida, ditados, duelos de reflexos, e ainda Wordle, forca, galo e xadrez em tabuleiros gráficos. Cada servidor tem leaderboard.",
     "games.t1": "Jogos de voz + texto, 1º a acertar",
     "games.t2": "Leaderboard do servidor e stats pessoais",
     "games.t3": "O Vozen anuncia o vencedor em voz alta",
@@ -75,7 +75,7 @@
     "price.free.price": "€0",
     "price.free.per": "para sempre",
     "price.free.1": "As 38 vozes em 35 línguas",
-    "price.free.2": "Leitura automática, 15 jogos, piadas e saudações",
+    "price.free.2": "Leitura automática, 16 jogos, piadas e saudações",
     "price.free.3": "Efeitos de voz Robot e Echo",
     "price.free.4": "Todos os controlos de admin e leaderboard semanal",
     "price.plus.badge": "PESSOAL",
@@ -148,10 +148,11 @@
       ["/voice effect", "Robô, eco, demónio… efeitos de voz"],
       ["/voice detection", "Voz nativa por língua"],
       ["/voice nickname", "Como o Vozen te chama em voz alta"],
-      ["/voice optout", "Deixa de ser lido automaticamente"]
+      ["/voice optout", "Deixa de ser lido automaticamente"],
+      ["/pronunciation", "Ensina o Vozen a dizer uma palavra (só tua)"]
     ],
     "fun": [
-      ["/game play", "Começa 1 dos 15 minijogos"],
+      ["/game play", "Começa 1 dos 16 minijogos"],
       ["/game leaderboard", "Melhores jogadores do servidor"],
       ["/game stats", "Os teus pontos, vitórias e posição"],
       ["/joke", "Uma piada curta em qualquer língua"],
@@ -159,7 +160,8 @@
       ["/8ball", "Pergunta à bola 8, em voz alta"],
       ["/fact · /fortune · /wyr", "Factos, sortes e dilemas falados"],
       ["/birthday set", "O Vozen dá-te os parabéns no teu dia"],
-      ["/topspeakers", "Quem mais fala + streaks"]
+      ["/topspeakers", "Quem mais fala + streaks"],
+      ["/randomizer", "O Vozen escolhe uma opção ao acaso e di-la"]
     ],
     "admin": [
       ["/config greet", "Saudar quem entra na call"],

@@ -1,5 +1,11 @@
 // src/commands/handlers/games.ts — handler de /game (play/stop/list/leaderboard/stats) extraído de index.ts (plano 015).
-import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
+import {
+  ActionRowBuilder,
+  ChatInputCommandInteraction,
+  ComponentType,
+  MessageFlags,
+  StringSelectMenuBuilder,
+} from 'discord.js';
 import type { BotDeps } from '../../bot/deps';
 import { getPlayer } from '../../bot/deps';
 import { brandEmbed, rankMedal } from '../../ui/theme';
@@ -33,11 +39,48 @@ export async function handleGame(i: ChatInputCommandInteraction, deps: BotDeps):
   const sub = i.options.getSubcommand();
 
   if (sub === 'play') {
-    // Ack IMEDIATO: criar a thread é uma chamada REST que num gateway lento estoira
-    // os 3s do token da interação (10062 Unknown interaction) com o jogo JÁ criado.
-    // deferReply compra 15 min; TODAS as respostas deste ramo passam a editReply.
-    await i.deferReply({ flags: MessageFlags.Ephemeral });
-    const gameId = i.options.getString('game', true);
+    let gameId = i.options.getString('game');
+    if (!gameId) {
+      // Beginner-friendly (plano v4): /game play sem jogo mostra um SELECT com os jogos
+      // (nome localizado), como o /setup faz com o canal. Só depois seguimos o fluxo normal.
+      const select = new StringSelectMenuBuilder()
+        .setCustomId(`gamePick:${i.id}`)
+        .setPlaceholder(t('game.pickPlaceholder', locale))
+        .addOptions(
+          GAME_DEFS.slice(0, 25).map((g) => ({
+            label: t(g.nameKey, locale),
+            description: t(g.descKey, locale).slice(0, 100),
+            value: g.id,
+          })),
+        );
+      await i.reply({
+        content: t('game.pickPrompt', locale),
+        components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select)],
+        flags: MessageFlags.Ephemeral,
+      });
+      let picked;
+      try {
+        picked = await i.channel?.awaitMessageComponent({
+          componentType: ComponentType.StringSelect,
+          time: 60_000,
+          filter: (c) => c.customId === `gamePick:${i.id}` && c.user.id === i.user.id,
+        });
+      } catch {
+        await i
+          .editReply({ content: t('game.pickTimeout', locale), components: [] })
+          .catch(() => {});
+        return;
+      }
+      if (!picked) return;
+      await picked.deferUpdate(); // a UI segue via i.editReply (mesma mensagem ephemeral)
+      await i.editReply({ components: [] }).catch(() => {});
+      gameId = picked.values[0];
+    } else {
+      // Ack IMEDIATO: criar a thread é uma chamada REST que num gateway lento estoira
+      // os 3s do token da interação (10062 Unknown interaction) com o jogo JÁ criado.
+      // deferReply compra 15 min; TODAS as respostas deste ramo passam a editReply.
+      await i.deferReply({ flags: MessageFlags.Ephemeral });
+    }
     const def = gameById(gameId);
     if (!def) {
       await i.editReply(t('game.unknownGame', locale));

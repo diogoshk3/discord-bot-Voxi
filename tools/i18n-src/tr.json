@@ -12,7 +12,7 @@
     "hero.title1": "Yaz.",
     "hero.title2": "Dinle.",
     "hero.sub": "Vozen, Discord sohbetini doğal nöral seslerle yüksek sesle okur — 35 dilde, oyunlar, kahkahalar ve sonsuza dek ücretsiz bir temel sürümle.",
-    "hero.mini": "35 dil · 38 ses · 15 mini oyun · ücretsiz temel sürüm",
+    "hero.mini": "35 dil · 38 ses · 16 mini oyun · ücretsiz temel sürüm",
     "hear.eyebrow": "Dinle",
     "hear.title": "Oynat'a bas. Bu gerçek bir Vozen sesi.",
     "hear.sub": "Her klip Vozen'in kendisi tarafından üretilir. Google, Piper ve Kokoro'yu karşılaştırmak için motorları değiştir.",
@@ -30,7 +30,7 @@
     "feat.2.d": "Her üye 35 dil arasından kendi sesini seçer — Google ya da yerel bir nöral motor.",
     "feat.3.t": "İnsan gibi konuşur",
     "feat.3.d": "Her mesajın dilini algılar, tek bir cümlenin içinde sesleri harmanlar ve ! ya da BÜYÜK HARF kullandığında sesini yükseltir.",
-    "feat.4.t": "15 sesli mini oyun",
+    "feat.4.t": "16 sesli mini oyun",
     "feat.4.d": "Dil tahmin et, heceleme yarışları, Wordle, refleks düelloları — sunucu lider tablosuyla birlikte.",
     "feat.5.t": "Kişilik dahil",
     "feat.5.d": "Katılanları selamlar — kendini tekrar etmeden — doğum günlerini kutlar, şaka yapar, sihirli 8 topu yanıtlar ve sunucunun en çok konuşanlarını takip eder.",
@@ -50,7 +50,7 @@
     "lang.t3": "Her kullanıcıya göre yerelleştirilmiş ses isimleri",
     "games.eyebrow": "Mini oyunlar",
     "games.title": "Yüksek sesle oyna.",
-    "games.sub": "Ses için tasarlanmış 15 mini oyun: kendi dilinde sıra tabanlı bir kelime zinciri (Vozen her kelimeyi yüksek sesle okur), konuşulan dili tahmin et, süper hızlı konuşmayı çöz, heceleme yarışları, refleks düelloları, ayrıca gerçek grafiksel tahtalarda Wordle, adam asmaca, XOX ve satranç. Her sunucu bir lider tablosu tutar.",
+    "games.sub": "Ses için tasarlanmış 16 mini oyun: kendi dilinde sıra tabanlı bir kelime zinciri (Vozen her kelimeyi yüksek sesle okur), konuşulan dili tahmin et, süper hızlı konuşmayı çöz, heceleme yarışları, refleks düelloları, ayrıca gerçek grafiksel tahtalarda Wordle, adam asmaca, XOX ve satranç. Her sunucu bir lider tablosu tutar.",
     "games.t1": "Ses + metin oyunları, ilk cevaplayan kazanır",
     "games.t2": "Sunucu lider tablosu ve kişisel istatistikler",
     "games.t3": "Vozen kazananı yüksek sesle duyurur",
@@ -75,7 +75,7 @@
     "price.free.price": "€0",
     "price.free.per": "sonsuza dek",
     "price.free.1": "35 dilde 38 sesin tamamı",
-    "price.free.2": "Otomatik okuma, 15 oyun, şakalar ve selamlamalar",
+    "price.free.2": "Otomatik okuma, 16 oyun, şakalar ve selamlamalar",
     "price.free.3": "Robot ve Yankı ses efektleri",
     "price.free.4": "Tüm yönetici kontrolleri ve haftalık lider tablosu",
     "price.plus.badge": "KİŞİSEL",
@@ -148,10 +148,11 @@
       ["/voice effect", "Robot, yankı, iblis… ses efektleri"],
       ["/voice detection", "Her dil için ana dilde ses"],
       ["/voice nickname", "Vozen sana yüksek sesle nasıl seslenir"],
-      ["/voice optout", "Otomatik okunmayı durdur"]
+      ["/voice optout", "Otomatik okunmayı durdur"],
+      ["/pronunciation", "Vozen'e bir kelimeyi nasıl söyleyeceğini öğret (sana özel)"]
     ],
     "fun": [
-      ["/game play", "15 mini oyundan birini başlat"],
+      ["/game play", "16 mini oyundan birini başlat"],
       ["/game leaderboard", "Sunucudaki en iyi oyuncular"],
       ["/game stats", "Puanların, galibiyetlerin ve sıralaman"],
       ["/joke", "Herhangi bir dilde kısa bir şaka"],
@@ -159,7 +160,8 @@
       ["/8ball", "Sihirli 8 topa sor, yüksek sesle"],
       ["/fact · /fortune · /wyr", "Eğlenceli bilgiler, kehanetler ve ikilemler"],
       ["/birthday set", "Vozen doğum gününde şarkı söyler"],
-      ["/topspeakers", "En çok konuşan kim + seriler"]
+      ["/topspeakers", "En çok konuşan kim + seriler"],
+      ["/randomizer", "Vozen rastgele bir seçenek seçip söyler"]
     ],
     "admin": [
       ["/config greet", "Aramaya katılanları selamla"],

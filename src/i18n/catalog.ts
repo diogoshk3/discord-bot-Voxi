@@ -1475,6 +1475,37 @@ export const catalog: Record<string, Entry> = {
     pt: '😴 Ninguém reagiu a tempo. Próxima!',
   },
 
+  // ── Heads or Tails (cara ou coroa) ─────────────────────────────────────────
+  'game.headsOrTails.name': { en: 'Heads or Tails', pt: 'Cara ou Coroa' },
+  'game.headsOrTails.desc': {
+    en: 'Call the coin flip — type heads or tails before I flip. Best guesser wins!',
+    pt: 'Adivinha a moeda — escreve cara ou coroa antes de eu a atirar. Quem acertar mais ganha!',
+  },
+  'game.headsOrTails.intro': {
+    en: '🪙 **Heads or Tails** — {rounds} rounds. Each round, type `heads` or `tails` before I flip the coin. 1 point per correct call!',
+    pt: '🪙 **Cara ou Coroa** — {rounds} rondas. Em cada ronda, escreve `cara` ou `coroa` antes de eu atirar a moeda. 1 ponto por acerto!',
+  },
+  'game.headsOrTails.introVoice': {
+    en: "Let's play heads or tails!",
+    pt: 'Vamos jogar cara ou coroa!',
+  },
+  'game.headsOrTails.round': {
+    en: '🪙 Round {n}/{total} — heads or tails? Type your call!',
+    pt: '🪙 Ronda {n}/{total} — cara ou coroa? Escreve o teu palpite!',
+  },
+  'game.headsOrTails.roundVoice': { en: 'Heads… or tails?', pt: 'Cara… ou coroa?' },
+  'game.headsOrTails.heads': { en: 'heads', pt: 'cara' },
+  'game.headsOrTails.tails': { en: 'tails', pt: 'coroa' },
+  'game.headsOrTails.resultVoice': { en: "It's {side}!", pt: 'Saiu {side}!' },
+  'game.headsOrTails.winners': {
+    en: "It's **{side}**! Point for: {users}",
+    pt: 'Saiu **{side}**! Ponto para: {users}',
+  },
+  'game.headsOrTails.noWinners': {
+    en: "It's **{side}**! Nobody called it — no points.",
+    pt: 'Saiu **{side}**! Ninguém acertou — sem pontos.',
+  },
+
   // ── Vozen Diz (Simon Says) ─────────────────────────────────────────────────
   'game.vozenSays.name': { en: 'Vozen Says', pt: 'Vozen Diz' },
   'game.vozenSays.desc': {
@@ -1725,4 +1756,80 @@ export const catalog: Record<string, Entry> = {
   },
   'game.stats.rank': { en: 'rank **#{rank}** of {total}', pt: 'posição **#{rank}** de {total}' },
   'game.stats.unranked': { en: 'not ranked yet', pt: 'ainda sem posição' },
+
+  // ── /game play sem jogo: select beginner-friendly (plano v4) ───────────────
+  'game.pickPrompt': {
+    en: '🎮 Which game do you want to play? Pick one:',
+    pt: '🎮 Que jogo queres jogar? Escolhe um:',
+  },
+  'game.pickPlaceholder': { en: 'Choose a game…', pt: 'Escolhe um jogo…' },
+  'game.pickTimeout': {
+    en: '⏰ No game picked — run `/game play` again when ready.',
+    pt: '⏰ Nenhum jogo escolhido — corre `/game play` outra vez quando quiseres.',
+  },
+
+  // ── /pronunciation (dicionário PESSOAL, limites 3 Free / 50 Premium) ───────
+  'pron.listHeader': {
+    en: '🗣️ **Your pronunciations** ({count}/{limit}):',
+    pt: '🗣️ **As tuas pronúncias** ({count}/{limit}):',
+  },
+  'pron.listEmpty': {
+    en: 'You have none yet — add one with `/pronunciation add`.',
+    pt: 'Ainda não tens nenhuma — adiciona com `/pronunciation add`.',
+  },
+  'pron.set': {
+    en: '✅ Saved! When **you** type “{term}”, I will say “{replacement}”.',
+    pt: '✅ Guardado! Quando **tu** escreveres “{term}”, eu digo “{replacement}”.',
+  },
+  'pron.removed': { en: '🗑️ Removed “{term}”.', pt: '🗑️ “{term}” removido.' },
+  'pron.notFound': {
+    en: 'You have no pronunciation for “{term}”. See yours with `/pronunciation list`.',
+    pt: 'Não tens nenhuma pronúncia para “{term}”. Vê as tuas com `/pronunciation list`.',
+  },
+  'pron.empty': {
+    en: 'The word and how to say it cannot be empty.',
+    pt: 'A palavra e a forma de dizer não podem estar vazias.',
+  },
+  'pron.limitHit': {
+    en: '🔒 You reached your limit of **{limit}** pronunciations. Remove one with `/pronunciation remove`.',
+    pt: '🔒 Atingiste o teu limite de **{limit}** pronúncias. Remove uma com `/pronunciation remove`.',
+  },
+  'pron.limitUpsell': {
+    en: '💎 Vozen Plus or Premium raises it to **50** → {url}',
+    pt: '💎 O Vozen Plus ou Premium sobe o limite para **50** → {url}',
+  },
+  'pron.modalTitle': { en: 'Teach Vozen a pronunciation', pt: 'Ensina uma pronúncia ao Vozen' },
+  'pron.modalTerm': { en: 'The word (as people type it)', pt: 'A palavra (como se escreve)' },
+  'pron.modalSay': { en: 'How Vozen should say it', pt: 'Como o Vozen a deve dizer' },
+
+  // ── /randomizer (sorteio falado) ────────────────────────────────────────────
+  'rand.selectPrompt': {
+    en: '🎲 **Randomizer** — how many options do you want me to pick from?',
+    pt: '🎲 **Randomizer** — entre quantas opções queres que eu escolha?',
+  },
+  'rand.selectPlaceholder': { en: 'Number of options…', pt: 'Número de opções…' },
+  'rand.selectOption': { en: '{n} options', pt: '{n} opções' },
+  'rand.filling': {
+    en: '📝 Fill in the form that just opened!',
+    pt: '📝 Preenche o formulário que acabou de abrir!',
+  },
+  'rand.modalTitle': { en: 'Randomizer — {amount} options', pt: 'Randomizer — {amount} opções' },
+  'rand.modalOption': { en: 'Option {n}', pt: 'Opção {n}' },
+  'rand.needTwo': {
+    en: 'Give me at least 2 options separated by commas (e.g. "pizza, sushi").',
+    pt: 'Dá-me pelo menos 2 opções separadas por vírgulas (ex.: "pizza, sushi").',
+  },
+  'rand.result': {
+    en: 'Out of {count} options, I pick… **{winner}**!',
+    pt: 'Entre {count} opções, escolho… **{winner}**!',
+  },
+  'rand.speak': { en: 'I pick… {winner}!', pt: 'Eu escolho… {winner}!' },
+  'rand.notInVoice': {
+    en: '_(join a voice channel with me and I will say it out loud next time)_',
+    pt: '_(entra numa call comigo e para a próxima digo-o em voz alta)_',
+  },
+  'rand.timeout': {
+    en: '⏰ Nothing picked — run `/randomizer` again when ready.',
+    pt: '⏰ Nada escolhido — corre `/randomizer` outra vez quando quiseres.',
+  },
 };

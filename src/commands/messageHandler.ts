@@ -15,7 +15,7 @@ import { isRepetitionSpam } from '../moderation/antispam';
 import { getVoiceEffect } from '../store/voiceEffect';
 import { getClone } from '../store/voiceClone';
 import { bumpTalk } from '../store/talkStats';
-import { getPronunciations } from '../store/pronunciation';
+import { getPronunciations, getUserPronunciations } from '../store/pronunciation';
 import { getUserVoice } from '../store/userVoice';
 import { isOptedOut } from '../store/optout';
 import { isDetectionOn } from '../store/langDetect';
@@ -249,7 +249,12 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     const speakerName = sanitizeSpeakerName(rawName);
     const { req, learnedLang } = prepareSpeech({
       personal,
-      pronunciations: getPronunciations(deps.db, message.guildId),
+      // Pronúncias do PRÓPRIO autor primeiro (aplicadas por ordem => o termo do user
+      // ganha ao da guild), depois o dicionário do servidor (aplica-se a toda a gente).
+      pronunciations: [
+        ...getUserPronunciations(deps.db, message.author.id),
+        ...getPronunciations(deps.db, message.guildId),
+      ],
       userVoice,
       available: deps.availableModels,
       guildDefaultVoice: cfg.defaultVoice,

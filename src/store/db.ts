@@ -65,6 +65,16 @@ export function initDb(path: string): Database.Database {
         PRIMARY KEY (user_id, term)
       );
 
+      -- Pronuncias PESSOAIS (/pronunciation): so se aplicam as mensagens do proprio
+      -- autor, em qualquer servidor (globais, como user_abbreviation). Limite imposto
+      -- no handler: 3 Free / 50 Premium (Plus ou servidor Premium).
+      CREATE TABLE IF NOT EXISTS pronunciation_user (
+        user_id     TEXT NOT NULL,
+        term        TEXT NOT NULL,
+        replacement TEXT NOT NULL,
+        PRIMARY KEY (user_id, term)
+      );
+
       -- (LEGADO) Tabela antiga do toggle de deteccao quando o default era ON: guardava
       -- quem a DESLIGOU. Ja NAO e lida (ver tts_lang_detect_on abaixo). Mantida so para
       -- nao falhar em DBs antigas; pode ser removida numa limpeza futura.

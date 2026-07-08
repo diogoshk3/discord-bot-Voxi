@@ -12,7 +12,7 @@
     "hero.title1": "Tippen.",
     "hero.title2": "Hören.",
     "hero.sub": "Vozen liest deinen Discord-Chat laut vor — mit natürlichen neuronalen Stimmen in 35 Sprachen, mit Spielen, Gelächter und einem Kern, der für immer kostenlos bleibt.",
-    "hero.mini": "35 Sprachen · 38 Stimmen · 15 Minispiele · kostenloser Kern",
+    "hero.mini": "35 Sprachen · 38 Stimmen · 16 Minispiele · kostenloser Kern",
     "hear.eyebrow": "Hör es dir an",
     "hear.title": "Play drücken. Das ist eine echte Vozen-Stimme.",
     "hear.sub": "Jeder Clip wird von Vozen selbst erzeugt. Wechsle die Engine und vergleiche Google, Piper und Kokoro.",
@@ -30,7 +30,7 @@
     "feat.2.d": "Jedes Mitglied wählt seine eigene Stimme aus 35 Sprachen — Google oder eine lokale neuronale Engine.",
     "feat.3.t": "Klingt wie ein Mensch",
     "feat.3.d": "Erkennt die Sprache jeder Nachricht, mischt Stimmen innerhalb eines Satzes und wird lauter, wenn du ! oder GROSSBUCHSTABEN nutzt.",
-    "feat.4.t": "15 Sprach-Minispiele",
+    "feat.4.t": "16 Sprach-Minispiele",
     "feat.4.d": "Errate die Sprache, Buchstabierwettbewerbe, Wordle, Reflex-Duelle — mit Server-Bestenliste.",
     "feat.5.t": "Persönlichkeit inklusive",
     "feat.5.d": "Begrüßt neue Mitglieder — ohne sich zu wiederholen —, gratuliert zum Geburtstag, erzählt Witze, beantwortet die Magic 8-Ball und trackt die aktivsten Sprecher deines Servers.",
@@ -50,7 +50,7 @@
     "lang.t3": "Stimmennamen für jeden Nutzer lokalisiert",
     "games.eyebrow": "Minispiele",
     "games.title": "Spiel es laut aus.",
-    "games.sub": "15 Minispiele, gemacht für die Stimme: eine rundenbasierte Wortkette in deiner Sprache (Vozen liest jedes Wort laut vor), errate die gesprochene Sprache, entschlüssele ultraschnelle Sprache, Buchstabierwettbewerbe, Reflex-Duelle, dazu Wordle, Galgenmännchen, Tic-Tac-Toe und Schach auf echten grafischen Brettern. Jeder Server führt eine Bestenliste.",
+    "games.sub": "16 Minispiele, gemacht für die Stimme: eine rundenbasierte Wortkette in deiner Sprache (Vozen liest jedes Wort laut vor), errate die gesprochene Sprache, entschlüssele ultraschnelle Sprache, Buchstabierwettbewerbe, Reflex-Duelle, dazu Wordle, Galgenmännchen, Tic-Tac-Toe und Schach auf echten grafischen Brettern. Jeder Server führt eine Bestenliste.",
     "games.t1": "Sprach- und Textspiele, wer zuerst antwortet",
     "games.t2": "Server-Bestenliste & persönliche Statistiken",
     "games.t3": "Vozen verkündet den Gewinner laut",
@@ -75,7 +75,7 @@
     "price.free.price": "€0",
     "price.free.per": "für immer",
     "price.free.1": "Alle 38 Stimmen in 35 Sprachen",
-    "price.free.2": "Auto-Vorlesen, 15 Spiele, Witze & Begrüßungen",
+    "price.free.2": "Auto-Vorlesen, 16 Spiele, Witze & Begrüßungen",
     "price.free.3": "Roboter- & Echo-Stimmeneffekte",
     "price.free.4": "Alle Admin-Kontrollen & wöchentliche Bestenliste",
     "price.plus.badge": "PERSÖNLICH",
@@ -148,10 +148,11 @@
       ["/voice effect", "Roboter, Echo, Dämon … Stimmeneffekte"],
       ["/voice detection", "Native Stimme pro Sprache"],
       ["/voice nickname", "Wie Vozen dich laut anspricht"],
-      ["/voice optout", "Nicht mehr automatisch vorgelesen werden"]
+      ["/voice optout", "Nicht mehr automatisch vorgelesen werden"],
+      ["/pronunciation", "Bring Vozen bei, ein Wort auszusprechen (nur deins)"]
     ],
     "fun": [
-      ["/game play", "Eines von 15 Minispielen starten"],
+      ["/game play", "Eines von 16 Minispielen starten"],
       ["/game leaderboard", "Top-Spieler auf dem Server"],
       ["/game stats", "Deine Punkte, Siege & Rang"],
       ["/joke", "Ein kurzer Witz in jeder Sprache"],
@@ -159,7 +160,8 @@
       ["/8ball", "Frag die Magic 8-Ball, laut"],
       ["/fact · /fortune · /wyr", "Fun Facts, Wahrsagungen & Dilemmata"],
       ["/birthday set", "Vozen singt an deinem Geburtstag"],
-      ["/topspeakers", "Wer am meisten redet + Serien"]
+      ["/topspeakers", "Wer am meisten redet + Serien"],
+      ["/randomizer", "Vozen wählt zufällig eine Option und sagt sie an"]
     ],
     "admin": [
       ["/config greet", "Begrüße Leute, die dem Call beitreten"],

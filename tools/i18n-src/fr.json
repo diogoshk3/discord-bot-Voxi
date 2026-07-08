@@ -12,7 +12,7 @@
     "hero.title1": "Écrivez-le.",
     "hero.title2": "Écoutez-le.",
     "hero.sub": "Vozen lit votre chat Discord à voix haute avec des voix neuronales naturelles — en 35 langues, avec des jeux, des rires et un cœur gratuit à vie.",
-    "hero.mini": "35 langues · 38 voix · 15 mini-jeux · cœur gratuit",
+    "hero.mini": "35 langues · 38 voix · 16 mini-jeux · cœur gratuit",
     "hear.eyebrow": "Écoutez-le",
     "hear.title": "Appuyez sur lecture. Ça, c'est une vraie voix Vozen.",
     "hear.sub": "Chaque extrait est généré par Vozen lui-même. Changez de moteur pour comparer Google, Piper et Kokoro.",
@@ -30,7 +30,7 @@
     "feat.2.d": "Chaque membre choisit sa propre voix parmi 35 langues — Google ou un moteur neuronal local.",
     "feat.3.t": "Parle comme un humain",
     "feat.3.d": "Détecte la langue de chaque message, mélange les voix dans une même phrase et monte le ton quand vous utilisez ! ou les MAJUSCULES.",
-    "feat.4.t": "15 mini-jeux vocaux",
+    "feat.4.t": "16 mini-jeux vocaux",
     "feat.4.d": "Devinez la langue, concours d'orthographe, Wordle, duels de réflexes — avec un classement de serveur.",
     "feat.5.t": "Une vraie personnalité",
     "feat.5.d": "Accueille les nouveaux arrivants — sans jamais se répéter —, souhaite les anniversaires, raconte des blagues, répond à la boule magique et suit les meilleurs bavards de votre serveur.",
@@ -50,7 +50,7 @@
     "lang.t3": "Noms de voix localisés pour chaque utilisateur",
     "games.eyebrow": "Mini-jeux",
     "games.title": "Jouez à voix haute.",
-    "games.sub": "15 mini-jeux pensés pour la voix : une chaîne de mots au tour par tour dans votre langue (Vozen lit chaque mot à voix haute), devinez la langue parlée, décodez un débit ultra-rapide, concours d'orthographe, duels de réflexes, plus Wordle, le pendu, le morpion et les échecs sur de vrais plateaux graphiques. Chaque serveur garde son classement.",
+    "games.sub": "16 mini-jeux pensés pour la voix : une chaîne de mots au tour par tour dans votre langue (Vozen lit chaque mot à voix haute), devinez la langue parlée, décodez un débit ultra-rapide, concours d'orthographe, duels de réflexes, plus Wordle, le pendu, le morpion et les échecs sur de vrais plateaux graphiques. Chaque serveur garde son classement.",
     "games.t1": "Jeux voix + texte, premier à répondre",
     "games.t2": "Classement du serveur et stats personnelles",
     "games.t3": "Vozen annonce le gagnant à voix haute",
@@ -75,7 +75,7 @@
     "price.free.price": "€0",
     "price.free.per": "à vie",
     "price.free.1": "Les 38 voix dans 35 langues",
-    "price.free.2": "Lecture auto, 15 jeux, blagues et accueils",
+    "price.free.2": "Lecture auto, 16 jeux, blagues et accueils",
     "price.free.3": "Effets de voix Robot et Écho",
     "price.free.4": "Tous les contrôles admin et classement hebdomadaire",
     "price.plus.badge": "PERSONNEL",
@@ -148,10 +148,11 @@
       ["/voice effect", "Robot, écho, démon… effets de voix"],
       ["/voice detection", "Voix native par langue"],
       ["/voice nickname", "Comment Vozen vous appelle à voix haute"],
-      ["/voice optout", "Ne plus être lu automatiquement"]
+      ["/voice optout", "Ne plus être lu automatiquement"],
+      ["/pronunciation", "Apprends à Vozen à prononcer un mot (perso)"]
     ],
     "fun": [
-      ["/game play", "Lancer l'un des 15 mini-jeux"],
+      ["/game play", "Lancer l'un des 16 mini-jeux"],
       ["/game leaderboard", "Les meilleurs joueurs du serveur"],
       ["/game stats", "Vos points, victoires et rang"],
       ["/joke", "Une petite blague dans n'importe quelle langue"],
@@ -159,7 +160,8 @@
       ["/8ball", "Interrogez la boule magique, à voix haute"],
       ["/fact · /fortune · /wyr", "Anecdotes, prédictions et dilemmes"],
       ["/birthday set", "Vozen chante le jour de votre anniversaire"],
-      ["/topspeakers", "Qui parle le plus + séries en cours"]
+      ["/topspeakers", "Qui parle le plus + séries en cours"],
+      ["/randomizer", "Vozen tire une option au sort et la dit"]
     ],
     "admin": [
       ["/config greet", "Accueillir ceux qui rejoignent l'appel"],

@@ -15,6 +15,7 @@ import { wordleDef } from './wordle';
 import { tictactoeDef } from './tictactoe';
 import { chessDef } from './chess';
 import { wordChainDef } from './wordChain';
+import { headsOrTailsDef } from './headsOrTails';
 import { WORDCHAIN_LANGS } from './wordchain/core';
 
 /**
@@ -38,6 +39,7 @@ export const GAME_DEFS: readonly GameDefinition[] = [
   tictactoeDef,
   chessDef,
   wordChainDef,
+  headsOrTailsDef,
 ];
 
 /** Nome amigável (autónimo) de cada língua jogável do word-chain. */
