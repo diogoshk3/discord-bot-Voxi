@@ -95,6 +95,10 @@ export interface AppConfig {
   // OWNER_ID é um fallback explícito. Sem OWNER_GUILD_ID o comando não é registado.
   ownerGuildId?: string;
   ownerId?: string;
+  // Webhook do Ko-fi (compras -> premium). Token de verificação (Ko-fi > Settings > API);
+  // AUSENTE => o servidor de webhook NÃO arranca (inerte). Porta do endpoint HTTP local.
+  kofiWebhookToken?: string;
+  kofiWebhookPort: number;
 }
 
 function requireEnv(name: string): string {
@@ -280,5 +284,8 @@ export function loadConfig(): AppConfig {
     // Owner-only: servidor de controlo (onde o /vozengrant é registado) + dono explícito.
     ownerGuildId: strEnv('OWNER_GUILD_ID', '') || undefined,
     ownerId: strEnv('OWNER_ID', '') || undefined,
+    // Webhook do Ko-fi: sem token => não arranca. Porta local do endpoint.
+    kofiWebhookToken: strEnv('KOFI_WEBHOOK_TOKEN', '') || undefined,
+    kofiWebhookPort: numEnvPositive('KOFI_WEBHOOK_PORT', 3001, { integer: true }),
   };
 }

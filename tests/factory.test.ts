@@ -39,6 +39,7 @@ function baseConfig(overrides: Partial<AppConfig> = {}): AppConfig {
     gttsChunkConcurrency: 3,
     supportUrl: 'https://discord.gg/V6PZYZmhcQ',
     kofiUrl: 'https://ko-fi.com/',
+    kofiWebhookPort: 3001,
     kokoroCmd: undefined,
     kokoroLangs: new Set(['en', 'es', 'fr', 'hi', 'it', 'pt', 'ja']),
     ...overrides,

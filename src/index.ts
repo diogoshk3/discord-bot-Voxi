@@ -30,6 +30,7 @@ import { startHealthServer } from './health';
 import { checkFfmpeg } from './health/ffmpeg';
 import { startLoopLagMonitor } from './health/loopLag';
 import { startEntitlementSync } from './premium/entitlementSync';
+import { startKofiWebhook } from './premium/kofiWebhook';
 import { startVoteWebhookServer } from './vote';
 
 function discoverModels(modelsDir: string): string[] {
@@ -233,6 +234,22 @@ async function main(): Promise<void> {
     startVoteWebhookServer(config);
   } catch (err) {
     log.error('[index] falha ao arrancar o webhook top.gg (ignorado)', err);
+  }
+
+  // Webhook do Ko-fi (compras -> premium). INERTE sem KOFI_WEBHOOK_TOKEN. Independente do
+  // gateway: arranca já (não espera o ClientReady) para não perder eventos. try/catch para
+  // nunca derrubar o arranque (ex.: porta ocupada).
+  try {
+    startKofiWebhook({
+      db,
+      token: config.kofiWebhookToken,
+      port: config.kofiWebhookPort,
+      now: () => Date.now(),
+      logInfo: (m) => log.info(m),
+      logError: (m, err) => log.error(m, err),
+    });
+  } catch (err) {
+    log.error('[index] falha ao arrancar o webhook do Ko-fi (ignorado)', err);
   }
 
   // Vaga 3 — auto-post da contagem de servidores para o top.gg. OPT-IN (TOPGG_TOKEN).
