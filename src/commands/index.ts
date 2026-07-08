@@ -649,62 +649,6 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
     )
     .addSubcommand((s) => s.setName('stats').setDescription('Show your own game stats'))
     .toJSON(),
-  // Context-menu (botão direito numa mensagem -> Apps -> Speak): lê essa mensagem em
-  // voz alta com a voz de quem clicou. Complementa o /tts sem escrever nada.
-  new ContextMenuCommandBuilder()
-    .setName('Speak')
-    .setNameLocalizations({ 'pt-BR': 'Ler em voz alta' })
-    .setType(ApplicationCommandType.Message)
-    .toJSON(),
-];
-
-// Comandos utilizáveis em DM: só devolvem TEXTO e não dependem de guild/voz/store.
-const DM_CAPABLE_COMMANDS = new Set(['invite', 'vote', 'help', 'uptime', 'botstats']);
-
-// Todos os OUTROS comandos dependem de uma guild (sessão de voz, config e store
-// por-guild). Por defeito o Discord mostra comandos globais também em DM, onde
-// `guildId` é null → o handler escrevia no store com guildId null (SqliteError:
-// guild_id NOT NULL) ou respondia coisas enganadoras. Restringi-los ao contexto
-// Guild faz o Discord ESCONDÊ-LOS em DM. Centralizado por nome (em vez de repetir
-// .setContexts() em ~10 builders) para não esquecer nenhum comando novo. Cobre
-// também o context-menu "Speak" (precisa de canal de voz).
-export const commandDefs: RESTPostAPIApplicationCommandsJSONBody[] = commandDefsRaw.map((def) =>
-  DM_CAPABLE_COMMANDS.has(def.name) ? def : { ...def, contexts: [InteractionContextType.Guild] },
-);
-
-// Comandos OWNER-ONLY. NÃO entram em commandDefs (global): são registados à parte, como
-// comandos de GUILD, só na OWNER_GUILD_ID (registerOwnerCommands). Assim o público nem
-// os vê no picker — 1.ª camada de defesa. A 2.ª é o gate por dono no handler.
-export const ownerCommandDefs: RESTPostAPIApplicationCommandsJSONBody[] = [
-  new SlashCommandBuilder()
-    .setName('vozengrant')
-    .setDescription('Owner only — grant Vozen Premium/Plus to a user')
-    .addUserOption((o) => o.setName('user').setDescription('User to grant to').setRequired(true))
-    .addStringOption((o) =>
-      o
-        .setName('plan')
-        .setDescription('What to grant')
-        .setRequired(true)
-        .addChoices(
-          { name: 'Premium (server pass, 3 licences)', value: 'premium' },
-          { name: 'Plus (personal, follows the user)', value: 'plus' },
-        ),
-    )
-    .addIntegerOption((o) =>
-      o
-        .setName('days')
-        .setDescription('Duration in days (default 30)')
-        .setMinValue(1)
-        .setMaxValue(3650),
-    )
-    .addIntegerOption((o) =>
-      o
-        .setName('seats')
-        .setDescription('Premium only: number of server licences (default 3)')
-        .setMinValue(1)
-        .setMaxValue(50),
-    )
-    .toJSON(),
   // /pronunciation — dicionário de pronúncia PESSOAL (só afeta as mensagens de quem o
   // criou; segue o utilizador entre servidores). Limite 3 Free / 50 Premium (Plus ou
   // servidor Premium). `add` sem opções abre um MODAL (beginner-friendly, plano v4).
@@ -805,6 +749,62 @@ export const ownerCommandDefs: RESTPostAPIApplicationCommandsJSONBody[] = [
         .setNameLocalizations({ 'pt-BR': 'opcoes' })
         .setDescription('Or type them here, separated by commas (e.g. "pizza, sushi, tacos")')
         .setMaxLength(1000),
+    )
+    .toJSON(),
+  // Context-menu (botão direito numa mensagem -> Apps -> Speak): lê essa mensagem em
+  // voz alta com a voz de quem clicou. Complementa o /tts sem escrever nada.
+  new ContextMenuCommandBuilder()
+    .setName('Speak')
+    .setNameLocalizations({ 'pt-BR': 'Ler em voz alta' })
+    .setType(ApplicationCommandType.Message)
+    .toJSON(),
+];
+
+// Comandos utilizáveis em DM: só devolvem TEXTO e não dependem de guild/voz/store.
+const DM_CAPABLE_COMMANDS = new Set(['invite', 'vote', 'help', 'uptime', 'botstats']);
+
+// Todos os OUTROS comandos dependem de uma guild (sessão de voz, config e store
+// por-guild). Por defeito o Discord mostra comandos globais também em DM, onde
+// `guildId` é null → o handler escrevia no store com guildId null (SqliteError:
+// guild_id NOT NULL) ou respondia coisas enganadoras. Restringi-los ao contexto
+// Guild faz o Discord ESCONDÊ-LOS em DM. Centralizado por nome (em vez de repetir
+// .setContexts() em ~10 builders) para não esquecer nenhum comando novo. Cobre
+// também o context-menu "Speak" (precisa de canal de voz).
+export const commandDefs: RESTPostAPIApplicationCommandsJSONBody[] = commandDefsRaw.map((def) =>
+  DM_CAPABLE_COMMANDS.has(def.name) ? def : { ...def, contexts: [InteractionContextType.Guild] },
+);
+
+// Comandos OWNER-ONLY. NÃO entram em commandDefs (global): são registados à parte, como
+// comandos de GUILD, só na OWNER_GUILD_ID (registerOwnerCommands). Assim o público nem
+// os vê no picker — 1.ª camada de defesa. A 2.ª é o gate por dono no handler.
+export const ownerCommandDefs: RESTPostAPIApplicationCommandsJSONBody[] = [
+  new SlashCommandBuilder()
+    .setName('vozengrant')
+    .setDescription('Owner only — grant Vozen Premium/Plus to a user')
+    .addUserOption((o) => o.setName('user').setDescription('User to grant to').setRequired(true))
+    .addStringOption((o) =>
+      o
+        .setName('plan')
+        .setDescription('What to grant')
+        .setRequired(true)
+        .addChoices(
+          { name: 'Premium (server pass, 3 licences)', value: 'premium' },
+          { name: 'Plus (personal, follows the user)', value: 'plus' },
+        ),
+    )
+    .addIntegerOption((o) =>
+      o
+        .setName('days')
+        .setDescription('Duration in days (default 30)')
+        .setMinValue(1)
+        .setMaxValue(3650),
+    )
+    .addIntegerOption((o) =>
+      o
+        .setName('seats')
+        .setDescription('Premium only: number of server licences (default 3)')
+        .setMinValue(1)
+        .setMaxValue(50),
     )
     .toJSON(),
 ];
