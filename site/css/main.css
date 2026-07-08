@@ -140,7 +140,12 @@ code { font-family: var(--f-mono); font-size: 0.9em; color: var(--aqua); }
 @keyframes float1 { 50% { transform: translate(40px, 30px); } }
 @keyframes float2 { 50% { transform: translate(-36px, 44px); } }
 
-body > *:not(.grain):not(.orbs) { position: relative; z-index: 2; }
+/* Levanta o conteúdo acima das camadas de fundo (.grain/.orbs). EXCLUI o .nav:
+   senão esta regra (mais específica que `.nav`) sobrepunha-se ao z-index:100 do
+   header e punha-o ao MESMO nível do .hero (z-index 2) — como o .hero vem depois no
+   DOM, pintava por cima do menu mobile aberto (dropdown sem fundo visível) e ainda
+   anulava o `position: sticky` do nav. Com o :not(.nav), o header mantém sticky+100. */
+body > *:not(.grain):not(.orbs):not(.nav) { position: relative; z-index: 2; }
 
 /* ── equalizer mark ─────────────────────────────────────── */
 .eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 18px; }
