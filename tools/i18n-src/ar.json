@@ -123,7 +123,8 @@
     "panel.expiredOn": "انتهى في",
     "panel.seatsUsed": "تراخيص قيد الاستخدام",
     "panel.servers": "نشط في:",
-    "panel.noServers": "لم يُفعَّل في أي خادم بعد — استخدم /premium activate."
+    "panel.noServers": "لم يُفعَّل في أي خادم بعد — استخدم /premium activate.",
+    "nav.login": "تسجيل الدخول"
   },
   "commands": {
     "general": [

@@ -123,7 +123,8 @@
     "panel.expiredOn": "Expiré le",
     "panel.seatsUsed": "licences utilisées",
     "panel.servers": "Actif sur :",
-    "panel.noServers": "Pas encore activé sur un serveur — lance /premium activate."
+    "panel.noServers": "Pas encore activé sur un serveur — lance /premium activate.",
+    "nav.login": "Connexion"
   },
   "commands": {
     "general": [

@@ -123,7 +123,8 @@
     "panel.expiredOn": "만료일:",
     "panel.seatsUsed": "개 라이선스 사용 중",
     "panel.servers": "활성화된 서버:",
-    "panel.noServers": "아직 어떤 서버에도 활성화되지 않았습니다 — /premium activate를 사용하세요."
+    "panel.noServers": "아직 어떤 서버에도 활성화되지 않았습니다 — /premium activate를 사용하세요.",
+    "nav.login": "로그인"
   },
   "commands": {
     "general": [

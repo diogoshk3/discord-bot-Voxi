@@ -381,6 +381,20 @@
     byId("ppRetry")?.addEventListener("click", loadPanel);
   }
 
+  // Botão de login na navbar (visível sempre). COM backend => login OAuth do Discord; SEM
+  // backend ainda => leva à secção Premium, para não mandar o utilizador a um erro de
+  // redirect no Discord antes de o redirect URI estar registado.
+  const navLoginBtn = document.getElementById("navLogin");
+  if (navLoginBtn) {
+    navLoginBtn.addEventListener("click", () => {
+      if (PREMIUM_API_BASE) login();
+      else
+        document
+          .getElementById("premium")
+          ?.scrollIntoView({ behavior: reduce ? "auto" : "smooth" });
+    });
+  }
+
   /* ── navbar ──────────────────────────────────────────── */
   const nav = $("#nav");
   const onScroll = () => nav.classList.toggle("is-stuck", window.scrollY > 12);

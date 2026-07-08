@@ -123,7 +123,8 @@
     "panel.expiredOn": "過期於",
     "panel.seatsUsed": "個授權使用中",
     "panel.servers": "已啟用於：",
-    "panel.noServers": "尚未在任何伺服器啟用 — 請使用 /premium activate。"
+    "panel.noServers": "尚未在任何伺服器啟用 — 請使用 /premium activate。",
+    "nav.login": "登入"
   },
   "commands": {
     "general": [

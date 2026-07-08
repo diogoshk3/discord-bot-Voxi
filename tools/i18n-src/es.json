@@ -123,7 +123,8 @@
     "panel.expiredOn": "Caducó el",
     "panel.seatsUsed": "licencias en uso",
     "panel.servers": "Activo en:",
-    "panel.noServers": "Aún no activado en ningún servidor — usa /premium activate."
+    "panel.noServers": "Aún no activado en ningún servidor — usa /premium activate.",
+    "nav.login": "Entrar"
   },
   "commands": {
     "general": [
