@@ -110,152 +110,47 @@
   },
   "commands": {
     "general": [
-      [
-        "/help",
-        "Afficher la liste des commandes de Vozen"
-      ],
-      [
-        "/join",
-        "Rejoindre votre salon vocal"
-      ],
-      [
-        "/leave",
-        "Quitter le salon vocal"
-      ],
-      [
-        "/tts",
-        "Lire un texte à voix haute"
-      ],
-      [
-        "/skip",
-        "Passer l'audio en cours"
-      ],
-      [
-        "/shutup",
-        "Faire taire Vozen immédiatement (vide la file)"
-      ],
-      [
-        "/setup",
-        "Configuration guidée en une étape"
-      ],
-      [
-        "/invite",
-        "Obtenir le lien d'invitation"
-      ],
-      [
-        "/vote",
-        "Voter pour Vozen sur top.gg"
-      ],
-      [
-        "/uptime",
-        "Depuis combien de temps Vozen est en ligne"
-      ],
-      [
-        "/premium",
-        "Le statut Premium de votre serveur et le vôtre"
-      ],
-      [
-        "/redeem",
-        "Activer un code Premium"
-      ]
+      ["/help", "Afficher la liste des commandes de Vozen"],
+      ["/join", "Rejoindre votre salon vocal"],
+      ["/leave", "Quitter le salon vocal"],
+      ["/tts", "Lire un texte à voix haute"],
+      ["/skip", "Passer l'audio en cours"],
+      ["/shutup", "Faire taire Vozen immédiatement (vide la file)"],
+      ["/setup", "Configuration guidée en une étape"],
+      ["/invite", "Obtenir le lien d'invitation"],
+      ["/vote", "Voter pour Vozen sur top.gg"],
+      ["/uptime", "Depuis combien de temps Vozen est en ligne"],
+      ["/premium", "Le statut Premium de votre serveur et le vôtre"],
+      ["/redeem", "Activer un code Premium"]
     ],
     "voice": [
-      [
-        "/voice set",
-        "Choisir votre voix, langue et moteur"
-      ],
-      [
-        "/voice list",
-        "Parcourir toutes les voix"
-      ],
-      [
-        "/voice preview",
-        "Écouter un échantillon de voix"
-      ],
-      [
-        "/voice clone",
-        "Cloner votre propre voix (Premium)"
-      ],
-      [
-        "/voice effect",
-        "Robot, écho, démon… effets de voix"
-      ],
-      [
-        "/voice detection",
-        "Voix native par langue"
-      ],
-      [
-        "/voice nickname",
-        "Comment Vozen vous appelle à voix haute"
-      ],
-      [
-        "/voice optout",
-        "Ne plus être lu automatiquement"
-      ]
+      ["/voice set", "Choisir votre voix, langue et moteur"],
+      ["/voice list", "Parcourir toutes les voix"],
+      ["/voice preview", "Écouter un échantillon de voix"],
+      ["/voice clone", "Cloner votre propre voix (Premium)"],
+      ["/voice effect", "Robot, écho, démon… effets de voix"],
+      ["/voice detection", "Voix native par langue"],
+      ["/voice nickname", "Comment Vozen vous appelle à voix haute"],
+      ["/voice optout", "Ne plus être lu automatiquement"]
     ],
     "fun": [
-      [
-        "/game play",
-        "Lancer l'un des 15 mini-jeux"
-      ],
-      [
-        "/game leaderboard",
-        "Les meilleurs joueurs du serveur"
-      ],
-      [
-        "/game stats",
-        "Vos points, victoires et rang"
-      ],
-      [
-        "/joke",
-        "Une petite blague dans n'importe quelle langue"
-      ],
-      [
-        "/laugh",
-        "Vozen rit avec votre voix"
-      ],
-      [
-        "/8ball",
-        "Interrogez la boule magique, à voix haute"
-      ],
-      [
-        "/fact · /fortune · /wyr",
-        "Anecdotes, prédictions et dilemmes"
-      ],
-      [
-        "/birthday set",
-        "Vozen chante le jour de votre anniversaire"
-      ],
-      [
-        "/topspeakers",
-        "Qui parle le plus + séries en cours"
-      ]
+      ["/game play", "Lancer l'un des 15 mini-jeux"],
+      ["/game leaderboard", "Les meilleurs joueurs du serveur"],
+      ["/game stats", "Vos points, victoires et rang"],
+      ["/joke", "Une petite blague dans n'importe quelle langue"],
+      ["/laugh", "Vozen rit avec votre voix"],
+      ["/8ball", "Interrogez la boule magique, à voix haute"],
+      ["/fact · /fortune · /wyr", "Anecdotes, prédictions et dilemmes"],
+      ["/birthday set", "Vozen chante le jour de votre anniversaire"],
+      ["/topspeakers", "Qui parle le plus + séries en cours"]
     ],
     "admin": [
-      [
-        "/config greet",
-        "Accueillir ceux qui rejoignent l'appel"
-      ],
-      [
-        "/config language",
-        "Définir la langue de l'interface"
-      ],
-      [
-        "/config default-voice",
-        "Définir la voix par défaut du serveur"
-      ],
-      [
-        "/config autoread",
-        "Activer/désactiver la lecture auto"
-      ],
-      [
-        "/config blockword",
-        "Gérer la liste de blocage"
-      ],
-      [
-        "/config pronunciation",
-        "Prononciations personnalisées"
-      ]
+      ["/config greet", "Accueillir ceux qui rejoignent l'appel"],
+      ["/config language", "Définir la langue de l'interface"],
+      ["/config default-voice", "Définir la voix par défaut du serveur"],
+      ["/config autoread", "Activer/désactiver la lecture auto"],
+      ["/config blockword", "Gérer la liste de blocage"],
+      ["/config pronunciation", "Prononciations personnalisées"]
     ]
   },
   "faq": [

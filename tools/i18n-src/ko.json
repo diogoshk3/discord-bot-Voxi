@@ -110,152 +110,47 @@
   },
   "commands": {
     "general": [
-      [
-        "/help",
-        "Vozen의 명령어 목록 보기"
-      ],
-      [
-        "/join",
-        "음성 채널에 참여"
-      ],
-      [
-        "/leave",
-        "음성 채널에서 나가기"
-      ],
-      [
-        "/tts",
-        "텍스트를 소리 내어 읽기"
-      ],
-      [
-        "/skip",
-        "현재 오디오 건너뛰기"
-      ],
-      [
-        "/shutup",
-        "지금 바로 Vozen 조용히 시키기 (대기열 비우기)"
-      ],
-      [
-        "/setup",
-        "단계별 원스텝 설정"
-      ],
-      [
-        "/invite",
-        "초대 링크 받기"
-      ],
-      [
-        "/vote",
-        "top.gg에서 Vozen에 투표"
-      ],
-      [
-        "/uptime",
-        "Vozen이 온라인 상태인 시간"
-      ],
-      [
-        "/premium",
-        "서버와 나의 Premium 상태"
-      ],
-      [
-        "/redeem",
-        "Premium 코드 사용하기"
-      ]
+      ["/help", "Vozen의 명령어 목록 보기"],
+      ["/join", "음성 채널에 참여"],
+      ["/leave", "음성 채널에서 나가기"],
+      ["/tts", "텍스트를 소리 내어 읽기"],
+      ["/skip", "현재 오디오 건너뛰기"],
+      ["/shutup", "지금 바로 Vozen 조용히 시키기 (대기열 비우기)"],
+      ["/setup", "단계별 원스텝 설정"],
+      ["/invite", "초대 링크 받기"],
+      ["/vote", "top.gg에서 Vozen에 투표"],
+      ["/uptime", "Vozen이 온라인 상태인 시간"],
+      ["/premium", "서버와 나의 Premium 상태"],
+      ["/redeem", "Premium 코드 사용하기"]
     ],
     "voice": [
-      [
-        "/voice set",
-        "음성, 언어, 엔진 선택"
-      ],
-      [
-        "/voice list",
-        "모든 음성 둘러보기"
-      ],
-      [
-        "/voice preview",
-        "음성 샘플 들어보기"
-      ],
-      [
-        "/voice clone",
-        "나만의 음성 복제 (Premium)"
-      ],
-      [
-        "/voice effect",
-        "로봇, 에코, 악마… 음성 효과"
-      ],
-      [
-        "/voice detection",
-        "언어별 원어민 음성"
-      ],
-      [
-        "/voice nickname",
-        "Vozen이 나를 부르는 방식"
-      ],
-      [
-        "/voice optout",
-        "자동 읽기 대상에서 제외"
-      ]
+      ["/voice set", "음성, 언어, 엔진 선택"],
+      ["/voice list", "모든 음성 둘러보기"],
+      ["/voice preview", "음성 샘플 들어보기"],
+      ["/voice clone", "나만의 음성 복제 (Premium)"],
+      ["/voice effect", "로봇, 에코, 악마… 음성 효과"],
+      ["/voice detection", "언어별 원어민 음성"],
+      ["/voice nickname", "Vozen이 나를 부르는 방식"],
+      ["/voice optout", "자동 읽기 대상에서 제외"]
     ],
     "fun": [
-      [
-        "/game play",
-        "15가지 미니게임 중 하나 시작"
-      ],
-      [
-        "/game leaderboard",
-        "서버 상위 플레이어"
-      ],
-      [
-        "/game stats",
-        "나의 점수, 승리, 순위"
-      ],
-      [
-        "/joke",
-        "어떤 언어로든 짧은 농담"
-      ],
-      [
-        "/laugh",
-        "Vozen이 당신의 목소리로 웃습니다"
-      ],
-      [
-        "/8ball",
-        "매직 8볼에게 소리 내어 질문하기"
-      ],
-      [
-        "/fact · /fortune · /wyr",
-        "재미있는 사실, 운세, 딜레마"
-      ],
-      [
-        "/birthday set",
-        "생일에 Vozen이 노래해줍니다"
-      ],
-      [
-        "/topspeakers",
-        "가장 많이 말한 사람 + 연속 기록"
-      ]
+      ["/game play", "15가지 미니게임 중 하나 시작"],
+      ["/game leaderboard", "서버 상위 플레이어"],
+      ["/game stats", "나의 점수, 승리, 순위"],
+      ["/joke", "어떤 언어로든 짧은 농담"],
+      ["/laugh", "Vozen이 당신의 목소리로 웃습니다"],
+      ["/8ball", "매직 8볼에게 소리 내어 질문하기"],
+      ["/fact · /fortune · /wyr", "재미있는 사실, 운세, 딜레마"],
+      ["/birthday set", "생일에 Vozen이 노래해줍니다"],
+      ["/topspeakers", "가장 많이 말한 사람 + 연속 기록"]
     ],
     "admin": [
-      [
-        "/config greet",
-        "통화에 참여하는 사람 인사하기"
-      ],
-      [
-        "/config language",
-        "인터페이스 언어 설정"
-      ],
-      [
-        "/config default-voice",
-        "서버 기본 음성 설정"
-      ],
-      [
-        "/config autoread",
-        "자동 읽기 켜기/끄기"
-      ],
-      [
-        "/config blockword",
-        "차단 목록 관리"
-      ],
-      [
-        "/config pronunciation",
-        "사용자 지정 발음"
-      ]
+      ["/config greet", "통화에 참여하는 사람 인사하기"],
+      ["/config language", "인터페이스 언어 설정"],
+      ["/config default-voice", "서버 기본 음성 설정"],
+      ["/config autoread", "자동 읽기 켜기/끄기"],
+      ["/config blockword", "차단 목록 관리"],
+      ["/config pronunciation", "사용자 지정 발음"]
     ]
   },
   "faq": [

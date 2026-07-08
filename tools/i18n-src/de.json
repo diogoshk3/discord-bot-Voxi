@@ -110,152 +110,47 @@
   },
   "commands": {
     "general": [
-      [
-        "/help",
-        "Vozens Befehlsliste anzeigen"
-      ],
-      [
-        "/join",
-        "Deinem Sprachkanal beitreten"
-      ],
-      [
-        "/leave",
-        "Den Sprachkanal verlassen"
-      ],
-      [
-        "/tts",
-        "Einen Text laut vorlesen"
-      ],
-      [
-        "/skip",
-        "Das aktuelle Audio überspringen"
-      ],
-      [
-        "/shutup",
-        "Vozen sofort verstummen lassen (leert die Warteschlange)"
-      ],
-      [
-        "/setup",
-        "Geführtes Ein-Schritt-Setup"
-      ],
-      [
-        "/invite",
-        "Den Einladungslink holen"
-      ],
-      [
-        "/vote",
-        "Für Vozen auf top.gg abstimmen"
-      ],
-      [
-        "/uptime",
-        "Wie lange Vozen schon online ist"
-      ],
-      [
-        "/premium",
-        "Premium-Status deines Servers & von dir"
-      ],
-      [
-        "/redeem",
-        "Einen Premium-Code einlösen"
-      ]
+      ["/help", "Vozens Befehlsliste anzeigen"],
+      ["/join", "Deinem Sprachkanal beitreten"],
+      ["/leave", "Den Sprachkanal verlassen"],
+      ["/tts", "Einen Text laut vorlesen"],
+      ["/skip", "Das aktuelle Audio überspringen"],
+      ["/shutup", "Vozen sofort verstummen lassen (leert die Warteschlange)"],
+      ["/setup", "Geführtes Ein-Schritt-Setup"],
+      ["/invite", "Den Einladungslink holen"],
+      ["/vote", "Für Vozen auf top.gg abstimmen"],
+      ["/uptime", "Wie lange Vozen schon online ist"],
+      ["/premium", "Premium-Status deines Servers & von dir"],
+      ["/redeem", "Einen Premium-Code einlösen"]
     ],
     "voice": [
-      [
-        "/voice set",
-        "Stimme, Sprache & Engine wählen"
-      ],
-      [
-        "/voice list",
-        "Alle Stimmen durchstöbern"
-      ],
-      [
-        "/voice preview",
-        "Eine Stimmenprobe anhören"
-      ],
-      [
-        "/voice clone",
-        "Deine eigene Stimme klonen (Premium)"
-      ],
-      [
-        "/voice effect",
-        "Roboter, Echo, Dämon … Stimmeneffekte"
-      ],
-      [
-        "/voice detection",
-        "Native Stimme pro Sprache"
-      ],
-      [
-        "/voice nickname",
-        "Wie Vozen dich laut anspricht"
-      ],
-      [
-        "/voice optout",
-        "Nicht mehr automatisch vorgelesen werden"
-      ]
+      ["/voice set", "Stimme, Sprache & Engine wählen"],
+      ["/voice list", "Alle Stimmen durchstöbern"],
+      ["/voice preview", "Eine Stimmenprobe anhören"],
+      ["/voice clone", "Deine eigene Stimme klonen (Premium)"],
+      ["/voice effect", "Roboter, Echo, Dämon … Stimmeneffekte"],
+      ["/voice detection", "Native Stimme pro Sprache"],
+      ["/voice nickname", "Wie Vozen dich laut anspricht"],
+      ["/voice optout", "Nicht mehr automatisch vorgelesen werden"]
     ],
     "fun": [
-      [
-        "/game play",
-        "Eines von 15 Minispielen starten"
-      ],
-      [
-        "/game leaderboard",
-        "Top-Spieler auf dem Server"
-      ],
-      [
-        "/game stats",
-        "Deine Punkte, Siege & Rang"
-      ],
-      [
-        "/joke",
-        "Ein kurzer Witz in jeder Sprache"
-      ],
-      [
-        "/laugh",
-        "Vozen lacht in deiner Stimme"
-      ],
-      [
-        "/8ball",
-        "Frag die Magic 8-Ball, laut"
-      ],
-      [
-        "/fact · /fortune · /wyr",
-        "Fun Facts, Wahrsagungen & Dilemmata"
-      ],
-      [
-        "/birthday set",
-        "Vozen singt an deinem Geburtstag"
-      ],
-      [
-        "/topspeakers",
-        "Wer am meisten redet + Serien"
-      ]
+      ["/game play", "Eines von 15 Minispielen starten"],
+      ["/game leaderboard", "Top-Spieler auf dem Server"],
+      ["/game stats", "Deine Punkte, Siege & Rang"],
+      ["/joke", "Ein kurzer Witz in jeder Sprache"],
+      ["/laugh", "Vozen lacht in deiner Stimme"],
+      ["/8ball", "Frag die Magic 8-Ball, laut"],
+      ["/fact · /fortune · /wyr", "Fun Facts, Wahrsagungen & Dilemmata"],
+      ["/birthday set", "Vozen singt an deinem Geburtstag"],
+      ["/topspeakers", "Wer am meisten redet + Serien"]
     ],
     "admin": [
-      [
-        "/config greet",
-        "Begrüße Leute, die dem Call beitreten"
-      ],
-      [
-        "/config language",
-        "Die Oberflächensprache festlegen"
-      ],
-      [
-        "/config default-voice",
-        "Die Standardstimme des Servers festlegen"
-      ],
-      [
-        "/config autoread",
-        "Auto-Vorlesen ein-/ausschalten"
-      ],
-      [
-        "/config blockword",
-        "Die Sperrliste verwalten"
-      ],
-      [
-        "/config pronunciation",
-        "Eigene Aussprachen"
-      ]
+      ["/config greet", "Begrüße Leute, die dem Call beitreten"],
+      ["/config language", "Die Oberflächensprache festlegen"],
+      ["/config default-voice", "Die Standardstimme des Servers festlegen"],
+      ["/config autoread", "Auto-Vorlesen ein-/ausschalten"],
+      ["/config blockword", "Die Sperrliste verwalten"],
+      ["/config pronunciation", "Eigene Aussprachen"]
     ]
   },
   "faq": [

@@ -22,14 +22,20 @@ async function main() {
   if (guildIds.length === 0) {
     const guilds = await rest.get(Routes.userGuilds());
     guildIds = guilds.map((g) => g.id);
-    console.log(`[register-guild] bot está em ${guilds.length} servidor(es): ${guilds.map((g) => g.name).join(', ')}`);
+    console.log(
+      `[register-guild] bot está em ${guilds.length} servidor(es): ${guilds.map((g) => g.name).join(', ')}`,
+    );
   }
 
   for (const gid of guildIds) {
     await rest.put(Routes.applicationGuildCommands(cfg.clientId, gid), { body: commandDefs });
-    console.log(`[register-guild] ${commandDefs.length} comandos registados no guild ${gid} (instantâneo).`);
+    console.log(
+      `[register-guild] ${commandDefs.length} comandos registados no guild ${gid} (instantâneo).`,
+    );
   }
-  console.log('[register-guild] feito. As opções novas (incl. o motor Kokoro) já aparecem — faz Ctrl+R no Discord.');
+  console.log(
+    '[register-guild] feito. As opções novas (incl. o motor Kokoro) já aparecem — faz Ctrl+R no Discord.',
+  );
 }
 
 main().catch((err) => {

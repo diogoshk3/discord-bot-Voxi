@@ -110,152 +110,47 @@
   },
   "commands": {
     "general": [
-      [
-        "/help",
-        "Mostra a lista de comandos"
-      ],
-      [
-        "/join",
-        "Entra no teu canal de voz"
-      ],
-      [
-        "/leave",
-        "Sai do canal de voz"
-      ],
-      [
-        "/tts",
-        "Lê um texto em voz alta"
-      ],
-      [
-        "/skip",
-        "Salta o áudio atual"
-      ],
-      [
-        "/shutup",
-        "Cala o Vozen já (esvazia a fila)"
-      ],
-      [
-        "/setup",
-        "Configuração guiada num passo"
-      ],
-      [
-        "/invite",
-        "Obtém o link de convite"
-      ],
-      [
-        "/vote",
-        "Vota no Vozen no top.gg"
-      ],
-      [
-        "/uptime",
-        "Há quanto tempo o Vozen está online"
-      ],
-      [
-        "/premium",
-        "Estado Premium do servidor e teu"
-      ],
-      [
-        "/redeem",
-        "Resgata um código Premium"
-      ]
+      ["/help", "Mostra a lista de comandos"],
+      ["/join", "Entra no teu canal de voz"],
+      ["/leave", "Sai do canal de voz"],
+      ["/tts", "Lê um texto em voz alta"],
+      ["/skip", "Salta o áudio atual"],
+      ["/shutup", "Cala o Vozen já (esvazia a fila)"],
+      ["/setup", "Configuração guiada num passo"],
+      ["/invite", "Obtém o link de convite"],
+      ["/vote", "Vota no Vozen no top.gg"],
+      ["/uptime", "Há quanto tempo o Vozen está online"],
+      ["/premium", "Estado Premium do servidor e teu"],
+      ["/redeem", "Resgata um código Premium"]
     ],
     "voice": [
-      [
-        "/voice set",
-        "Escolhe a tua voz, língua e motor"
-      ],
-      [
-        "/voice list",
-        "Vê todas as vozes"
-      ],
-      [
-        "/voice preview",
-        "Ouve uma amostra de voz"
-      ],
-      [
-        "/voice clone",
-        "Clona a tua própria voz (Premium)"
-      ],
-      [
-        "/voice effect",
-        "Robô, eco, demónio… efeitos de voz"
-      ],
-      [
-        "/voice detection",
-        "Voz nativa por língua"
-      ],
-      [
-        "/voice nickname",
-        "Como o Vozen te chama em voz alta"
-      ],
-      [
-        "/voice optout",
-        "Deixa de ser lido automaticamente"
-      ]
+      ["/voice set", "Escolhe a tua voz, língua e motor"],
+      ["/voice list", "Vê todas as vozes"],
+      ["/voice preview", "Ouve uma amostra de voz"],
+      ["/voice clone", "Clona a tua própria voz (Premium)"],
+      ["/voice effect", "Robô, eco, demónio… efeitos de voz"],
+      ["/voice detection", "Voz nativa por língua"],
+      ["/voice nickname", "Como o Vozen te chama em voz alta"],
+      ["/voice optout", "Deixa de ser lido automaticamente"]
     ],
     "fun": [
-      [
-        "/game play",
-        "Começa 1 dos 15 minijogos"
-      ],
-      [
-        "/game leaderboard",
-        "Melhores jogadores do servidor"
-      ],
-      [
-        "/game stats",
-        "Os teus pontos, vitórias e posição"
-      ],
-      [
-        "/joke",
-        "Uma piada curta em qualquer língua"
-      ],
-      [
-        "/laugh",
-        "O Vozen ri na tua voz"
-      ],
-      [
-        "/8ball",
-        "Pergunta à bola 8, em voz alta"
-      ],
-      [
-        "/fact · /fortune · /wyr",
-        "Factos, sortes e dilemas falados"
-      ],
-      [
-        "/birthday set",
-        "O Vozen dá-te os parabéns no teu dia"
-      ],
-      [
-        "/topspeakers",
-        "Quem mais fala + streaks"
-      ]
+      ["/game play", "Começa 1 dos 15 minijogos"],
+      ["/game leaderboard", "Melhores jogadores do servidor"],
+      ["/game stats", "Os teus pontos, vitórias e posição"],
+      ["/joke", "Uma piada curta em qualquer língua"],
+      ["/laugh", "O Vozen ri na tua voz"],
+      ["/8ball", "Pergunta à bola 8, em voz alta"],
+      ["/fact · /fortune · /wyr", "Factos, sortes e dilemas falados"],
+      ["/birthday set", "O Vozen dá-te os parabéns no teu dia"],
+      ["/topspeakers", "Quem mais fala + streaks"]
     ],
     "admin": [
-      [
-        "/config greet",
-        "Saudar quem entra na call"
-      ],
-      [
-        "/config language",
-        "Define a língua da interface"
-      ],
-      [
-        "/config default-voice",
-        "Define a voz padrão do servidor"
-      ],
-      [
-        "/config autoread",
-        "Liga/desliga a leitura automática"
-      ],
-      [
-        "/config blockword",
-        "Gere a blocklist"
-      ],
-      [
-        "/config pronunciation",
-        "Pronúncias personalizadas"
-      ]
+      ["/config greet", "Saudar quem entra na call"],
+      ["/config language", "Define a língua da interface"],
+      ["/config default-voice", "Define a voz padrão do servidor"],
+      ["/config autoread", "Liga/desliga a leitura automática"],
+      ["/config blockword", "Gere a blocklist"],
+      ["/config pronunciation", "Pronúncias personalizadas"]
     ]
   },
   "faq": [

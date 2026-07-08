@@ -68,4 +68,6 @@ const out =
   `window.VOZEN_FAQ = ${JSON.stringify(FAQ)};\n`;
 
 writeFileSync(join(ROOT, 'site', 'js', 'i18n-v2.js'), out);
-console.log(`[build-i18n] ${LANGS.length} línguas · ${uiKeys.length} chaves ui · ${FAQ.length} FAQ -> site/js/i18n-v2.js`);
+console.log(
+  `[build-i18n] ${LANGS.length} línguas · ${uiKeys.length} chaves ui · ${FAQ.length} FAQ -> site/js/i18n-v2.js`,
+);

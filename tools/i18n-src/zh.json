@@ -110,152 +110,47 @@
   },
   "commands": {
     "general": [
-      [
-        "/help",
-        "顯示 Vozen 的指令清單"
-      ],
-      [
-        "/join",
-        "加入你的語音頻道"
-      ],
-      [
-        "/leave",
-        "離開語音頻道"
-      ],
-      [
-        "/tts",
-        "大聲朗讀一段文字"
-      ],
-      [
-        "/skip",
-        "略過目前的音訊"
-      ],
-      [
-        "/shutup",
-        "立刻讓 Vozen 安靜（清空佇列）"
-      ],
-      [
-        "/setup",
-        "一步到位的引導式設定"
-      ],
-      [
-        "/invite",
-        "取得邀請連結"
-      ],
-      [
-        "/vote",
-        "在 top.gg 上為 Vozen 投票"
-      ],
-      [
-        "/uptime",
-        "Vozen 已上線多久"
-      ],
-      [
-        "/premium",
-        "你的伺服器與你的 Premium 狀態"
-      ],
-      [
-        "/redeem",
-        "兌換 Premium 代碼"
-      ]
+      ["/help", "顯示 Vozen 的指令清單"],
+      ["/join", "加入你的語音頻道"],
+      ["/leave", "離開語音頻道"],
+      ["/tts", "大聲朗讀一段文字"],
+      ["/skip", "略過目前的音訊"],
+      ["/shutup", "立刻讓 Vozen 安靜（清空佇列）"],
+      ["/setup", "一步到位的引導式設定"],
+      ["/invite", "取得邀請連結"],
+      ["/vote", "在 top.gg 上為 Vozen 投票"],
+      ["/uptime", "Vozen 已上線多久"],
+      ["/premium", "你的伺服器與你的 Premium 狀態"],
+      ["/redeem", "兌換 Premium 代碼"]
     ],
     "voice": [
-      [
-        "/voice set",
-        "選擇你的語音、語言與引擎"
-      ],
-      [
-        "/voice list",
-        "瀏覽所有語音"
-      ],
-      [
-        "/voice preview",
-        "試聽語音範例"
-      ],
-      [
-        "/voice clone",
-        "複製你自己的聲音（Premium）"
-      ],
-      [
-        "/voice effect",
-        "機器人、回音、惡魔……語音特效"
-      ],
-      [
-        "/voice detection",
-        "每種語言的道地母語語音"
-      ],
-      [
-        "/voice nickname",
-        "Vozen 大聲稱呼你的方式"
-      ],
-      [
-        "/voice optout",
-        "停止被自動朗讀"
-      ]
+      ["/voice set", "選擇你的語音、語言與引擎"],
+      ["/voice list", "瀏覽所有語音"],
+      ["/voice preview", "試聽語音範例"],
+      ["/voice clone", "複製你自己的聲音（Premium）"],
+      ["/voice effect", "機器人、回音、惡魔……語音特效"],
+      ["/voice detection", "每種語言的道地母語語音"],
+      ["/voice nickname", "Vozen 大聲稱呼你的方式"],
+      ["/voice optout", "停止被自動朗讀"]
     ],
     "fun": [
-      [
-        "/game play",
-        "開始 15 款小遊戲之一"
-      ],
-      [
-        "/game leaderboard",
-        "伺服器上的頂尖玩家"
-      ],
-      [
-        "/game stats",
-        "你的分數、勝場與排名"
-      ],
-      [
-        "/joke",
-        "任何語言的一則短笑話"
-      ],
-      [
-        "/laugh",
-        "Vozen 用你的聲音大笑"
-      ],
-      [
-        "/8ball",
-        "大聲詢問神奇八號球"
-      ],
-      [
-        "/fact · /fortune · /wyr",
-        "趣味知識、運勢與兩難抉擇"
-      ],
-      [
-        "/birthday set",
-        "Vozen 在你生日時獻唱"
-      ],
-      [
-        "/topspeakers",
-        "誰講話最多＋連續紀錄"
-      ]
+      ["/game play", "開始 15 款小遊戲之一"],
+      ["/game leaderboard", "伺服器上的頂尖玩家"],
+      ["/game stats", "你的分數、勝場與排名"],
+      ["/joke", "任何語言的一則短笑話"],
+      ["/laugh", "Vozen 用你的聲音大笑"],
+      ["/8ball", "大聲詢問神奇八號球"],
+      ["/fact · /fortune · /wyr", "趣味知識、運勢與兩難抉擇"],
+      ["/birthday set", "Vozen 在你生日時獻唱"],
+      ["/topspeakers", "誰講話最多＋連續紀錄"]
     ],
     "admin": [
-      [
-        "/config greet",
-        "向加入通話的成員打招呼"
-      ],
-      [
-        "/config language",
-        "設定介面語言"
-      ],
-      [
-        "/config default-voice",
-        "設定伺服器的預設語音"
-      ],
-      [
-        "/config autoread",
-        "開啟／關閉自動朗讀"
-      ],
-      [
-        "/config blockword",
-        "管理封鎖清單"
-      ],
-      [
-        "/config pronunciation",
-        "自訂發音"
-      ]
+      ["/config greet", "向加入通話的成員打招呼"],
+      ["/config language", "設定介面語言"],
+      ["/config default-voice", "設定伺服器的預設語音"],
+      ["/config autoread", "開啟／關閉自動朗讀"],
+      ["/config blockword", "管理封鎖清單"],
+      ["/config pronunciation", "自訂發音"]
     ]
   },
   "faq": [

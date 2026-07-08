@@ -110,152 +110,47 @@
   },
   "commands": {
     "general": [
-      [
-        "/help",
-        "Show Vozen's command list"
-      ],
-      [
-        "/join",
-        "Join your voice channel"
-      ],
-      [
-        "/leave",
-        "Leave the voice channel"
-      ],
-      [
-        "/tts",
-        "Read a text out loud"
-      ],
-      [
-        "/skip",
-        "Skip the current audio"
-      ],
-      [
-        "/shutup",
-        "Silence Vozen now (clears the queue)"
-      ],
-      [
-        "/setup",
-        "Guided one-step setup"
-      ],
-      [
-        "/invite",
-        "Get the invite link"
-      ],
-      [
-        "/vote",
-        "Vote for Vozen on top.gg"
-      ],
-      [
-        "/uptime",
-        "How long Vozen's been online"
-      ],
-      [
-        "/premium",
-        "Your server's & your Premium status"
-      ],
-      [
-        "/redeem",
-        "Redeem a Premium code"
-      ]
+      ["/help", "Show Vozen's command list"],
+      ["/join", "Join your voice channel"],
+      ["/leave", "Leave the voice channel"],
+      ["/tts", "Read a text out loud"],
+      ["/skip", "Skip the current audio"],
+      ["/shutup", "Silence Vozen now (clears the queue)"],
+      ["/setup", "Guided one-step setup"],
+      ["/invite", "Get the invite link"],
+      ["/vote", "Vote for Vozen on top.gg"],
+      ["/uptime", "How long Vozen's been online"],
+      ["/premium", "Your server's & your Premium status"],
+      ["/redeem", "Redeem a Premium code"]
     ],
     "voice": [
-      [
-        "/voice set",
-        "Pick your voice, language & engine"
-      ],
-      [
-        "/voice list",
-        "Browse all voices"
-      ],
-      [
-        "/voice preview",
-        "Hear a voice sample"
-      ],
-      [
-        "/voice clone",
-        "Clone your own voice (Premium)"
-      ],
-      [
-        "/voice effect",
-        "Robot, echo, demon… voice effects"
-      ],
-      [
-        "/voice detection",
-        "Native voice per language"
-      ],
-      [
-        "/voice nickname",
-        "How Vozen calls you out loud"
-      ],
-      [
-        "/voice optout",
-        "Stop being auto-read"
-      ]
+      ["/voice set", "Pick your voice, language & engine"],
+      ["/voice list", "Browse all voices"],
+      ["/voice preview", "Hear a voice sample"],
+      ["/voice clone", "Clone your own voice (Premium)"],
+      ["/voice effect", "Robot, echo, demon… voice effects"],
+      ["/voice detection", "Native voice per language"],
+      ["/voice nickname", "How Vozen calls you out loud"],
+      ["/voice optout", "Stop being auto-read"]
     ],
     "fun": [
-      [
-        "/game play",
-        "Start one of 15 minigames"
-      ],
-      [
-        "/game leaderboard",
-        "Top players on the server"
-      ],
-      [
-        "/game stats",
-        "Your points, wins & rank"
-      ],
-      [
-        "/joke",
-        "A short joke in any language"
-      ],
-      [
-        "/laugh",
-        "Vozen laughs in your voice"
-      ],
-      [
-        "/8ball",
-        "Ask the magic 8-ball, out loud"
-      ],
-      [
-        "/fact · /fortune · /wyr",
-        "Fun facts, fortunes & dilemmas"
-      ],
-      [
-        "/birthday set",
-        "Vozen sings on your birthday"
-      ],
-      [
-        "/topspeakers",
-        "Who talks the most + streaks"
-      ]
+      ["/game play", "Start one of 15 minigames"],
+      ["/game leaderboard", "Top players on the server"],
+      ["/game stats", "Your points, wins & rank"],
+      ["/joke", "A short joke in any language"],
+      ["/laugh", "Vozen laughs in your voice"],
+      ["/8ball", "Ask the magic 8-ball, out loud"],
+      ["/fact · /fortune · /wyr", "Fun facts, fortunes & dilemmas"],
+      ["/birthday set", "Vozen sings on your birthday"],
+      ["/topspeakers", "Who talks the most + streaks"]
     ],
     "admin": [
-      [
-        "/config greet",
-        "Greet people who join the call"
-      ],
-      [
-        "/config language",
-        "Set the interface language"
-      ],
-      [
-        "/config default-voice",
-        "Set the server's default voice"
-      ],
-      [
-        "/config autoread",
-        "Turn auto-read on/off"
-      ],
-      [
-        "/config blockword",
-        "Manage the blocklist"
-      ],
-      [
-        "/config pronunciation",
-        "Custom pronunciations"
-      ]
+      ["/config greet", "Greet people who join the call"],
+      ["/config language", "Set the interface language"],
+      ["/config default-voice", "Set the server's default voice"],
+      ["/config autoread", "Turn auto-read on/off"],
+      ["/config blockword", "Manage the blocklist"],
+      ["/config pronunciation", "Custom pronunciations"]
     ]
   },
   "faq": [

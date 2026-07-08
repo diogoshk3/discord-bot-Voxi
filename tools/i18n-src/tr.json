@@ -110,152 +110,47 @@
   },
   "commands": {
     "general": [
-      [
-        "/help",
-        "Vozen'in komut listesini göster"
-      ],
-      [
-        "/join",
-        "Ses kanalına katıl"
-      ],
-      [
-        "/leave",
-        "Ses kanalından ayrıl"
-      ],
-      [
-        "/tts",
-        "Bir metni yüksek sesle oku"
-      ],
-      [
-        "/skip",
-        "Mevcut sesi atla"
-      ],
-      [
-        "/shutup",
-        "Vozen'i hemen sustur (kuyruğu temizler)"
-      ],
-      [
-        "/setup",
-        "Tek adımlı rehberli kurulum"
-      ],
-      [
-        "/invite",
-        "Davet bağlantısını al"
-      ],
-      [
-        "/vote",
-        "top.gg'de Vozen'e oy ver"
-      ],
-      [
-        "/uptime",
-        "Vozen ne kadardır çevrimiçi"
-      ],
-      [
-        "/premium",
-        "Sunucunun ve senin Premium durumun"
-      ],
-      [
-        "/redeem",
-        "Bir Premium kodu kullan"
-      ]
+      ["/help", "Vozen'in komut listesini göster"],
+      ["/join", "Ses kanalına katıl"],
+      ["/leave", "Ses kanalından ayrıl"],
+      ["/tts", "Bir metni yüksek sesle oku"],
+      ["/skip", "Mevcut sesi atla"],
+      ["/shutup", "Vozen'i hemen sustur (kuyruğu temizler)"],
+      ["/setup", "Tek adımlı rehberli kurulum"],
+      ["/invite", "Davet bağlantısını al"],
+      ["/vote", "top.gg'de Vozen'e oy ver"],
+      ["/uptime", "Vozen ne kadardır çevrimiçi"],
+      ["/premium", "Sunucunun ve senin Premium durumun"],
+      ["/redeem", "Bir Premium kodu kullan"]
     ],
     "voice": [
-      [
-        "/voice set",
-        "Sesini, dilini ve motorunu seç"
-      ],
-      [
-        "/voice list",
-        "Tüm seslere göz at"
-      ],
-      [
-        "/voice preview",
-        "Bir ses örneği dinle"
-      ],
-      [
-        "/voice clone",
-        "Kendi sesini klonla (Premium)"
-      ],
-      [
-        "/voice effect",
-        "Robot, yankı, iblis… ses efektleri"
-      ],
-      [
-        "/voice detection",
-        "Her dil için ana dilde ses"
-      ],
-      [
-        "/voice nickname",
-        "Vozen sana yüksek sesle nasıl seslenir"
-      ],
-      [
-        "/voice optout",
-        "Otomatik okunmayı durdur"
-      ]
+      ["/voice set", "Sesini, dilini ve motorunu seç"],
+      ["/voice list", "Tüm seslere göz at"],
+      ["/voice preview", "Bir ses örneği dinle"],
+      ["/voice clone", "Kendi sesini klonla (Premium)"],
+      ["/voice effect", "Robot, yankı, iblis… ses efektleri"],
+      ["/voice detection", "Her dil için ana dilde ses"],
+      ["/voice nickname", "Vozen sana yüksek sesle nasıl seslenir"],
+      ["/voice optout", "Otomatik okunmayı durdur"]
     ],
     "fun": [
-      [
-        "/game play",
-        "15 mini oyundan birini başlat"
-      ],
-      [
-        "/game leaderboard",
-        "Sunucudaki en iyi oyuncular"
-      ],
-      [
-        "/game stats",
-        "Puanların, galibiyetlerin ve sıralaman"
-      ],
-      [
-        "/joke",
-        "Herhangi bir dilde kısa bir şaka"
-      ],
-      [
-        "/laugh",
-        "Vozen senin sesinle güler"
-      ],
-      [
-        "/8ball",
-        "Sihirli 8 topa sor, yüksek sesle"
-      ],
-      [
-        "/fact · /fortune · /wyr",
-        "Eğlenceli bilgiler, kehanetler ve ikilemler"
-      ],
-      [
-        "/birthday set",
-        "Vozen doğum gününde şarkı söyler"
-      ],
-      [
-        "/topspeakers",
-        "En çok konuşan kim + seriler"
-      ]
+      ["/game play", "15 mini oyundan birini başlat"],
+      ["/game leaderboard", "Sunucudaki en iyi oyuncular"],
+      ["/game stats", "Puanların, galibiyetlerin ve sıralaman"],
+      ["/joke", "Herhangi bir dilde kısa bir şaka"],
+      ["/laugh", "Vozen senin sesinle güler"],
+      ["/8ball", "Sihirli 8 topa sor, yüksek sesle"],
+      ["/fact · /fortune · /wyr", "Eğlenceli bilgiler, kehanetler ve ikilemler"],
+      ["/birthday set", "Vozen doğum gününde şarkı söyler"],
+      ["/topspeakers", "En çok konuşan kim + seriler"]
     ],
     "admin": [
-      [
-        "/config greet",
-        "Aramaya katılanları selamla"
-      ],
-      [
-        "/config language",
-        "Arayüz dilini ayarla"
-      ],
-      [
-        "/config default-voice",
-        "Sunucunun varsayılan sesini ayarla"
-      ],
-      [
-        "/config autoread",
-        "Otomatik okumayı aç/kapat"
-      ],
-      [
-        "/config blockword",
-        "Engel listesini yönet"
-      ],
-      [
-        "/config pronunciation",
-        "Özel telaffuzlar"
-      ]
+      ["/config greet", "Aramaya katılanları selamla"],
+      ["/config language", "Arayüz dilini ayarla"],
+      ["/config default-voice", "Sunucunun varsayılan sesini ayarla"],
+      ["/config autoread", "Otomatik okumayı aç/kapat"],
+      ["/config blockword", "Engel listesini yönet"],
+      ["/config pronunciation", "Özel telaffuzlar"]
     ]
   },
   "faq": [
