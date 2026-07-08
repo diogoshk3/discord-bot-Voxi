@@ -86,6 +86,9 @@ export interface AppConfig {
   // (subscrição por-utilizador ≙ Plus).
   premiumGuildSkuId?: string;
   premiumUserSkuId?: string;
+  // Página do Ko-fi onde se compra o Premium/Plus. Mostrada no /premium info e nos erros
+  // "não tens passe". Env KOFI_URL; default = página genérica (o operador põe a sua).
+  kofiUrl: string;
 }
 
 function requireEnv(name: string): string {
@@ -266,5 +269,7 @@ export function loadConfig(): AppConfig {
     // Premium Apps (monetização nativa). Ausentes => entitlements inertes (só /redeem).
     premiumGuildSkuId: strEnv('PREMIUM_GUILD_SKU_ID', '') || undefined,
     premiumUserSkuId: strEnv('PREMIUM_USER_SKU_ID', '') || undefined,
+    // Página do Ko-fi (compra do Premium/Plus). O operador define KOFI_URL com a sua.
+    kofiUrl: strEnv('KOFI_URL', 'https://ko-fi.com/'),
   };
 }

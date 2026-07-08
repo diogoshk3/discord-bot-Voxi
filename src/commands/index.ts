@@ -170,10 +170,23 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
     .setName('topspeakers')
     .setDescription('See who Vozen has read the most — and daily streaks')
     .toJSON(),
-  // /premium — estado da assinatura + como obter. /redeem — resgatar um código.
+  // /premium — estado/montra + gerir licenças do passe. /redeem — resgatar um código.
   new SlashCommandBuilder()
     .setName('premium')
-    .setDescription('See this server’s Vozen Premium status')
+    .setDescription('Vozen Premium: your status, or use/free a licence on this server')
+    .addSubcommand((s) =>
+      s.setName('info').setDescription('See your Premium status — or what you get and how to buy'),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName('activate')
+        .setDescription('Use one of your Premium licences on this server (needs Manage Server)'),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName('deactivate')
+        .setDescription('Free this server’s Premium licence to use it elsewhere'),
+    )
     .toJSON(),
   new SlashCommandBuilder()
     .setName('redeem')

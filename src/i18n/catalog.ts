@@ -438,6 +438,75 @@ export const catalog: Record<string, Entry> = {
     en: 'Everything you use today stays free. Premium (€3.99/mo) adds premium voices, 24/7 in-call, full voice effects and higher limits. Support: https://ko-fi.com/',
     pt: 'Tudo o que já usas continua grátis. O Premium (€3,99/mês) acrescenta vozes premium, 24/7 na call, efeitos de voz completos e limites maiores. Apoio: https://ko-fi.com/',
   },
+  // Passe (compra de Premium): linha de estado + montra + fluxo activate/deactivate.
+  'premium.linePass': {
+    en: '🎟️ **Your Premium pass:** {used}/{total} licences in use · expires {date}',
+    pt: '🎟️ **O teu passe Premium:** {used}/{total} licenças em uso · termina {date}',
+  },
+  'premium.passServers': {
+    en: '↳ In use on: {servers}',
+    pt: '↳ Em uso em: {servers}',
+  },
+  'premium.pitch': {
+    en: "You don't have Premium yet. Premium unlocks all 8 voice effects, server voice cloning, higher limits and priority queue (24/7 in-call coming soon). **Vozen Plus** (€1.99/mo) gives you the effects & cloning personally, on any server.",
+    pt: 'Ainda não tens Premium. O Premium desbloqueia os 8 efeitos de voz, clonar voz para o servidor, limites maiores e fila prioritária (24/7 na call em breve). O **Vozen Plus** (€1,99/mês) dá-te os efeitos e o clone só para ti, em qualquer servidor.',
+  },
+  'premium.buyHint': {
+    en: '▶ **Get Premium:** {link}\nAfter buying, run `/premium activate` on the server you want.',
+    pt: '▶ **Obter Premium:** {link}\nDepois de comprares, corre `/premium activate` no servidor que quiseres.',
+  },
+  'premium.confirmActivate': {
+    en: 'Use **1 of your {total} Premium licences** on **this server**? You have **{used}** in use right now. You can free it later with `/premium deactivate` — the clock keeps running on the pass either way.',
+    pt: 'Usar **1 das tuas {total} licenças Premium** **neste servidor**? Tens **{used}** em uso agora. Podes libertá-la depois com `/premium deactivate` — o relógio corre sempre no passe.',
+  },
+  'premium.confirmYes': {
+    en: '💎 Use a licence',
+    pt: '💎 Usar licença',
+  },
+  'premium.confirmNo': {
+    en: 'Cancel',
+    pt: 'Cancelar',
+  },
+  'premium.activateOk': {
+    en: '✅ Premium is now active on **this server** until {date}. Licences: **{used}/{total}** in use.',
+    pt: '✅ Premium ativo **neste servidor** até {date}. Licenças: **{used}/{total}** em uso.',
+  },
+  'premium.activateCancelled': {
+    en: 'Cancelled — no licence was used.',
+    pt: 'Cancelado — não gastaste nenhuma licença.',
+  },
+  'premium.activateTimeout': {
+    en: 'Timed out — no licence was used.',
+    pt: 'Tempo esgotado — não gastaste nenhuma licença.',
+  },
+  'premium.noPass': {
+    en: "You don't have an active Premium pass. Get one and it lands on your account — then run `/premium activate` here.\n▶ {link}",
+    pt: 'Não tens um passe Premium ativo. Compra um e ele cai na tua conta — depois corre `/premium activate` aqui.\n▶ {link}',
+  },
+  'premium.alreadyActive': {
+    en: 'This server already has one of your Premium licences. Nothing to do.',
+    pt: 'Este servidor já tem uma das tuas licenças Premium. Nada a fazer.',
+  },
+  'premium.noSeats': {
+    en: 'All your **{total}** Premium licences are in use ({servers}). Free one with `/premium deactivate` there, then try again here.',
+    pt: 'As tuas **{total}** licenças Premium estão todas em uso ({servers}). Liberta uma com `/premium deactivate` aí e tenta outra vez aqui.',
+  },
+  'premium.needManageGuild': {
+    en: 'Activating Premium affects the whole server — only members with **Manage Server** can do it. Ask an admin.',
+    pt: 'Ativar o Premium afeta o servidor inteiro — só membros com **Gerir Servidor** o podem fazer. Pede a um admin.',
+  },
+  'premium.deactivateOk': {
+    en: "✅ Freed this server's Premium licence. Use it on another server with `/premium activate`.",
+    pt: '✅ Libertaste a licença Premium deste servidor. Usa-a noutro servidor com `/premium activate`.',
+  },
+  'premium.deactivateNone': {
+    en: 'This server has no Premium licence from you to free.',
+    pt: 'Este servidor não tem nenhuma licença tua para libertar.',
+  },
+  'premium.thisServer': {
+    en: 'this server',
+    pt: 'este servidor',
+  },
   'redeem.ok': {
     en: '✅ Code redeemed! **{target}** now has Vozen Premium until {date}.',
     pt: '✅ Código resgatado! **{target}** tem agora Vozen Premium até {date}.',

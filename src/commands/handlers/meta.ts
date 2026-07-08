@@ -8,6 +8,7 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  ComponentType,
 } from 'discord.js';
 import type { BotDeps } from '../../bot/deps';
 import { metrics } from '../../metrics';
@@ -16,8 +17,14 @@ import { getTopSpeakers } from '../../store/talkStats';
 import {
   redeemCode,
   peekRedeemCodeKind,
-  getGuildPremiumExpiry,
   getUserPremiumExpiry,
+  isGuildPremium,
+  effectiveGuildPremiumExpiry,
+  getPremiumPass,
+  countActiveSeats,
+  listPassActivations,
+  activateSeat,
+  deactivateSeat,
 } from '../../store/premium';
 import { t } from '../../i18n/index';
 import { INVITE_PERMISSIONS, formatDuration, localeForUser, reply } from '../helpers';
@@ -49,33 +56,168 @@ export async function handleTopSpeakers(
   await i.reply({ content: `${t('topspeakers.title', locale)}\n${lines.join('\n')}` });
 }
 
-/** /premium — estado das assinaturas (servidor + próprio utilizador) + como obter. */
+// Discord renderiza <t:SEGUNDOS:D> como data localizada por-utilizador.
+const stampDate = (ms: number): string => `<t:${Math.floor(ms / 1000)}:D>`;
+
+/** Nomes dos servidores (best-effort via cache; fallback = id) para as mensagens do passe. */
+function serverNames(deps: BotDeps, ids: string[]): string {
+  return ids.map((id) => deps.client.guilds.cache.get(id)?.name ?? id).join(', ');
+}
+
+/** /premium — despacha os subcomandos info | activate | deactivate. */
 export async function handlePremium(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
+  const sub = i.options.getSubcommand(false) ?? 'info';
+  if (sub === 'activate') return handlePremiumActivate(i, deps);
+  if (sub === 'deactivate') return handlePremiumDeactivate(i, deps);
+  return handlePremiumInfo(i, deps);
+}
+
+/** /premium info — estado (servidor + passe + Plus) OU montra + link de compra. */
+async function handlePremiumInfo(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
   const locale = localeForUser(deps, i);
   const now = Date.now();
-  // Discord renderiza <t:SEGUNDOS:D> como data localizada por-utilizador.
-  const stamp = (ms: number): string => `<t:${Math.floor(ms / 1000)}:D>`;
+  const lines: string[] = [];
 
-  const gExp = getGuildPremiumExpiry(deps.db, i.guildId!);
+  const guildActive = i.guildId ? isGuildPremium(deps.db, i.guildId, now) : false;
+  if (i.guildId) {
+    if (guildActive) {
+      const exp = effectiveGuildPremiumExpiry(deps.db, i.guildId, now);
+      lines.push(t('premium.lineServerActive', locale, { date: stampDate(exp ?? now) }));
+    } else {
+      lines.push(t('premium.lineServerFree', locale));
+    }
+  }
+
+  const pass = getPremiumPass(deps.db, i.user.id);
+  const passActive = pass !== null && pass.expiresAt > now;
+  if (passActive) {
+    const used = countActiveSeats(deps.db, i.user.id);
+    lines.push(
+      t('premium.linePass', locale, {
+        used,
+        total: pass!.seats,
+        date: stampDate(pass!.expiresAt),
+      }),
+    );
+    const acts = listPassActivations(deps.db, i.user.id);
+    if (acts.length)
+      lines.push(t('premium.passServers', locale, { servers: serverNames(deps, acts) }));
+  }
+
   const uExp = getUserPremiumExpiry(deps.db, i.user.id);
-  const gActive = gExp !== null && gExp > now;
   const uActive = uExp !== null && uExp > now;
+  lines.push(
+    uActive
+      ? t('premium.lineUserActive', locale, { date: stampDate(uExp!) })
+      : t('premium.lineUserFree', locale),
+  );
 
-  const serverLine = gActive
-    ? t('premium.lineServerActive', locale, { date: stamp(gExp) })
-    : t('premium.lineServerFree', locale);
-  const youLine = uActive
-    ? t('premium.lineUserActive', locale, { date: stamp(uExp) })
-    : t('premium.lineUserFree', locale);
-
-  // Cartão de marca: dourado quando há Premium ativo (servidor ou user), blurple senão.
-  const desc = [serverLine, youLine];
-  // Só mostra o "como obter" quando NENHUM dos dois está ativo (senão é ruído).
-  if (!gActive && !uActive) desc.push('', t('premium.getHint', locale));
-  const embed = brandEmbed(gActive || uActive ? 'premium' : 'brand')
+  const anyActive = guildActive || passActive || uActive;
+  const desc = anyActive
+    ? lines
+    : [t('premium.pitch', locale), '', t('premium.buyHint', locale, { link: deps.config.kofiUrl })];
+  const embed = brandEmbed(anyActive ? 'premium' : 'brand')
     .setTitle(t('premium.title', locale))
     .setDescription(desc.join('\n'));
   await i.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+}
+
+/**
+ * /premium activate — gasta 1 licença do passe NESTE servidor, com pop-up de confirmação.
+ * Precisa de Gerir Servidor (ativar Premium afeta o servidor inteiro). A confirmação é
+ * efémera (só o invocador a vê), por isso não é preciso filtrar cliques de terceiros.
+ */
+async function handlePremiumActivate(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
+  const locale = localeForUser(deps, i);
+  const member = i.member as GuildMember | null;
+  if (!i.guildId || !member?.permissions?.has(PermissionFlagsBits.ManageGuild)) {
+    await reply(i, t('premium.needManageGuild', locale));
+    return;
+  }
+  const now = Date.now();
+  const pass = getPremiumPass(deps.db, i.user.id);
+  if (!pass || pass.expiresAt <= now) {
+    await reply(i, t('premium.noPass', locale, { link: deps.config.kofiUrl }));
+    return;
+  }
+  const acts = listPassActivations(deps.db, i.user.id);
+  if (acts.includes(i.guildId)) {
+    await reply(i, t('premium.alreadyActive', locale));
+    return;
+  }
+  if (acts.length >= pass.seats) {
+    await reply(
+      i,
+      t('premium.noSeats', locale, { total: pass.seats, servers: serverNames(deps, acts) }),
+    );
+    return;
+  }
+
+  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId('premActYes')
+      .setLabel(t('premium.confirmYes', locale))
+      .setStyle(ButtonStyle.Success),
+    new ButtonBuilder()
+      .setCustomId('premActNo')
+      .setLabel(t('premium.confirmNo', locale))
+      .setStyle(ButtonStyle.Secondary),
+  );
+  await i.reply({
+    content: t('premium.confirmActivate', locale, { total: pass.seats, used: acts.length }),
+    components: [row],
+    flags: MessageFlags.Ephemeral,
+  });
+  const msg = await i.fetchReply();
+
+  let btn;
+  try {
+    btn = await msg.awaitMessageComponent({ componentType: ComponentType.Button, time: 30_000 });
+  } catch {
+    await i
+      .editReply({ content: t('premium.activateTimeout', locale), components: [] })
+      .catch(() => {});
+    return;
+  }
+  if (btn.customId === 'premActNo') {
+    await btn.update({ content: t('premium.activateCancelled', locale), components: [] });
+    return;
+  }
+  // Re-verifica e gasta numa transação (o estado pode ter mudado nos 30s da confirmação).
+  const res = activateSeat(deps.db, i.user.id, i.guildId, Date.now());
+  let out: string;
+  if (res.status === 'ok') {
+    out = t('premium.activateOk', locale, {
+      date: stampDate(res.expiresAt!),
+      used: res.used!,
+      total: res.seats!,
+    });
+  } else if (res.status === 'already') {
+    out = t('premium.alreadyActive', locale);
+  } else if (res.status === 'no_seats') {
+    out = t('premium.noSeats', locale, {
+      total: res.seats!,
+      servers: serverNames(deps, listPassActivations(deps.db, i.user.id)),
+    });
+  } else {
+    out = t('premium.noPass', locale, { link: deps.config.kofiUrl });
+  }
+  await btn.update({ content: out, components: [] });
+}
+
+/** /premium deactivate — liberta a licença deste servidor (ação reversível e segura). */
+async function handlePremiumDeactivate(
+  i: ChatInputCommandInteraction,
+  deps: BotDeps,
+): Promise<void> {
+  const locale = localeForUser(deps, i);
+  const member = i.member as GuildMember | null;
+  if (!i.guildId || !member?.permissions?.has(PermissionFlagsBits.ManageGuild)) {
+    await reply(i, t('premium.needManageGuild', locale));
+    return;
+  }
+  const freed = deactivateSeat(deps.db, i.user.id, i.guildId);
+  await reply(i, freed ? t('premium.deactivateOk', locale) : t('premium.deactivateNone', locale));
 }
 
 /** /redeem <code> — resgata um código de Premium (servidor) ou Plus (utilizador). */

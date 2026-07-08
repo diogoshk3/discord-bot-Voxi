@@ -45,6 +45,31 @@ export function getGuildPremiumExpiry(db: Database.Database, guildId: string): n
   return row ? row.expires_at : null;
 }
 
+/**
+ * Fim EFETIVO do Premium do servidor para EXIBIÇÃO (só ativos): o máximo entre o expiry
+ * direto (redeem/discord/manual) e o fim de qualquer passe que tenha uma licença ativa
+ * aqui. null se o servidor não está Premium agora. (Para ESTENDER usa-se getGuildPremium
+ * Expiry, que é só a linha direta.)
+ */
+export function effectiveGuildPremiumExpiry(
+  db: Database.Database,
+  guildId: string,
+  now: number,
+): number | null {
+  const row = db
+    .prepare(
+      `SELECT MAX(exp) AS m FROM (
+         SELECT expires_at AS exp FROM premium_guild WHERE guild_id = ? AND expires_at > ?
+         UNION ALL
+         SELECT p.expires_at FROM premium_pass_activation a
+           JOIN premium_pass p ON p.user_id = a.user_id
+           WHERE a.guild_id = ? AND p.expires_at > ?
+       )`,
+    )
+    .get(guildId, now, guildId, now) as { m: number | null };
+  return row.m ?? null;
+}
+
 /** Expiry do Plus do utilizador (unix ms) ou null se nunca teve. Pode estar no passado. */
 export function getUserPremiumExpiry(db: Database.Database, userId: string): number | null {
   const row = db.prepare('SELECT expires_at FROM premium_user WHERE user_id = ?').get(userId) as
