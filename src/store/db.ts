@@ -178,6 +178,32 @@ export function initDb(path: string): Database.Database {
         used_at    INTEGER,
         created_at INTEGER NOT NULL
       );
+
+      -- PASSE Vozen Premium por-UTILIZADOR: uma compra de Premium (guild) dá à pessoa um
+      -- passe com N "licenças" (seats) e uma DATA DE FIM ABSOLUTA (expires_at, unix ms). O
+      -- relógio corre no passe: ativar/desativar um servidor não pausa nem estende a data.
+      -- A pessoa gasta uma licença num servidor com /premium activate (ver premium_pass_
+      -- activation); renovar (webhook) só estende expires_at e os servidores ativos herdam
+      -- a nova data em tempo real (isGuildPremium lê o passe). source = kofi|discord|manual.
+      CREATE TABLE IF NOT EXISTS premium_pass (
+        user_id    TEXT PRIMARY KEY,
+        seats      INTEGER NOT NULL,
+        expires_at INTEGER NOT NULL,
+        source     TEXT NOT NULL DEFAULT ''
+      );
+
+      -- Que servidores é que o dono de um passe ativou (1 linha = 1 licença gasta). O nº de
+      -- linhas por user_id nunca passa premium_pass.seats. Um servidor é Premium enquanto
+      -- existir aqui uma ativação cujo passe (premium_pass) ainda não expirou. idx por guild
+      -- para o isGuildPremium ser rápido.
+      CREATE TABLE IF NOT EXISTS premium_pass_activation (
+        user_id      TEXT NOT NULL,
+        guild_id     TEXT NOT NULL,
+        activated_at INTEGER NOT NULL,
+        PRIMARY KEY (user_id, guild_id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_pass_activation_guild
+        ON premium_pass_activation (guild_id);
     `);
 
     // Migracoes idempotentes de guild_config GUIADAS PELO DESCRITOR

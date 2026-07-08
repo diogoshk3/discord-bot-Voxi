@@ -17,9 +17,19 @@ export interface RedeemResult {
 }
 
 export function isGuildPremium(db: Database.Database, guildId: string, now: number): boolean {
+  // Premium DIRETO do servidor (redeem/discord/manual)...
   const row = db.prepare('SELECT expires_at FROM premium_guild WHERE guild_id = ?').get(guildId) as
     { expires_at: number } | undefined;
-  return !!row && row.expires_at > now;
+  if (row && row.expires_at > now) return true;
+  // ...OU um PASSE: existe uma ativação deste servidor cujo passe ainda não expirou?
+  const pass = db
+    .prepare(
+      `SELECT 1 FROM premium_pass_activation a
+       JOIN premium_pass p ON p.user_id = a.user_id
+       WHERE a.guild_id = ? AND p.expires_at > ? LIMIT 1`,
+    )
+    .get(guildId, now) as { 1: number } | undefined;
+  return !!pass;
 }
 
 export function isUserPremium(db: Database.Database, userId: string, now: number): boolean {
@@ -82,6 +92,116 @@ export function grantUserPremium(
      ON CONFLICT(user_id) DO UPDATE SET expires_at = excluded.expires_at, source = excluded.source`,
   ).run(userId, expiresAt, source);
   return expiresAt;
+}
+
+// ── Passe de Premium (Ko-fi): N licenças por-utilizador, ativadas por servidor ───────
+// Uma compra de Premium (guild) dá à PESSOA um passe com `seats` licenças e uma data de
+// fim ABSOLUTA. A pessoa gasta uma licença num servidor (activateSeat) e pode libertá-la
+// (deactivateSeat) para a usar noutro — o relógio corre sempre no passe, não no servidor.
+
+export interface PremiumPass {
+  seats: number;
+  expiresAt: number;
+  source: string;
+}
+
+export type ActivateStatus = 'ok' | 'already' | 'no_pass' | 'expired' | 'no_seats';
+
+export interface ActivateResult {
+  status: ActivateStatus;
+  seats?: number; // total de licenças do passe
+  used?: number; // licenças em uso após a operação
+  expiresAt?: number; // fim do passe (unix ms)
+}
+
+/** Passe do utilizador (ou null se nunca comprou). expiresAt pode estar no passado. */
+export function getPremiumPass(db: Database.Database, userId: string): PremiumPass | null {
+  const row = db
+    .prepare('SELECT seats, expires_at, source FROM premium_pass WHERE user_id = ?')
+    .get(userId) as { seats: number; expires_at: number; source: string } | undefined;
+  return row ? { seats: row.seats, expiresAt: row.expires_at, source: row.source } : null;
+}
+
+/** Servidores onde o utilizador tem uma licença ativa (ordem de ativação). */
+export function listPassActivations(db: Database.Database, userId: string): string[] {
+  return (
+    db
+      .prepare(
+        'SELECT guild_id FROM premium_pass_activation WHERE user_id = ? ORDER BY activated_at',
+      )
+      .all(userId) as { guild_id: string }[]
+  ).map((r) => r.guild_id);
+}
+
+/** Quantas licenças o utilizador tem em uso agora. */
+export function countActiveSeats(db: Database.Database, userId: string): number {
+  const row = db
+    .prepare('SELECT COUNT(*) AS n FROM premium_pass_activation WHERE user_id = ?')
+    .get(userId) as { n: number };
+  return row.n;
+}
+
+/**
+ * Concede/renova um passe de `seats` licenças por `days` dias. ESTENDE a partir do máximo
+ * entre agora e o fim atual (renovar antes de expirar acumula). Nunca REDUZ o nº de
+ * licenças (usa o máximo) — subir de plano aumenta, renovar mantém. Devolve o novo fim.
+ */
+export function grantGuildPass(
+  db: Database.Database,
+  userId: string,
+  seats: number,
+  days: number,
+  source: string,
+  now: number,
+): number {
+  const cur = getPremiumPass(db, userId);
+  const base = cur && cur.expiresAt > now ? cur.expiresAt : now;
+  const expiresAt = base + days * DAY_MS;
+  const finalSeats = cur ? Math.max(cur.seats, seats) : seats;
+  db.prepare(
+    `INSERT INTO premium_pass (user_id, seats, expires_at, source)
+     VALUES (?, ?, ?, ?)
+     ON CONFLICT(user_id) DO UPDATE SET seats = excluded.seats, expires_at = excluded.expires_at, source = excluded.source`,
+  ).run(userId, finalSeats, expiresAt, source);
+  return expiresAt;
+}
+
+/**
+ * Gasta uma licença do passe no servidor `guildId`. Transacional (conta-e-insere) para não
+ * passar do limite com dois cliques simultâneos. Idempotente: reativar o mesmo servidor
+ * devolve 'already' sem gastar outra licença.
+ */
+export function activateSeat(
+  db: Database.Database,
+  userId: string,
+  guildId: string,
+  now: number,
+): ActivateResult {
+  const tx = db.transaction((): ActivateResult => {
+    const pass = getPremiumPass(db, userId);
+    if (!pass) return { status: 'no_pass' };
+    if (pass.expiresAt <= now) return { status: 'expired', expiresAt: pass.expiresAt };
+    const already = db
+      .prepare('SELECT 1 FROM premium_pass_activation WHERE user_id = ? AND guild_id = ?')
+      .get(userId, guildId);
+    const used = countActiveSeats(db, userId);
+    if (already) return { status: 'already', seats: pass.seats, used, expiresAt: pass.expiresAt };
+    if (used >= pass.seats)
+      return { status: 'no_seats', seats: pass.seats, used, expiresAt: pass.expiresAt };
+    db.prepare(
+      'INSERT INTO premium_pass_activation (user_id, guild_id, activated_at) VALUES (?, ?, ?)',
+    ).run(userId, guildId, now);
+    return { status: 'ok', seats: pass.seats, used: used + 1, expiresAt: pass.expiresAt };
+  });
+  return tx();
+}
+
+/** Liberta a licença de `guildId`. Devolve true se havia uma ativação para remover. */
+export function deactivateSeat(db: Database.Database, userId: string, guildId: string): boolean {
+  const res = db
+    .prepare('DELETE FROM premium_pass_activation WHERE user_id = ? AND guild_id = ?')
+    .run(userId, guildId);
+  return res.changes > 0;
 }
 
 // ── Discord Premium Apps (entitlements) ──────────────────────────────────────
