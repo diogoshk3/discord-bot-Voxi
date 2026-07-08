@@ -12,6 +12,8 @@ import { EffectEngine } from './tts/effects';
 import { CloneEngine, resolveCloneCmd } from './tts/cloneEngine';
 import { GuildVoicePlayer } from './voice/player';
 import { AloneWatcher } from './voice/aloneWatcher';
+import { GreetCooldown } from './voice/greetCooldown';
+import { DuplicateTracker } from './moderation/antispam';
 import type { BotDeps } from './bot/deps';
 import { removePlayer } from './bot/deps';
 import { GameManager } from './games/manager';
@@ -138,6 +140,10 @@ async function main(): Promise<void> {
     limiters: new Map(),
     // xsaid: último autor lido por guild, para não repetir "{nome} disse" em seguidas.
     lastSpeaker: new Map<string, string>(),
+    // Cooldown de 5 min da saudação de entrada (anti-spam de entrar/sair da call).
+    greetCooldown: new GreetCooldown(),
+    // Tracker de duplicados para o anti-spam de leitura (opt-in por guild).
+    dupTracker: new DuplicateTracker(),
     // Disponibilidade REAL do clone (inclui auto-deteção do venv), para a UI não dizer
     // "motor não instalado" quando o sidecar foi detetado sem CLONE_CMD no env.
     cloneAvailable: cloneEngine.available,

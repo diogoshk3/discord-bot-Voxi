@@ -478,6 +478,21 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
     )
     .addSubcommand((s) =>
       s
+        .setName('antispam')
+        .setNameLocalizations({ 'pt-BR': 'antispam' })
+        .setDescription(
+          "Don't read spammed messages (mass word repetition or the same big message) (off by default)",
+        )
+        .addBooleanOption((o) =>
+          o
+            .setName('active')
+            .setNameLocalizations({ 'pt-BR': 'ativo' })
+            .setDescription('on/off')
+            .setRequired(true),
+        ),
+    )
+    .addSubcommand((s) =>
+      s
         .setName('greet')
         .setDescription('Greet people by name when they join the voice channel (on by default)')
         .addBooleanOption((o) =>

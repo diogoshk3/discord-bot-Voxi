@@ -68,9 +68,11 @@ Cada pasta de `src/` e a sua responsabilidade (o que está realmente no código)
 | `voice/queue.ts` | `PlayQueue`: fila FIFO com cap (descarta ao exceder). | — |
 | `voice/player.ts` | `GuildVoicePlayer` por guild: `VoiceConnection` + `AudioPlayer` + fila + `say()` (devolve boolean), `isActive()`, `skip()` (com `pendingSkip`), timer de inatividade + auto-reconexão com backoff. Espera `entersState(Ready)` antes de tocar. Ver **Fiabilidade** para os invariantes. | `@discordjs/voice`, `queue`, `metrics`, `logging` |
 | `voice/greeting.ts` | Saudação de voz ao ENTRAR na call: `isJoinIntoChannel(old,new,bot)` (puro — deteta entrada no canal do bot), `buildGreeting({locale,name,…})` → `SynthRequest` ("Olá {nome}" na língua escolhida + voz dessa língua; fallback inglês), `GREETINGS`/`GREET_LANGUAGE_CHOICES`/`GREET_LOCALES`. O gatilho vive no `VoiceStateUpdate` (client.ts `greetOnJoin`): humano entra → `player.say`. Config: `greet_on_join` (default ON), `greet_locale` (default 'en'). | `engine` |
+| `voice/greetCooldown.ts` | `GreetCooldown.shouldGreet(guild,user)`: cooldown de 5 min (`GREET_COOLDOWN_MS`) por (guild,user) da saudação — spam de entrar/sair da call não repete o "Olá {nome}"/parabéns. Janela fixa (pedido suprimido não a estende), memória capada, relógio injetável. Consultado no `greetOnJoin`. | — |
 | `health/ffmpeg.ts` | `checkFfmpeg(getInfo?)`: health-check do binário ffmpeg no boot (via `prism-media`), com veredicto `{ok,version}`/`{ok:false,error}` e mensagem acionável (comando de correção no Windows). Injetável para testes. | `prism-media` |
 | `moderation/filter.ts` | `isBlocked(texto, blocklist)`: verifica a blocklist (pré-síntese). | — |
 | `moderation/rateLimiter.ts` | `RateLimiter` (token bucket) por-utilizador; poda preguiçosa de buckets cheios+inativos acima de `MAX_BUCKETS` (5000). | — |
+| `moderation/antispam.ts` | Anti-spam de leitura (opt-in por guild, `guild_config.antispam`, default OFF): `isRepetitionSpam(texto)` (puro — muitos tokens + baixa diversidade, ex. "POKEBOLAS ×39") e `DuplicateTracker.isDuplicateSpam(guild,autor,texto,now)` (mesma pessoa a repetir a mesma msg grande em <60s, janela fixa, memória capada). Gate no `messageHandler` antes do `lastSpeaker`/`bumpTalk`. | — |
 | `commands/index.ts` | Definições dos slash commands (`commandDefs`) e `handleInteraction` (join, leave, tts, skip, **laugh**, **joke**, voice, config, stats, **help**, **setup**). Toda a UI passa por `t()`/`localeFor(deps, guildId)`. | tudo acima |
 | `commands/messageHandler.ts` | `handleMessage`: pipeline de auto-leitura/menção/reply em `messageCreate`. | store, textCleaning, moderation, resolveSynth |
 | `commands/resolveSynth.ts` | `resolveSynth`: resolve `SynthRequest` — a **língua da mensagem decide a voz** (`lang = forceLang \|\| detectLang(text)` + `pickVoiceForLang`). `ResolveSynthInput` inclui `forceLang` (código franc que força a língua da voz, ignorando `detectLang`; usado quando a mensagem é só gírias EN). | `language` |
@@ -173,6 +175,9 @@ Pipeline de auto-leitura em `commands/messageHandler.ts` (`handleMessage`), pela
 9. **Guard de legibilidade**: exige pelo menos **uma letra ou número** (`/[\p{L}\p{N}]/u`).
    Cobre o vazio `''` e também texto que ficou só com pontuação, símbolos ou resíduo
    zero-width do strip de emoji (rede de segurança) → nesse caso descarta.
+9b. **Anti-spam** (só se `guild_config.antispam` ON, default OFF): `isRepetitionSpam(cleaned)`
+   OU `DuplicateTracker.isDuplicateSpam(...)` → descarta em silêncio (com log). **Antes** do
+   `lastSpeaker`/`bumpTalk` — uma mensagem saltada não conta. Ver `moderation/antispam.ts`.
 10. **Abreviaturas pessoais + gírias EN**: primeiro `applyUserAbbrev(cleaned, …)`
     (abreviaturas **pessoais** do utilizador, globais — precedência pessoal > embutido),
     depois `expandAbbreviations(personal)` — gírias **só inglesas**, aplicadas em qualquer

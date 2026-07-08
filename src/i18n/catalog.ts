@@ -624,6 +624,14 @@ export const catalog: Record<string, Entry> = {
     en: 'Vozen will **not** read the voice channel text chat (only the TTS channel).',
     pt: 'O Vozen **não** lê o chat de texto do canal de voz (só o canal de TTS).',
   },
+  'config.antispamOn': {
+    en: "✅ Anti-spam **on** — Vozen won't read spammed messages (mass word repetition or the same big message posted over and over).",
+    pt: '✅ Anti-spam **ligado** — o Vozen não lê mensagens spamadas (repetição em massa da mesma palavra ou a mesma mensagem grande repetida).',
+  },
+  'config.antispamOff': {
+    en: 'Anti-spam **off** — Vozen reads every message as usual.',
+    pt: 'Anti-spam **desligado** — o Vozen lê todas as mensagens como habitual.',
+  },
   'config.greetOn': {
     en: "✅ I'll greet people by name when they join the voice channel.",
     pt: '✅ Vou saudar as pessoas pelo nome quando entrarem no canal de voz.',
@@ -683,6 +691,10 @@ export const catalog: Record<string, Entry> = {
   'config.showTextInVoice': {
     en: 'Text-in-voice: {value}',
     pt: 'Texto-em-voz: {value}',
+  },
+  'config.showAntispam': {
+    en: 'Anti-spam: {value}',
+    pt: 'Anti-spam: {value}',
   },
   'config.showGreet': {
     en: 'Greet on join: {value} ({language})',
@@ -1038,12 +1050,12 @@ export const catalog: Record<string, Entry> = {
     en:
       '• /setup — guided one-step configuration · run this first\n' +
       '• /config — autoread, tts-channel, language, default-voice, blockword, pronunciation,\n' +
-      '  rate-limit, role, max-chars, enabled · e.g. /config tts-channel #general\n' +
+      '  rate-limit, role, max-chars, antispam, enabled · e.g. /config tts-channel #general\n' +
       '• /stats — bot statistics',
     pt:
       '• /setup — configuracao guiada num passo · corre isto primeiro\n' +
       '• /config — autoread, tts-channel, language, default-voice, blockword, pronunciation,\n' +
-      '  rate-limit, role, max-chars, enabled · ex. /config tts-channel #geral\n' +
+      '  rate-limit, role, max-chars, antispam, enabled · ex. /config tts-channel #geral\n' +
       '• /stats — estatisticas do bot',
   },
   'help.groupMore': {

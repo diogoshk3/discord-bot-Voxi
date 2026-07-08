@@ -34,6 +34,10 @@ export interface GuildConfig {
   // saudação (a principal é sempre inglês, 'en').
   greetOnJoin: boolean;
   greetLocale: string;
+  // antispam: quando LIGADO, o Vozen não lê mensagens spamadas — repetição massiva da
+  // mesma palavra/frase (ex. "POKEBOLAS ×39") nem a mesma mensagem grande repetida em
+  // janela curta. DESLIGADO por defeito (opt-in). Ver src/moderation/antispam.
+  antispam: boolean;
 }
 
 const DEFAULTS: GuildConfig = {
@@ -53,6 +57,7 @@ const DEFAULTS: GuildConfig = {
   textInVoice: false, // NÃO ler o chat-em-voz por defeito (opt-in)
   greetOnJoin: true, // saudar quem entra na call LIGADO por defeito
   greetLocale: DEFAULT_LOCALE, // 'en' — inglês como língua da saudação por defeito
+  antispam: false, // NÃO filtrar spam por defeito (opt-in, decisão do Diogo)
 };
 
 interface GuildConfigRow {
@@ -71,6 +76,7 @@ interface GuildConfigRow {
   text_in_voice: number | null;
   greet_on_join: number | null;
   greet_locale: string | null;
+  antispam: number | null;
 }
 
 type SqlValue = string | number | null;
@@ -190,6 +196,13 @@ export const GUILD_CONFIG_COLUMNS: GuildConfigColumn[] = [
     sqlType: "TEXT NOT NULL DEFAULT 'en'",
     toDb: asIs,
     fromDb: (r) => r ?? DEFAULTS.greetLocale,
+  },
+  {
+    prop: 'antispam',
+    column: 'antispam',
+    sqlType: 'INTEGER NOT NULL DEFAULT 0',
+    toDb: asBool,
+    fromDb: (r) => (r == null ? DEFAULTS.antispam : r === 1),
   },
 ];
 

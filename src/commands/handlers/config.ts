@@ -150,6 +150,12 @@ export async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps
     const on = i.options.getBoolean('active', true);
     setGuildConfig(deps.db, i.guildId!, { textInVoice: on });
     await reply(i, on ? t('config.textInVoiceOn', locale) : t('config.textInVoiceOff', locale));
+  } else if (sub === 'antispam') {
+    // Não ler mensagens spamadas (repetição massiva / mesma msg grande repetida).
+    // DESLIGADO por defeito (opt-in).
+    const on = i.options.getBoolean('active', true);
+    setGuildConfig(deps.db, i.guildId!, { antispam: on });
+    await reply(i, on ? t('config.antispamOn', locale) : t('config.antispamOff', locale));
   } else if (sub === 'greet') {
     // Saudação de voz a quem entra na call. LIGADA por defeito.
     const on = i.options.getBoolean('active', true);
@@ -217,6 +223,7 @@ export async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps
       t('config.showAutojoin', locale, { value: cfg.autojoin ? on : off }),
       t('config.showReadBots', locale, { value: cfg.readBots ? on : off }),
       t('config.showTextInVoice', locale, { value: cfg.textInVoice ? on : off }),
+      t('config.showAntispam', locale, { value: cfg.antispam ? on : off }),
       t('config.showGreet', locale, {
         value: cfg.greetOnJoin ? on : off,
         language:

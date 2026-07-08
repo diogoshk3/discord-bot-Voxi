@@ -63,6 +63,11 @@ function greetOnJoin(deps: BotDeps, oldState: VoiceState, newState: VoiceState):
     // por isso disparam mesmo com a saudação normal desligada. Já a saudação "Olá" só sai
     // se `greetOnJoin` estiver ON. Sem parabéns E sem saudação -> nada a dizer.
     if (!isBirthday && !cfg.greetOnJoin) return;
+    // Cooldown de 5 min por (guild, user): quem spama entrar/sair só é saudado uma vez
+    // por janela — cobre a saudação normal E os parabéns. Só consulta aqui (depois de
+    // sabermos que HÁ algo a dizer) para não gastar a janela à toa. Sem o mapa (testes
+    // antigos) não há cooldown (comportamento antigo: saúda sempre).
+    if (deps.greetCooldown && !deps.greetCooldown.shouldGreet(guildId, member.id)) return;
     const rawName =
       getNickname(deps.db, guildId, member.id) ?? member.displayName ?? member.user.username ?? '';
     const req = buildGreeting({

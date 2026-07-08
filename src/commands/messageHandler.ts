@@ -11,6 +11,7 @@ import { getNickname } from '../store/nickname';
 import { getGuildConfig } from '../store/guildConfig';
 import { getBlocklist } from '../store/blocklist';
 import { redactBlocked } from '../moderation/filter';
+import { isRepetitionSpam } from '../moderation/antispam';
 import { getVoiceEffect } from '../store/voiceEffect';
 import { getClone } from '../store/voiceClone';
 import { bumpTalk } from '../store/talkStats';
@@ -187,6 +188,23 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     // (rede de segurança do strip de emoji): nada disso é "legível". Sem corpo legível
     // E sem media -> não vale sintetizar.
     if (!/[\p{L}\p{N}]/u.test(cleaned) && media.length === 0) return;
+
+    // Anti-spam (opt-in por guild, OFF por defeito): não lê mensagens spamadas —
+    // repetição massiva de tokens NA mensagem (ex. "POKEBOLAS ×39") OU a MESMA
+    // mensagem grande repetida pela mesma pessoa em janela curta. Corre sobre o texto
+    // JÁ limpo/truncado; ANTES do lastSpeaker/bumpTalk (uma msg saltada não conta). O
+    // tracker de duplicados só existe com o mapa injetado (testes antigos → sem dup).
+    if (cfg.antispam) {
+      const dup =
+        deps.dupTracker?.isDuplicateSpam(message.guildId, message.author.id, cleaned, Date.now()) ??
+        false;
+      if (isRepetitionSpam(cleaned) || dup) {
+        log.info(
+          `[antispam] mensagem saltada (guild ${message.guildId}, autor ${message.author.id})`,
+        );
+        return;
+      }
+    }
 
     // Blocklist (buscada uma vez; reutilizada na redação do req mais abaixo).
     const blocklist = getBlocklist(deps.db, message.guildId);

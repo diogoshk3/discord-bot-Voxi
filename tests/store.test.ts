@@ -101,6 +101,7 @@ describe('store', () => {
         textInVoice: false, // NÃO ler o chat-em-voz por defeito
         greetOnJoin: true, // saudar quem entra na call LIGADO por defeito
         greetLocale: 'en', // inglês como língua da saudação por defeito
+        antispam: false, // filtro de spam DESLIGADO por defeito
       });
     });
 
@@ -145,6 +146,7 @@ describe('store', () => {
         textInVoice: false, // NÃO ler o chat-em-voz por defeito
         greetOnJoin: true, // saudar quem entra na call LIGADO por defeito
         greetLocale: 'en', // inglês como língua da saudação por defeito
+        antispam: false, // filtro de spam DESLIGADO por defeito
       });
     });
 
@@ -223,6 +225,7 @@ describe('store', () => {
         textInVoice: true,
         greetOnJoin: false,
         greetLocale: 'pt',
+        antispam: true,
       };
       setGuildConfig(db, G, full);
       expect(getGuildConfig(db, G)).toEqual(full);
@@ -272,8 +275,9 @@ describe('store', () => {
           textInVoice: false,
           greetOnJoin: true,
           greetLocale: 'en',
+          antispam: false,
         });
-        // As 15 colunas passam a existir depois da migração.
+        // As 16 colunas passam a existir depois da migração.
         const info = migrated.pragma('table_info(guild_config)') as Array<{ name: string }>;
         const names = new Set(info.map((c) => c.name));
         for (const col of GUILD_CONFIG_COLUMNS) expect(names.has(col.column)).toBe(true);

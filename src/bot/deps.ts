@@ -5,6 +5,8 @@ import type { TTSEngine } from '../tts/engine';
 import { GuildVoicePlayer } from '../voice/player';
 import { RateLimiter } from '../moderation/rateLimiter';
 import type { AloneWatcher } from '../voice/aloneWatcher';
+import type { GreetCooldown } from '../voice/greetCooldown';
+import type { DuplicateTracker } from '../moderation/antispam';
 import type { GameManager } from '../games/manager';
 import { invalidateGuild } from '../store/cache';
 import { log } from '../logging/logger';
@@ -26,6 +28,19 @@ export interface BotDeps {
    * o mapa (ex. testes antigos) não há supressão (anuncia sempre).
    */
   lastSpeaker?: Map<string, string>;
+  /**
+   * Cooldown de 5 min da saudação de entrada, por (guild, user). Evita que spam de
+   * entrar/sair da call faça o Vozen repetir "Olá {nome}"/parabéns. Injetado no
+   * bootstrap; opcional (sem ele, saúda sempre — comportamento antigo). Ver greetCooldown.
+   */
+  greetCooldown?: GreetCooldown;
+  /**
+   * Tracker de mensagens duplicadas (anti-spam), por (guild, author). Deteta a mesma
+   * pessoa a repetir a mesma mensagem grande em janela curta. Só é consultado quando
+   * a guild tem `antispam` ON. Injetado no bootstrap; opcional (sem ele, só a heurística
+   * de repetição intra-mensagem atua). Ver src/moderation/antispam.
+   */
+  dupTracker?: DuplicateTracker;
   /**
    * Gestor dos minijogos (/game). Um jogo ativo por guild. Opcional (testes antigos
    * nao o injetam; sem ele nao ha jogos, so o TTS normal). Ver src/games.
