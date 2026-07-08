@@ -12,7 +12,6 @@ import type { BotDeps } from '../src/bot/deps';
 import { initDb } from '../src/store/db';
 import { getGuildConfig, setGuildConfig } from '../src/store/guildConfig';
 import { getBlocklist, addBlockword } from '../src/store/blocklist';
-import { getPronunciations, addPronunciation } from '../src/store/pronunciation';
 import type Database from 'better-sqlite3';
 
 const GUILD = 'g-config-test';
@@ -380,99 +379,8 @@ describe('/config blockword — validacao de palavra vazia', () => {
   });
 });
 
-// ── pronunciation add/remove/list ─────────────────────────────────────────────
-
-describe('/config pronunciation — add/remove/list', () => {
-  let db: Database.Database;
-
-  beforeEach(() => {
-    db = initDb(':memory:');
-  });
-  afterEach(() => {
-    db.close();
-  });
-
-  it('add: rejeita termo vazio com mensagem clara e nao aplica', async () => {
-    const i = makeConfigInteraction({
-      group: 'pronunciation',
-      sub: 'add',
-      optionsMap: { term: '   ', pronunciation: 'good game' },
-    });
-    const deps = makeConfigDeps(db);
-    await handleInteraction(i as any, deps);
-    // Migrado PT->EN (P16.2): "The term can't be empty."
-    expect(i.replies.some((r) => /term|empty|termo|vazio|vazia/i.test(r))).toBe(true);
-    expect(getPronunciations(db, GUILD)).toHaveLength(0);
-  });
-
-  it('add: rejeita pronuncia vazia com mensagem clara e nao aplica', async () => {
-    const i = makeConfigInteraction({
-      group: 'pronunciation',
-      sub: 'add',
-      optionsMap: { term: 'gg', pronunciation: '   ' },
-    });
-    const deps = makeConfigDeps(db);
-    await handleInteraction(i as any, deps);
-    // Migrado PT->EN (P16.2): "The pronunciation can't be empty."
-    expect(i.replies.some((r) => /pronunciation|empty|pronuncia|vazio|vazia/i.test(r))).toBe(true);
-    expect(getPronunciations(db, GUILD)).toHaveLength(0);
-  });
-
-  it('add: aceita termo+pronuncia validos, guarda trimado', async () => {
-    const i = makeConfigInteraction({
-      group: 'pronunciation',
-      sub: 'add',
-      optionsMap: { term: '  gg  ', pronunciation: '  good game  ' },
-    });
-    const deps = makeConfigDeps(db);
-    await handleInteraction(i as any, deps);
-    expect(i.replies.some((r) => /gg.*good game/i.test(r))).toBe(true);
-    expect(getPronunciations(db, GUILD)).toEqual([{ term: 'gg', replacement: 'good game' }]);
-  });
-
-  it('remove: remove um termo existente', async () => {
-    addPronunciation(db, GUILD, 'gg', 'good game');
-    const i = makeConfigInteraction({
-      group: 'pronunciation',
-      sub: 'remove',
-      optionsMap: { term: 'gg' },
-    });
-    const deps = makeConfigDeps(db);
-    await handleInteraction(i as any, deps);
-    expect(i.replies.some((r) => /removida|gg/i.test(r))).toBe(true);
-    expect(getPronunciations(db, GUILD)).toHaveLength(0);
-  });
-
-  it('remove: rejeita termo vazio com mensagem clara', async () => {
-    const i = makeConfigInteraction({
-      group: 'pronunciation',
-      sub: 'remove',
-      optionsMap: { term: '' },
-    });
-    const deps = makeConfigDeps(db);
-    await handleInteraction(i as any, deps);
-    // Migrado PT->EN (P16.2): "The term can't be empty."
-    expect(i.replies.some((r) => /term|empty|termo|vazio|vazia/i.test(r))).toBe(true);
-  });
-
-  it('list: mostra os termos definidos', async () => {
-    addPronunciation(db, GUILD, 'gg', 'good game');
-    addPronunciation(db, GUILD, 'btw', 'by the way');
-    const i = makeConfigInteraction({ group: 'pronunciation', sub: 'list' });
-    const deps = makeConfigDeps(db);
-    await handleInteraction(i as any, deps);
-    expect(i.replies.some((r) => /gg.*good game/i.test(r))).toBe(true);
-    expect(i.replies.some((r) => /btw.*by the way/i.test(r))).toBe(true);
-  });
-
-  it('list: mensagem para dicionario vazio (sem opcoes nao rebenta)', async () => {
-    const i = makeConfigInteraction({ group: 'pronunciation', sub: 'list' });
-    const deps = makeConfigDeps(db);
-    await handleInteraction(i as any, deps);
-    // Migrado PT->EN (P16.2): dicionario vazio -> "(none)"
-    expect(i.replies.some((r) => /\(none\)|nenhum/i.test(r))).toBe(true);
-  });
-});
+// NB: os testes do /config pronunciation foram removidos com a feature (plano v4) —
+// as pronúncias agora são pessoais via /pronunciation; ver tests/pronunciationUser.test.ts.
 
 // ── enabled (kill-switch) ─────────────────────────────────────────────────────
 
@@ -571,7 +479,6 @@ describe('/config show — mostra config atual do servidor', () => {
     });
     addBlockword(db, GUILD, 'spam');
     addBlockword(db, GUILD, 'flood');
-    addPronunciation(db, GUILD, 'gg', 'good game');
 
     const i = makeConfigInteraction({ sub: 'show' });
     const deps = makeConfigDeps(db);
@@ -587,7 +494,6 @@ describe('/config show — mostra config atual do servidor', () => {
     expect(text).toMatch(/123/);
     expect(text).toMatch(/7/);
     expect(text).toMatch(/2/); // 2 palavras na blocklist
-    expect(text).toMatch(/1/); // 1 entrada de pronuncia
   });
 
   it('mostra (nenhum) para canal nao definido e qualquer para role nao definido', async () => {
@@ -657,10 +563,9 @@ describe('/config reset — repoe config aos defaults', () => {
     expect(cfg.ratePerMin).toBe(5);
   });
 
-  it('blocklist e pronuncia sao mantidas apos reset', async () => {
-    // Adicionar dados na blocklist e pronuncia
+  it('blocklist e mantida apos reset', async () => {
+    // Adicionar dados na blocklist
     addBlockword(db, GUILD, 'spam');
-    addPronunciation(db, GUILD, 'gg', 'good game');
     // Configurar algo nao-default para confirmar que o reset e da config base
     setGuildConfig(db, GUILD, { maxChars: 999 });
 
@@ -670,9 +575,8 @@ describe('/config reset — repoe config aos defaults', () => {
 
     // Config base reposta
     expect(getGuildConfig(db, GUILD).maxChars).toBe(300);
-    // Blocklist e pronuncia mantidas — nao destruidas pelo reset
+    // Blocklist mantida — nao destruida pelo reset
     expect(getBlocklist(db, GUILD)).toContain('spam');
-    expect(getPronunciations(db, GUILD)).toEqual([{ term: 'gg', replacement: 'good game' }]);
   });
 
   it('reset em guild sem config previa nao rebenta', async () => {

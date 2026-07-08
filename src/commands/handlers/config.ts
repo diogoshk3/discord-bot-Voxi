@@ -11,11 +11,6 @@ import { metrics } from '../../metrics';
 import { brandEmbed } from '../../ui/theme';
 import { getGuildConfig, setGuildConfig, resetGuildConfig } from '../../store/guildConfig';
 import { addBlockword, removeBlockword, getBlocklist } from '../../store/blocklist';
-import {
-  getPronunciations,
-  addPronunciation,
-  removePronunciation,
-} from '../../store/pronunciation';
 import { makeLocalizedNamer } from '../../language/voiceMap';
 import { GREET_LANGUAGE_CHOICES, GREET_LOCALES } from '../../voice/greeting';
 import { t, SUPPORTED_LOCALES, LOCALE_DISPLAY_NAMES, type SupportedLocale } from '../../i18n/index';
@@ -46,38 +41,8 @@ export async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps
     }
     return;
   }
-  if (group === 'pronunciation') {
-    const sub = i.options.getSubcommand();
-    // `list` nao tem opcoes: tratar ANTES de exigir o termo (getString(..., true) lancaria).
-    if (sub === 'list') {
-      const dict = getPronunciations(deps.db, i.guildId!);
-      const out = dict.length
-        ? dict
-            .map((e) => `- ${e.term} -> ${e.replacement || t('config.pronEmptyValue', locale)}`)
-            .join('\n')
-        : t('config.listEmpty', locale);
-      await reply(i, `${t('config.pronListHeader', locale)}\n${out}`);
-      return;
-    }
-    const term = i.options.getString('term', true).trim();
-    if (!term) {
-      await reply(i, t('config.termEmpty', locale));
-      return;
-    }
-    if (sub === 'add') {
-      const replacement = i.options.getString('pronunciation', true).trim();
-      if (!replacement) {
-        await reply(i, t('config.pronEmpty', locale));
-        return;
-      }
-      addPronunciation(deps.db, i.guildId!, term, replacement);
-      await reply(i, t('config.pronSet', locale, { term, replacement }));
-    } else {
-      removePronunciation(deps.db, i.guildId!, term);
-      await reply(i, t('config.pronRemoved', locale, { term }));
-    }
-    return;
-  }
+  // NB: o antigo grupo `pronunciation` (dicionário de SERVIDOR) foi removido no plano
+  // v4 — pronúncias agora são só pessoais, via /pronunciation (handlers/personal.ts).
   const sub = i.options.getSubcommand();
   if (sub === 'tts-channel') {
     const ch = i.options.getChannel('channel', true);
@@ -207,7 +172,6 @@ export async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps
   } else if (sub === 'show') {
     const cfg = getGuildConfig(deps.db, i.guildId!);
     const blocklistCount = getBlocklist(deps.db, i.guildId!).length;
-    const pronunciationCount = getPronunciations(deps.db, i.guildId!).length;
     const on = t('config.on', locale);
     const off = t('config.off', locale);
     const channelStr = cfg.ttsChannelId ? `<#${cfg.ttsChannelId}>` : t('config.valueNone', locale);
@@ -233,7 +197,6 @@ export async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps
       t('config.showMaxChars', locale, { value: cfg.maxChars }),
       t('config.showRateLimit', locale, { value: cfg.ratePerMin }),
       t('config.showBlocklist', locale, { count: blocklistCount }),
-      t('config.showPronunciation', locale, { count: pronunciationCount }),
     ];
     await reply(i, lines.join('\n'));
   } else if (sub === 'reset') {

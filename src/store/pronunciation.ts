@@ -3,40 +3,13 @@ import type { PronunciationEntry } from '../textCleaning/pronunciation';
 // Tabela CACHEADA (lida a cada mensagem): todo o setter TEM de chamar invalidate.
 import { cached, invalidate } from './cache';
 
-export function getPronunciations(db: Database.Database, guildId: string): PronunciationEntry[] {
-  const rows = cached(db, 'pronunciation', guildId, () => {
-    return db
-      .prepare('SELECT term, replacement FROM pronunciation WHERE guild_id = ? ORDER BY term ASC')
-      .all(guildId) as PronunciationEntry[];
-  });
-  return rows.map((e) => ({ ...e })); // cópia: o chamador não deve mutar o cacheado
-}
-
-export function addPronunciation(
-  db: Database.Database,
-  guildId: string,
-  term: string,
-  replacement: string,
-): void {
-  // Re-adicionar um termo existente edita o replacement (UPDATE, nao NOTHING como
-  // na blocklist, que nao tem payload).
-  db.prepare(
-    `INSERT INTO pronunciation (guild_id, term, replacement) VALUES (?, ?, ?)
-     ON CONFLICT(guild_id, term) DO UPDATE SET replacement = excluded.replacement`,
-  ).run(guildId, term, replacement);
-  invalidate(db, 'pronunciation', guildId);
-}
-
-export function removePronunciation(db: Database.Database, guildId: string, term: string): void {
-  db.prepare('DELETE FROM pronunciation WHERE guild_id = ? AND term = ?').run(guildId, term);
-  invalidate(db, 'pronunciation', guildId);
-}
-
-// ── Pronúncias PESSOAIS (/pronunciation) ──────────────────────────────────────────────
-// Só se aplicam às mensagens do PRÓPRIO autor (aplicadas antes do dicionário da guild —
-// como applyPronunciation corre por ordem, o termo do user ganha ao da guild). Globais:
-// seguem o utilizador para qualquer servidor, como as user_abbreviation. Limite (3 Free /
-// 50 Premium) decidido no handler e imposto aqui via parâmetro.
+// Pronúncias PESSOAIS (/pronunciation): só se aplicam às mensagens do PRÓPRIO autor.
+// Globais: seguem o utilizador para qualquer servidor, como as user_abbreviation.
+// Limite (3 Free / 50 Premium) decidido no handler e imposto aqui via parâmetro.
+//
+// NB (plano v4): o antigo dicionário de SERVIDOR (/config pronunciation, tabela
+// `pronunciation`) foi removido do produto — a tabela fica dormente na BD (dados
+// preservados, nada os lê) para a remoção ser reversível.
 
 /** Limites de pronúncias pessoais por plano. */
 export const USER_PRON_LIMIT_FREE = 3;

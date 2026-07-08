@@ -36,7 +36,7 @@ export function redactRequest(req: SynthRequest, blocklist: string[]): SynthRequ
 export interface PrepareSpeechInput {
   /** Texto JA com as abreviaturas PESSOAIS do user aplicadas (antes da expansao EN). */
   personal: string;
-  /** Dicionario de pronuncia da guild (getPronunciations). */
+  /** Pronúncias PESSOAIS do autor (getUserPronunciations) — individuais desde o plano v4. */
   pronunciations: PronunciationEntry[];
   userVoice: { model: string; speed: number } | null;
   available: string[];

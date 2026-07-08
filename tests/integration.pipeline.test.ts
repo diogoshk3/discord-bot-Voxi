@@ -37,7 +37,7 @@ import { initDb } from '../src/store/db';
 import { setGuildConfig } from '../src/store/guildConfig';
 import { addBlockword } from '../src/store/blocklist';
 import { setOptOut } from '../src/store/optout';
-import { addPronunciation } from '../src/store/pronunciation';
+import { addUserPronunciation } from '../src/store/pronunciation';
 import { setDetection } from '../src/store/langDetect';
 
 const GUILD = 'g-integration';
@@ -246,8 +246,8 @@ describe('pipeline central — integracao end-to-end (store real + player falso)
   });
 
   // ── 6. PRONUNCIA real aplicada antes do synth ─────────────────────────────
-  it('dicionario de pronuncia da guild -> termo substituido no texto falado', async () => {
-    addPronunciation(db, GUILD, 'JS', 'JavaScript');
+  it('pronuncia PESSOAL do autor -> termo substituido no texto falado', async () => {
+    addUserPronunciation(db, USER, 'JS', 'JavaScript', 50);
     const deps = makeDeps(db, say);
     const content =
       'eu adoro programar em JS todos os dias da semana porque e muito divertido e produtivo sempre';
@@ -264,10 +264,10 @@ describe('pipeline central — integracao end-to-end (store real + player falso)
     expect(req.model.startsWith('pt_')).toBe(true);
   });
 
-  // ── 7. PRECEDENCIA: /pronunciation da guild > giria embutida ──────────────
-  it('pronuncia da guild SOMBREIA uma giria EN embutida (config vence)', async () => {
-    // 'brb' e giria embutida ("be right back"), mas a guild redefine-a via /pronunciation.
-    addPronunciation(db, GUILD, 'brb', 'bora rapaz');
+  // ── 7. PRECEDENCIA: /pronunciation pessoal > giria embutida ───────────────
+  it('pronuncia PESSOAL SOMBREIA uma giria EN embutida (a do user vence)', async () => {
+    // 'brb' e giria embutida ("be right back"), mas o user redefine-a via /pronunciation.
+    addUserPronunciation(db, USER, 'brb', 'bora rapaz', 50);
     const deps = makeDeps(db, say);
     const content = 'brb';
 

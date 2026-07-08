@@ -580,45 +580,8 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
             ),
         ),
     )
-    .addSubcommandGroup((g) =>
-      g
-        .setName('pronunciation')
-        .setDescription('Manage the pronunciation dictionary')
-        .addSubcommand((s) =>
-          s
-            .setName('add')
-            .setDescription('Add/edit a term')
-            .addStringOption((o) =>
-              o
-                .setName('term')
-                .setNameLocalizations({ 'pt-BR': 'termo' })
-                .setDescription('Term to replace')
-                .setRequired(true)
-                .setMaxLength(80),
-            )
-            .addStringOption((o) =>
-              o
-                .setName('pronunciation')
-                .setNameLocalizations({ 'pt-BR': 'pronuncia' })
-                .setDescription('How it should be read')
-                .setRequired(true)
-                .setMaxLength(200),
-            ),
-        )
-        .addSubcommand((s) =>
-          s
-            .setName('remove')
-            .setDescription('Remove a term')
-            .addStringOption((o) =>
-              o
-                .setName('term')
-                .setNameLocalizations({ 'pt-BR': 'termo' })
-                .setDescription('Term to remove')
-                .setRequired(true),
-            ),
-        )
-        .addSubcommand((s) => s.setName('list').setDescription('List the defined terms')),
-    )
+    // NB: o antigo subgrupo `pronunciation` (dicionário de servidor) foi REMOVIDO no
+    // plano v4 — as pronúncias agora são só PESSOAIS via /pronunciation (individual).
     .toJSON(),
   new SlashCommandBuilder()
     .setName('setup')
