@@ -11,6 +11,7 @@ import {
   grantUserPremium,
   rememberKofiSupporter,
   lookupKofiSupporter,
+  recordKofiTransaction,
 } from '../store/premium';
 import {
   parseKofiPayload,
@@ -240,7 +241,23 @@ export function startKofiWebhook(deps: KofiWebhookDeps): Server | null {
           ...grant,
           discordId: resolveKofiDiscordId(db, event, grant, now()),
         };
-        const exp = applyKofiGrant(db, resolved, now());
+        // IDEMPOTÊNCIA: o Ko-fi reentrega em timeout/não-2xx. Registo do tx + grant são
+        // UMA transação: num duplicado confirmamos 200 sem re-aplicar (o grant acumula
+        // expiry — ver kofi_transaction em db.ts); se o grant falhar, o registo reverte
+        // e um retry legítimo volta a ser aceite. Sem tx id (payload atípico) aplica na
+        // mesma — fica o log para auditoria manual.
+        const applied = db.transaction((): { dup: boolean; exp: number | null } => {
+          if (event.transactionId && !recordKofiTransaction(db, event.transactionId, now())) {
+            return { dup: true, exp: null };
+          }
+          return { dup: false, exp: applyKofiGrant(db, resolved, now()) };
+        })();
+        if (applied.dup) {
+          logInfo(`[kofi] entrega DUPLICADA ignorada (tx=${event.transactionId}).`);
+          res.writeHead(200).end('ok');
+          return;
+        }
+        const exp = applied.exp;
         if (exp == null) {
           // Comprou mas não pôs (ou pôs mal) o Discord ID → resolve-se à mão com /vozengrant.
           logError(

@@ -287,6 +287,24 @@ export function lookupKofiSupporter(db: Database.Database, email: string): strin
   return row ? row.discord_id : null;
 }
 
+/**
+ * Regista uma transação Ko-fi como processada (idempotência do webhook). Devolve true
+ * na 1.ª vez (a entrega deve ser aplicada) e false num duplicado/retry (já processada
+ * — o chamador confirma 200 SEM voltar a aplicar o grant, que acumula expiry).
+ * O chamador deve embrulhar registo+grant numa db.transaction para serem atómicos:
+ * se o grant falhar, o registo também reverte e um retry legítimo volta a passar.
+ */
+export function recordKofiTransaction(
+  db: Database.Database,
+  transactionId: string,
+  now: number,
+): boolean {
+  const res = db
+    .prepare('INSERT OR IGNORE INTO kofi_transaction (transaction_id, processed_at) VALUES (?, ?)')
+    .run(transactionId, now);
+  return res.changes > 0;
+}
+
 // ── Discord Premium Apps (entitlements) ──────────────────────────────────────
 // Quando o operador liga a monetização nativa do Discord (SKUs), as compras chegam
 // como "entitlements". Reutilizamos as tabelas premium_* com source='discord' para

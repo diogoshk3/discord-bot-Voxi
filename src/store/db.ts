@@ -214,6 +214,16 @@ export function initDb(path: string): Database.Database {
         discord_id TEXT NOT NULL,
         updated_at INTEGER NOT NULL
       );
+
+      -- Ledger de transações Ko-fi processadas (IDEMPOTÊNCIA do webhook). O Ko-fi
+      -- reenvia entregas em timeout/não-2xx; sem este ledger um retry re-aplicava o
+      -- grant — e como grantUserPremium/grantGuildPass ACUMULAM expiry, a mesma compra
+      -- pagava dias a dobrar. Renovações legítimas trazem kofi_transaction_id DISTINTO,
+      -- por isso nunca são bloqueadas por engano.
+      CREATE TABLE IF NOT EXISTS kofi_transaction (
+        transaction_id TEXT PRIMARY KEY,
+        processed_at   INTEGER NOT NULL
+      );
     `);
 
     // Migracoes idempotentes de guild_config GUIADAS PELO DESCRITOR

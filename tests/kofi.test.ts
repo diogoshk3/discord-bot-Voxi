@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import type { Server } from 'node:http';
 import type Database from 'better-sqlite3';
 import { initDb } from '../src/store/db';
-import { getPremiumPass, isUserPremium } from '../src/store/premium';
+import { getPremiumPass, isUserPremium, recordKofiTransaction } from '../src/store/premium';
 import {
   parseKofiPayload,
   verifyKofiToken,
@@ -227,5 +227,97 @@ describe('kofiWebhook — API Premium HTTP', () => {
     expect((await req('10.0.0.2')).status).toBe(401);
     expect((await req('10.0.0.3')).status).toBe(401);
     expect((await req('10.0.0.1')).status).toBe(401);
+  });
+});
+
+describe('kofi — idempotência do webhook (retries do Ko-fi não duplicam o grant)', () => {
+  let db: Database.Database;
+  let server: Server | null = null;
+
+  beforeEach(() => {
+    db = initDb(':memory:');
+  });
+  afterEach(async () => {
+    if (server) {
+      await new Promise<void>((resolve) => server!.close(() => resolve()));
+      server = null;
+    }
+    db.close();
+  });
+
+  it('recordKofiTransaction: 1.ª vez true, duplicado false', () => {
+    expect(recordKofiTransaction(db, 'tx-a', 1000)).toBe(true);
+    expect(recordKofiTransaction(db, 'tx-a', 2000)).toBe(false);
+    expect(recordKofiTransaction(db, 'tx-b', 3000)).toBe(true);
+  });
+
+  async function startAndPost(payload: string): Promise<number> {
+    const res = await fetch(urlOf(server!), {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: payload,
+    });
+    return res.status;
+  }
+  function urlOf(s: Server): string {
+    const addr = s.address();
+    if (!addr || typeof addr === 'string') throw new Error('porta efémera indisponível');
+    return `http://127.0.0.1:${addr.port}/`;
+  }
+
+  it('mesma entrega 2x (mesmo kofi_transaction_id) -> o expiry só estende UMA vez', async () => {
+    server = startKofiWebhook({
+      db,
+      token: 'tok',
+      port: 0,
+      now: () => 1_000_000,
+      logInfo: () => {},
+      logError: () => {},
+    });
+    expect(server).not.toBeNull();
+    await new Promise<void>((resolve) => server!.once('listening', () => resolve()));
+
+    const payload = kofiJson({ kofi_transaction_id: 'tx-dup-1' });
+    expect(await startAndPost(payload)).toBe(200);
+    const passAfter1 = getPremiumPass(db, DID);
+    expect(passAfter1).not.toBeNull();
+
+    // Retry do Ko-fi: MESMO tx id -> 200 (ack) mas SEM re-aplicar o grant.
+    expect(await startAndPost(payload)).toBe(200);
+    const passAfter2 = getPremiumPass(db, DID);
+    expect(passAfter2?.expiresAt).toBe(passAfter1?.expiresAt);
+  });
+
+  it('renovação legítima (tx id DIFERENTE) -> estende de novo', async () => {
+    server = startKofiWebhook({
+      db,
+      token: 'tok',
+      port: 0,
+      now: () => 1_000_000,
+      logInfo: () => {},
+      logError: () => {},
+    });
+    await new Promise<void>((resolve) => server!.once('listening', () => resolve()));
+
+    expect(await startAndPost(kofiJson({ kofi_transaction_id: 'tx-r1' }))).toBe(200);
+    const after1 = getPremiumPass(db, DID)!.expiresAt;
+    expect(await startAndPost(kofiJson({ kofi_transaction_id: 'tx-r2' }))).toBe(200);
+    const after2 = getPremiumPass(db, DID)!.expiresAt;
+    expect(after2).toBeGreaterThan(after1);
+  });
+
+  it('payload SEM tx id (atípico) -> processa na mesma (não fica bloqueado)', async () => {
+    server = startKofiWebhook({
+      db,
+      token: 'tok',
+      port: 0,
+      now: () => 1_000_000,
+      logInfo: () => {},
+      logError: () => {},
+    });
+    await new Promise<void>((resolve) => server!.once('listening', () => resolve()));
+
+    expect(await startAndPost(kofiJson({ kofi_transaction_id: null }))).toBe(200);
+    expect(getPremiumPass(db, DID)).not.toBeNull();
   });
 });
