@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import type { Server } from 'node:http';
 import type Database from 'better-sqlite3';
 import { initDb } from '../src/store/db';
 import { getPremiumPass, isUserPremium } from '../src/store/premium';
@@ -10,6 +11,7 @@ import {
   PREMIUM_PASS_SEATS,
 } from '../src/premium/kofi';
 import { applyKofiGrant, resolveKofiDiscordId } from '../src/premium/kofiWebhook';
+import { startKofiWebhook } from '../src/premium/kofiWebhook';
 
 const DID = '123456789012345678'; // 18 dígitos
 const EMAIL = 'buyer@example.com';
@@ -173,5 +175,57 @@ describe('kofi — renovações (email -> Discord ID)', () => {
     const e = parseKofiPayload(kofiJson({ message: 'no id', email: 'stranger@x.com' }))!;
     const g = mapKofiToGrant(e, now)!;
     expect(resolveKofiDiscordId(db, e, g, now)).toBeNull();
+  });
+});
+
+describe('kofiWebhook — API Premium HTTP', () => {
+  let db: Database.Database;
+  let server: Server | null = null;
+
+  beforeEach(() => {
+    db = initDb(':memory:');
+  });
+  afterEach(async () => {
+    if (server) {
+      await new Promise<void>((resolve) => server!.close(() => resolve()));
+      server = null;
+    }
+    db.close();
+  });
+
+  it('limita o mapa de rate-limit por IP para não crescer sem fim', async () => {
+    const statusApi = {
+      getStatus: vi.fn(async () => ({ code: 401, body: { error: 'invalid_token' } })),
+      resolveIdentity: vi.fn(),
+    };
+    server = startKofiWebhook({
+      db,
+      token: undefined,
+      port: 0,
+      now: () => 1_000_000,
+      logInfo: () => {},
+      logError: () => {},
+      statusApi,
+      apiOrigin: 'https://vozen.org',
+      apiRateMaxEntries: 2,
+    });
+    expect(server).not.toBeNull();
+    await new Promise<void>((resolve) => server!.once('listening', () => resolve()));
+    const addr = server!.address();
+    if (!addr || typeof addr === 'string') throw new Error('porta efémera indisponível');
+    const url = `http://127.0.0.1:${addr.port}/api/me/premium`;
+    const req = (ip: string) =>
+      fetch(url, {
+        headers: { Authorization: 'Bearer mau', 'X-Forwarded-For': ip },
+      });
+
+    for (let i = 0; i < 30; i++) {
+      expect((await req('10.0.0.1')).status).toBe(401);
+    }
+    expect((await req('10.0.0.1')).status).toBe(429);
+
+    expect((await req('10.0.0.2')).status).toBe(401);
+    expect((await req('10.0.0.3')).status).toBe(401);
+    expect((await req('10.0.0.1')).status).toBe(401);
   });
 });

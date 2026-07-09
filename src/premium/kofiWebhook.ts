@@ -32,12 +32,15 @@ export interface KofiWebhookDeps {
   // Ausente => só o webhook. Presente => também responde à API com CORS restrito a `apiOrigin`.
   statusApi?: StatusApi;
   apiOrigin?: string;
+  /** Limite defensivo do mapa de rate-limit da API. Default 2048. */
+  apiRateMaxEntries?: number;
 }
 
 // Rate-limit simples por IP para a API do painel (janela deslizante). Sem dependências:
 // um Map em memória chega — reinicia com o processo, é best-effort anti-abuso.
 const API_RATE_MAX = 30; // pedidos
 const API_RATE_WINDOW_MS = 10_000; // por 10s
+const API_RATE_MAX_ENTRIES = 2048;
 
 interface RateState {
   count: number;
@@ -83,10 +86,28 @@ function clientIp(req: import('node:http').IncomingMessage): string {
   return req.socket.remoteAddress ?? 'unknown';
 }
 
+function pruneRateMap(rate: Map<string, RateState>, now: number, maxEntries: number): void {
+  for (const [ip, state] of rate) {
+    if (state.reset <= now) rate.delete(ip);
+  }
+  while (rate.size >= maxEntries) {
+    const oldest = rate.keys().next().value as string | undefined;
+    if (!oldest) break;
+    rate.delete(oldest);
+  }
+}
+
 /** true se o IP passou do limite na janela atual (e regista o pedido). */
-function isRateLimited(rate: Map<string, RateState>, ip: string, now: number): boolean {
+function isRateLimited(
+  rate: Map<string, RateState>,
+  ip: string,
+  now: number,
+  maxEntries: number,
+): boolean {
   const cur = rate.get(ip);
   if (!cur || cur.reset <= now) {
+    if (cur) rate.delete(ip);
+    pruneRateMap(rate, now, maxEntries);
     rate.set(ip, { count: 1, reset: now + API_RATE_WINDOW_MS });
     return false;
   }
@@ -99,6 +120,7 @@ interface ApiCtx {
   apiOrigin: string;
   now: () => number;
   rate: Map<string, RateState>;
+  rateMaxEntries: number;
   logError: (m: string, err: unknown) => void;
 }
 
@@ -128,7 +150,7 @@ function handleApiRequest(
     res.writeHead(405, cors).end('method not allowed');
     return;
   }
-  if (isRateLimited(ctx.rate, clientIp(req), ctx.now())) {
+  if (isRateLimited(ctx.rate, clientIp(req), ctx.now(), ctx.rateMaxEntries)) {
     res.writeHead(429, cors).end('{"error":"rate_limited"}');
     return;
   }
@@ -167,13 +189,14 @@ export function startKofiWebhook(deps: KofiWebhookDeps): Server | null {
     return null;
   }
   const rate = new Map<string, RateState>();
+  const rateMaxEntries = Math.max(1, Math.floor(deps.apiRateMaxEntries ?? API_RATE_MAX_ENTRIES));
 
   const server = createServer((req, res) => {
     const path = (req.url ?? '').split('?')[0];
 
     // ── Painel Premium: GET/OPTIONS /api/me/premium ────────────────────────────────
     if (statusApi && apiOrigin && path === '/api/me/premium') {
-      handleApiRequest(req, res, { statusApi, apiOrigin, now, rate, logError });
+      handleApiRequest(req, res, { statusApi, apiOrigin, now, rate, rateMaxEntries, logError });
       return;
     }
 

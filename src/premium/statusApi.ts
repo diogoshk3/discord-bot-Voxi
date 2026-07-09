@@ -27,6 +27,8 @@ export interface StatusApiDeps {
   resolveGuildName?: (guildId: string) => string | null;
   /** TTL da cache token->identidade (ms). Default 60s. */
   identityTtlMs?: number;
+  /** Limite defensivo contra spam lento de tokens diferentes. Default 512. */
+  identityCacheMaxEntries?: number;
   logError?: (m: string, err: unknown) => void;
 }
 
@@ -49,12 +51,26 @@ const DISCORD_ME = 'https://discord.com/api/v10/users/@me';
  */
 export function createStatusApi(deps: StatusApiDeps): StatusApi {
   const ttl = deps.identityTtlMs ?? 60_000;
+  const maxCacheEntries = Math.max(1, Math.floor(deps.identityCacheMaxEntries ?? 512));
   const cache = new Map<string, { identity: DiscordIdentity | null; exp: number }>();
+
+  function pruneCache(now: number): void {
+    for (const [key, value] of cache) {
+      if (value.exp <= now) cache.delete(key);
+    }
+    while (cache.size >= maxCacheEntries) {
+      const oldest = cache.keys().next().value as string | undefined;
+      if (!oldest) break;
+      cache.delete(oldest);
+    }
+  }
 
   async function resolveIdentity(token: string): Promise<DiscordIdentity | null> {
     const now = deps.now();
     const hit = cache.get(token);
     if (hit && hit.exp > now) return hit.identity;
+    if (hit) cache.delete(token);
+    pruneCache(now);
 
     let identity: DiscordIdentity | null = null;
     try {
@@ -85,6 +101,7 @@ export function createStatusApi(deps: StatusApiDeps): StatusApi {
       identity = null;
     }
     // Cacheia mesmo o `null` (token inválido) para não repetir o fetch em spam.
+    pruneCache(now);
     cache.set(token, { identity, exp: now + ttl });
     return identity;
   }

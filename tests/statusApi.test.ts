@@ -104,4 +104,21 @@ describe('statusApi — validação de token e montagem do estado', () => {
     await api.getStatus('tok');
     expect(fetchImpl).toHaveBeenCalledTimes(2);
   });
+
+  it('limita a cache de identidades para tokens inválidos não crescerem sem fim', async () => {
+    const fetchImpl = fakeFetch('tok', DID);
+    const api = createStatusApi({
+      db,
+      now: () => now,
+      fetchImpl,
+      identityCacheMaxEntries: 2,
+    });
+
+    await api.getStatus('mau-1');
+    await api.getStatus('mau-2');
+    await api.getStatus('mau-3');
+    await api.getStatus('mau-1');
+
+    expect(fetchImpl).toHaveBeenCalledTimes(4);
+  });
 });
