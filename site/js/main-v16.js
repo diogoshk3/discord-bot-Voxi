@@ -211,7 +211,7 @@
      o estado DESTE utilizador. Escondido enquanto PREMIUM_API_BASE estiver vazio. */
   const TOK_KEY = "vozen.dtoken";
   const STATE_KEY = "vozen.oauthstate";
-  const OAUTH_REDIRECT = location.origin + location.pathname;
+  const OAUTH_REDIRECT = new URL("account.html", location.href).href;
   let panelState = { mode: "hidden" };
 
   const t = (k) => (DICT[lang] && DICT[lang][k]) || (DICT.en && DICT.en[k]) || k;
@@ -229,6 +229,18 @@
   };
   const DISCORD_MARK =
     '<svg viewBox="0 0 24 18" width="20" height="15" aria-hidden="true" fill="currentColor"><path d="M20.3 1.6A19.8 19.8 0 0 0 15.4.1a14 14 0 0 0-.6 1.3 18.3 18.3 0 0 0-5.5 0A13 13 0 0 0 8.6.1 19.7 19.7 0 0 0 3.7 1.6C.6 6.3-.3 10.8.2 15.3a19.9 19.9 0 0 0 6 3 14.7 14.7 0 0 0 1.3-2.1 12.9 12.9 0 0 1-2-1c.2-.1.3-.3.5-.4a14.2 14.2 0 0 0 12 0l.5.4a12.8 12.8 0 0 1-2 1 14.5 14.5 0 0 0 1.3 2.1 19.8 19.8 0 0 0 6-3c.6-5.2-.8-9.7-3.5-13.7ZM8 12.6c-1.2 0-2.1-1.1-2.1-2.4S6.8 7.8 8 7.8s2.2 1.1 2.1 2.4c0 1.3-.9 2.4-2.1 2.4Zm8 0c-1.2 0-2.1-1.1-2.1-2.4s.9-2.4 2.1-2.4 2.2 1.1 2.1 2.4c0 1.3-.9 2.4-2.1 2.4Z"/></svg>';
+
+  function storedToken() {
+    try {
+      return sessionStorage.getItem(TOK_KEY);
+    } catch {
+      return null;
+    }
+  }
+
+  function unlockAccountPage() {
+    if (IS_ACCOUNT) document.body.classList.add("is-account-ready");
+  }
 
   function randState() {
     const a = new Uint8Array(16);
@@ -254,6 +266,10 @@
     try {
       sessionStorage.removeItem(TOK_KEY);
     } catch {}
+    if (IS_ACCOUNT) {
+      window.location.href = "index.html";
+      return;
+    }
     setPanel({ mode: "anon" });
   }
 
@@ -297,12 +313,13 @@
         sessionStorage.setItem(TOK_KEY, fromHash);
       } catch {}
     }
-    let tok = null;
-    try {
-      tok = sessionStorage.getItem(TOK_KEY);
-    } catch {}
+    const tok = storedToken();
     if (!tok) {
-      setPanel({ mode: "anon" });
+      if (IS_ACCOUNT) {
+        login();
+        return;
+      }
+      setPanel({ mode: "hidden" });
       return;
     }
     setPanel({ mode: "loading" });
@@ -314,6 +331,10 @@
         try {
           sessionStorage.removeItem(TOK_KEY);
         } catch {}
+        if (IS_ACCOUNT) {
+          login();
+          return;
+        }
         setPanel({ mode: "anon" });
         return;
       }
@@ -410,6 +431,7 @@
       return;
     }
     el.hidden = false;
+    if (IS_ACCOUNT && panelState.mode !== "anon") unlockAccountPage();
     const head = `<div class="ppanel__head"><span class="ppanel__title">💎 ${t("panel.title")}</span></div>`;
     let body = "";
     if (panelState.mode === "soon") {
@@ -445,7 +467,8 @@
   if (navLoginBtn) {
     navLoginBtn.addEventListener("click", () => {
       if (!IS_ACCOUNT) {
-        window.location.href = "account.html";
+        if (storedToken() || !PREMIUM_API_BASE) window.location.href = "account.html";
+        else login();
         return;
       }
       if (panelState.mode === "ok") {
