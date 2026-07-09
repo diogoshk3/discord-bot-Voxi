@@ -8,6 +8,7 @@
 // MultiSegmentEngine (cada segmento herda o `engine` da mensagem — ver multiSegment.ts).
 
 import type { SynthRequest, TTSEngine } from './engine';
+import { log } from '../logging/logger';
 
 export class PerUserEngineRouter implements TTSEngine {
   constructor(
@@ -16,8 +17,17 @@ export class PerUserEngineRouter implements TTSEngine {
     private readonly kokoro: TTSEngine,
   ) {}
 
-  synth(req: SynthRequest): Promise<string> {
+  async synth(req: SynthRequest): Promise<string> {
     if (req.engine === 'kokoro') return this.kokoro.synth(req);
-    return (req.engine === 'piper' ? this.piper : this.google).synth(req);
+    if (req.engine !== 'piper') return this.google.synth(req);
+
+    try {
+      return await this.piper.synth(req);
+    } catch (err) {
+      log.warn(
+        `[tts] Piper falhou para ${req.model}; fallback para Google: ${(err as Error).message}`,
+      );
+      return this.google.synth({ ...req, engine: 'google' });
+    }
   }
 }

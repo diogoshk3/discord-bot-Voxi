@@ -25,6 +25,19 @@ describe('PerUserEngineRouter — despacha por req.engine', () => {
     expect(k.synth).not.toHaveBeenCalled();
   });
 
+  it("engine='piper' cai para gTTS se o Piper falhar", async () => {
+    const g = fake('gtts');
+    const p: TTSEngine = { synth: vi.fn(async () => { throw new Error('Modelo Piper nao encontrado'); }) };
+    const k = fake('kokoro');
+    const r = new PerUserEngineRouter(g, p, k);
+
+    expect(await r.synth(req('piper'))).toBe('/wav/gtts.wav');
+    expect(p.synth).toHaveBeenCalledTimes(1);
+    expect(g.synth).toHaveBeenCalledTimes(1);
+    expect(g.synth).toHaveBeenCalledWith(expect.objectContaining({ engine: 'google' }));
+    expect(k.synth).not.toHaveBeenCalled();
+  });
+
   it("engine='kokoro' -> Kokoro", async () => {
     const g = fake('gtts');
     const p = fake('piper');
