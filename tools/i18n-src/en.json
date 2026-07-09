@@ -119,6 +119,7 @@
     "panel.error": "Couldn't reach the server. Please try again in a moment.",
     "panel.none": "No active plan yet",
     "panel.noneSub": "Log in and any Plus or Premium on your account shows up here.",
+    "panel.soon": "Account & Premium status is coming soon.",
     "panel.activeUntil": "Active until",
     "panel.expiredOn": "Expired on",
     "panel.seatsUsed": "licenses in use",

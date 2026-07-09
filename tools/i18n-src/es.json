@@ -119,6 +119,7 @@
     "panel.error": "No se pudo contactar con el servidor. Inténtalo de nuevo en un momento.",
     "panel.none": "Sin plan activo",
     "panel.noneSub": "Inicia sesión y tu Plus o Premium aparecerá aquí.",
+    "panel.soon": "La cuenta y el estado Premium llegan pronto.",
     "panel.activeUntil": "Activo hasta",
     "panel.expiredOn": "Caducó el",
     "panel.seatsUsed": "licencias en uso",

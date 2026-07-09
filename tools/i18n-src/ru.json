@@ -119,6 +119,7 @@
     "panel.error": "Не удалось связаться с сервером. Повторите попытку чуть позже.",
     "panel.none": "Активного плана пока нет",
     "panel.noneSub": "Войдите — ваш Plus или Premium появится здесь.",
+    "panel.soon": "Аккаунт и статус Premium скоро появятся.",
     "panel.activeUntil": "Активно до",
     "panel.expiredOn": "Истёк",
     "panel.seatsUsed": "лицензий используется",

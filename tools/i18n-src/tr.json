@@ -119,6 +119,7 @@
     "panel.error": "Sunucuya ulaşılamadı. Birazdan tekrar dene.",
     "panel.none": "Henüz aktif plan yok",
     "panel.noneSub": "Giriş yap; Plus veya Premium'un burada görünür.",
+    "panel.soon": "Hesap ve Premium durumu çok yakında geliyor.",
     "panel.activeUntil": "Şu tarihe kadar aktif:",
     "panel.expiredOn": "Süresi doldu:",
     "panel.seatsUsed": "lisans kullanımda",

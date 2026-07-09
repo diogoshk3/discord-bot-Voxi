@@ -25,6 +25,9 @@
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  // Página dedicada da conta (account.html). Só aí o painel Premium é o conteúdo
+  // principal — e mostra o estado "em breve" enquanto o backend não está no ar.
+  const IS_ACCOUNT = document.body.classList.contains("page-account");
 
   /* ── external links ──────────────────────────────────── */
   $$(".js-invite").forEach((a) => {
@@ -279,8 +282,13 @@
   }
 
   async function loadPanel() {
+    // Sem o elemento do painel (páginas que não o têm) não há nada a fazer.
+    if (!document.getElementById("premiumPanel")) return;
     if (!PREMIUM_API_BASE) {
-      setPanel({ mode: "hidden" });
+      // Backend ainda não está no ar: na página da conta mostramos "em breve"
+      // (nunca disparamos o OAuth, senão o redirect não registado dava erro no
+      // Discord); nas outras páginas o painel fica escondido.
+      setPanel(IS_ACCOUNT ? { mode: "soon" } : { mode: "hidden" });
       return;
     }
     const fromHash = readTokenFromHash();
@@ -357,7 +365,7 @@
   function renderPanel() {
     const el = document.getElementById("premiumPanel");
     if (!el) return;
-    if (!PREMIUM_API_BASE || panelState.mode === "hidden") {
+    if (panelState.mode === "hidden") {
       el.hidden = true;
       el.innerHTML = "";
       return;
@@ -365,7 +373,10 @@
     el.hidden = false;
     const head = `<div class="ppanel__head"><span class="ppanel__title">💎 ${t("panel.title")}</span></div>`;
     let body = "";
-    if (panelState.mode === "anon") {
+    if (panelState.mode === "soon") {
+      // Estado dormente da página da conta: backend ainda não configurado.
+      body = `<p class="ppanel__meta">${t("panel.soon")}</p>`;
+    } else if (panelState.mode === "anon") {
       body = `<button type="button" class="btn--discord" id="ppLogin">${DISCORD_MARK}<span>${t("panel.login")}</span></button>`;
     } else if (panelState.mode === "loading") {
       body = `<p class="ppanel__meta">${t("panel.loading")}</p>`;
@@ -381,16 +392,20 @@
     byId("ppRetry")?.addEventListener("click", loadPanel);
   }
 
-  // Botão de login na navbar (visível sempre). COM backend => login OAuth do Discord; SEM
-  // backend ainda => leva à secção Premium, para não mandar o utilizador a um erro de
-  // redirect no Discord antes de o redirect URI estar registado.
+  // Botão de login na navbar: leva à página dedicada da conta (account.html). Já na
+  // página da conta, faz login OAuth quando o backend está no ar; senão faz scroll ao
+  // painel (que mostra "em breve") — nunca dispara um redirect que ainda não existe.
   const navLoginBtn = document.getElementById("navLogin");
   if (navLoginBtn) {
     navLoginBtn.addEventListener("click", () => {
+      if (!IS_ACCOUNT) {
+        window.location.href = "account.html";
+        return;
+      }
       if (PREMIUM_API_BASE) login();
       else
         document
-          .getElementById("premium")
+          .getElementById("premiumPanel")
           ?.scrollIntoView({ behavior: reduce ? "auto" : "smooth" });
     });
   }

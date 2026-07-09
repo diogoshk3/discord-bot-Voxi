@@ -119,6 +119,7 @@
     "panel.error": "Impossible de joindre le serveur. Réessaie dans un instant.",
     "panel.none": "Aucun plan actif",
     "panel.noneSub": "Connecte-toi : ton Plus ou Premium apparaît ici.",
+    "panel.soon": "Le compte et le statut Premium arrivent bientôt.",
     "panel.activeUntil": "Actif jusqu'au",
     "panel.expiredOn": "Expiré le",
     "panel.seatsUsed": "licences utilisées",

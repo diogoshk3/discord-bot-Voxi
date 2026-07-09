@@ -119,6 +119,7 @@
     "panel.error": "서버에 연결할 수 없습니다. 잠시 후 다시 시도하세요.",
     "panel.none": "활성 플랜이 없습니다",
     "panel.noneSub": "로그인하면 계정의 Plus 또는 Premium이 여기에 표시됩니다.",
+    "panel.soon": "계정 및 프리미엄 상태가 곧 제공됩니다.",
     "panel.activeUntil": "유효 기간:",
     "panel.expiredOn": "만료일:",
     "panel.seatsUsed": "개 라이선스 사용 중",

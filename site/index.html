@@ -421,9 +421,8 @@
             <h2 data-i18n="price.title">Free core. Fair Premium.</h2>
             <p data-i18n="price.sub">Everything Vozen does today stays free — forever. Premium adds the extras that cost us real compute.</p>
           </header>
-          <!-- Painel Premium: login com Discord + estado da conta. Preenchido/mostrado pelo
-               main.js só quando a API está configurada (PREMIUM_API_BASE); senão fica hidden. -->
-          <div class="premium-panel" id="premiumPanel" aria-live="polite" hidden></div>
+          <!-- O login/estado da conta vivem agora numa página dedicada (account.html),
+               acessível pelo botão "Log in" da navbar. -->
           <div class="bill-toggle reveal" role="group" aria-label="Billing period">
             <button type="button" class="bill-toggle__btn is-active" data-bill="month" data-i18n="price.billMonthly">Monthly</button>
             <button type="button" class="bill-toggle__btn" data-bill="year">
@@ -542,7 +541,7 @@
       </div>
     </footer>
 
-    <script src="js/i18n-v9.js"></script>
-    <script src="js/main-v13.js"></script>
+    <script src="js/i18n-v10.js"></script>
+    <script src="js/main-v14.js"></script>
   </body>
 </html>
