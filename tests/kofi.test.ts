@@ -353,4 +353,35 @@ describe('kofi — idempotência do webhook (retries do Ko-fi não duplicam o gr
     expect(await startAndPost(kofiJson({ kofi_transaction_id: null }))).toBe(200);
     expect(getPremiumPass(db, DID)).not.toBeNull();
   });
+
+  it('ramos de erro do POST: token errado 401 (sem grant), lixo 400, corpo >64KB 413', async () => {
+    server = startKofiWebhook({
+      db,
+      token: 'tok',
+      port: 0,
+      now: () => 1_000_000,
+      logInfo: () => {},
+      logError: () => {},
+    });
+    await new Promise<void>((resolve) => server!.once('listening', () => resolve()));
+
+    // Token de verificação errado -> 401 e NADA é aplicado no store.
+    expect(await startAndPost(kofiJson({ verification_token: 'errado' }))).toBe(401);
+    expect(getPremiumPass(db, DID)).toBeNull();
+
+    // Payload ilegível -> 400.
+    expect(await startAndPost('nonsense{')).toBe(400);
+
+    // Corpo acima do teto de 64KB -> abortado cedo: ou 413, ou o socket é destruído a
+    // meio do upload (o fetch vê ECONNRESET). Ambos provam o guard anti-DoS.
+    const oversized = await startAndPost('x'.repeat(65 * 1024)).then(
+      (status) => status,
+      () => 'reset' as const,
+    );
+    expect([413, 'reset']).toContain(oversized);
+
+    // E depois dos erros, um POST válido continua a funcionar.
+    expect(await startAndPost(kofiJson({ kofi_transaction_id: 'tx-ok' }))).toBe(200);
+    expect(getPremiumPass(db, DID)).not.toBeNull();
+  });
 });
