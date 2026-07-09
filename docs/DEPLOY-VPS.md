@@ -116,19 +116,30 @@ Conteúdo:
 [Unit]
 Description=Vozen Discord TTS bot
 After=network.target
+StartLimitIntervalSec=300
+StartLimitBurst=10
 
 [Service]
 Type=simple
 User=vozen
 WorkingDirectory=/home/vozen/discord-bot-Vozen
 ExecStart=/usr/bin/npm run start:prod
-Restart=on-failure
+Restart=always
 RestartSec=5
 Environment=NODE_ENV=production
 
 [Install]
 WantedBy=multi-user.target
 ```
+
+> **Porquê `Restart=always` (e não `on-failure`)**: se alguém/algo matar diretamente o
+> processo-folha `dist/index.js` (ex.: `kill <pid>`), o handler de shutdown do bot sai
+> com código **0**; o supervisor vê "saída limpa" e não reinicia, e `on-failure` ignora
+> saídas limpas — o bot 24/7 ficava DOWN até um `systemctl start` manual. `always`
+> recupera esse caso e continua a respeitar o `systemctl stop` do operador (o systemd
+> suprime o restart em stops intencionais). O `StartLimitIntervalSec/Burst` trava
+> crash-loops (máx. 10 restarts em 5 min). Verificado ao vivo em 2026-07-09: kill ao
+> leaf → "Scheduled restart job" → bot online outra vez em ~25s.
 
 Ativa:
 
