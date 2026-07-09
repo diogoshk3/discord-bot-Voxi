@@ -27,7 +27,11 @@ describe('PerUserEngineRouter — despacha por req.engine', () => {
 
   it("engine='piper' cai para gTTS se o Piper falhar", async () => {
     const g = fake('gtts');
-    const p: TTSEngine = { synth: vi.fn(async () => { throw new Error('Modelo Piper nao encontrado'); }) };
+    const p: TTSEngine = {
+      synth: vi.fn(async () => {
+        throw new Error('Modelo Piper nao encontrado');
+      }),
+    };
     const k = fake('kokoro');
     const r = new PerUserEngineRouter(g, p, k);
 
