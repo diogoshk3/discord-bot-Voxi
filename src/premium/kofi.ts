@@ -8,6 +8,8 @@
 // Campos que usamos: verification_token, type, message (onde o comprador põe o Discord ID),
 // is_subscription_payment, tier_name (memberships) e shop_items (compras únicas → anual).
 
+import { createHash, timingSafeEqual } from 'node:crypto';
+
 /** Nº de licenças (servidores) de um passe de Premium. Decisão de produto: paga 1, usa 3. */
 export const PREMIUM_PASS_SEATS = 3;
 
@@ -75,9 +77,18 @@ export function parseKofiPayload(raw: string): KofiEvent | null {
   }
 }
 
-/** true se o token do payload bate certo com o esperado (e o esperado não é vazio). */
+/**
+ * true se o token do payload bate certo com o esperado (e o esperado não é vazio).
+ * Comparação em TEMPO CONSTANTE: `===` short-circuita no 1.º byte diferente e vaza um
+ * oráculo de prefixo por timing. Hashamos ambos os lados para SHA-256 (comprimento fixo,
+ * também não vaza o tamanho do secret) e usamos timingSafeEqual — o mesmo padrão do
+ * webhook do top.gg (authMatches em src/vote.ts).
+ */
 export function verifyKofiToken(event: KofiEvent, expected: string | undefined): boolean {
-  return !!expected && event.verificationToken === expected;
+  if (!expected) return false;
+  const a = createHash('sha256').update(event.verificationToken).digest();
+  const b = createHash('sha256').update(expected).digest();
+  return timingSafeEqual(a, b);
 }
 
 /** Extrai o 1.º Discord ID (17–20 dígitos) da mensagem, ou null. */

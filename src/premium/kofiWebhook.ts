@@ -83,7 +83,16 @@ export function resolveKofiDiscordId(
 /** IP do pedido (respeita o X-Forwarded-For do reverse proxy; senão o socket). */
 function clientIp(req: import('node:http').IncomingMessage): string {
   const xff = req.headers['x-forwarded-for'];
-  if (typeof xff === 'string' && xff.length) return xff.split(',')[0].trim();
+  if (typeof xff === 'string' && xff.length) {
+    // O ÚLTIMO elemento do X-Forwarded-For é o acrescentado pelo proxy confiável
+    // (Caddy no mesmo host, que faz append do peer real); os anteriores vêm do
+    // cliente e são forjáveis — usar o leftmost deixava rodar buckets do rate-limit
+    // à vontade (1 header novo = 1 janela nova). Pressuposto documentado: exatamente
+    // UM proxy confiável à frente (ver docs/DEPLOY-VPS.md, Caddy -> localhost:3001).
+    const parts = xff.split(',');
+    const last = parts[parts.length - 1].trim();
+    if (last) return last;
+  }
   return req.socket.remoteAddress ?? 'unknown';
 }
 
@@ -283,6 +292,10 @@ export function startKofiWebhook(deps: KofiWebhookDeps): Server | null {
     req.on('error', (err) => logError('[kofi] erro no request do webhook', err));
   });
   server.on('error', (err) => logError('[kofi] erro no servidor de webhook', err));
-  server.listen(port, () => logInfo(`[kofi] webhook à escuta na porta ${port}.`));
+  // Loopback-only: o mundo exterior chega via Caddy (reverse_proxy localhost:3001).
+  // Assim a garantia não depende só da firewall (defesa em profundidade).
+  server.listen(port, '127.0.0.1', () =>
+    logInfo(`[kofi] webhook à escuta em 127.0.0.1:${port}.`),
+  );
   return server;
 }

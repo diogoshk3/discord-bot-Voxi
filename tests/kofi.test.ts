@@ -228,6 +228,39 @@ describe('kofiWebhook — API Premium HTTP', () => {
     expect((await req('10.0.0.3')).status).toBe(401);
     expect((await req('10.0.0.1')).status).toBe(401);
   });
+
+  it('XFF forjado à esquerda NÃO roda buckets (identidade = último elemento)', async () => {
+    const statusApi = {
+      getStatus: vi.fn(async () => ({ code: 401, body: { error: 'invalid_token' } })),
+      resolveIdentity: vi.fn(),
+    };
+    server = startKofiWebhook({
+      db,
+      token: undefined,
+      port: 0,
+      now: () => 1_000_000,
+      logInfo: () => {},
+      logError: () => {},
+      statusApi,
+      apiOrigin: 'https://vozen.org',
+    });
+    await new Promise<void>((resolve) => server!.once('listening', () => resolve()));
+    const addr = server!.address();
+    if (!addr || typeof addr === 'string') throw new Error('porta efémera indisponível');
+    const url = `http://127.0.0.1:${addr.port}/api/me/premium`;
+
+    // 30 pedidos com prefixo forjado DIFERENTE mas o mesmo IP real no fim -> mesma janela.
+    for (let i = 0; i < 30; i++) {
+      const res = await fetch(url, {
+        headers: { Authorization: 'Bearer mau', 'X-Forwarded-For': `1.2.3.${i}, 10.9.9.9` },
+      });
+      expect(res.status).toBe(401);
+    }
+    const blocked = await fetch(url, {
+      headers: { Authorization: 'Bearer mau', 'X-Forwarded-For': '9.9.9.9, 10.9.9.9' },
+    });
+    expect(blocked.status).toBe(429);
+  });
 });
 
 describe('kofi — idempotência do webhook (retries do Ko-fi não duplicam o grant)', () => {

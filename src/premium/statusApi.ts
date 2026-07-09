@@ -44,6 +44,10 @@ export interface StatusApi {
 
 const DISCORD_ME = 'https://discord.com/api/v10/users/@me';
 
+// Teto da validação na Discord: sem isto um discord.com lento/pendurado segurava o pedido
+// HTTP do painel em aberto (e, sob spam, acumulava). No abort caímos no catch => 401.
+const DISCORD_FETCH_TIMEOUT_MS = 5_000;
+
 /**
  * Cria a API do painel. Mantém uma cache token->identidade (TTL curto) — evita bater na
  * Discord a cada refresh do painel e limita o dano de spam de tokens inválidos (um token
@@ -73,9 +77,12 @@ export function createStatusApi(deps: StatusApiDeps): StatusApi {
     pruneCache(now);
 
     let identity: DiscordIdentity | null = null;
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), DISCORD_FETCH_TIMEOUT_MS);
     try {
       const res = await deps.fetchImpl(DISCORD_ME, {
         headers: { Authorization: `Bearer ${token}` },
+        signal: ac.signal,
       });
       if (res.ok) {
         const u = (await res.json()) as {
@@ -99,6 +106,8 @@ export function createStatusApi(deps: StatusApiDeps): StatusApi {
     } catch (err) {
       deps.logError?.('[premium-api] falha a validar token na Discord', err);
       identity = null;
+    } finally {
+      clearTimeout(timer);
     }
     // Cacheia mesmo o `null` (token inválido) para não repetir o fetch em spam.
     pruneCache(now);

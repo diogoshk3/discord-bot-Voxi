@@ -65,8 +65,9 @@ export function startHealthServer(config: Pick<AppConfig, 'healthPort'>): Server
     log.error(`[health] erro no servidor de health (porta ${port})`, err);
   });
 
-  server.listen(port, () => {
-    log.info(`[health] servidor de health a ouvir na porta ${port} (GET /health).`);
+  // Loopback-only (defesa em profundidade): o health é para monitorização local/proxy.
+  server.listen(port, '127.0.0.1', () => {
+    log.info(`[health] servidor de health a ouvir em 127.0.0.1:${port} (GET /health).`);
   });
 
   return server;

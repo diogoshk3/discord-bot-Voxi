@@ -224,8 +224,12 @@ export function startVoteWebhookServer(
     log.error(`[vote] erro no servidor de webhook top.gg (porta ${port})`, err);
   });
 
-  server.listen(port, () => {
-    log.info(`[vote] servidor de webhook top.gg a ouvir na porta ${port} (POST /webhook/topgg).`);
+  // Loopback-only (defesa em profundidade): a exposição pública faz-se via reverse
+  // proxy no mesmo host (Caddy), nunca com a porta crua na internet.
+  server.listen(port, '127.0.0.1', () => {
+    log.info(
+      `[vote] servidor de webhook top.gg a ouvir em 127.0.0.1:${port} (POST /webhook/topgg).`,
+    );
   });
 
   return server;
