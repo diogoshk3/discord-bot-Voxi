@@ -570,19 +570,46 @@ body > *:not(.grain):not(.orbs):not(.nav) { position: relative; z-index: 2; }
 
 /* ── Painel Premium (login com Discord + estado da conta) ───────────────────── */
 .premium-panel {
-  max-width: 1180px; margin: 0 auto 22px; padding: 20px 24px; border-radius: var(--radius);
-  background: var(--glass); border: 1px solid var(--line); box-shadow: inset 0 1px 0 var(--hi);
+  position: relative; overflow: hidden; isolation: isolate;
+  max-width: 560px; margin: 0 auto 22px; padding: 22px; border-radius: var(--radius);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.015)),
+    var(--glass-2);
+  border: 1px solid var(--line);
+  box-shadow: inset 0 1px 0 var(--hi), 0 24px 60px -24px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  animation: panelIn 0.3s ease-out both;
+}
+.premium-panel::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.22), transparent 28%, rgba(46, 230, 200, 0.16) 58%, transparent 82%),
+    radial-gradient(80% 60% at 0% 0%, rgba(102, 114, 255, 0.16), transparent 62%);
+  opacity: 0.72;
+}
+@keyframes panelIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.premium-panel[hidden] { display: none; }
+.premium-panel:has(.ppanel__anon),
+.premium-panel:has(.ppanel__loading),
+.premium-panel:has(.ppanel__error) {
+  text-align: left;
 }
 .ppanel__head { margin-bottom: 14px; }
-.ppanel__title { font-family: var(--f-display); font-weight: 700; font-size: 16px; color: var(--text-0); letter-spacing: -0.01em; }
+.ppanel__title {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--f-display); font-weight: 700; font-size: 16px; color: var(--text-0); letter-spacing: -0.01em;
+}
 /* Botão "Login with Discord" — blurple da marca do Discord, com o logo. */
 .btn--discord {
-  display: inline-flex; align-items: center; gap: 10px; padding: 12px 20px; border-radius: 12px;
-  border: 1px solid transparent; background: var(--blurple); color: #fff; font-weight: 700; font-size: 15px;
+  min-height: 46px; display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 12px 18px; border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18); background: var(--blurple); color: #fff; font-weight: 700; font-size: 15px;
   cursor: pointer; transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
 }
 .btn--discord:hover { background: #7782ff; box-shadow: 0 10px 30px -12px rgba(102, 114, 255, 0.8); transform: translateY(-1px); }
 .btn--discord svg { display: block; }
+.btn--discord:active { transform: translateY(0); }
 /* Botão de login na navbar (substitui o CTA "Add to Discord"): logo + texto alinhados. */
 .nav__login { display: inline-flex; align-items: center; gap: 8px; }
 .nav__login svg { display: block; }
@@ -599,14 +626,16 @@ body > *:not(.grain):not(.orbs):not(.nav) { position: relative; z-index: 2; }
   max-width: 132px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .btn--ghost {
-  margin-top: 10px; padding: 9px 16px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px;
+  min-height: 44px; margin-top: 10px; padding: 9px 16px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px;
   color: var(--text-0); background: rgba(255, 255, 255, 0.045); border: 1px solid var(--line-2);
 }
 .btn--ghost:hover { background: rgba(255, 255, 255, 0.08); }
-.ppanel__account { display: flex; align-items: center; gap: 14px; }
+.btn--ghost:active { transform: translateY(1px); }
+.ppanel__account { display: flex; align-items: center; gap: 14px; padding: 2px 0 4px; }
 .ppanel__user { min-width: 0; display: flex; align-items: center; gap: 12px; }
 .ppanel__av {
-  width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex: none;
+  width: 46px; height: 46px; padding: 2px; border-radius: 50%; object-fit: cover; flex: none;
+  background: var(--grad-brand);
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.24), 0 18px 40px -24px rgba(102, 114, 255, 0.95);
 }
 .ppanel__av--none {
@@ -619,22 +648,27 @@ body > *:not(.grain):not(.orbs):not(.nav) { position: relative; z-index: 2; }
   color: var(--text-2); font-family: var(--f-mono); font-size: 12px; overflow-wrap: anywhere;
 }
 .ppanel__logout {
-  margin-left: auto; padding: 7px 14px; border-radius: 9px; cursor: pointer; font-weight: 600; font-size: 13px;
+  min-height: 44px; margin-left: auto; padding: 7px 14px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px;
   color: var(--text-1); background: rgba(255, 255, 255, 0.04); border: 1px solid var(--line-2);
 }
 .ppanel__logout:hover { color: var(--text-0); background: rgba(255, 255, 255, 0.08); }
 .ppanel__statusgrid { margin-top: 18px; display: grid; gap: 10px; }
 .ppanel__status {
   display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 5px 14px;
-  padding: 12px 14px; border-radius: 14px; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--line);
+  min-height: 66px; padding: 13px 14px; border-radius: 14px; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--line);
+  transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
 }
 .ppanel__status.is-on {
   border-color: rgba(46, 230, 200, 0.28);
   background: linear-gradient(90deg, rgba(46, 230, 200, 0.09), rgba(255, 255, 255, 0.035));
 }
 .ppanel__status.is-off {
-  border-color: rgba(255, 110, 169, 0.18);
-  background: rgba(255, 255, 255, 0.028);
+  border-color: var(--line);
+  background: var(--panel-2);
+}
+.ppanel__status.is-off:hover {
+  border-color: var(--line-2);
+  transform: translateY(-1px);
 }
 .ppanel__status span { color: var(--text-0); font-weight: 700; }
 .ppanel__status small { grid-column: 1 / -1; color: var(--text-2); font-size: 12.5px; line-height: 1.45; }
@@ -642,16 +676,21 @@ body > *:not(.grain):not(.orbs):not(.nav) { position: relative; z-index: 2; }
   width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%;
   font-family: var(--f-display); font-size: 15px; font-weight: 900;
 }
-.ppanel__mark.is-on { color: #04150f; background: var(--aqua); box-shadow: 0 0 20px rgba(46, 230, 200, 0.34); }
-.ppanel__mark.is-off { color: #ffd4e1; background: rgba(255, 110, 169, 0.13); border: 1px solid rgba(255, 110, 169, 0.34); }
+.ppanel__mark.is-on { color: var(--bg-0); background: var(--aqua); box-shadow: 0 0 20px rgba(46, 230, 200, 0.34); }
+.ppanel__mark.is-off { color: rgba(255, 110, 169, 0.64); background: rgba(255, 110, 169, 0.09); border: 1px solid rgba(255, 110, 169, 0.2); }
+.ppanel__get {
+  grid-column: 1 / -1; justify-self: start; display: inline-flex; align-items: center; gap: 5px;
+  color: var(--aqua); font-size: 12.5px; font-weight: 700;
+}
+.ppanel__get:hover { color: var(--aqua-2); }
 .ppanel__plans { margin-top: 16px; display: flex; flex-direction: column; gap: 14px; }
 .ppanel__plan { display: flex; flex-direction: column; gap: 6px; }
 .ppanel__chip {
-  align-self: flex-start; display: inline-flex; align-items: center; padding: 4px 11px; border-radius: 999px;
+  align-self: flex-start; display: inline-flex; align-items: center; padding: 5px 12px; border-radius: 999px;
   font-family: var(--f-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; color: #1a1500;
 }
 .ppanel__chip--pro { background: var(--amber); }
-.ppanel__chip--plus { background: linear-gradient(115deg, #6672ff, #8a97ff); color: #f6f7fe; }
+.ppanel__chip--plus { background: linear-gradient(115deg, var(--blurple), var(--blurple-2)); color: var(--text-0); }
 .ppanel__meta { color: var(--text-2); font-size: 13.5px; }
 .ppanel__servers { margin-top: 4px; }
 .ppanel__servers ul { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
@@ -662,10 +701,41 @@ body > *:not(.grain):not(.orbs):not(.nav) { position: relative; z-index: 2; }
 .ppanel__servers li code { font-family: var(--f-mono); color: var(--text-2); }
 .ppanel__none { display: flex; flex-direction: column; gap: 4px; }
 .ppanel__none b { color: var(--text-0); font-size: 15px; }
+.ppanel__anon { display: grid; gap: 10px; }
+.ppanel__loading { display: grid; gap: 10px; padding: 4px 0 2px; }
+.ppanel__skel {
+  position: relative; overflow: hidden; display: block; height: 15px; border-radius: 999px;
+  background: var(--panel-2); border: 1px solid var(--line);
+}
+.ppanel__skel::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.09), transparent);
+  transform: translateX(-100%);
+  animation: shimmer 1.15s ease-in-out infinite;
+}
+.ppanel__skel--lg { width: 76%; height: 18px; }
+.ppanel__skel--sm { width: 48%; }
+@keyframes shimmer { to { transform: translateX(100%); } }
+.ppanel__error { display: grid; gap: 8px; }
+.ppanel__error-ic {
+  width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%;
+  color: rgba(255, 110, 169, 0.82); background: rgba(255, 110, 169, 0.1); border: 1px solid rgba(255, 110, 169, 0.26);
+  font-family: var(--f-display); font-weight: 800;
+}
 @media (max-width: 560px) {
-  .premium-panel { padding: 18px; }
+  .premium-panel { padding: 16px; }
+  .btn--discord { width: 100%; }
   .ppanel__account { align-items: flex-start; flex-direction: column; }
   .ppanel__logout { margin-left: 0; width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .premium-panel,
+  .ppanel__skel::after { animation: none; }
+  .ppanel__status,
+  .btn--discord,
+  .btn--ghost { transition: none; }
+  .ppanel__status.is-off:hover,
+  .btn--discord:hover { transform: none; }
 }
 
 .pricing { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; max-width: 1180px; margin: 0 auto; }

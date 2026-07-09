@@ -358,10 +358,14 @@
     const state = active ? "is-on" : "is-off";
     const text = active ? "Active" : "Inactive";
     const mark = active ? "&#10003;" : "&#10005;";
+    const action = active
+      ? ""
+      : `<a class="ppanel__get" href="index.html#premium">${t("nav.premium")} <span aria-hidden="true">→</span></a>`;
     return (
       `<div class="ppanel__status ${state}">` +
       `<span>${esc(label)}</span><b class="ppanel__mark ${state}" aria-label="${text}">${mark}</b>` +
       (detail ? `<small>${detail}</small>` : "") +
+      action +
       `</div>`
     );
   }
@@ -438,11 +442,11 @@
       // Estado dormente da página da conta: backend ainda não configurado.
       body = `<p class="ppanel__meta">${t("panel.soon")}</p>`;
     } else if (panelState.mode === "anon") {
-      body = `<button type="button" class="btn--discord" id="ppLogin">${DISCORD_MARK}<span>${t("panel.login")}</span></button>`;
+      body = `<div class="ppanel__anon"><button type="button" class="btn--discord" id="ppLogin">${DISCORD_MARK}<span>${t("panel.login")}</span></button><p class="ppanel__meta">${t("panel.noneSub")}</p></div>`;
     } else if (panelState.mode === "loading") {
-      body = `<p class="ppanel__meta">${t("panel.loading")}</p>`;
+      body = `<div class="ppanel__loading" aria-label="${esc(t("panel.loading"))}"><span class="ppanel__skel ppanel__skel--lg"></span><span class="ppanel__skel"></span><span class="ppanel__skel ppanel__skel--sm"></span></div>`;
     } else if (panelState.mode === "error") {
-      body = `<p class="ppanel__meta">${t("panel.error")}</p><button type="button" class="btn--ghost" id="ppRetry">${t("panel.retry")}</button>`;
+      body = `<div class="ppanel__error"><span class="ppanel__error-ic" aria-hidden="true">!</span><p class="ppanel__meta">${t("panel.error")}</p><button type="button" class="btn--ghost" id="ppRetry">${t("panel.retry")}</button></div>`;
     } else if (panelState.mode === "ok") {
       body = renderOk(panelState.data || {});
     }
