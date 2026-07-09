@@ -468,7 +468,7 @@
     }
     el.hidden = false;
     if (IS_ACCOUNT && panelState.mode !== "anon") unlockAccountPage();
-    const head = `<div class="ppanel__head"><span class="ppanel__title">💎 ${t("panel.title")}</span></div>`;
+    const head = `<div class="ppanel__head"><span class="ppanel__title">💎 Membership status</span></div>`;
     let body = "";
     if (panelState.mode === "soon") {
       // Estado dormente da página da conta: backend ainda não configurado.
