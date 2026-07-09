@@ -237,9 +237,13 @@ sudo systemctl restart vozen.service
 
 ## 12. Deploy automático (GitHub Actions → SSH ao VPS)
 
-Depois de confirmares que o deploy manual funciona (passos 1–11), automatiza-se
-como o site: a cada push à `main` que altere `src/**`, um workflow do GitHub
-faz SSH ao VPS e corre os mesmos 4 comandos sozinho.
+> **JÁ ATIVO (2026-07-09).** O workflow `.github/workflows/deploy-bot.yml` existe e os
+> secrets `VPS_HOST`/`VPS_USER`/`VPS_SSH_KEY` estão configurados no repositório. A cada
+> push à `main` que altere `src/**`, o bot atualiza-se sozinho no VPS (~1 min). O texto
+> abaixo é o registo de COMO foi montado (para refazer noutra máquina/servidor).
+
+Automatiza-se como o site: a cada push à `main` que altere `src/**`, um workflow do
+GitHub faz SSH ao VPS e corre os mesmos 4 comandos sozinho.
 
 **No VPS**, gera um par de chaves SSH dedicado ao deploy (não uses a tua
 chave pessoal):
