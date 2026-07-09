@@ -106,3 +106,21 @@ Fica como follow-up opcional se se quiser o "24/7 literal através de deploys".
 Verificação: 1458 testes verdes, CI verde, site (pages) + bot (VPS `8a94a97`) deployados pelos
 auto-deploys. **Premium Apps do Discord** continua inerte (falta config no Developer Portal —
 não é código, só o Diogo pode).
+
+## Follow-up 2 — 2026-07-10 (persistência real do 24/7)
+
+Fechado o "24/7 literal através de deploys" que ficou como opcional: a call de servidores
+Premium agora **sobrevive a restarts/deploys** (as ligações de voz morrem no encerramento —
+antes o bot só voltava reativamente). Design validado com o advisor (o bloqueio era: confirmar
+que o `shutdown.ts` NÃO passa pelos sítios de esquecer — confirmado, só faz `player.destroy()`).
+
+- Tabela `voice_presence` (canal por guild) + store `voicePresence.ts`.
+- Escrita gated a Premium em `createVoiceSession` (best-effort); esquecer só no `/leave` e
+  `guildDelete` (não no `removePlayer`/`shutdown`) → a linha sobrevive ao deploy.
+- `voice/rejoin.ts` (`planRejoin`, puro): Premium+canal-pronto → repor; não-Premium/canal-morto
+  → esquecer; sem-permissões → mantém e tenta no próximo arranque. Wiring no `ClientReady`.
+- +9 testes (store round-trip + política). Commit `b033337`. Suite 1467 verde.
+
+**Premium Apps** continua a ser a única coisa que não é código — guia entregue ao Diogo (criar
+SKUs no Developer Portal pós-verificação → colar `PREMIUM_GUILD_SKU_ID`/`PREMIUM_USER_SKU_ID`
+no `.env` do VPS; o `entitlementSync` já os consome).
