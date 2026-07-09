@@ -294,12 +294,11 @@
 
   function setPanel(s) {
     panelState = s;
+    renderNavLogin(s.mode === "ok" ? s.data : null);
     renderPanel();
   }
 
   async function loadPanel() {
-    // Sem o elemento do painel (páginas que não o têm) não há nada a fazer.
-    if (!document.getElementById("premiumPanel")) return;
     if (!PREMIUM_API_BASE) {
       // Backend ainda não está no ar: na página da conta mostramos "em breve"
       // (nunca disparamos o OAuth, senão o redirect não registado dava erro no
