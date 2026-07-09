@@ -50,11 +50,16 @@ export function resolveKokoroCmd(
   explicit: string | undefined,
 ): { exe: string; args: string[] } | null {
   if (explicit && explicit.trim()) return parseCommand(explicit.trim());
-  const venvPy = join(process.cwd(), 'tools', 'kokoro-venv', 'Scripts', 'python.exe');
+  // O python do venv fica em Scripts/python.exe (Windows) ou bin/python (Linux/macOS) —
+  // tenta os dois para o sidecar auto-detetar em qualquer plataforma (o VPS e Linux).
+  const venvPy = [
+    join(process.cwd(), 'tools', 'kokoro-venv', 'Scripts', 'python.exe'),
+    join(process.cwd(), 'tools', 'kokoro-venv', 'bin', 'python'),
+  ].find((p) => existsSync(p));
   const server = join(process.cwd(), 'tools', 'kokoro_server.py');
   const model = join(process.cwd(), 'tools', 'kokoro-v1.0.onnx');
   const voices = join(process.cwd(), 'tools', 'voices-v1.0.bin');
-  if (existsSync(venvPy) && existsSync(server) && existsSync(model) && existsSync(voices)) {
+  if (venvPy && existsSync(server) && existsSync(model) && existsSync(voices)) {
     return { exe: venvPy, args: [server] };
   }
   return null;

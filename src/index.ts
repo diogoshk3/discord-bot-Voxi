@@ -8,6 +8,7 @@ import { log } from './logging/logger';
 import { initDb } from './store/db';
 import { AudioCache } from './tts/cache';
 import { createEngine, createPerUserEngine, selectEngine } from './tts/factory';
+import { syntheticGttsModels } from './language/voiceMap';
 import { EffectEngine } from './tts/effects';
 import { CloneEngine, resolveCloneCmd } from './tts/cloneEngine';
 import { GuildVoicePlayer } from './voice/player';
@@ -62,19 +63,15 @@ async function main(): Promise<void> {
       `[index] nenhum modelo .onnx em ${config.modelsDir} — so vozes gTTS ficarao disponiveis.`,
     );
   }
-  // Vozes SO-Google: linguas que o gTTS fala mas SEM modelo Piper standard (ex.: japones
-  // — o rhasspy/piper-voices nao tem ja_JP). O motor-base publico e o per-user com o
-  // Google por defeito, por isso injetamos uma voz sintetica por cada, para o /voice set e
-  // a detecao automatica as oferecerem. O nome segue a convencao Piper (locale-voz-qualidade)
-  // para o gttsLangOfModel derivar o tl (ja_JP-... -> 'ja') e o LOCALE_NAMES dar o autonimo
-  // (日本語). Sem .onnx no disco: se o Google cair, o Piper nao tem fallback e a mensagem e
-  // SALTADA (nunca trava o worker) — routing dormente em voiceMap.ts (jpn->ja_, como cym/nob).
-  // Excluidas em TTS_ENGINE=neural (operador, sem gTTS).
-  const GTTS_ONLY_MODELS = config.ttsEngine === 'neural' ? [] : ['ja_JP-google-medium'];
-  const availableModels = [
-    ...piperModels,
-    ...GTTS_ONLY_MODELS.filter((m) => !piperModels.includes(m)),
-  ].sort();
+  // Vozes SO-Google: para CADA lingua conhecida (LOCALE_NAMES) SEM modelo Piper no disco,
+  // injetamos uma voz sintetica `{locale}-google-medium`, para o /voice set e a detecao
+  // automatica a oferecerem e ela falar via Google (o motor por defeito). Isto torna o
+  // catalogo INDEPENDENTE do disco: mesmo com ./models vazio (ex.: deploy fresco sem os
+  // .onnx) as ~40 linguas aparecem na mesma, em vez de colapsar para so o japones. O nome
+  // segue a convencao Piper (locale-voz-qualidade) para o gttsLangOfModel derivar o tl
+  // (ja_JP-... -> 'ja') e o LOCALE_NAMES dar o autonimo. Excluidas em neural (sem gTTS).
+  const GTTS_ONLY_MODELS = syntheticGttsModels(piperModels, config.ttsEngine === 'neural');
+  const availableModels = [...piperModels, ...GTTS_ONLY_MODELS].sort();
 
   // P13.2 — health-check do ffmpeg no ARRANQUE. O @discordjs/voice transcodifica
   // o audio via prism-media -> ffmpeg; se o binario faltar/for da plataforma

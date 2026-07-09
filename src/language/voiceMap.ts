@@ -168,6 +168,22 @@ export const LOCALE_NAMES: Record<string, string> = {
 };
 
 /**
+ * Vozes sintéticas gTTS para as línguas SEM modelo Piper no disco. Para cada locale
+ * conhecido (LOCALE_NAMES) que nenhum modelo de `piperModels` cobre, devolve
+ * `{locale}-google-medium` — assim a língua APARECE no /voice set e fala via Google
+ * (o motor por defeito), mesmo num servidor sem .onnx (evita o colapso "só japonês"
+ * quando ./models está vazio). Generaliza o caso ja_JP (o Piper standard não tem
+ * japonês) e acrescenta no_NO. Vazio em modo neural (operador, sem gTTS). PURO.
+ */
+export function syntheticGttsModels(piperModels: string[], neural: boolean): string[] {
+  if (neural) return [];
+  const covered = new Set(piperModels.map((m) => m.split('-')[0])); // 'es_ES-davefx-medium' -> 'es_ES'
+  return Object.keys(LOCALE_NAMES)
+    .filter((locale) => !covered.has(locale))
+    .map((locale) => `${locale}-google-medium`);
+}
+
+/**
  * Nome amigável de um modelo Piper para o dropdown: a língua escrita na própria
  * língua, derivada do locale (parte antes do 1.º '-'). Se o locale não estiver
  * mapeado, devolve o id do modelo tal e qual (fallback seguro, nunca esconde uma voz).

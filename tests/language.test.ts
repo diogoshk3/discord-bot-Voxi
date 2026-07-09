@@ -1,6 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { detectLang } from '../src/language/detect';
-import { pickVoice, pickVoiceForLang, modelDisplayName } from '../src/language/voiceMap';
+import {
+  pickVoice,
+  pickVoiceForLang,
+  modelDisplayName,
+  syntheticGttsModels,
+} from '../src/language/voiceMap';
 
 // Catalogo estavel dos 38 modelos Piper (hardcoded de proposito — e o catalogo
 // fixo do projeto, nao deve depender de runtime/descoberta para os testes).
@@ -358,4 +363,39 @@ describe('pickVoice — cada lingua dos 38 modelos routa para a voz certa', () =
       expect(chosen.startsWith(prefix)).toBe(true);
     });
   }
+});
+
+// ------------------------------------------------------------------
+// syntheticGttsModels — catalogo INDEPENDENTE do disco (resiliencia)
+// ------------------------------------------------------------------
+
+describe('syntheticGttsModels — vozes gTTS para linguas sem modelo Piper', () => {
+  it('sem NENHUM modelo Piper: injeta todas as linguas conhecidas via Google', () => {
+    const synth = syntheticGttsModels([], false);
+    // Uma voz sintetica por cada locale de LOCALE_NAMES (>=39).
+    expect(synth.length).toBeGreaterThanOrEqual(39);
+    // Todas seguem a convencao `{locale}-google-medium`.
+    expect(synth.every((m) => m.endsWith('-google-medium'))).toBe(true);
+    // Linguas-chave presentes (o "colapso so-japones" fica resolvido).
+    expect(synth).toContain('pt_PT-google-medium');
+    expect(synth).toContain('en_US-google-medium');
+    expect(synth).toContain('es_ES-google-medium');
+  });
+
+  it('com os 38 modelos Piper: so injeta as linguas SEM modelo (ja_JP e no_NO)', () => {
+    const synth = syntheticGttsModels(MODELS_38, false);
+    expect(synth).toEqual(['ja_JP-google-medium', 'no_NO-google-medium']);
+  });
+
+  it('NUNCA duplica um locale que ja tem modelo Piper', () => {
+    const synth = syntheticGttsModels(MODELS_38, false);
+    // pt_PT/en_US/es_ES tem modelo Piper -> nao ha voz google para eles.
+    expect(synth.some((m) => m.startsWith('pt_PT'))).toBe(false);
+    expect(synth.some((m) => m.startsWith('en_US'))).toBe(false);
+  });
+
+  it('modo neural (operador, sem gTTS): lista vazia', () => {
+    expect(syntheticGttsModels([], true)).toEqual([]);
+    expect(syntheticGttsModels(MODELS_38, true)).toEqual([]);
+  });
 });
