@@ -235,6 +235,23 @@ export function initDb(path: string): Database.Database {
         channel_id TEXT NOT NULL,
         updated_at INTEGER NOT NULL
       );
+
+      -- Códigos de presente (gift codes): o dono gera com /gencode (owner-only) e a
+      -- pessoa resgata com /redeem. USO ÚNICO — redeemed_by/redeemed_at ficam NULL até
+      -- ser resgatado (o resgate é atómico, ver store/premiumCode.ts). plan = premium|
+      -- plus; seats só conta para premium; expires_at é a validade do CÓDIGO (não do
+      -- premium), NULL = nunca expira.
+      CREATE TABLE IF NOT EXISTS premium_code (
+        code        TEXT PRIMARY KEY,
+        plan        TEXT NOT NULL,
+        days        INTEGER NOT NULL,
+        seats       INTEGER NOT NULL,
+        created_by  TEXT NOT NULL,
+        created_at  INTEGER NOT NULL,
+        expires_at  INTEGER,
+        redeemed_by TEXT,
+        redeemed_at INTEGER
+      );
     `);
 
     // Migracoes idempotentes de guild_config GUIADAS PELO DESCRITOR

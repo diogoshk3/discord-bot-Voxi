@@ -729,10 +729,21 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
     .setNameLocalizations({ 'pt-BR': 'Ler em voz alta' })
     .setType(ApplicationCommandType.Message)
     .toJSON(),
+  // /redeem — PÚBLICO: resgata um código de presente (gerado pelo dono com /gencode).
+  // Concede Plus ou um passe Premium à conta de quem resgata (não a um servidor), por
+  // isso é DM-capable. Uso único; ver store/premiumCode.ts.
+  new SlashCommandBuilder()
+    .setName('redeem')
+    .setDescription('Redeem a Vozen gift code')
+    .addStringOption((o) =>
+      o.setName('code').setDescription('Your gift code (e.g. VOZEN-XXXX-XXXX)').setRequired(true),
+    )
+    .toJSON(),
 ];
 
 // Comandos utilizáveis em DM: só devolvem TEXTO e não dependem de guild/voz/store.
-const DM_CAPABLE_COMMANDS = new Set(['invite', 'vote', 'help', 'uptime', 'botstats']);
+// (/redeem também: concede à CONTA de quem resgata, não a um servidor.)
+const DM_CAPABLE_COMMANDS = new Set(['invite', 'vote', 'help', 'uptime', 'botstats', 'redeem']);
 
 // Todos os OUTROS comandos dependem de uma guild (sessão de voz, config e store
 // por-guild). Por defeito o Discord mostra comandos globais também em DM, onde
@@ -776,6 +787,51 @@ export const ownerCommandDefs: RESTPostAPIApplicationCommandsJSONBody[] = [
         .setDescription('Premium only: number of server licences (default 3)')
         .setMinValue(1)
         .setMaxValue(50),
+    )
+    .toJSON(),
+  // /gencode — OWNER-ONLY: gera código(s) de presente que o dono dá a quem quiser. Mesma
+  // defesa em profundidade do /vozengrant (só registado na OWNER_GUILD_ID + gate por dono
+  // no handler). Resgatam-se com /redeem (público). `plan` escolhe Plus vs passe Premium.
+  new SlashCommandBuilder()
+    .setName('gencode')
+    .setDescription('Owner only — generate Vozen gift code(s)')
+    .addStringOption((o) =>
+      o
+        .setName('plan')
+        .setDescription('What the code grants')
+        .setRequired(true)
+        .addChoices(
+          { name: 'Premium (server pass)', value: 'premium' },
+          { name: 'Plus (personal, follows the user)', value: 'plus' },
+        ),
+    )
+    .addIntegerOption((o) =>
+      o
+        .setName('days')
+        .setDescription('Premium duration in days (default 30)')
+        .setMinValue(1)
+        .setMaxValue(3650),
+    )
+    .addIntegerOption((o) =>
+      o
+        .setName('seats')
+        .setDescription('Premium only: server licences (default 3)')
+        .setMinValue(1)
+        .setMaxValue(50),
+    )
+    .addIntegerOption((o) =>
+      o
+        .setName('amount')
+        .setDescription('How many codes to generate (default 1)')
+        .setMinValue(1)
+        .setMaxValue(20),
+    )
+    .addIntegerOption((o) =>
+      o
+        .setName('expires_days')
+        .setDescription('Optional: code expires after this many days')
+        .setMinValue(1)
+        .setMaxValue(3650),
     )
     .toJSON(),
 ];

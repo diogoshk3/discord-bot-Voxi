@@ -21,6 +21,8 @@ import {
   handleTopSpeakers,
   handlePremium,
   handleVozenGrant,
+  handleGenCode,
+  handleRedeem,
 } from './handlers/meta';
 import {
   handlePronunciation,
@@ -247,6 +249,10 @@ export async function handleInteraction(
         return await handlePremium(i, deps);
       case 'vozengrant':
         return await handleVozenGrant(i, deps);
+      case 'gencode':
+        return await handleGenCode(i, deps);
+      case 'redeem':
+        return await handleRedeem(i, deps);
       case 'game':
         return await handleGame(i, deps);
       case 'voice':

@@ -26,9 +26,12 @@ import {
   grantGuildPass,
   grantUserPremium,
 } from '../../store/premium';
+import { randomInt } from 'node:crypto';
 import { t } from '../../i18n/index';
 import { INVITE_PERMISSIONS, formatDuration, localeForUser, reply } from '../helpers';
 import { commandDefs } from '../index';
+import { insertPremiumCode, redeemPremiumCode } from '../../store/premiumCode';
+import { generateCodeString, normalizeCode } from '../../premium/codeGen';
 
 /**
  * /topspeakers — ranking público de quem teve mais mensagens LIDAS pelo Vozen nesta guild,
@@ -249,6 +252,87 @@ export async function handleVozenGrant(
     await reply(
       i,
       t('grant.okPremium', locale, { user: target.id, days, seats, date: stampDate(exp) }),
+    );
+  }
+}
+
+/**
+ * /gencode — OWNER-ONLY: gera código(s) de presente. Defesa em profundidade igual ao
+ * /vozengrant: (1) registado só na OWNER_GUILD_ID (invisível ao público); (2) gate por
+ * dono real aqui; (3) resposta efémera. Cada código é uso único; resgata-se com /redeem.
+ * `seats` só conta para premium (0 para plus). Regenera em colisão de PK (praticamente nula).
+ */
+export async function handleGenCode(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
+  const locale = localeForUser(deps, i);
+  if (!deps.ownerIds || !deps.ownerIds.has(i.user.id)) {
+    await reply(i, t('grant.denied', locale));
+    return;
+  }
+  const plan = i.options.getString('plan', true) as 'premium' | 'plus';
+  const days = i.options.getInteger('days') ?? 30;
+  const seats = plan === 'plus' ? 0 : (i.options.getInteger('seats') ?? 3);
+  const amount = i.options.getInteger('amount') ?? 1;
+  const expiresDays = i.options.getInteger('expires_days');
+  const now = Date.now();
+  const expiresAt = expiresDays ? now + expiresDays * 86_400_000 : null;
+  const codes: string[] = [];
+  for (let n = 0; n < amount; n++) {
+    for (let tries = 0; tries < 5; tries++) {
+      const code = generateCodeString((max) => randomInt(max));
+      const inserted = insertPremiumCode(deps.db, {
+        code,
+        plan,
+        days,
+        seats,
+        createdBy: i.user.id,
+        createdAt: now,
+        expiresAt,
+      });
+      if (inserted) {
+        codes.push(code);
+        break;
+      }
+    }
+  }
+  await reply(
+    i,
+    t('gencode.done', locale, {
+      count: codes.length,
+      plan,
+      days,
+      list: codes.map((c) => `\`${c}\``).join('\n'),
+    }),
+  );
+}
+
+/**
+ * /redeem — PÚBLICO: resgata um código de presente (uso único, resgate atómico no store).
+ * Concede à CONTA de quem resgata — Plus direto, ou um passe Premium que ativa com
+ * /premium activate. Resposta efémera. source 'code' (distingue de kofi/manual).
+ */
+export async function handleRedeem(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
+  const locale = localeForUser(deps, i);
+  const code = normalizeCode(i.options.getString('code', true));
+  const now = Date.now();
+  const res = redeemPremiumCode(deps.db, code, i.user.id, now);
+  if (!res.ok) {
+    const key =
+      res.reason === 'not-found'
+        ? 'redeem.notFound'
+        : res.reason === 'expired'
+          ? 'redeem.expired'
+          : 'redeem.used';
+    await reply(i, t(key, locale));
+    return;
+  }
+  if (res.plan === 'plus') {
+    const exp = grantUserPremium(deps.db, i.user.id, res.days, 'redeem', now);
+    await reply(i, t('redeem.okPlus', locale, { days: res.days, date: stampDate(exp) }));
+  } else {
+    const exp = grantGuildPass(deps.db, i.user.id, res.seats, res.days, 'redeem', now);
+    await reply(
+      i,
+      t('redeem.okPremium', locale, { days: res.days, seats: res.seats, date: stampDate(exp) }),
     );
   }
 }

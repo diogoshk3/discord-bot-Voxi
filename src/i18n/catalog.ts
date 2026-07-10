@@ -520,6 +520,31 @@ export const catalog: Record<string, Entry> = {
     en: '✅ Granted <@{user}> **Vozen Plus** for **{days}** days — expires {date}.',
     pt: '✅ Concedido a <@{user}> o **Vozen Plus** por **{days}** dias — termina {date}.',
   },
+  // ── /gencode (owner) + /redeem (público) — códigos de presente ─────────────
+  'gencode.done': {
+    en: '✅ Generated **{count}** {plan} code(s), **{days}** days each. Share them privately:\n{list}',
+    pt: '✅ Gerado(s) **{count}** código(s) {plan}, **{days}** dias cada. Partilha-os em privado:\n{list}',
+  },
+  'redeem.okPlus': {
+    en: '🎁 Redeemed! You got **Vozen Plus** for **{days}** days — expires {date}.',
+    pt: '🎁 Resgatado! Recebeste o **Vozen Plus** por **{days}** dias — termina {date}.',
+  },
+  'redeem.okPremium': {
+    en: '🎁 Redeemed! You got a **Premium pass** ({seats} licences) for **{days}** days — expires {date}. Activate it in your server with `/premium activate`.',
+    pt: '🎁 Resgatado! Recebeste um **passe Premium** ({seats} licenças) por **{days}** dias — termina {date}. Ativa-o no teu servidor com `/premium activate`.',
+  },
+  'redeem.notFound': {
+    en: "❌ That code doesn't exist. Double-check it and try again.",
+    pt: '❌ Esse código não existe. Confere e tenta outra vez.',
+  },
+  'redeem.used': {
+    en: '❌ That code has already been redeemed.',
+    pt: '❌ Esse código já foi resgatado.',
+  },
+  'redeem.expired': {
+    en: '❌ That code has expired.',
+    pt: '❌ Esse código expirou.',
+  },
   // ── /voice abbrev (abreviaturas pessoais, globais) ─────────────────────────
   'voice.abbrev.added': {
     en: 'Got it — {term} will be read as {replacement}.',

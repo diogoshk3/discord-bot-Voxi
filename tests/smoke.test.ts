@@ -172,7 +172,8 @@ describe('smoke: boot sem token (monta deps reais sem ligar ao Discord)', () => 
   });
 
   it('comandos de guild estão restritos ao contexto Guild; os públicos não', () => {
-    const DM_CAPABLE = new Set(['invite', 'vote', 'help', 'uptime', 'botstats']);
+    // /redeem também é DM-capable: concede à CONTA de quem resgata, não a uma guild.
+    const DM_CAPABLE = new Set(['invite', 'vote', 'help', 'uptime', 'botstats', 'redeem']);
     for (const def of commandDefs) {
       const contexts = (def as { contexts?: number[] }).contexts;
       if (DM_CAPABLE.has(def.name)) {
