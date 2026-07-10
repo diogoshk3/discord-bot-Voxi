@@ -236,6 +236,15 @@ export function initDb(path: string): Database.Database {
         redeemed_by TEXT,
         redeemed_at INTEGER
       );
+
+      -- Marca de SAÍDA do bot de um servidor (conformidade §5(b): não reter dados além
+      -- do necessário). Escrita no guildDelete REAL (não em outages); apagada no
+      -- guildCreate (re-convite). Um job diário purga os dados dos servidores cuja saída
+      -- foi há mais de 30 dias (grace period p/ re-convite). Ver store/guildDeparted.ts.
+      CREATE TABLE IF NOT EXISTS guild_departed (
+        guild_id TEXT PRIMARY KEY,
+        left_at  INTEGER NOT NULL
+      );
     `);
 
     // Migracoes idempotentes de guild_config GUIADAS PELO DESCRITOR

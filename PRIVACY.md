@@ -91,6 +91,8 @@ For users and server administrators, the bot's commands allow data to be removed
 
 The audio cache is regenerable and self-limiting (see section 2.1); deleting it loses no configuration.
 
+**Automatic retention limit (servers).** When Vozen is removed from a server, that server's data (configuration, blocklist, pronunciations, stats, scores, per-user voice settings for that server, etc.) is **automatically deleted 30 days later** if the bot is not re-invited. The 30-day grace period exists so an accidental kick or a short outage does not wipe everything immediately; re-inviting the bot within that window cancels the deletion. Paid records (a server's premium status and the payment ledger) are kept, as they belong to the purchaser and to legally-retained financial history.
+
 ---
 
 ## 4. Third parties

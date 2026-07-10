@@ -6,6 +6,7 @@ import { loadConfig } from './config/index';
 import { startBotListUpdater } from './botLists';
 import { log } from './logging/logger';
 import { initDb } from './store/db';
+import { startDepartedPurgeJob } from './store/guildDeparted';
 import { AudioCache } from './tts/cache';
 import { createEngine, createPerUserEngine, selectEngine } from './tts/factory';
 import { syntheticGttsModels } from './language/voiceMap';
@@ -335,6 +336,17 @@ async function main(): Promise<void> {
       });
     } catch (err) {
       log.error('[index] falha ao arrancar a sync de entitlements (ignorado)', err);
+    }
+    // Conformidade §5(b): purga os dados dos servidores que removeram o bot há >30 dias
+    // (marcados em guild_departed no guildDelete real). Corre já e depois 1x/dia.
+    try {
+      startDepartedPurgeJob(db, (ids) =>
+        log.info(
+          `[retencao] purgados os dados de ${ids.length} servidor(es) saído(s): ${ids.join(', ')}`,
+        ),
+      );
+    } catch (err) {
+      log.error('[index] falha ao arrancar o job de purga de servidores saídos (ignorado)', err);
     }
     // 24/7 in-call: repõe os servidores Premium nos canais onde estavam antes do
     // restart/deploy (as ligações de voz morrem no encerramento; as linhas de

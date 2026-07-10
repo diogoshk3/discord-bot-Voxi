@@ -10,6 +10,7 @@ import {
 } from 'discord.js';
 import type { BotDeps } from './deps';
 import { handleGuildDelete, getPlayer } from './deps';
+import { markGuildDeparted, unmarkGuildDeparted } from '../store/guildDeparted';
 import { handleInteraction, handleAutocomplete, handleMessageContextMenu } from '../commands/index';
 import { handleMessage } from '../commands/messageHandler';
 import { getGuildConfig } from '../store/guildConfig';
@@ -134,6 +135,12 @@ export function bindEvents(deps: BotDeps): void {
   // (pickWelcomeChannel/buildWelcomeEmbed); aqui so ligamos as pecas: null -> nao
   // envia; try/catch para NUNCA crashar (guild nova = locale default 'en').
   client.on(Events.GuildCreate, (guild: Guild) => {
+    // Re-convite: cancela qualquer purga agendada (o bot voltou dentro do grace period).
+    try {
+      if (deps.db) unmarkGuildDeparted(deps.db, guild.id);
+    } catch (err) {
+      log.warn('[retencao] falha ao desmarcar saída do servidor (ignorado)', err);
+    }
     void (async () => {
       try {
         const channel = pickWelcomeChannel(
@@ -165,6 +172,14 @@ export function bindEvents(deps: BotDeps): void {
   client.on(Events.GuildDelete, (guild: Guild) => {
     if (guild.available === false) return;
     handleGuildDelete(deps, guild.id);
+    // Conformidade §5(b): marca a saída REAL (o guard acima já exclui outages). Um job
+    // diário purga os dados 30 dias depois se o bot não for re-convidado. try/catch:
+    // nunca crashar o gateway por causa da retenção.
+    try {
+      if (deps.db) markGuildDeparted(deps.db, guild.id, Date.now());
+    } catch (err) {
+      log.warn('[retencao] falha ao marcar saída do servidor (ignorado)', err);
+    }
   });
 
   // Vaga 3 — reporter de erros para um webhook do Discord (OPT-IN via ERROR_WEBHOOK_URL).

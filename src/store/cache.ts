@@ -102,3 +102,34 @@ export function invalidateGuild(db: Database.Database, guildId: string): void {
     }
   }
 }
+
+/**
+ * Tabelas cacheadas cuja chave é (ou termina em) um userId: chave === userId (user_clone,
+ * global) ou sufixo `:userId` (as por-(guild,user), chave `guildId:userId`).
+ */
+const USER_KEYED = new Set([
+  'user_voice',
+  'user_nickname',
+  'tts_optout',
+  'user_effect',
+  'user_clone',
+]);
+
+/**
+ * Remove TODAS as entradas de um utilizador (em qualquer servidor) das tabelas USER-KEYED.
+ * Usado pelo `eraseUser` (RGPD): apaga em vários servidores de uma vez, por isso invalidação
+ * pontual não chega. Não toca em clones de que o user é ALVO mas não dono — esses são
+ * invalidados individualmente por deleteClonesByTarget.
+ */
+export function invalidateUser(db: Database.Database, userId: string): void {
+  const byTable = caches.get(db);
+  if (!byTable) return;
+  const suffix = `:${userId}`;
+  for (const table of USER_KEYED) {
+    const map = byTable.get(table);
+    if (!map) continue;
+    for (const key of map.keys()) {
+      if (key === userId || key.endsWith(suffix)) map.delete(key);
+    }
+  }
+}
