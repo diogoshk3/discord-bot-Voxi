@@ -15,6 +15,22 @@ Guidance for AI coding agents working on Vozen (Discord TTS bot).
 
 ## Hard rules
 
+- **Discord compliance is mandatory** (Developer ToS + Developer Policy — audit
+  2026-07-11 in `docs/PLAN-DISCORD-COMPLIANCE.md`). Every new feature must respect:
+  - API data is used ONLY for the declared functionality; no profiling, no sale,
+    no sharing with third parties (disclosed TTS engines excepted), no AI training
+    on message content.
+  - Any user-facing data the bot stores must be disclosed in PRIVACY.md AND have
+    a user-accessible deletion path (command).
+  - Anything acting on/about a user (recording, DMs, account changes) requires
+    that user's explicit prior consent (see voice clone: consent-first pattern).
+  - No unsolicited DMs, ever. No contacting users outside Discord with API data.
+  - Paid features must support Discord Premium Apps purchase with price parity
+    (≤ other channels) wherever Discord monetization is available to the app.
+  - Suspected unauthorized data access → notify Discord and affected users
+    immediately (see docs/INCIDENT-RESPONSE.md once it exists).
+  - Growth gate: BEFORE ~75 servers, the app must pass verification + Message
+    Content intent review.
 - NEVER run `npm audit fix --force`. It would downgrade discord.js to v13 and
   @discordjs/opus across a major. Transitive CVEs are handled by the
   `overrides` block in `package.json` — read the `//overrides` comment there
