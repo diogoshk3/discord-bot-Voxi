@@ -79,7 +79,7 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
   // /joke). `sound` (obrigatorio) toca o efeito sonoro "rizz" no fim. Precisa de call.
   new SlashCommandBuilder()
     .setName('rizz')
-    .setDescription('Vozen drops a pickup line in the language you pick')
+    .setDescription('Vozen drops a pickup line in the language you pick (💎 Premium)')
     .addStringOption((o) =>
       o
         .setName('language')

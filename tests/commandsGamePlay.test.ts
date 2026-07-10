@@ -10,6 +10,7 @@ vi.mock('@discordjs/voice', () => ({
 import { handleInteraction } from '../src/commands/index';
 import type { BotDeps } from '../src/bot/deps';
 import { initDb } from '../src/store/db';
+import { grantGuildPremium } from '../src/store/premium';
 import type Database from 'better-sqlite3';
 
 const GUILD = 'g-gameplay-test';
@@ -125,5 +126,46 @@ describe('/game play — deferReply antes do REST + respostas via editReply', ()
     await handleInteraction(i as any, makeDeps(db, games));
     expect(i.edits.length).toBe(1);
     expect(i.calls).not.toContain('reply');
+  });
+});
+
+describe('/game play — gate Premium (wordle, word-chain, chess)', () => {
+  let db: Database.Database;
+  beforeEach(() => {
+    db = initDb(':memory:');
+  });
+  afterEach(() => {
+    db.close();
+  });
+
+  const freeGames = () => {
+    const start = vi.fn((_g: string, _c: string, ..._r: unknown[]) => 'started' as const);
+    return { games: { active: () => false, channelOf: () => null, start }, start };
+  };
+
+  for (const gameId of ['wordle', 'word-chain']) {
+    it(`jogo Premium (${gameId}) SEM Premium -> responde locked e NÃO inicia`, async () => {
+      const { games, start } = freeGames();
+      const i = makePlayInteraction({ gameId, channel: { type: 0 } });
+      await handleInteraction(i as any, makeDeps(db, games));
+      expect(start).not.toHaveBeenCalled();
+      expect(i.edits.length).toBe(1);
+      expect(/Premium/i.test(i.edits[0])).toBe(true);
+    });
+  }
+
+  it('jogo Premium (wordle) COM Premium do servidor -> inicia', async () => {
+    grantGuildPremium(db, GUILD, 30, 'test', Date.now());
+    const { games, start } = freeGames();
+    const i = makePlayInteraction({ gameId: 'wordle', channel: { type: 2 } });
+    await handleInteraction(i as any, makeDeps(db, games));
+    expect(start).toHaveBeenCalledTimes(1);
+  });
+
+  it('jogo GRÁTIS (tictactoe) SEM Premium -> inicia normalmente (não afetado)', async () => {
+    const { games, start } = freeGames();
+    const i = makePlayInteraction({ gameId: 'tictactoe', channel: { type: 2 } });
+    await handleInteraction(i as any, makeDeps(db, games));
+    expect(start).toHaveBeenCalledTimes(1);
   });
 });

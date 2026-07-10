@@ -10,6 +10,7 @@ import type { BotDeps } from '../src/bot/deps';
 import { initDb } from '../src/store/db';
 import { setGuildConfig } from '../src/store/guildConfig';
 import { setUserVoice } from '../src/store/userVoice';
+import { grantGuildPremium } from '../src/store/premium';
 import type Database from 'better-sqlite3';
 
 const GUILD = 'g-rizz';
@@ -61,9 +62,21 @@ describe('/rizz', () => {
   let db: Database.Database;
   beforeEach(() => {
     db = initDb(':memory:');
+    // /rizz é Premium — a maioria dos testes exercita o caminho feliz, por isso o
+    // servidor tem Premium por defeito. O teste do gate remove-o.
+    grantGuildPremium(db, GUILD, 30, 'test', Date.now());
   });
   afterEach(() => {
     db.close();
+  });
+
+  it('sem Premium (Plus nem Premium do servidor) -> responde locked e NÃO chama say', async () => {
+    db.prepare('DELETE FROM premium_guild WHERE guild_id = ?').run(GUILD);
+    const say = vi.fn().mockResolvedValue(true);
+    const i = makeRizzInteraction({ language: 'en', sound: false });
+    await handleInteraction(i as any, makeDeps(db, { say }));
+    expect(say).not.toHaveBeenCalled();
+    expect(i.replies.some((r) => /Premium/i.test(r))).toBe(true);
   });
 
   it('sem player ativo responde "join" e NÃO chama say', async () => {

@@ -367,6 +367,10 @@ export const catalog: Record<string, Entry> = {
     en: "I don't know that language. Pick one from the list.",
     pt: 'Nao conheco essa lingua. Escolhe uma da lista.',
   },
+  'rizz.locked': {
+    en: '🔒 **/rizz** is a Premium perk. Unlock it with Vozen Plus (you) or Premium (this server). See `/premium`.',
+    pt: '🔒 O **/rizz** é um extra Premium. Desbloqueia com o Vozen Plus (tu) ou Premium (este servidor). Vê `/premium`.',
+  },
 
   // ── Micro-comandos divertidos (/8ball, /fortune, /fact, /wyr) ──────────────
   'fun.eightball': {
@@ -1147,7 +1151,7 @@ export const catalog: Record<string, Entry> = {
   'help.groupFunBody': {
     en:
       '• /joke — I tell a short joke (pick a language + optional laughter) · e.g. /joke English\n' +
-      '• /rizz — I drop a pickup line (pick a language + optional rizz sound) · e.g. /rizz English\n' +
+      '• /rizz — I drop a pickup line (pick a language + optional rizz sound) · 💎 Premium\n' +
       '• /laugh — I laugh out loud in your current voice\n' +
       '• /8ball · /fortune · /fact · /wyr — I answer/read out loud (and in chat)\n' +
       '• /birthday set — I wish you a happy birthday when you join on your day\n' +
@@ -1155,7 +1159,7 @@ export const catalog: Record<string, Entry> = {
       '• /game — play a minigame with the server (13 games!) · e.g. /game play, /game leaderboard',
     pt:
       '• /joke — conto uma piada curta (escolhe a lingua + risos opcionais) · ex. /joke Portuguese\n' +
-      '• /rizz — mando uma cantada (escolhe a lingua + efeito rizz opcional) · ex. /rizz Portuguese\n' +
+      '• /rizz — mando uma cantada (escolhe a lingua + efeito rizz opcional) · 💎 Premium\n' +
       '• /laugh — rio-me em voz alta na tua voz atual\n' +
       '• /8ball · /fortune · /fact · /wyr — respondo/leio em voz alta (e no chat)\n' +
       '• /birthday set — digo-te parabens quando entrares na call no teu dia\n' +
@@ -1649,8 +1653,8 @@ export const catalog: Record<string, Entry> = {
   // ── Termo/Wordle ──────────────────────────────────────────────────────────
   'game.wordle.name': { en: 'Wordle', pt: 'Termo' },
   'game.wordle.desc': {
-    en: 'Guess the 5-letter word. 🟩 right spot, 🟨 wrong spot, ⬛ not in word.',
-    pt: 'Adivinha a palavra de 5 letras. 🟩 sítio certo, 🟨 sítio errado, ⬛ não existe.',
+    en: 'Guess the 5-letter word. 🟩 right spot, 🟨 wrong spot, ⬛ not in word. 💎 Premium.',
+    pt: 'Adivinha a palavra de 5 letras. 🟩 sítio certo, 🟨 sítio errado, ⬛ não existe. 💎 Premium.',
   },
   'game.wordle.intro': {
     en: '🟩 **Wordle** — type a 5-letter word. You share {max} guesses. 🟩 right spot · 🟨 wrong spot · ⬛ not in word.',
@@ -1750,8 +1754,8 @@ export const catalog: Record<string, Entry> = {
   // ── word-chain (cadeia de palavras) ───────────────────────────────────────
   'game.wordChain.name': { en: 'Word Chain', pt: 'Cadeia de Palavras' },
   'game.wordChain.descr': {
-    en: 'Turn-based word chain in one language: say a word starting with the last letter of the previous one. 2 lives, no repeats, the clock speeds up. Pick the language with the `language` option.',
-    pt: 'Cadeia de palavras por turnos numa língua: diz uma palavra que comece na última letra da anterior. 2 vidas, sem repetir, e o relógio acelera. Escolhe a língua na opção `language`.',
+    en: 'Turn-based word chain in one language: say a word starting with the last letter of the previous one. 2 lives, no repeats, the clock speeds up. Pick the language with the `language` option. 💎 Premium.',
+    pt: 'Cadeia de palavras por turnos numa língua: diz uma palavra que comece na última letra da anterior. 2 vidas, sem repetir, e o relógio acelera. Escolhe a língua na opção `language`. 💎 Premium.',
   },
   'game.wordChain.unavailable': {
     en: "⚠️ Word Chain isn't available in **{lang}** right now (missing word list).",

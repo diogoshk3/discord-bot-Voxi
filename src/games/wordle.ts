@@ -174,5 +174,6 @@ export const wordleDef: GameDefinition = {
   nameKey: 'game.wordle.name',
   descKey: 'game.wordle.desc',
   needsVoice: false,
+  premium: true, // 💎 Premium (Plus do próprio OU Premium do servidor) — gate em handleGame
   create: () => new WordleGame(),
 };

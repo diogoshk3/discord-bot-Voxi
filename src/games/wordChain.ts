@@ -215,6 +215,7 @@ export const wordChainDef: GameDefinition = {
   nameKey: 'game.wordChain.name',
   descKey: 'game.wordChain.descr',
   needsVoice: false, // a voz é um BÓNUS; o jogo funciona só em texto se não houver call
+  premium: true, // 💎 Premium (Plus do próprio OU Premium do servidor) — gate em handleGame
   usesLanguage: true,
   create: (opts) => new WordChainGame(opts),
 };

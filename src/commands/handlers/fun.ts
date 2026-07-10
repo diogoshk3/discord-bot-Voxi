@@ -5,6 +5,7 @@ import type { BotDeps } from '../../bot/deps';
 import { getPlayer, getLimiter } from '../../bot/deps';
 import { getUserVoice } from '../../store/userVoice';
 import { getGuildConfig } from '../../store/guildConfig';
+import { isGuildPremium, isUserPremium } from '../../store/premium';
 import { getBirthday, setBirthday, clearBirthday, isValidBirthday } from '../../store/birthday';
 import type { SynthRequest } from '../../tts/engine';
 import { laughterFor } from '../../content/laughter';
@@ -171,6 +172,17 @@ const RIZZ_SFX_PATH = join(__dirname, '..', '..', '..', 'assets', 'sfx', 'rizz.w
 export async function handleRizz(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
   await i.deferReply({ flags: MessageFlags.Ephemeral });
   const locale = localeForUser(deps, i);
+
+  // 💎 GATE: /rizz é Premium (Plus do próprio OU Premium do servidor). Mesmo padrão do
+  // /voice clone, /voice effect e dos jogos Premium. Checado cedo — nem gera a frase.
+  const now = Date.now();
+  const premium =
+    isUserPremium(deps.db, i.user.id, now) || isGuildPremium(deps.db, i.guildId!, now);
+  if (!premium) {
+    await i.editReply(t('rizz.locked', locale));
+    return;
+  }
+
   const player = getPlayer(deps, i.guildId!);
   if (!player) {
     await i.editReply(t('tts.notInVoice', locale));
