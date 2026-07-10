@@ -485,9 +485,10 @@ describe('/setup — definicao do comando', () => {
     const opt = def?.options?.find((o) => o.name === 'channel');
     expect(opt).toBeDefined();
     expect(opt?.required ?? false).toBe(false);
-    // O nome primario e INGLES (default beginner-friendly), mas o PORTUGUES fica
-    // preservado via name_localizations: um cliente pt-BR ve "canal". (O Discord
-    // so suporta pt-BR como locale de portugues — nao ha pt-PT no enum de locales.)
-    expect(opt?.name_localizations).toEqual({ 'pt-BR': 'canal' });
+    // Comandos/opcoes sao SO em INGLES para toda a gente: as name_localizations pt-BR
+    // foram REMOVIDAS (senao um cliente Discord em portugues via "/cala-te", "canal"…).
+    // A localizacao das RESPOSTAS do bot (t()/i18n) continua intacta — isto e so o nome.
+    expect(opt?.name).toBe('channel');
+    expect(opt?.name_localizations).toBeUndefined();
   });
 });

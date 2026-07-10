@@ -43,20 +43,13 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
   new SlashCommandBuilder()
     .setName('tts')
     .setDescription('Vozen reads a text out loud')
-    .addStringOption((o) =>
-      o
-        .setName('text')
-        .setNameLocalizations({ 'pt-BR': 'texto' })
-        .setDescription('What to read')
-        .setRequired(true),
-    )
+    .addStringOption((o) => o.setName('text').setDescription('What to read').setRequired(true))
     .toJSON(),
   new SlashCommandBuilder().setName('skip').setDescription('Skip the current audio').toJSON(),
   // /shutup — cala o Vozen JÁ: esvazia a fila toda e pára o que está a tocar (sem sair
   // da call). O /skip salta só a mensagem atual; este limpa tudo.
   new SlashCommandBuilder()
     .setName('shutup')
-    .setNameLocalizations({ 'pt-BR': 'cala-te' })
     .setDescription('Make Vozen stop talking now (clears the whole queue)')
     .toJSON(),
   // /laugh — diversao por-utilizador (como /tts): o Vozen ri na voz ATUAL do user.
@@ -74,17 +67,12 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
     .addStringOption((o) =>
       o
         .setName('language')
-        .setNameLocalizations({ 'pt-BR': 'idioma' })
         .setDescription('Language of the joke')
         .setRequired(true)
         .setAutocomplete(true),
     )
     .addBooleanOption((o) =>
-      o
-        .setName('laughter')
-        .setNameLocalizations({ 'pt-BR': 'risos' })
-        .setDescription('Add laughter at the end?')
-        .setRequired(true),
+      o.setName('laughter').setDescription('Add laughter at the end?').setRequired(true),
     )
     .toJSON(),
   // Micro-comandos divertidos (falados na voz + resposta pública). Funcionam sem estar
@@ -95,7 +83,6 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
     .addStringOption((o) =>
       o
         .setName('question')
-        .setNameLocalizations({ 'pt-BR': 'pergunta' })
         .setDescription('Your yes/no question')
         .setRequired(true)
         .setMaxLength(200),
@@ -122,7 +109,6 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
         .addIntegerOption((o) =>
           o
             .setName('day')
-            .setNameLocalizations({ 'pt-BR': 'dia' })
             .setDescription('Day of the month (1–31)')
             .setRequired(true)
             .setMinValue(1)
@@ -131,7 +117,6 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
         .addIntegerOption((o) =>
           o
             .setName('month')
-            .setNameLocalizations({ 'pt-BR': 'mes' })
             .setDescription('Month (1–12)')
             .setRequired(true)
             .setMinValue(1)
@@ -180,7 +165,6 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
         .addStringOption((o) =>
           o
             .setName('engine')
-            .setNameLocalizations({ 'pt-BR': 'motor' })
             .setDescription('Voice engine: Google (default), Piper, or Kokoro (neural, ~7 langs)')
             .setRequired(false)
             .addChoices(
@@ -219,7 +203,6 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
         .addBooleanOption((o) =>
           o
             .setName('active')
-            .setNameLocalizations({ 'pt-BR': 'ativo' })
             .setDescription(
               'On = native voice per language; Off (default) = your one fixed voice for everything',
             )
@@ -228,7 +211,6 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
         .addStringOption((o) =>
           o
             .setName('engine')
-            .setNameLocalizations({ 'pt-BR': 'motor' })
             .setDescription(
               'Voice engine: Google (default), Piper, or Kokoro (neural) — often sound better in some languages',
             )
@@ -247,7 +229,6 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
         .addStringOption((o) =>
           o
             .setName('name')
-            .setNameLocalizations({ 'pt-BR': 'nome' })
             .setDescription('Spoken name (empty = use your server name)')
             .setRequired(false)
             .setMaxLength(40),
@@ -260,7 +241,6 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
         .addStringOption((o) =>
           o
             .setName('effect')
-            .setNameLocalizations({ 'pt-BR': 'efeito' })
             .setDescription('Voice effect (none = clean; 💎 needs Premium)')
             .setRequired(true)
             .addChoices(...EFFECT_CHOICES),
@@ -284,7 +264,6 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
             .addStringOption((o) =>
               o
                 .setName('user')
-                .setNameLocalizations({ 'pt-BR': 'pessoa' })
                 .setDescription(
                   'Whose voice to clone — pick someone in the call (empty = yourself). They must agree.',
                 )
@@ -294,7 +273,6 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
             .addIntegerOption((o) =>
               o
                 .setName('seconds')
-                .setNameLocalizations({ 'pt-BR': 'segundos' })
                 .setDescription('Seconds of speech to capture (5–30, default 15)')
                 .setMinValue(5)
                 .setMaxValue(30)
@@ -308,7 +286,6 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
             .addBooleanOption((o) =>
               o
                 .setName('active')
-                .setNameLocalizations({ 'pt-BR': 'ativo' })
                 .setDescription('true = your messages use your cloned voice')
                 .setRequired(true),
             ),
@@ -330,7 +307,6 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
         .addChannelOption((o) =>
           o
             .setName('channel')
-            .setNameLocalizations({ 'pt-BR': 'canal' })
             .setDescription('Text channel')
             .addChannelTypes(ChannelType.GuildText)
             .setRequired(true),
@@ -340,13 +316,7 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
       s
         .setName('autoread')
         .setDescription('Turn auto-read on/off')
-        .addBooleanOption((o) =>
-          o
-            .setName('active')
-            .setNameLocalizations({ 'pt-BR': 'ativo' })
-            .setDescription('on/off')
-            .setRequired(true),
-        ),
+        .addBooleanOption((o) => o.setName('active').setDescription('on/off').setRequired(true)),
     )
     .addSubcommand((s) =>
       s
@@ -355,7 +325,6 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
         .addIntegerOption((o) =>
           o
             .setName('value')
-            .setNameLocalizations({ 'pt-BR': 'valor' })
             .setDescription('1-2000')
             .setRequired(true)
             .setMinValue(1)
@@ -369,7 +338,6 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
         .addIntegerOption((o) =>
           o
             .setName('value')
-            .setNameLocalizations({ 'pt-BR': 'valor' })
             .setDescription('1-120')
             .setRequired(true)
             .setMinValue(1)
@@ -391,25 +359,13 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
       s
         .setName('enabled')
         .setDescription('Turn TTS on/off on this server (kill-switch)')
-        .addBooleanOption((o) =>
-          o
-            .setName('active')
-            .setNameLocalizations({ 'pt-BR': 'ativo' })
-            .setDescription('on/off')
-            .setRequired(true),
-        ),
+        .addBooleanOption((o) => o.setName('active').setDescription('on/off').setRequired(true)),
     )
     .addSubcommand((s) =>
       s
         .setName('xsaid')
         .setDescription('Announce who spoke before each message ("{name} said …")')
-        .addBooleanOption((o) =>
-          o
-            .setName('active')
-            .setNameLocalizations({ 'pt-BR': 'ativo' })
-            .setDescription('on/off')
-            .setRequired(true),
-        ),
+        .addBooleanOption((o) => o.setName('active').setDescription('on/off').setRequired(true)),
     )
     .addSubcommand((s) =>
       s
@@ -417,93 +373,51 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
         .setDescription(
           'Vozen joins your voice channel automatically when you type in the TTS channel',
         )
-        .addBooleanOption((o) =>
-          o
-            .setName('active')
-            .setNameLocalizations({ 'pt-BR': 'ativo' })
-            .setDescription('on/off')
-            .setRequired(true),
-        ),
+        .addBooleanOption((o) => o.setName('active').setDescription('on/off').setRequired(true)),
     )
     .addSubcommand((s) =>
       s
         .setName('always-on')
-        .setNameLocalizations({ 'pt-BR': 'sempre-ligado' })
         .setDescription(
           '24/7 in-call (💎 Premium): Vozen stays in the voice channel even when empty',
         )
-        .addBooleanOption((o) =>
-          o
-            .setName('active')
-            .setNameLocalizations({ 'pt-BR': 'ativo' })
-            .setDescription('on/off')
-            .setRequired(true),
-        ),
+        .addBooleanOption((o) => o.setName('active').setDescription('on/off').setRequired(true)),
     )
     .addSubcommand((s) =>
       s
         .setName('read-bots')
-        .setNameLocalizations({ 'pt-BR': 'ler-bots' })
         .setDescription('Read messages from other bots and webhooks (off by default)')
-        .addBooleanOption((o) =>
-          o
-            .setName('active')
-            .setNameLocalizations({ 'pt-BR': 'ativo' })
-            .setDescription('on/off')
-            .setRequired(true),
-        ),
+        .addBooleanOption((o) => o.setName('active').setDescription('on/off').setRequired(true)),
     )
     .addSubcommand((s) =>
       s
         .setName('text-in-voice')
-        .setNameLocalizations({ 'pt-BR': 'texto-em-voz' })
         .setDescription(
           'Also read the text chat inside the voice channel Vozen is in (off by default)',
         )
-        .addBooleanOption((o) =>
-          o
-            .setName('active')
-            .setNameLocalizations({ 'pt-BR': 'ativo' })
-            .setDescription('on/off')
-            .setRequired(true),
-        ),
+        .addBooleanOption((o) => o.setName('active').setDescription('on/off').setRequired(true)),
     )
     .addSubcommand((s) =>
       s
         .setName('antispam')
-        .setNameLocalizations({ 'pt-BR': 'antispam' })
         .setDescription(
           "Don't read spammed messages (mass word repetition or the same big message) (off by default)",
         )
-        .addBooleanOption((o) =>
-          o
-            .setName('active')
-            .setNameLocalizations({ 'pt-BR': 'ativo' })
-            .setDescription('on/off')
-            .setRequired(true),
-        ),
+        .addBooleanOption((o) => o.setName('active').setDescription('on/off').setRequired(true)),
     )
     .addSubcommand((s) =>
       s
         .setName('greet')
         .setDescription('Greet people by name when they join the voice channel (on by default)')
-        .addBooleanOption((o) =>
-          o
-            .setName('active')
-            .setNameLocalizations({ 'pt-BR': 'ativo' })
-            .setDescription('on/off')
-            .setRequired(true),
-        ),
+        .addBooleanOption((o) => o.setName('active').setDescription('on/off').setRequired(true)),
     )
     .addSubcommand((s) =>
       s
         .setName('greet-language')
-        .setNameLocalizations({ 'pt-BR': 'idioma-saudacao' })
         .setDescription('Language of the join greeting (English by default)')
         .addStringOption((o) =>
           o
             .setName('language')
-            .setNameLocalizations({ 'pt-BR': 'idioma' })
             .setDescription('Greeting language')
             .setRequired(true)
             .addChoices(...GREET_LANGUAGE_CHOICES),
@@ -550,11 +464,7 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
             .setName('add')
             .setDescription('Add a word')
             .addStringOption((o) =>
-              o
-                .setName('word')
-                .setNameLocalizations({ 'pt-BR': 'palavra' })
-                .setDescription('Word to block')
-                .setRequired(true),
+              o.setName('word').setDescription('Word to block').setRequired(true),
             ),
         )
         .addSubcommand((s) =>
@@ -562,11 +472,7 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
             .setName('remove')
             .setDescription('Remove a word')
             .addStringOption((o) =>
-              o
-                .setName('word')
-                .setNameLocalizations({ 'pt-BR': 'palavra' })
-                .setDescription('Word to unblock')
-                .setRequired(true),
+              o.setName('word').setDescription('Word to unblock').setRequired(true),
             ),
         ),
     )
@@ -580,7 +486,6 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
     .addChannelOption((o) =>
       o
         .setName('channel')
-        .setNameLocalizations({ 'pt-BR': 'canal' })
         .setDescription('Auto-read channel (omit = use the current channel)')
         .addChannelTypes(ChannelType.GuildText)
         .setRequired(false),
@@ -613,7 +518,6 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
         .addStringOption((o) =>
           o
             .setName('game')
-            .setNameLocalizations({ 'pt-BR': 'jogo' })
             // OPCIONAL de propósito (beginner-friendly, plano v4): /game play "vazio"
             // mostra um select menu com os jogos em vez de o Discord exigir a opção.
             .setDescription('Which game to play (leave empty to pick from a menu)')
@@ -622,7 +526,6 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
         .addStringOption((o) =>
           o
             .setName('language')
-            .setNameLocalizations({ 'pt-BR': 'idioma' })
             .setDescription('Language for Word Chain (ignored by other games)')
             .setRequired(false)
             .setAutocomplete(true),
@@ -648,14 +551,12 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
         .addStringOption((o) =>
           o
             .setName('term')
-            .setNameLocalizations({ 'pt-BR': 'termo' })
             .setDescription('The word as people type it (e.g. "gg")')
             .setMaxLength(100),
         )
         .addStringOption((o) =>
           o
             .setName('say')
-            .setNameLocalizations({ 'pt-BR': 'dizer' })
             .setDescription('How Vozen should say it (e.g. "good game")')
             .setMaxLength(200),
         ),
@@ -667,7 +568,6 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
         .addStringOption((o) =>
           o
             .setName('term')
-            .setNameLocalizations({ 'pt-BR': 'termo' })
             .setDescription('The word to remove')
             .setRequired(true)
             .setMaxLength(100),
@@ -686,18 +586,10 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
         .setName('add')
         .setDescription('Add or edit a server pronunciation (leave empty for a form)')
         .addStringOption((o) =>
-          o
-            .setName('term')
-            .setNameLocalizations({ 'pt-BR': 'termo' })
-            .setDescription('The word as people type it')
-            .setMaxLength(100),
+          o.setName('term').setDescription('The word as people type it').setMaxLength(100),
         )
         .addStringOption((o) =>
-          o
-            .setName('say')
-            .setNameLocalizations({ 'pt-BR': 'dizer' })
-            .setDescription('How Vozen should say it for everyone')
-            .setMaxLength(200),
+          o.setName('say').setDescription('How Vozen should say it for everyone').setMaxLength(200),
         ),
     )
     .addSubcommand((s) =>
@@ -707,7 +599,6 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
         .addStringOption((o) =>
           o
             .setName('term')
-            .setNameLocalizations({ 'pt-BR': 'termo' })
             .setDescription('The word to remove')
             .setRequired(true)
             .setMaxLength(100),
@@ -724,7 +615,6 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
     .addIntegerOption((o) =>
       o
         .setName('amount')
-        .setNameLocalizations({ 'pt-BR': 'quantidade' })
         .setDescription('How many options to fill in (2–5, opens a form)')
         .setMinValue(2)
         .setMaxValue(5),
@@ -732,18 +622,13 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
     .addStringOption((o) =>
       o
         .setName('options')
-        .setNameLocalizations({ 'pt-BR': 'opcoes' })
         .setDescription('Or type them here, separated by commas (e.g. "pizza, sushi, tacos")')
         .setMaxLength(1000),
     )
     .toJSON(),
   // Context-menu (botão direito numa mensagem -> Apps -> Speak): lê essa mensagem em
   // voz alta com a voz de quem clicou. Complementa o /tts sem escrever nada.
-  new ContextMenuCommandBuilder()
-    .setName('Speak')
-    .setNameLocalizations({ 'pt-BR': 'Ler em voz alta' })
-    .setType(ApplicationCommandType.Message)
-    .toJSON(),
+  new ContextMenuCommandBuilder().setName('Speak').setType(ApplicationCommandType.Message).toJSON(),
   // /redeem — PÚBLICO: resgata um código de presente (gerado pelo dono com /gencode).
   // Concede Plus ou um passe Premium à conta de quem resgata (não a um servidor), por
   // isso é DM-capable. Uso único; ver store/premiumCode.ts.
