@@ -27,9 +27,30 @@ export function dateKey(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-/** Chave do dia ANTERIOR a `d` (DST-safe: usa componentes, não subtração de ms). PURA. */
+/** Chave do dia `n` dias ANTES de `d` (DST-safe: usa componentes, não subtração de ms). PURA. */
+export function dayKeyMinus(d: Date, n: number): string {
+  return dateKey(new Date(d.getFullYear(), d.getMonth(), d.getDate() - n));
+}
+
+/** Chave do dia ANTERIOR a `d` (DST-safe). PURA. */
 export function prevDateKey(d: Date): string {
-  return dateKey(new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1));
+  return dayKeyMinus(d, 1);
+}
+
+/**
+ * Streak VIVO no dia de referência `now` (regras estilo Duolingo). O `streak` guardado só
+ * é atualizado quando a pessoa fala (`bumpTalk`), por isso entre mensagens fica ESTÁTICO —
+ * esta função corrige-o para o valor REAL de hoje:
+ *  - falou hoje, ontem OU anteontem (1 dia falhado, dentro do "freeze") => streak intacto;
+ *  - 3+ dias sem falar (2 dias SEGUIDOS falhados) => 0 (perdido para sempre).
+ * Simétrico do `bumpTalk`: este continua o streak para gaps <= 2 e reinicia para gaps >= 3.
+ * PURA.
+ */
+export function effectiveStreak(lastDate: string, storedStreak: number, now: Date): number {
+  const today = dateKey(now);
+  const y1 = dayKeyMinus(now, 1);
+  const y2 = dayKeyMinus(now, 2);
+  return lastDate === today || lastDate === y1 || lastDate === y2 ? storedStreak : 0;
 }
 
 /** Resultado de `bumpTalk`: se esta foi a PRIMEIRA mensagem do dia (para o aviso de
@@ -53,7 +74,8 @@ export function bumpTalk(
   now: Date,
 ): TalkBump {
   const today = dateKey(now);
-  const yesterday = prevDateKey(now);
+  const y1 = dayKeyMinus(now, 1); // ontem
+  const y2 = dayKeyMinus(now, 2); // anteontem (== 1 dia falhado -> freeze)
   const row = db
     .prepare(
       'SELECT spoken_count, streak, best_streak, last_date FROM talk_stats WHERE guild_id = ? AND user_id = ?',
@@ -70,12 +92,14 @@ export function bumpTalk(
 
   // firstOfDay = ainda não tinha falado HOJE (a última mensagem é de outro dia).
   const firstOfDay = row.last_date !== today;
+  // Regras Duolingo: falhar 1 dia NÃO parte o streak (freeze — o dia falhado não conta,
+  // mas o de hoje soma +1); falhar 2 dias SEGUIDOS (gap >= 3) perde tudo -> recomeça a 1.
   let streak: number;
   if (row.last_date === today)
     streak = row.streak; // já contou hoje
-  else if (row.last_date === yesterday)
-    streak = row.streak + 1; // dia seguido
-  else streak = 1; // houve um intervalo (ou datas do futuro) -> recomeça
+  else if (row.last_date === y1 || row.last_date === y2)
+    streak = row.streak + 1; // dia seguido OU 1 dia falhado (freeze) -> continua
+  else streak = 1; // 2+ dias seguidos falhados (ou datas do futuro) -> perde
   const best = Math.max(row.best_streak, streak);
 
   db.prepare(
@@ -86,20 +110,32 @@ export function bumpTalk(
   return { firstOfDay, streak };
 }
 
-/** Top `limit` tagarelas desta guild por contagem (desc), depois melhor streak (desc). */
-export function getTopSpeakers(db: Database.Database, guildId: string, limit = 10): TalkRow[] {
+/**
+ * Top `limit` do leaderboard de STREAKS desta guild: ranqueado por DIAS de streak VIVO
+ * (`effectiveStreak` em `now`) desc, desempate por contagem de mensagens desc. Um streak
+ * MORTO (3+ dias sem falar) conta como 0 e afunda — o leaderboard mostra o standing ATUAL,
+ * não valores obsoletos. Busca todas as linhas da guild e ordena em JS (o streak vivo
+ * depende de `now`, não dá para ordenar em SQL). `now` injetável para testes.
+ */
+export function getTopSpeakers(
+  db: Database.Database,
+  guildId: string,
+  now: Date,
+  limit = 10,
+): TalkRow[] {
   const rows = db
     .prepare(
-      `SELECT user_id, spoken_count, streak, best_streak FROM talk_stats
-       WHERE guild_id = ?
-       ORDER BY spoken_count DESC, best_streak DESC
-       LIMIT ?`,
+      `SELECT user_id, spoken_count, streak, best_streak, last_date FROM talk_stats
+       WHERE guild_id = ?`,
     )
-    .all(guildId, limit) as DbRow[];
-  return rows.map((r) => ({
-    userId: r.user_id,
-    count: r.spoken_count,
-    streak: r.streak,
-    bestStreak: r.best_streak,
-  }));
+    .all(guildId) as DbRow[];
+  return rows
+    .map((r) => ({
+      userId: r.user_id,
+      count: r.spoken_count,
+      streak: effectiveStreak(r.last_date, r.streak, now),
+      bestStreak: r.best_streak,
+    }))
+    .sort((a, b) => b.streak - a.streak || b.count - a.count)
+    .slice(0, limit);
 }

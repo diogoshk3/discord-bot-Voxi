@@ -219,7 +219,7 @@ export function loadConfig(): AppConfig {
     messageLeadMs: numEnv('MESSAGE_LEAD_MS', 200), // 0.20s (0 = sem espera, por isso NÃO exige > 0)
     queueCap: numEnvPositive('QUEUE_CAP', 20, { integer: true }),
     maxChars: numEnvPositive('MAX_CHARS', 300, { integer: true }),
-    ratePerMin: numEnvPositive('RATE_PER_MIN', 15, { integer: true }),
+    ratePerMin: numEnvPositive('RATE_PER_MIN', 8, { integer: true }),
     ttsEngine: engineEnv(),
     openaiApiKey: strEnv('OPENAI_API_KEY', '') || undefined,
     // P9.3 — texto opcional da presenca; vazio/ausente => undefined e buildPresence

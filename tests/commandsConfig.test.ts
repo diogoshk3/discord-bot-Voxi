@@ -151,7 +151,7 @@ describe('/config rate-limit — validacao de range', () => {
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
     expect(i.replies.some((r) => /rate-limit|entre|1.*120|120.*1/i.test(r))).toBe(true);
-    expect(getGuildConfig(db, GUILD).ratePerMin).toBe(15); // default intacto
+    expect(getGuildConfig(db, GUILD).ratePerMin).toBe(8); // default intacto
   });
 
   it('rejeita valor 121 com mensagem clara e nao aplica', async () => {
@@ -159,7 +159,7 @@ describe('/config rate-limit — validacao de range', () => {
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
     expect(i.replies.some((r) => /rate-limit|entre|1.*120|120.*1/i.test(r))).toBe(true);
-    expect(getGuildConfig(db, GUILD).ratePerMin).toBe(15);
+    expect(getGuildConfig(db, GUILD).ratePerMin).toBe(8);
   });
 
   it('rejeita valor 9999 (muito acima do maximo) e nao persiste', async () => {
@@ -167,7 +167,7 @@ describe('/config rate-limit — validacao de range', () => {
     const deps = makeConfigDeps(db);
     await handleInteraction(i as any, deps);
     expect(i.replies.some((r) => /rate-limit|entre|1.*120|120.*1/i.test(r))).toBe(true);
-    expect(getGuildConfig(db, GUILD).ratePerMin).toBe(15); // default intacto
+    expect(getGuildConfig(db, GUILD).ratePerMin).toBe(8); // default intacto
   });
 
   it('aceita valor 10 e persiste', async () => {
@@ -560,7 +560,7 @@ describe('/config reset — repoe config aos defaults', () => {
     expect(cfg.enabled).toBe(true);
     expect(cfg.defaultVoice).toBe('');
     expect(cfg.maxChars).toBe(300);
-    expect(cfg.ratePerMin).toBe(15);
+    expect(cfg.ratePerMin).toBe(8);
   });
 
   it('blocklist e mantida apos reset', async () => {

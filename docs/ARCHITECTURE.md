@@ -54,8 +54,7 @@ Cada pasta de `src/` e a sua responsabilidade (o que está realmente no código)
 | `textCleaning/pronunciation.ts` | `applyPronunciation(texto, dict)`: aplica o dicionário de pronúncia da guild ao texto limpo. | — |
 | `language/detect.ts` | `detectLang(texto)` → código ISO 639-3 ou `''`. Consulta primeiro o **léxico de saudações** (`greetings.ts`) e só depois o `franc`. `detectLangDetailed` devolve `{lang, confident}` (léxico=certo; franc=confiante se a margem topo–2.º ≥ 0.10) — usado pela memória de língua. | `franc`, `greetings` |
 | `language/greetings.ts` | `lookupShortLang(texto)`: léxico curado de saudações/palavras curtas → ISO 639-3 (o franc falha em texto curto: "ola"→und). Baseado no TEXTO (serve `/tts` e canal). Tokens ambíguos deliberadamente fora. | — |
-| `language/langMemory.ts` | Memória adaptativa por-`(guild,user)` (T3.2): `rememberLang`/`recallLang` com TTL 15 min. Guarda a última língua CONFIANTE; um fragmento curto ambíguo resolve para essa língua em vez do palpite incerto do franc (sem língua-base fixa). | — |
-| `language/voiceMap.ts` | `pickVoiceForLang(lang, available, preferred)` (usado pelo `resolveSynth`): honra a voz **preferida** se já estiver na língua, senão escolhe um modelo dessa língua por prefixo de locale (fallback à preferida). `pickVoice(lang, available, fallback)`: variante que mapeia a língua ao modelo por prefixo, senão devolve o fallback. `LANG_TO_PREFIX` cobre todos os modelos Piper. `modelDisplayName`/`LOCALE_NAMES`: nome amigável (endónimo) por locale de modelo, para os dropdowns. `syntheticGttsModels(piperModels, neural)`: para cada locale de `LOCALE_NAMES` sem modelo Piper no disco injeta uma voz `{locale}-google-medium` no catálogo — as línguas aparecem (e falam via Google) mesmo com `./models` vazio. | — |
+| `language/voiceMap.ts` | `pickVoiceForLang(lang, available, preferred)`: honra a voz **preferida** se já estiver na língua, senão escolhe um modelo dessa língua por prefixo de locale (fallback à preferida). `pickVoice(lang, available, fallback)`: variante que mapeia a língua ao modelo por prefixo, senão devolve o fallback. `LANG_TO_PREFIX` cobre todos os modelos Piper. `modelDisplayName`/`LOCALE_NAMES`: nome amigável (endónimo) por locale de modelo, para os dropdowns. `syntheticGttsModels(piperModels, neural)`: para cada locale de `LOCALE_NAMES` sem modelo Piper no disco injeta uma voz `{locale}-google-medium` no catálogo — as línguas aparecem (e falam via Google) mesmo com `./models` vazio. | — |
 | `tts/engine.ts` | Interface `TTSEngine { synth(req): Promise<audioPath> }` e tipo `SynthRequest` (inclui `emphasisSource` — o texto do UTILIZADOR de onde se calcula a ênfase, isolado do que o bot injeta como o prefixo xsaid, para não haver falso-grito). | — |
 | `tts/factory.ts` | `createEngine(config, cache)` seleciona o motor (Piper default; Neural atrás de flag). `selectEngine(base, config, models, cache)` (puro) embrulha o base num `MultiSegmentEngine` **só** se a flag `multilingualSegments` estiver ON; senão devolve o `base` por identidade (`===`). | `config`, `cache`, `piper`, `neural`, `multiSegment` |
 | `tts/circuitBreaker.ts` | `CircuitBreakerEngine` (decorator): protege o caminho **gTTS**. Após `GTTS_BREAKER_THRESHOLD` (3) falhas **consecutivas** (Google bloqueia/timeout ~15s), **abre** por `GTTS_BREAKER_COOLDOWN_MS` (60s) e serve o `fallback` (Piper) **direto**, sem tentar o gTTS — evita acumular stalls de 15s por mensagem. Meio-aberto após o cooldown: uma sondagem; sucesso fecha, falha reabre. Degradação graciosa (uma falha fechada também cai no fallback). Relógio injetável (testes). Ligado em `createPerUserEngine` (o gTTS entra como `primary`, o Piper como `fallback`). | `engine`, `logging` |
@@ -81,9 +80,8 @@ Cada pasta de `src/` e a sua responsabilidade (o que está realmente no código)
 | `moderation/rateLimiter.ts` | `RateLimiter` (token bucket) por-utilizador; poda preguiçosa de buckets cheios+inativos acima de `MAX_BUCKETS` (5000). | — |
 | `moderation/antispam.ts` | Anti-spam de leitura (opt-in por guild, `guild_config.antispam`, default OFF): `isRepetitionSpam(texto)` (puro — muitos tokens + baixa diversidade, ex. "POKEBOLAS ×39") e `DuplicateTracker.isDuplicateSpam(guild,autor,texto,now)` (mesma pessoa a repetir a mesma msg grande em <60s, janela fixa, memória capada). Gate no `messageHandler` antes do `lastSpeaker`/`bumpTalk`. | — |
 | `commands/index.ts` | Definições dos slash commands (`commandDefs`) e `handleInteraction` (join, leave, tts, skip, **laugh**, **joke**, voice, config, stats, **help**, **setup**). Toda a UI passa por `t()`/`localeFor(deps, guildId)`. | tudo acima |
-| `commands/messageHandler.ts` | `handleMessage`: pipeline de auto-leitura/menção/reply em `messageCreate`. | store, textCleaning, moderation, resolveSynth |
-| `commands/resolveSynth.ts` | `resolveSynth`: resolve `SynthRequest` — a **língua da mensagem decide a voz** (`lang = forceLang \|\| detectLang(text)` + `pickVoiceForLang`). `ResolveSynthInput` inclui `forceLang` (código franc que força a língua da voz, ignorando `detectLang`; usado quando a mensagem é só gírias EN). | `language` |
-| `commands/prepareSpeech.ts` | `prepareSpeech` (partilhado por `/tts` e leitura de canal): texto→`SynthRequest`. Deteção ON → parte **gírias EN** para um segmento em voz inglesa e deteta o resto por si (**vozes mistas**, ex. "isto funciona **btw**"); usa a **memória de língua** (`recentLang`) para desambiguar curtos e devolve `learnedLang` (deteção confiante) para o caller memorizar. Deteção OFF → voz fixa `singleVoice`. | `detect`, `voiceMap`, `abbreviations`, `pronunciation`, `langMemory` |
+| `commands/messageHandler.ts` | `handleMessage`: pipeline de auto-leitura/menção/reply em `messageCreate`. | store, textCleaning, moderation, prepareSpeech |
+| `commands/prepareSpeech.ts` | `prepareSpeech` (partilhado por `/tts` e leitura de canal): texto→`SynthRequest`. A deteção automática de língua foi **removida**: a voz é SEMPRE a **preferida** (user > guild > .env > amy), `singleVoice`, sem detetar a língua do texto nem partir por segmento. Aplica gírias embutidas + `/pronunciation` + restauro de acentos na língua da VOZ. Decora com o xsaid (prefixo "{nome} disse") e o sufixo de media, localizados na língua da voz. | `voiceMap`, `abbreviations`, `pronunciation`, `accents`, `spokenPhrases` |
 | `content/jokes.ts` | Catálogo de piadas curtas multilingue (35 línguas) + `JOKE_LANGUAGES` (autocomplete `idioma`), `jokeLangByKey`, `pickJoke(langKey, seed)` (puro/seeded). Usado pelo `/joke`. | — |
 | `content/pickupLines.ts` | Banco de pick-up lines (frases de engate) multilingue — REUTILIZA `JOKE_LANGUAGES` (35 línguas) + `pickLine(key, seed)` (puro/seeded, fallback EN). Usado pelo `/rizz`. | `content/jokes` |
 | `leaderboard/randomPost.ts` | `LeaderboardPoster` (F2): decide por ATIVIDADE (mensagens lidas + limiar + cooldown + sorteio; relógio/aleatoriedade injetáveis) quando postar o top de tagarelas no canal do `/setup`. `renderLeaderboard(rows, locale)` (puro) monta o texto (menções suprimidas). Estado em memória por-guild; instância no `BotDeps`. | `store/talkStats`, `i18n` |
@@ -202,7 +200,7 @@ Pipeline de auto-leitura em `commands/messageHandler.ts` (`handleMessage`), pela
     blocklist, para que o texto realmente falado seja o que é verificado e guardado (a
     pronúncia opera sobre a palavra já expandida).
 12. **Blocklist** (`isBlocked`) → se bater, bloqueia (sem falar).
-13. **Resolver voz** (`resolveSynth`): ver "Precedência de voz" abaixo.
+13. **Resolver voz** (`prepareSpeech`): ver "Precedência de voz" abaixo.
 14. **`player.say(req)`** → enfileira FIFO e devolve **boolean** (ver invariantes); a
     síntese acontece no worker (`playNext`), não no `say`, para preservar a ordem de chegada.
     Depois do `say`, e SÓ se a fala foi enfileirada: **streak 🔥** (F1 — `bumpTalk` devolve
@@ -217,11 +215,11 @@ Pipeline de auto-leitura em `commands/messageHandler.ts` (`handleMessage`), pela
     → callback `onIdle` remove o player e sai do canal de voz.
 
 `/tts` reutiliza o mesmo sub-pipeline (rate-limit → cleanText → guard L/N →
-abreviaturas pessoais + gírias EN + `forceLang` → pronúncia → blocklist → resolveSynth →
+abreviaturas pessoais + gírias EN → pronúncia → blocklist → prepareSpeech →
 `say`), **mas não** está sujeito a gating por role nem a opt-out: é ação explícita do
 utilizador (escreve o comando), não leitura passiva. O `/voice preview` toca **uma voz
-específica** (demo) e por isso constrói o `SynthRequest` diretamente, sem passar por
-`resolveSynth`. `/tts` e `/voice preview` **usam** o boolean de `say()` para responder
+específica** (demo) e por isso constrói o `SynthRequest` diretamente. `/tts` e
+`/voice preview` **usam** o boolean de `say()` para responder
 com verdade — `tts.queued` se entrou na fila, `tts.busy` se a fila estava cheia; a
 auto-leitura ignora o valor.
 
@@ -229,25 +227,21 @@ auto-leitura ignora o valor.
 constroem o `SynthRequest` diretamente (a língua é conhecida — a voz atual do user no
 `/laugh`, a língua escolhida no `/joke` — não detetada).
 
-### Precedência de voz (`resolveSynth` + `pickVoiceForLang`)
+### Precedência de voz (`prepareSpeech` + `pickVoiceForLang`)
 
-A **língua da mensagem decide a voz.** `resolveSynth` deteta **sempre** a língua
-(`lang = forceLang || detectLang(text)`) e chama `pickVoiceForLang(lang, available,
-preferred)` (confirmado em `resolveSynth.ts` e `voiceMap.ts`):
+A **voz é FIXA** (a deteção automática de língua foi removida — 2026-07). `prepareSpeech`
+usa **sempre** a voz preferida, `singleVoice`, sem olhar para a língua do texto:
 
 1. **Voz preferida** — por precedência: voz guardada do utilizador (`user_voice`) →
    `guild default_voice` (se não-vazio) → `.env DEFAULT_VOICE` → `'en_US-amy-medium'`.
-2. A voz preferida é **honrada só quando já está na língua detetada**. Caso contrário
-   escolhe-se uma **voz correta da língua detetada**; se não houver modelo para essa
-   língua, cai-se na **preferida**.
-3. **`forceLang`**: quando a mensagem é só gírias EN (`isAllEnglishAbbrev`), passa-se
-   `forceLang='eng'` e a escolha usa essa língua em vez de `detectLang` (que em texto
-   curto pode devolver `''`).
+2. Essa voz lê **tudo**, em qualquer língua (a pessoa soa sempre igual). O restauro de
+   acentos usa a língua **da voz** (`accentLangOfModel`), não a do texto.
 
-Consequência (design): uma voz fixa (ex. via `/voice set`) **nunca** acaba a ler texto
-de outra língua — que sairia "a comer as palavras". A **velocidade** vem da voz guardada
-do utilizador, senão é **sempre** `defaultSpeed` (`DEFAULT_SPEED`); o `default_voice` da
-guild define apenas o modelo, nunca a velocidade.
+Consequência (design): a voz que a pessoa escolhe é a que fala — nunca troca de locutor
+a meio. `pickVoiceForLang` mantém-se para o motor multi-segmento **experimental**
+(`MULTILINGUAL_SEGMENTS`, opt-in por env), não para o caminho normal. A **velocidade** vem
+da voz guardada do utilizador, senão é **sempre** `defaultSpeed` (`DEFAULT_SPEED`); o
+`default_voice` da guild define apenas o modelo, nunca a velocidade.
 
 ## Decisões de arquitetura
 
@@ -263,13 +257,11 @@ guild define apenas o modelo, nunca a velocidade.
   (o default seguro), em vez de crashar o arranque por um typo. Toda a app fala com a
   interface abstrata `TTSEngine`, por isso trocar de motor não toca no resto.
 
-- **(c) A língua da mensagem decide a voz.** `resolveSynth` deteta **sempre** a língua
-  (`forceLang || detectLang`) e usa `pickVoiceForLang`: a voz **preferida** (user-voice >
-  `guild default_voice` > `.env DEFAULT_VOICE` > `'en_US-amy-medium'`) é honrada **só
-  quando já está na língua detetada**; senão escolhe-se uma voz correta dessa língua
-  (fallback à preferida). Ver "Precedência de voz" acima. Evita que uma voz fixa leia
-  texto de outra língua (garble), sem perder a preferência explícita quando as línguas
-  coincidem.
+- **(c) A voz é FIXA (deteção de língua removida, 2026-07).** `prepareSpeech` usa
+  **sempre** a voz **preferida** (user-voice > `guild default_voice` > `.env
+  DEFAULT_VOICE` > `'en_US-amy-medium'`) para tudo, `singleVoice`, sem detetar a língua do
+  texto. A pessoa soa sempre igual e nunca troca de locutor a meio. Ver "Precedência de
+  voz" acima. (O antigo toggle `/voice detection` e a memória de língua foram removidos.)
 
 - **(d) Gating por canal e por role como checks standalone.** O trigger (canal de
   auto-leitura, menção, reply) e o gating por role são verificações separadas **após** o

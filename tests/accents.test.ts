@@ -97,26 +97,13 @@ describe('prepareSpeech — integra o restauro de acentos', () => {
     available,
     defaultVoice: 'en_US-amy-medium',
     defaultSpeed: 1,
-    autoDetect: true,
   };
 
-  it('língua-base PT (via memória) => o texto falado leva os acentos', () => {
-    const r = prepareSpeech({
-      ...base,
-      personal: 'nao quero fazer isto amanha',
-      recentLang: 'por',
-    });
-    expect(r.req.model.startsWith('pt_')).toBe(true);
-    expect(r.spoken).toContain('não');
-    expect(r.spoken).toContain('amanhã');
-  });
-
-  it('voz fixa (autoDetect OFF) PT => restaura pela língua da voz', () => {
+  it('voz fixa PT => restaura os acentos pela língua da VOZ', () => {
     const r = prepareSpeech({
       ...base,
       personal: 'nao voce',
-      autoDetect: false,
-      userVoice: { model: 'pt_PT-tugao-medium', speed: 1 },
+      userVoice: { model: 'pt_PT-google-medium', speed: 1 },
     });
     expect(r.spoken).toBe('não você');
     expect(r.req.singleVoice).toBe(true);

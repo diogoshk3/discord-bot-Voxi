@@ -56,7 +56,7 @@ const DEFAULTS: GuildConfig = {
   // entao para config.defaultVoice (.env). Ver /config default-voice.
   defaultVoice: '',
   maxChars: 300,
-  ratePerMin: 15,
+  ratePerMin: 8,
   enabled: true,
   ttsRoleId: null,
   locale: DEFAULT_LOCALE, // 'en' — ingles como idioma da interface por defeito

@@ -20,9 +20,7 @@ import { renderLeaderboard } from '../leaderboard/randomPost';
 import { getUserPronunciations, getServerPronunciations } from '../store/pronunciation';
 import { getUserVoice } from '../store/userVoice';
 import { isOptedOut } from '../store/optout';
-import { isDetectionOn } from '../store/langDetect';
 import { prepareSpeech, redactRequest, hasReadableText } from './prepareSpeech';
-import { recallLang, rememberLang } from '../language/langMemory';
 import { t } from '../i18n/index';
 import { log } from '../logging/logger';
 
@@ -254,10 +252,6 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     // (a parte non-slang e detetada por si; as girias EN saem em voz inglesa como
     // segmento separado). A blocklist e aplicada depois, por REDACAO do req.
     const userVoice = getUserVoice(deps.db, message.guildId, message.author.id);
-    const auto = isDetectionOn(deps.db, message.guildId, message.author.id);
-    // Memoria de lingua (T3.2): recorda a lingua recente do user para desambiguar
-    // fragmentos curtos; memoriza a deteccao confiante desta mensagem.
-    const recentLang = recallLang(message.guildId, message.author.id);
     // xsaid: anuncia "{nome} disse …" antes da mensagem — MAS não repete o nome quando o
     // MESMO autor manda mensagens SEGUIDAS (compara com o último locutor lido nesta guild).
     // A leitura de `lastSpeaker` e a escrita (mais abaixo) ficam no mesmo bloco síncrono
@@ -273,7 +267,7 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
       message.author.username ??
       '';
     const speakerName = sanitizeSpeakerName(rawName);
-    const { req, learnedLang } = prepareSpeech({
+    const { req } = prepareSpeech({
       personal,
       // Pronúncias do autor PRIMEIRO (o termo dele ganha) + as do SERVIDOR a seguir.
       pronunciations: [
@@ -285,12 +279,9 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
       guildDefaultVoice: cfg.defaultVoice,
       defaultVoice: deps.config.defaultVoice,
       defaultSpeed: deps.config.defaultSpeed,
-      autoDetect: auto,
-      recentLang,
       media,
       announceSpeaker: announce ? speakerName : undefined,
     });
-    if (learnedLang) rememberLang(message.guildId, message.author.id, learnedLang);
     // Motor escolhido pelo autor (google default | piper). O PerUserEngineRouter usa isto.
     req.engine = userVoice?.engine;
 
@@ -358,7 +349,7 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     // falhado (sem permissão de escrita, etc.) NUNCA pode partir a fala.
     if (queued && cfg.ttsChannelId && deps.leaderboardPoster?.record(message.guildId)) {
       try {
-        const rows = getTopSpeakers(deps.db, message.guildId, 10);
+        const rows = getTopSpeakers(deps.db, message.guildId, new Date(), 10);
         const ch = deps.client.channels.cache.get(cfg.ttsChannelId);
         if (
           rows.length > 0 &&

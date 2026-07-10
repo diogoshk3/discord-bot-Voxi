@@ -19,7 +19,6 @@ import { isGuildPremium, isUserPremium } from '../../store/premium';
 import { setVoiceEffect } from '../../store/voiceEffect';
 import { isVoiceEffect, isPremiumEffect, effectLabel, type VoiceEffect } from '../../tts/effects';
 import { sanitizeSpeakerName } from '../../language/speakerName';
-import { setDetection } from '../../store/langDetect';
 import { formatVoiceList, makeLocalizedNamer } from '../../language/voiceMap';
 import type { SynthRequest } from '../../tts/engine';
 import {
@@ -35,44 +34,6 @@ import { unlinkSync, rmSync } from 'node:fs';
 import { log } from '../../logging/logger';
 import { t } from '../../i18n/index';
 import { localeFor, localeForUser, reply } from '../helpers';
-
-/**
- * /voice detection active:<bool> — liga/desliga a DETECAO AUTOMATICA de lingua para
- * o proprio utilizador (por-guild). Por-utilizador (sem gate de admin), sob o /voice.
- * ON (default): o Vozen deteta a lingua da mensagem e le nessa lingua, misturando
- * vozes num texto multi-lingua. OFF: usa sempre a voz fixa escolhida (/voice set).
- * Resposta i18n no locale do proprio (localeForUser).
- */
-async function handleVoiceDetection(
-  i: ChatInputCommandInteraction,
-  deps: BotDeps,
-  locale: string,
-): Promise<void> {
-  const active = i.options.getBoolean('active', true);
-  setDetection(deps.db, i.guildId!, i.user.id, active);
-  let msg = active ? t('voice.detection.on', locale) : t('voice.detection.off', locale);
-  // MOTOR opcional aqui também (o utilizador pediu-o neste comando): escreve no MESMO
-  // sítio que o /voice set (user_voice.engine), preservando a voz e a velocidade atuais.
-  // Omitido => não mexe no motor. Piper costuma soar melhor nalgumas línguas (ex. PT).
-  const engineOpt = i.options.getString('engine') as 'google' | 'piper' | 'kokoro' | null;
-  if (engineOpt) {
-    const cur = getUserVoice(deps.db, i.guildId!, i.user.id);
-    setUserVoice(
-      deps.db,
-      i.guildId!,
-      i.user.id,
-      cur?.model ?? deps.config.defaultVoice,
-      cur?.speed ?? deps.config.defaultSpeed,
-      engineOpt,
-    );
-    msg +=
-      '\n' +
-      t('voice.detection.engine', locale, {
-        engine: engineOpt === 'piper' ? 'Piper' : engineOpt === 'kokoro' ? 'Kokoro' : 'Google',
-      });
-  }
-  await reply(i, msg);
-}
 
 // Utilizadores com uma gravação /voice clone record EM CURSO. BUG real descoberto
 // (auditoria): connection.receiver.subscribe(userId, ...) do @discordjs/voice devolve
@@ -426,10 +387,6 @@ export async function handleVoice(i: ChatInputCommandInteraction, deps: BotDeps)
     return;
   }
   const sub = i.options.getSubcommand();
-  if (sub === 'detection') {
-    await handleVoiceDetection(i, deps, locale);
-    return;
-  }
   if (sub === 'set') {
     const model = i.options.getString('model', true);
     if (!deps.availableModels.includes(model)) {

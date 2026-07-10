@@ -57,12 +57,14 @@ async function main(): Promise<void> {
   const db = initDb(config.dbPath);
   const cache = new AudioCache(path.join(path.dirname(config.dbPath), 'audio-cache'));
 
-  // Modelos DELIBERADAMENTE excluidos das opcoes/deteccao. VAZIO desde 2026-07-08:
-  // o Diogo pediu para REPOR o Português europeu (pt_PT-tugao-medium), por isso deixa
-  // de estar escondido — passa a aparecer como "Português (Portugal)" a par do
-  // "Português" (Brasil). O mecanismo fica de pe: basta juntar um id a este Set para
-  // voltar a esconder um modelo das opcoes (o .onnx continua sempre no disco).
-  const EXCLUDED_MODELS = new Set<string>();
+  // Modelos DELIBERADAMENTE excluidos das opcoes/deteccao. Desde 2026-07-10 o Diogo
+  // pediu para RETIRAR o Piper de Portugues europeu (pt_PT-tugao-medium): o pt-PT passa
+  // a ser servido SO pelo Google (syntheticGttsModels gera 'pt_PT-google-medium' porque
+  // nenhum Piper cobre pt_PT) e pelo Kokoro (motor opt-in, independente destes modelos).
+  // As prefs gravadas que apontavam para o Piper foram migradas para a voz Google (ver
+  // db.ts). O mecanismo fica de pe: basta juntar/tirar um id deste Set (o .onnx continua
+  // no disco ate ser apagado a mao).
+  const EXCLUDED_MODELS = new Set<string>(['pt_PT-tugao-medium']);
   const piperModels = discoverModels(config.modelsDir).filter((m) => !EXCLUDED_MODELS.has(m));
   if (piperModels.length === 0) {
     log.warn(

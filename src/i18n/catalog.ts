@@ -299,23 +299,6 @@ export const catalog: Record<string, Entry> = {
     en: '🔒 **{effect}** is a Premium effect. Free effects: 🤖 Robot and 🔊 Echo. Unlock all with Vozen Premium — see `/premium`.',
     pt: '🔒 **{effect}** é um efeito Premium. Efeitos grátis: 🤖 Robot e 🔊 Echo. Desbloqueia todos com o Vozen Premium — vê `/premium`.',
   },
-  // /voice detection — liga/desliga a deteccao AUTOMATICA de lingua para o proprio.
-  // DEFAULT = OFF (voz UNICA fixa p/ todas as linguas — parece a mesma pessoa). ON e
-  // opt-in: voz nativa por lingua, MAS pode trocar de locutor. A mensagem OFF aponta
-  // para /voice set (a "definicao" para trocar a voz).
-  'voice.detection.on': {
-    en: '✅ Per-language detection is **on** — each language is read by its native voice, so the speaker may change between languages.',
-    pt: '✅ Deteção por-língua **ligada** — cada língua é lida pela sua voz nativa, por isso o locutor pode mudar entre línguas.',
-  },
-  'voice.detection.off': {
-    en: '✅ Per-language detection is **off** (default) — one single voice reads everything, in every language. Pick it with `/voice set`.',
-    pt: '✅ Deteção por-língua **desligada** (padrão) — uma só voz lê tudo, em qualquer língua. Escolhe-a com `/voice set`.',
-  },
-  // Confirma a troca de MOTOR feita a partir do /voice detection (mesmo motor do /voice set).
-  'voice.detection.engine': {
-    en: '🔧 Voice engine set to **{engine}**. Tip: Piper often sounds better in some languages.',
-    pt: '🔧 Motor de voz definido para **{engine}**. Dica: o Piper costuma soar melhor nalgumas línguas.',
-  },
   'voice.notInVoice': {
     en: "I'm not in a voice channel yet — run /join first.",
     pt: 'Ainda nao estou num canal de voz — usa /join primeiro.',
@@ -1130,7 +1113,6 @@ export const catalog: Record<string, Entry> = {
       '• /voice list — see the available voices\n' +
       '• /voice preview — hear a sample of your voice\n' +
       '• /voice reset — go back to the default voice\n' +
-      '• /voice detection <on/off> — native voice per language, speaker may change (off by default: one fixed voice)\n' +
       '• /voice effect <effect> — voice effect (robot, echo… 💎 more with Premium)\n' +
       '• /voice clone record — clone YOUR OWN voice (💎 Premium, consent-first)\n' +
       '• /voice optout · /voice optin — turn auto-read off / on for you',
@@ -1139,7 +1121,6 @@ export const catalog: Record<string, Entry> = {
       '• /voice list — ve as vozes disponiveis\n' +
       '• /voice preview — ouve uma amostra da tua voz\n' +
       '• /voice reset — volta a voz por defeito\n' +
-      '• /voice detection <on/off> — voz nativa por lingua, o locutor pode mudar (desligado por defeito: uma voz fixa)\n' +
       '• /voice effect <efeito> — efeito de voz (robot, echo… 💎 mais com Premium)\n' +
       '• /voice clone record — clona a TUA voz (💎 Premium, com consentimento)\n' +
       '• /voice optout · /voice optin — desliga / liga a leitura automatica para ti',

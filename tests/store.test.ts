@@ -25,7 +25,6 @@ import {
 import { isOptedOut, setOptOut, setOptIn } from '../src/store/optout';
 import { getNickname, setNickname, clearNickname } from '../src/store/nickname';
 import { getVoiceEffect, setVoiceEffect, clearVoiceEffect } from '../src/store/voiceEffect';
-import { isDetectionOn, setDetection } from '../src/store/langDetect';
 import {
   getClone,
   saveClone,
@@ -95,7 +94,7 @@ describe('store', () => {
         autoread: false,
         defaultVoice: '', // vazio = guild nao definiu voz default
         maxChars: 300,
-        ratePerMin: 15,
+        ratePerMin: 8,
         enabled: true,
         ttsRoleId: null,
         locale: 'en', // default: ingles como idioma da interface
@@ -142,7 +141,7 @@ describe('store', () => {
         autoread: true,
         defaultVoice: '', // vazio = guild nao definiu voz default
         maxChars: 300,
-        ratePerMin: 15,
+        ratePerMin: 8,
         enabled: true,
         ttsRoleId: null,
         locale: 'en', // default: ingles como idioma da interface
@@ -294,6 +293,46 @@ describe('store', () => {
         const names = new Set(info.map((c) => c.name));
         for (const col of GUILD_CONFIG_COLUMNS) expect(names.has(col.column)).toBe(true);
         expect(names.has('guild_id')).toBe(true);
+      } finally {
+        migrated.close();
+        rmSync(dir, { recursive: true, force: true });
+      }
+    });
+
+    it('migra a voz Piper pt_PT (tugao) retirada -> pt_PT-google-medium (user_voice + default da guild)', () => {
+      const dir = mkdtempSync(join(tmpdir(), 'voxi-ptpt-'));
+      const path = join(dir, 'ptpt.db');
+      const raw = new BetterSqlite3(path);
+      raw.exec(`
+        CREATE TABLE user_voice (
+          guild_id    TEXT NOT NULL,
+          user_id     TEXT NOT NULL,
+          voice_model TEXT NOT NULL,
+          speed       REAL NOT NULL,
+          engine      TEXT NOT NULL DEFAULT 'google',
+          PRIMARY KEY (guild_id, user_id)
+        );
+        CREATE TABLE guild_config (
+          guild_id      TEXT PRIMARY KEY,
+          default_voice TEXT NOT NULL DEFAULT 'en_US-amy-medium'
+        );
+      `);
+      raw
+        .prepare(
+          'INSERT INTO user_voice (guild_id, user_id, voice_model, speed, engine) VALUES (?, ?, ?, ?, ?)',
+        )
+        .run('g', 'u', 'pt_PT-tugao-medium', 1, 'piper');
+      raw
+        .prepare('INSERT INTO guild_config (guild_id, default_voice) VALUES (?, ?)')
+        .run('g2', 'pt_PT-tugao-medium');
+      raw.close();
+
+      const migrated = initDb(path);
+      try {
+        // A voz Piper pt_PT foi retirada das opcoes; as prefs gravadas migram para a
+        // voz pt-PT do Google (mesma lingua, motor default). Idempotente (no-op depois).
+        expect(getUserVoice(migrated, 'g', 'u')?.model).toBe('pt_PT-google-medium');
+        expect(getGuildConfig(migrated, 'g2').defaultVoice).toBe('pt_PT-google-medium');
       } finally {
         migrated.close();
         rmSync(dir, { recursive: true, force: true });
@@ -732,13 +771,6 @@ describe('store — cache write-through', () => {
     expect(isOptedOut(db, G, U)).toBe(true);
     setOptIn(db, G, U);
     expect(isOptedOut(db, G, U)).toBe(false);
-
-    // lang detect
-    isDetectionOn(db, G, U);
-    setDetection(db, G, U, true);
-    expect(isDetectionOn(db, G, U)).toBe(true);
-    setDetection(db, G, U, false);
-    expect(isDetectionOn(db, G, U)).toBe(false);
 
     // voice effect
     getVoiceEffect(db, G, U);

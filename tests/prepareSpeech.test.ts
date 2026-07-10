@@ -3,8 +3,9 @@ import { prepareSpeech, redactRequest, hasReadableText } from '../src/commands/p
 import { emphasisGain } from '../src/tts/emphasis';
 import type { SynthRequest } from '../src/tts/engine';
 
-// Catalogo: EN + PT + ES (mesmo dos testes de resolveSynth).
-const AVAILABLE = ['en_US-amy-medium', 'pt_PT-tugao-medium', 'es_ES-davefx-medium'];
+// Catalogo de modelos (usado só como strings — a deteção automática foi removida, por isso
+// a voz é SEMPRE a preferida, nunca escolhida pela língua do texto).
+const AVAILABLE = ['en_US-amy-medium', 'pt_PT-google-medium', 'es_ES-davefx-medium'];
 
 // Sem `as const`: mantê-lo tornava `pronunciations` um `readonly []` que não encaixa
 // no PronunciationEntry[] (mutável) esperado pelo PrepareSpeechInput.
@@ -14,35 +15,41 @@ const BASE = {
   available: AVAILABLE,
   defaultVoice: 'en_US-amy-medium',
   defaultSpeed: 1,
-  autoDetect: true,
 };
 
-describe('prepareSpeech — texto sem girias (single voice)', () => {
-  it('frase PT longa -> req sem `segments`, model pt_', () => {
+describe('prepareSpeech — voz FIXA (deteção removida)', () => {
+  it('lê SEMPRE na voz preferida, singleVoice, sem segments — mesmo texto de outra língua', () => {
     const { req } = prepareSpeech({
       ...BASE,
-      personal:
-        'isto e uma frase em portugues bem comprida para deteccao de lingua correta e fiavel',
+      personal: 'isto e uma frase em portugues bem comprida que ANTES era detetada como portugues',
     });
-    expect(req.model.startsWith('pt_')).toBe(true);
+    // Sem deteção: a voz é a preferida (.env => en_US-amy), não a da língua do texto.
+    expect(req.model).toBe('en_US-amy-medium');
+    expect(req.singleVoice).toBe(true);
     expect(req.segments).toBeUndefined();
-    expect(req.singleVoice).toBeUndefined();
   });
-});
 
-describe('prepareSpeech — so girias (single voice EN)', () => {
-  it('"brb omg" -> req sem `segments`, model en_', () => {
-    const { req, spoken } = prepareSpeech({ ...BASE, personal: 'brb omg' });
-    expect(req.model.startsWith('en_')).toBe(true);
+  it('honra a voz do user (user > guild > .env)', () => {
+    const { req } = prepareSpeech({
+      ...BASE,
+      personal: 'texto qualquer',
+      userVoice: { model: 'es_ES-davefx-medium', speed: 1.3 },
+    });
+    expect(req.model).toBe('es_ES-davefx-medium');
+    expect(req.speed).toBe(1.3);
+    expect(req.singleVoice).toBe(true);
     expect(req.segments).toBeUndefined();
-    // As girias foram expandidas no texto falado.
+  });
+
+  it('expande gírias embutidas no texto falado (btw -> by the way)', () => {
+    const { req, spoken } = prepareSpeech({ ...BASE, personal: 'brb omg' });
+    expect(req.segments).toBeUndefined();
     expect(spoken).toBe('be right back oh my god');
   });
 });
 
 describe('prepareSpeech — teto de saída (anti-amplificação)', () => {
   it('limita o req.text a 2400 chars; o spoken fica inteiro (blocklist)', () => {
-    // Texto que, mesmo sem expansão, já ultrapassa o teto de síntese.
     const long = 'palavra '.repeat(500); // ~4000 chars
     const { req, spoken } = prepareSpeech({ ...BASE, personal: long });
     expect(req.text.length).toBe(2400); // o que vai para a síntese é limitado
@@ -55,32 +62,10 @@ describe('prepareSpeech — teto de saída (anti-amplificação)', () => {
   });
 });
 
-describe('prepareSpeech — MISTURADO (voz por-segmento)', () => {
-  it('"isto esta a funcionar muito bem hoje btw" -> segments length 2, base pt_, giria en_', () => {
-    const { req, spoken } = prepareSpeech({
-      ...BASE,
-      personal: 'isto esta a funcionar muito bem hoje btw',
-    });
-    expect(req.segments).toBeDefined();
-    expect(req.segments).toHaveLength(2);
-    // 1.o segmento = base PT (frase longa deteta 'por').
-    expect(req.segments![0].text).toBe('isto esta a funcionar muito bem hoje');
-    expect(req.segments![0].model.startsWith('pt_')).toBe(true);
-    // 2.o segmento = giria expandida em voz EN.
-    expect(req.segments![1].text).toBe('by the way');
-    expect(req.segments![1].model.startsWith('en_')).toBe(true);
-    // Voz-base/fallback do req = pt_.
-    expect(req.model.startsWith('pt_')).toBe(true);
-    expect(req.singleVoice).toBeUndefined();
-    expect(spoken).toBe('isto esta a funcionar muito bem hoje by the way');
-  });
-});
-
 describe('prepareSpeech — anúncios (xsaid + media) localizados na voz', () => {
-  it('xsaid: prefixo "{nome} said" na língua da voz (single voice EN)', () => {
+  it('xsaid: prefixo "{nome} said" na língua da voz (voz EN)', () => {
     const { req, spoken } = prepareSpeech({
       ...BASE,
-      autoDetect: false, // voz fixa EN (amy)
       personal: 'hello there',
       announceSpeaker: 'Alex',
     });
@@ -93,7 +78,6 @@ describe('prepareSpeech — anúncios (xsaid + media) localizados na voz', () =>
     // gritar. O emphasisSource tem de ser só o que o utilizador escreveu.
     const { req } = prepareSpeech({
       ...BASE,
-      autoDetect: false, // voz fixa EN (amy)
       personal: 'hello there',
       announceSpeaker: 'DIOGO', // nome em MAIÚSCULAS
     });
@@ -103,10 +87,11 @@ describe('prepareSpeech — anúncios (xsaid + media) localizados na voz', () =>
     expect(emphasisGain(req.text)).toBeGreaterThan(1); // o texto decorado gritaria (bug antigo)
   });
 
-  it('xsaid localizado: voz PT -> "disse"', () => {
+  it('xsaid localizado na língua da VOZ: voz PT -> "disse"', () => {
     const { spoken } = prepareSpeech({
       ...BASE,
-      personal: 'isto e uma frase longa em portugues para detetar a lingua de forma fiavel',
+      personal: 'uma frase qualquer',
+      userVoice: { model: 'pt_PT-google-medium', speed: 1 },
       announceSpeaker: 'Alex',
     });
     expect(spoken.startsWith('Alex disse ')).toBe(true);
@@ -115,80 +100,33 @@ describe('prepareSpeech — anúncios (xsaid + media) localizados na voz', () =>
   it('media: sufixo no fim, corpo vazio -> "{nome} said a gif"', () => {
     const { spoken } = prepareSpeech({
       ...BASE,
-      autoDetect: false,
       personal: '',
       announceSpeaker: 'Alex',
       media: [{ kind: 'gif' }],
     });
     expect(spoken).toBe('Alex said a gif');
   });
-
-  it('MISTURADO: xsaid e media entram como segmentos extra na voz-base', () => {
-    const { req } = prepareSpeech({
-      ...BASE,
-      personal: 'isto esta a funcionar muito bem hoje btw',
-      announceSpeaker: 'Alex',
-      media: [{ kind: 'link' }],
-    });
-    expect(req.segments).toHaveLength(4); // [xsaid, base pt, giria en, media]
-    expect(req.segments![0].text).toBe('Alex disse'); // voz-base é pt_ -> "disse"
-    expect(req.segments![0].model.startsWith('pt_')).toBe(true);
-    expect(req.segments![3].text).toBe('um link'); // pt_ -> "um link"
-    expect(req.segments![3].model.startsWith('pt_')).toBe(true);
-    // req.text carrega tudo (fallback single-voice + base da cache).
-    expect(req.text).toBe('Alex disse isto esta a funcionar muito bem hoje by the way um link');
-  });
 });
 
 describe('prepareSpeech — /pronunciation sobrepoe a lista de girias embutida', () => {
-  it('OFF: pronuncia btw->batata GANHA a giria (nao "by the way")', () => {
+  it('pronuncia btw->batata GANHA a giria (nao "by the way")', () => {
     const { spoken, req } = prepareSpeech({
       ...BASE,
       personal: 'btw',
       pronunciations: [{ term: 'btw', replacement: 'batata' }],
       userVoice: { model: 'es_ES-davefx-medium', speed: 1 },
-      autoDetect: false,
     });
     expect(spoken).toBe('batata');
     expect(req.singleVoice).toBe(true);
   });
 
-  it('OFF: SEM pronuncia, btw expande normalmente para "by the way"', () => {
+  it('SEM pronuncia, btw expande normalmente para "by the way"', () => {
     const { spoken } = prepareSpeech({
       ...BASE,
       personal: 'btw',
       userVoice: { model: 'es_ES-davefx-medium', speed: 1 },
-      autoDetect: false,
     });
     expect(spoken).toBe('by the way');
-  });
-
-  it('ON: pronuncia btw->batata evita o split de giria (uma voz base, sem "by the way")', () => {
-    const { req, spoken } = prepareSpeech({
-      ...BASE,
-      personal: 'isto esta a funcionar muito bem hoje btw',
-      pronunciations: [{ term: 'btw', replacement: 'batata' }],
-    });
-    expect(spoken).toContain('batata');
-    expect(spoken).not.toContain('by the way');
-    // Sem giria EN reconhecida -> nao ha split misturado; uma so voz base (pt_).
-    expect(req.segments).toBeUndefined();
-    expect(req.model.startsWith('pt_')).toBe(true);
-  });
-});
-
-describe('prepareSpeech — autoDetect OFF (voz fixa)', () => {
-  it('autoDetect:false -> singleVoice:true, model = preferida, sem segments', () => {
-    const { req } = prepareSpeech({
-      ...BASE,
-      personal: 'isto e uma frase em portugues bem comprida para deteccao de lingua',
-      userVoice: { model: 'en_US-amy-medium', speed: 1.3 },
-      autoDetect: false,
-    });
-    expect(req.singleVoice).toBe(true);
-    expect(req.model).toBe('en_US-amy-medium');
-    expect(req.speed).toBe(1.3);
-    expect(req.segments).toBeUndefined();
   });
 });
 
@@ -224,13 +162,13 @@ describe('redactRequest — redige a blocklist no SynthRequest', () => {
       model: 'en_US-amy-medium',
       speed: 1,
       segments: [
-        { text: 'ola palavrao', model: 'pt_PT-tugao-medium' },
+        { text: 'ola palavrao', model: 'pt_PT-google-medium' },
         { text: 'hi', model: 'en_US-amy-medium' },
       ],
     };
     const out = redactRequest(req, ['palavrao']);
     expect(out.segments).toEqual([
-      { text: 'ola', model: 'pt_PT-tugao-medium' },
+      { text: 'ola', model: 'pt_PT-google-medium' },
       { text: 'hi', model: 'en_US-amy-medium' },
     ]);
   });
@@ -241,7 +179,7 @@ describe('redactRequest — redige a blocklist no SynthRequest', () => {
       model: 'en_US-amy-medium',
       speed: 1,
       segments: [
-        { text: 'palavrao', model: 'pt_PT-tugao-medium' },
+        { text: 'palavrao', model: 'pt_PT-google-medium' },
         { text: 'hi', model: 'en_US-amy-medium' },
       ],
     };
@@ -254,7 +192,7 @@ describe('redactRequest — redige a blocklist no SynthRequest', () => {
       text: 'palavrao',
       model: 'en_US-amy-medium',
       speed: 1,
-      segments: [{ text: 'palavrao', model: 'pt_PT-tugao-medium' }],
+      segments: [{ text: 'palavrao', model: 'pt_PT-google-medium' }],
     };
     const out = redactRequest(req, ['palavrao']);
     expect(out.segments).toBeUndefined();

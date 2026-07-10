@@ -26,7 +26,7 @@ export function initDb(path: string): Database.Database {
         autoread       INTEGER NOT NULL DEFAULT 0,
         default_voice  TEXT NOT NULL DEFAULT 'en_US-amy-medium',
         max_chars      INTEGER NOT NULL DEFAULT 300,
-        rate_per_min   INTEGER NOT NULL DEFAULT 15,
+        rate_per_min   INTEGER NOT NULL DEFAULT 8,
         enabled        INTEGER NOT NULL DEFAULT 1,
         tts_role_id    TEXT,
         locale         TEXT NOT NULL DEFAULT 'en',
@@ -77,25 +77,6 @@ export function initDb(path: string): Database.Database {
         term        TEXT NOT NULL,
         replacement TEXT NOT NULL,
         PRIMARY KEY (user_id, term)
-      );
-
-      -- (LEGADO) Tabela antiga do toggle de deteccao quando o default era ON: guardava
-      -- quem a DESLIGOU. Ja NAO e lida (ver tts_lang_detect_on abaixo). Mantida so para
-      -- nao falhar em DBs antigas; pode ser removida numa limpeza futura.
-      CREATE TABLE IF NOT EXISTS tts_lang_detect_off (
-        guild_id TEXT NOT NULL,
-        user_id  TEXT NOT NULL,
-        PRIMARY KEY (guild_id, user_id)
-      );
-
-      -- Toggle da DETECAO AUTOMATICA de lingua por-(guild,user). O DEFAULT passou a
-      -- OFF (voz UNICA fixa para todas as linguas — a pessoa parece a mesma). Por isso
-      -- guardamos agora quem a LIGOU (opt-in): uma linha aqui => deteccao ON (voz
-      -- nativa por lingua, pode trocar de locutor); sem linha => OFF (voz fixa).
-      CREATE TABLE IF NOT EXISTS tts_lang_detect_on (
-        guild_id TEXT NOT NULL,
-        user_id  TEXT NOT NULL,
-        PRIMARY KEY (guild_id, user_id)
       );
 
       -- Apelido FONETICO por-(guild,user) para o xsaid: como a pessoa quer ser CHAMADA
@@ -293,6 +274,24 @@ export function initDb(path: string): Database.Database {
     if (ksCols.some((c) => c.name === 'email') && !ksCols.some((c) => c.name === 'email_hash')) {
       db.exec('ALTER TABLE kofi_supporter RENAME COLUMN email TO email_hash');
     }
+
+    // Migracao idempotente: a voz Piper de Portugues europeu (pt_PT-tugao-medium) foi
+    // RETIRADA das opcoes — fica so o pt-PT do Google (e do Kokoro para quem o usa). As
+    // prefs ja gravadas que a apontavam migram para a voz pt-PT do Google
+    // (pt_PT-google-medium), mesma lingua, servida pelo motor default. Apos correr uma vez
+    // nao ha mais linhas a migrar (no-op). Cobre a voz por-user e a default da guild.
+    db.exec(
+      "UPDATE user_voice SET voice_model = 'pt_PT-google-medium' WHERE voice_model = 'pt_PT-tugao-medium'",
+    );
+    db.exec(
+      "UPDATE guild_config SET default_voice = 'pt_PT-google-medium' WHERE default_voice = 'pt_PT-tugao-medium'",
+    );
+
+    // Migracao: a feature de DETECAO AUTOMATICA de lingua (/voice detection) foi REMOVIDA
+    // — toda a gente passa a usar a voz FIXA escolhida. As tabelas do toggle (e a legada)
+    // deixam de existir. DROP IF EXISTS: no-op em DBs novas, limpa as antigas.
+    db.exec('DROP TABLE IF EXISTS tts_lang_detect_on');
+    db.exec('DROP TABLE IF EXISTS tts_lang_detect_off');
 
     return db;
   } catch (err) {

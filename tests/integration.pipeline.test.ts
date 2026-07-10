@@ -38,7 +38,6 @@ import { setGuildConfig } from '../src/store/guildConfig';
 import { addBlockword } from '../src/store/blocklist';
 import { setOptOut } from '../src/store/optout';
 import { addUserPronunciation } from '../src/store/pronunciation';
-import { setDetection } from '../src/store/langDetect';
 
 const GUILD = 'g-integration';
 const CHAN = 'chan-autoread';
@@ -123,27 +122,23 @@ describe('pipeline central — integracao end-to-end (store real + player falso)
   beforeEach(() => {
     db = initDb(':memory:');
     say = vi.fn().mockResolvedValue(undefined);
-    // Auto-leitura ligada no canal CHAN. default_voice fica '' (a guild nao
-    // define voz) => a precedencia cai para config.defaultVoice (de_) quando a
-    // deteccao de lingua nao mapeia.
+    // Auto-leitura ligada no canal CHAN. A deteção automática de língua foi REMOVIDA:
+    // a voz é SEMPRE a fixa. Damos à guild uma default_voice pt_ para que o pipeline
+    // leia tudo em português (localização de media "um link", etc.) de forma previsível.
     setGuildConfig(db, GUILD, {
       autoread: true,
       ttsChannelId: CHAN,
       enabled: true,
-      defaultVoice: '',
+      defaultVoice: 'pt_PT-google-medium',
     });
-    // A deteccao de lingua->voz e agora OPT-IN (default OFF = voz unica fixa). Este
-    // teste exercita DELIBERADAMENTE o caminho de deteccao ("voz certa" por lingua),
-    // por isso ligamo-la explicitamente para o USER.
-    setDetection(db, GUILD, USER, true);
   });
 
   afterEach(() => {
     db.close();
   });
 
-  // ── 1. CAMINHO FELIZ PT ───────────────────────────────────────────────────
-  it('mensagem em portugues -> texto limpo + voz pt_', async () => {
+  // ── 1. CAMINHO FELIZ PT (voz fixa pt_) ────────────────────────────────────
+  it('mensagem em portugues -> texto limpo + voz FIXA pt_', async () => {
     const deps = makeDeps(db, say);
     const content =
       'bom dia a todos os membros deste servidor espero que estejam todos bem e com muita saude';
@@ -154,14 +149,14 @@ describe('pipeline central — integracao end-to-end (store real + player falso)
     const req = say.mock.calls[0][0];
     // TEXTO: sem alteracoes de limpeza/pronuncia neste caso => identico.
     expect(req.text).toBe(content);
-    // VOZ: deteta PT e escolhe o modelo pt_ disponivel (nao o fallback de_).
-    expect(req.model).toBe('pt_PT-tugao-medium');
-    expect(req.model.startsWith('pt_')).toBe(true);
+    // VOZ: a voz FIXA da guild (pt_), singleVoice (deteção removida).
+    expect(req.model).toBe('pt_PT-google-medium');
+    expect(req.singleVoice).toBe(true);
     expect(req.speed).toBe(1.0);
   });
 
-  // ── 2. CAMINHO FELIZ EN ───────────────────────────────────────────────────
-  it('mensagem em ingles -> texto limpo + voz en_', async () => {
+  // ── 2. Texto de OUTRA língua -> continua na voz FIXA (sem deteção) ─────────
+  it('mensagem em ingles -> lida na MESMA voz fixa pt_ (deteção removida)', async () => {
     const deps = makeDeps(db, say);
     const content =
       'good morning to all the members of this server i hope you are all doing well and feeling great';
@@ -171,9 +166,9 @@ describe('pipeline central — integracao end-to-end (store real + player falso)
     expect(say).toHaveBeenCalledTimes(1);
     const req = say.mock.calls[0][0];
     expect(req.text).toBe(content);
-    // VOZ: deteta EN e escolhe en_ — distinto do fallback de_, logo significativo.
-    expect(req.model).toBe('en_US-amy-medium');
-    expect(req.model.startsWith('en_')).toBe(true);
+    // Sem deteção: texto inglês sai na voz FIXA pt_ (não muda de locutor).
+    expect(req.model).toBe('pt_PT-google-medium');
+    expect(req.singleVoice).toBe(true);
     expect(req.speed).toBe(1.0);
   });
 

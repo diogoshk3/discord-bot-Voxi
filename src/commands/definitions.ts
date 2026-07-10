@@ -212,34 +212,6 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
     )
     .addSubcommand((s) =>
       s
-        .setName('detection')
-        .setDescription(
-          'Native voice per language (speaker may change). Off by default: one fixed voice.',
-        )
-        .addBooleanOption((o) =>
-          o
-            .setName('active')
-            .setDescription(
-              'On = native voice per language; Off (default) = your one fixed voice for everything',
-            )
-            .setRequired(true),
-        )
-        .addStringOption((o) =>
-          o
-            .setName('engine')
-            .setDescription(
-              'Voice engine: Google (default), Piper, or Kokoro (neural) — often sound better in some languages',
-            )
-            .setRequired(false)
-            .addChoices(
-              { name: 'Google (default)', value: 'google' },
-              { name: 'Piper', value: 'piper' },
-              { name: 'Kokoro (neural)', value: 'kokoro' },
-            ),
-        ),
-    )
-    .addSubcommand((s) =>
-      s
         .setName('nickname')
         .setDescription('How Vozen should call you out loud (xsaid). Leave empty to clear.')
         .addStringOption((o) =>

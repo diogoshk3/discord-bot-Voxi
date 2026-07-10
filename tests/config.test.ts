@@ -121,7 +121,7 @@ describe('loadConfig', () => {
     expect(cfg.messageLeadMs).toBe(200); // 0.20s de silêncio antes de falar
     expect(cfg.queueCap).toBe(20);
     expect(cfg.maxChars).toBe(300);
-    expect(cfg.ratePerMin).toBe(15);
+    expect(cfg.ratePerMin).toBe(8);
   });
 
   it('parses numeric env overrides', () => {

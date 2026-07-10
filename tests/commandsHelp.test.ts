@@ -118,20 +118,13 @@ describe('/help — discovery de comandos em-app', () => {
     expect(text.toLowerCase()).toMatch(/report|reportar/);
   });
 
-  it('reflete os subcomandos de /voice (set, list, preview, optout, optin, detection)', async () => {
+  it('reflete os subcomandos de /voice (set, list, preview, optout, optin)', async () => {
     const i = makeHelpInteraction();
     await handleInteraction(i as any, makeDeps());
     const text = i.replies.join('\n');
-    for (const sub of ['set', 'list', 'reset', 'preview', 'optout', 'optin', 'detection']) {
+    for (const sub of ['set', 'list', 'reset', 'preview', 'optout', 'optin']) {
       expect(text).toContain(sub);
     }
-  });
-
-  it('menciona /voice detection na seccao "Your voice" (ON por defeito)', async () => {
-    const i = makeHelpInteraction();
-    await handleInteraction(i as any, makeDeps());
-    const text = i.replies.join('\n');
-    expect(text).toContain('/voice detection');
   });
 
   it('mostra os cabecalhos dos grupos em INGLES por defeito', async () => {

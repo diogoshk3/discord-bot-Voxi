@@ -14,14 +14,12 @@ import { createVoiceSession, becomeSpeakerIfStage } from '../../voice/session';
 import { getUserVoice } from '../../store/userVoice';
 import { getGuildConfig } from '../../store/guildConfig';
 import { getBlocklist } from '../../store/blocklist';
-import { isDetectionOn } from '../../store/langDetect';
 import { getUserPronunciations, getServerPronunciations } from '../../store/pronunciation';
 import { getVoiceEffect } from '../../store/voiceEffect';
 import { getClone } from '../../store/voiceClone';
 import { forgetVoicePresence } from '../../store/voicePresence';
 import { cleanText, collectUrlMedia, collectMarkdownMedia } from '../../textCleaning/clean';
 import { prepareSpeech, redactRequest, hasReadableText } from '../prepareSpeech';
-import { recallLang, rememberLang } from '../../language/langMemory';
 import { log } from '../../logging/logger';
 import { t } from '../../i18n/index';
 import { localeFor, localeForUser, reply } from '../helpers';
@@ -143,9 +141,7 @@ export async function speakRawText(
   if (!/[\p{L}\p{N}]/u.test(cleaned) && media.length === 0) return { status: 'empty' };
 
   const userVoice = getUserVoice(deps.db, guildId, userId);
-  const auto = isDetectionOn(deps.db, guildId, userId);
-  const recentLang = recallLang(guildId, userId);
-  const { req, learnedLang } = prepareSpeech({
+  const { req } = prepareSpeech({
     personal: cleaned,
     // Pronúncias de quem invocou (/tts e Speak leem com a voz + regras do próprio),
     // seguidas das do SERVIDOR (aplicam-se a todos).
@@ -158,11 +154,8 @@ export async function speakRawText(
     guildDefaultVoice: cfg.defaultVoice,
     defaultVoice: deps.config.defaultVoice,
     defaultSpeed: deps.config.defaultSpeed,
-    autoDetect: auto,
-    recentLang,
     media: media.map((kind) => ({ kind })),
   });
-  if (learnedLang) rememberLang(guildId, userId, learnedLang);
   // Motor escolhido pelo user (google default | piper) — usado pelo PerUserEngineRouter.
   req.engine = userVoice?.engine;
 

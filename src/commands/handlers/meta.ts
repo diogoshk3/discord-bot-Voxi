@@ -43,7 +43,7 @@ export async function handleTopSpeakers(
   deps: BotDeps,
 ): Promise<void> {
   const locale = localeForUser(deps, i);
-  const rows = getTopSpeakers(deps.db, i.guildId!, 10);
+  const rows = getTopSpeakers(deps.db, i.guildId!, new Date(), 10);
   if (rows.length === 0) {
     await reply(i, t('topspeakers.empty', locale));
     return;
