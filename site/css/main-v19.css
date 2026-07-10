@@ -560,14 +560,9 @@ body > *:not(.grain):not(.orbs):not(.nav) { position: relative; z-index: 2; }
 .price-card--pro .price-card__price .was { text-decoration-color: rgba(255, 194, 75, 0.6); }
 .price-card--plus .price-card__price .was { text-decoration-color: rgba(102, 114, 255, 0.6); }
 .price-card--max .price-card__price .was { text-decoration-color: rgba(167, 106, 255, 0.55); }
-/* Em 4 colunas (~196px úteis) o preço anual tem 6 glifos (€75.99) e roçava a borda mesmo
-   sozinho: baixa um degrau. Só no anual e só na grelha larga; o mensal fica intacto a 46px. */
-@media (min-width: 1161px) {
-  .pricing.is-annual .price-card__price b { font-size: 36px; }
-}
-@media (max-width: 360px) {
-  .pricing.is-annual .price-card__price b { font-size: 38px; }
-}
+/* O preço grande (colorido) fica SEMPRE a 46px — igual no mensal e no anual. Para o anual
+   de 6 glifos (€75.99) caber nos 4 cartões lado a lado, o espaço vem do padding/gap mais
+   apertados da grelha (ver .pricing e .price-card), não de encolher o número. */
 /* Troca Mensal→Anual: os elementos anuais entram com um fade+subida curto. Só sob
    .is-annual → o load inicial (mensal) nunca anima. */
 @keyframes priceIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
@@ -920,11 +915,11 @@ body > *:not(.grain):not(.orbs):not(.nav) { position: relative; z-index: 2; }
   .btn--discord:hover { transform: none; }
 }
 
-.pricing { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; max-width: 1480px; margin: 0 auto; }
+.pricing { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; max-width: 1480px; margin: 0 auto; }
 /* 4 cartões: acima de 1160px cabem os 4; abaixo caem para 2×2 (e a 1 coluna no telemóvel). */
 @media (max-width: 1160px) { .pricing { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 760px; } }
 .price-card {
-  position: relative; padding: 38px 34px; border-radius: var(--radius);
+  position: relative; padding: 38px 24px; border-radius: var(--radius);
   background: var(--glass); border: 1px solid var(--line); box-shadow: inset 0 1px 0 var(--hi);
   /* Coluna flex: os cartões esticam à mesma altura (grid) e a nota+botão fixam-se ao
      fundo (margin-top:auto na nota) → os botões de compra ficam todos ao mesmo nível,
