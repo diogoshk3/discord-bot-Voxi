@@ -18,6 +18,7 @@ import {
   parseKofiPayload,
   verifyKofiToken,
   mapKofiToGrant,
+  hashKofiEmail,
   type KofiEvent,
   type KofiGrant,
 } from './kofi';
@@ -73,12 +74,17 @@ export function resolveKofiDiscordId(
   event: KofiEvent,
   grant: KofiGrant,
   now: number,
+  webhookToken: string | undefined,
 ): string | null {
+  // Indexamos pelo HASH do email (nunca o email em claro) — ver hashKofiEmail. O token do
+  // webhook é a chave do HMAC; ele autentica o pedido (verifyKofiToken), logo está sempre
+  // presente quando chegamos aqui. Sem token não hashamos (degrada em segurança, nunca vaza).
+  const emailHash = event.email && webhookToken ? hashKofiEmail(webhookToken, event.email) : null;
   if (grant.discordId) {
-    if (event.email) rememberKofiSupporter(db, event.email, grant.discordId, now);
+    if (emailHash) rememberKofiSupporter(db, emailHash, grant.discordId, now);
     return grant.discordId;
   }
-  return event.email ? lookupKofiSupporter(db, event.email) : null;
+  return emailHash ? lookupKofiSupporter(db, emailHash) : null;
 }
 
 /** IP do pedido (respeita o X-Forwarded-For do reverse proxy; senão o socket). */
@@ -249,7 +255,7 @@ export function startKofiWebhook(deps: KofiWebhookDeps): Server | null {
         // Discord ID: da mensagem (1.ª compra, memorizada por email) ou pelo email (renovação).
         const resolved: KofiGrant = {
           ...grant,
-          discordId: resolveKofiDiscordId(db, event, grant, now()),
+          discordId: resolveKofiDiscordId(db, event, grant, now(), token),
         };
         // IDEMPOTÊNCIA: o Ko-fi reentrega em timeout/não-2xx. Registo do tx + grant são
         // UMA transação: num duplicado confirmamos 200 sem re-aplicar (o grant acumula

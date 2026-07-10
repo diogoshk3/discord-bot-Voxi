@@ -13,6 +13,7 @@ import {
   GUILD_CONFIG_COLUMNS,
 } from '../src/store/guildConfig';
 import { getBlocklist, addBlockword, removeBlockword } from '../src/store/blocklist';
+import { rememberKofiSupporter, lookupKofiSupporter } from '../src/store/premium';
 import {
   getUserPronunciations,
   addUserPronunciation,
@@ -808,5 +809,36 @@ describe('store — cache write-through', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe('store — migração kofi_supporter (email em claro -> email_hash)', () => {
+  let dir: string | undefined;
+  afterEach(() => {
+    if (dir) rmSync(dir, { recursive: true, force: true });
+    dir = undefined;
+  });
+
+  it('renomeia a coluna email->email_hash numa DB antiga e o store continua a funcionar', () => {
+    dir = mkdtempSync(join(tmpdir(), 'vozen-kofimig-'));
+    const file = join(dir, 'old.db');
+    // Simula uma DB ANTIGA: kofi_supporter com a coluna de email EM CLARO (`email`).
+    const seed = new BetterSqlite3(file);
+    seed.exec(
+      'CREATE TABLE kofi_supporter (email TEXT PRIMARY KEY, discord_id TEXT NOT NULL, updated_at INTEGER NOT NULL)',
+    );
+    seed.close();
+    // initDb aplica a migração idempotente -> a coluna passa a chamar-se email_hash.
+    const db = initDb(file);
+    const cols = (db.pragma('table_info(kofi_supporter)') as Array<{ name: string }>).map(
+      (c) => c.name,
+    );
+    expect(cols).toContain('email_hash');
+    expect(cols).not.toContain('email');
+    // E o store (que agora escreve/lê email_hash) funciona sem rebentar ("no such column").
+    const hash = 'deadbeef'.repeat(8); // 64 hex, forma de um hash
+    rememberKofiSupporter(db, hash, '123456789012345678', 1);
+    expect(lookupKofiSupporter(db, hash)).toBe('123456789012345678');
+    db.close();
   });
 });

@@ -8,7 +8,7 @@
 // Campos que usamos: verification_token, type, message (onde o comprador põe o Discord ID),
 // is_subscription_payment, tier_name (memberships) e shop_items (compras únicas → anual).
 
-import { createHash, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 
 /** Nº de licenças (servidores) de um passe de Premium. Decisão de produto: paga 1, usa 3. */
 export const PREMIUM_PASS_SEATS = 3;
@@ -91,6 +91,19 @@ export function verifyKofiToken(event: KofiEvent, expected: string | undefined):
   const a = createHash('sha256').update(event.verificationToken).digest();
   const b = createHash('sha256').update(expected).digest();
   return timingSafeEqual(a, b);
+}
+
+/**
+ * Chave OPACA para o email do comprador do Ko-fi: HMAC-SHA256(token, email normalizado).
+ * Guardamos ISTO na BD (tabela kofi_supporter) em vez do email em claro — minimização de
+ * PII. As renovações reenviam o email → hasheia-se e casa com o hash guardado, por isso a
+ * associação email→Discord ID continua a funcionar sem nunca reter o email. O token do
+ * webhook serve de chave secreta (alta entropia ⇒ sem rainbow tables sobre emails).
+ * NOTA: se rodares o KOFI_WEBHOOK_TOKEN, os hashes antigos deixam de casar (renovações
+ * desses supporters voltam a precisar do Discord ID na mensagem).
+ */
+export function hashKofiEmail(webhookToken: string, email: string): string {
+  return createHmac('sha256', webhookToken).update(email.trim().toLowerCase()).digest('hex');
 }
 
 /** Extrai o 1.º Discord ID (17–20 dígitos) da mensagem, ou null. */

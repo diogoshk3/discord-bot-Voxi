@@ -8,6 +8,7 @@ import {
   verifyKofiToken,
   extractDiscordId,
   mapKofiToGrant,
+  hashKofiEmail,
   PREMIUM_PASS_SEATS,
   PREMIUM_MAX_SEATS,
 } from '../src/premium/kofi';
@@ -16,6 +17,7 @@ import { startKofiWebhook } from '../src/premium/kofiWebhook';
 
 const DID = '123456789012345678'; // 18 dígitos
 const EMAIL = 'buyer@example.com';
+const TOKEN = 'kofi-webhook-secret-xyz'; // chave do HMAC do email nos testes
 
 function kofiJson(over: Record<string, unknown>): string {
   return JSON.stringify({
@@ -154,6 +156,22 @@ describe('kofi — aplicação do grant no store', () => {
   });
 });
 
+describe('kofi — hashKofiEmail (minimização de PII)', () => {
+  it('determinístico e case/space-insensitive (mesma pessoa -> mesmo hash)', () => {
+    expect(hashKofiEmail(TOKEN, EMAIL)).toBe(hashKofiEmail(TOKEN, EMAIL));
+    expect(hashKofiEmail(TOKEN, '  Buyer@Example.COM ')).toBe(hashKofiEmail(TOKEN, EMAIL));
+  });
+  it('é hex de 64 chars e NUNCA revela o email', () => {
+    const h = hashKofiEmail(TOKEN, EMAIL);
+    expect(h).toMatch(/^[a-f0-9]{64}$/);
+    expect(h).not.toContain('buyer');
+    expect(h).not.toContain('example');
+  });
+  it('depende do token (segredo do webhook = chave do HMAC)', () => {
+    expect(hashKofiEmail('token-A', EMAIL)).not.toBe(hashKofiEmail('token-B', EMAIL));
+  });
+});
+
 describe('kofi — renovações (email -> Discord ID)', () => {
   let db: Database.Database;
   const now = 1_000_000;
@@ -171,18 +189,18 @@ describe('kofi — renovações (email -> Discord ID)', () => {
   it('1.ª compra: Discord ID da mensagem é memorizado por email', () => {
     const e = parseKofiPayload(kofiJson({}))!;
     const g = mapKofiToGrant(e, now)!;
-    expect(resolveKofiDiscordId(db, e, g, now)).toBe(DID);
+    expect(resolveKofiDiscordId(db, e, g, now, TOKEN)).toBe(DID);
   });
 
   it('renovação SEM mensagem: reencontra o Discord ID pelo email', () => {
     // 1.ª compra memoriza
     const e1 = parseKofiPayload(kofiJson({}))!;
-    resolveKofiDiscordId(db, e1, mapKofiToGrant(e1, now)!, now);
+    resolveKofiDiscordId(db, e1, mapKofiToGrant(e1, now)!, now, TOKEN);
     // renovação: sem Discord ID na mensagem, mesmo email
     const e2 = parseKofiPayload(kofiJson({ message: 'Renewal' }))!;
     const g2 = mapKofiToGrant(e2, now)!;
     expect(g2.discordId).toBeNull(); // a mensagem já não o traz
-    const resolvedId = resolveKofiDiscordId(db, e2, g2, now);
+    const resolvedId = resolveKofiDiscordId(db, e2, g2, now, TOKEN);
     expect(resolvedId).toBe(DID); // ...mas o email reencontra-o
     // e o grant aplica-se e estende o passe
     const exp = applyKofiGrant(db, { ...g2, discordId: resolvedId }, now + 30 * 86_400_000);
@@ -193,7 +211,19 @@ describe('kofi — renovações (email -> Discord ID)', () => {
   it('renovação de email desconhecido -> null (cai no grant manual)', () => {
     const e = parseKofiPayload(kofiJson({ message: 'no id', email: 'stranger@x.com' }))!;
     const g = mapKofiToGrant(e, now)!;
-    expect(resolveKofiDiscordId(db, e, g, now)).toBeNull();
+    expect(resolveKofiDiscordId(db, e, g, now, TOKEN)).toBeNull();
+  });
+
+  it('SEC: a BD NÃO guarda o email em claro — só o hash HMAC (minimização de PII)', () => {
+    const e = parseKofiPayload(kofiJson({}))!;
+    resolveKofiDiscordId(db, e, mapKofiToGrant(e, now)!, now, TOKEN);
+    // Vasculha TODAS as colunas de todas as linhas: o email em claro não pode aparecer.
+    const rows = db.prepare('SELECT * FROM kofi_supporter').all() as Record<string, unknown>[];
+    expect(rows.length).toBe(1);
+    const dump = JSON.stringify(rows);
+    expect(dump).not.toContain(EMAIL); // nem o email...
+    expect(dump).not.toContain('example.com'); // ...nem o domínio
+    expect(dump).toContain(hashKofiEmail(TOKEN, EMAIL)); // guarda o hash
   });
 });
 

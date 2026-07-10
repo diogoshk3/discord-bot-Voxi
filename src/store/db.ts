@@ -208,11 +208,12 @@ export function initDb(path: string): Database.Database {
       CREATE INDEX IF NOT EXISTS idx_pass_activation_guild
         ON premium_pass_activation (guild_id);
 
-      -- Mapa email->Discord ID para o webhook do Ko-fi. O comprador escreve o Discord ID na
-      -- 1.ª compra (é guardado aqui); nas RENOVAÇÕES o Ko-fi já não reenvia a mensagem, por
-      -- isso reencontramos o Discord ID pelo email do pagamento. Só o mais recente por email.
+      -- Mapa HASH(email)->Discord ID para o webhook do Ko-fi. O comprador escreve o Discord
+      -- ID na 1.ª compra (guardado aqui, indexado pelo HASH do email); nas RENOVAÇÕES o Ko-fi
+      -- já não reenvia a mensagem, por isso reencontramos o Discord ID pelo hash do email.
+      -- NUNCA guardamos o email em claro (minimização de PII) — ver hashKofiEmail.
       CREATE TABLE IF NOT EXISTS kofi_supporter (
-        email      TEXT PRIMARY KEY,
+        email_hash TEXT PRIMARY KEY,
         discord_id TEXT NOT NULL,
         updated_at INTEGER NOT NULL
       );
@@ -282,6 +283,15 @@ export function initDb(path: string): Database.Database {
     if (!ucCols.some((c) => c.name === 'target_id')) {
       db.exec("ALTER TABLE user_clone ADD COLUMN target_id TEXT NOT NULL DEFAULT ''");
       db.exec("UPDATE user_clone SET target_id = user_id WHERE target_id = ''");
+    }
+    // Migracao idempotente: kofi_supporter passou a indexar por HASH do email (minimizacao
+    // de PII). A coluna antiga `email` (email em claro) renomeia-se para `email_hash`. Em DBs
+    // novas o CREATE ja tem email_hash (no-op). A tabela e uma cache reconstruivel (o Ko-fi
+    // reenvia o email nas renovacoes), por isso linhas antigas em claro que sobrem sao inertes
+    // (o lookup passa a ser por hash e nunca casa com um email em claro).
+    const ksCols = db.pragma('table_info(kofi_supporter)') as Array<{ name: string }>;
+    if (ksCols.some((c) => c.name === 'email') && !ksCols.some((c) => c.name === 'email_hash')) {
+      db.exec('ALTER TABLE kofi_supporter RENAME COLUMN email TO email_hash');
     }
 
     return db;

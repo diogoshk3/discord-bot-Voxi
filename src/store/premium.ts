@@ -261,29 +261,31 @@ export function buildPremiumStatus(
   };
 }
 
-// ── Ko-fi: mapa email -> Discord ID (para as renovações) ──────────────────────────────
-// A 1.ª compra traz o Discord ID na mensagem; guardamo-lo por email. As renovações não
-// reenviam a mensagem, por isso reencontramos o Discord ID pelo email do pagamento.
+// ── Ko-fi: mapa HASH(email) -> Discord ID (para as renovações) ─────────────────────────
+// A 1.ª compra traz o Discord ID na mensagem; guardamo-lo indexado pelo HASH do email. As
+// renovações não reenviam a mensagem, por isso reencontramos o Discord ID pelo hash do
+// email do pagamento. A BD NUNCA guarda o email em claro (minimização de PII) — a chave
+// `emailHash` é opaca (HMAC calculado no webhook, ver hashKofiEmail em premium/kofi.ts).
 
-/** Guarda/atualiza o Discord ID associado a um email do Ko-fi. */
+/** Guarda/atualiza o Discord ID associado ao HASH de um email do Ko-fi. */
 export function rememberKofiSupporter(
   db: Database.Database,
-  email: string,
+  emailHash: string,
   discordId: string,
   now: number,
 ): void {
   db.prepare(
-    `INSERT INTO kofi_supporter (email, discord_id, updated_at)
+    `INSERT INTO kofi_supporter (email_hash, discord_id, updated_at)
      VALUES (?, ?, ?)
-     ON CONFLICT(email) DO UPDATE SET discord_id = excluded.discord_id, updated_at = excluded.updated_at`,
-  ).run(email.toLowerCase(), discordId, now);
+     ON CONFLICT(email_hash) DO UPDATE SET discord_id = excluded.discord_id, updated_at = excluded.updated_at`,
+  ).run(emailHash, discordId, now);
 }
 
-/** Reencontra o Discord ID de um email do Ko-fi (ou null). */
-export function lookupKofiSupporter(db: Database.Database, email: string): string | null {
+/** Reencontra o Discord ID a partir do HASH de um email do Ko-fi (ou null). */
+export function lookupKofiSupporter(db: Database.Database, emailHash: string): string | null {
   const row = db
-    .prepare('SELECT discord_id FROM kofi_supporter WHERE email = ?')
-    .get(email.toLowerCase()) as { discord_id: string } | undefined;
+    .prepare('SELECT discord_id FROM kofi_supporter WHERE email_hash = ?')
+    .get(emailHash) as { discord_id: string } | undefined;
   return row ? row.discord_id : null;
 }
 
