@@ -65,3 +65,31 @@ ser "dados sensíveis/biométricos" (RGPD, regra 16).
 - **Breach:** o ToS de developer (§5) obriga a notificar o Discord e os afetados em caso de
   acesso não autorizado a Dados da API. Documentar o processo antes de escalar.
 - **Rever:** o artigo da política foi atualizado em 2026-07-07 — reavaliar periodicamente.
+
+## Atualização 2026-07-11 (re-auditoria + novo trabalho)
+
+Re-auditados os 3 documentos (ToS de Desenvolvedor, Política, Termos do SDK Social). O
+**SDK Social não se aplica** (é para integrações em jogos). Confirmado o veredito: sem
+violações ativas. Plano completo em `docs/PLAN-DISCORD-COMPLIANCE.md`. Deltas fechados:
+
+- **Direito ao esquecimento — `/privacy erase` (NOVO).** Um comando apaga TODOS os dados
+  pessoais do utilizador em qualquer servidor, com confirmação por botão. Revoga também os
+  clones da voz dele feitos por outros. Retém o premium pago + histórico financeiro (exceção
+  de contrato/retenção legal). `store/dataLifecycle.ts::eraseUser` (testado). Antes a
+  eliminação estava espalhada por vários comandos; agora há o "apagar tudo".
+- **Retenção limitada — purga de servidores saídos (NOVO).** Os dados de um servidor que
+  remove o bot são apagados 30 dias depois se não houver re-convite (`store/guildDeparted.ts`,
+  marcado no `GuildDelete` REAL — o guard de outage já existia). Fecha o ToS §5(b)
+  ("não reter além do necessário"). Financeiro/entitlement retido.
+- **Rot-guard de conformidade (NOVO).** As tabelas apagadas por purga/erase são listas
+  explícitas com um teste (`tests/dataLifecycle.test.ts`) que FALHA se uma tabela nova com
+  `guild_id`/`user_id` não for categorizada — mantém a purga/erase completas no futuro.
+- **Encriptação em repouso (ToS §5(c)) — LACUNA ABERTA.** O disco do VPS **não** é cifrado
+  (ext4 puro, verificado). A BD e os `.wav` de clones estão em claro. Plano e runbook de
+  incidentes em `docs/INCIDENT-RESPONSE.md` + COMPL·5; a migração da BD de produção precisa
+  de **aprovação explícita** do operador (é o passo mais arriscado). Alvo prioritário: os
+  `.wav` biométricos.
+- **Regra permanente (NOVO).** `CLAUDE.md` tem uma secção "Discord compliance is mandatory"
+  que toda a feature futura respeita.
+- **Portal (pendente do Diogo):** preencher Privacy/ToS URL; confirmar elegibilidade de
+  Premium Apps no separador Monetization (COMPL·1) — desbloqueia a decisão de monetização.
