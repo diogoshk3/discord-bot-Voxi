@@ -223,7 +223,7 @@
   const TOK_KEY = "vozen.dtoken";
   const STATE_KEY = "vozen.oauthstate";
   const NAV_USER_KEY = "vozen.navuser";
-  const OAUTH_REDIRECT = new URL("account.html", location.href).href;
+  const OAUTH_REDIRECT = new URL("/account", location.href).href;
   let panelState = { mode: "hidden" };
 
   const t = (k) => (DICT[lang] && DICT[lang][k]) || (DICT.en && DICT.en[k]) || k;
@@ -316,7 +316,7 @@
       sessionStorage.removeItem(NAV_USER_KEY);
     } catch {}
     if (IS_ACCOUNT) {
-      window.location.href = "index.html";
+      window.location.href = "/";
       return;
     }
     setPanel({ mode: "anon" });
@@ -411,7 +411,7 @@
     const mark = active ? "&#10003;" : "&#10005;";
     const action = active
       ? ""
-      : `<a class="ppanel__get" href="index.html#premium">${t("nav.premium")} <span aria-hidden="true">→</span></a>`;
+      : `<a class="ppanel__get" href="/#premium">${t("nav.premium")} <span aria-hidden="true">→</span></a>`;
     return (
       `<div class="ppanel__status ${state}">` +
       `<span>${esc(label)}</span><b class="ppanel__mark ${state}" aria-label="${text}">${mark}</b>` +
@@ -541,7 +541,7 @@
   if (navLoginBtn) {
     navLoginBtn.addEventListener("click", () => {
       if (!IS_ACCOUNT) {
-        if (storedToken() || !PREMIUM_API_BASE) window.location.href = "account.html";
+        if (storedToken() || !PREMIUM_API_BASE) window.location.href = "/account";
         else login();
         return;
       }
