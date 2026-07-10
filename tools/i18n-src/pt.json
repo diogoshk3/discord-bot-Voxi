@@ -44,8 +44,8 @@
     "feat.9.d": "Todo o código do Vozen é público no GitHub. Audita-o, aprende com ele ou abre um PR — sem segredos, sem spyware.",
     "lang.eyebrow": "Línguas",
     "lang.title": "Um servidor, todas as línguas.",
-    "lang.sub": "O Vozen ouve a língua de cada mensagem e responde numa voz nativa. Português, inglês, japonês, árabe — até misturados na mesma frase. Cada um define a sua voz, com os nomes na sua própria língua.",
-    "lang.t1": "Deteção automática de língua",
+    "lang.sub": "O Vozen fala mais de 35 línguas. Cada um escolhe a sua voz — português, inglês, japonês, árabe e muito mais — com os nomes na sua própria língua.",
+    "lang.t1": "Mais de 35 línguas",
     "lang.t2": "Uma voz nativa por língua",
     "lang.t3": "Nomes das vozes na língua de cada um",
     "games.eyebrow": "Minijogos",
@@ -159,7 +159,6 @@
       ["/voice preview", "Ouve uma amostra de voz"],
       ["/voice clone", "Clona a tua própria voz (Premium)"],
       ["/voice effect", "Robô, eco, demónio… efeitos de voz"],
-      ["/voice detection", "Voz nativa por língua"],
       ["/voice nickname", "Como o Vozen te chama em voz alta"],
       ["/voice optout", "Deixa de ser lido automaticamente"],
       ["/pronunciation", "Ensina o Vozen a dizer uma palavra (só tua)"]
@@ -213,7 +212,7 @@
     ],
     [
       "Google ou Piper — que motor de voz?",
-      "Os dois são grátis. O Google (padrão) cobre as 35 línguas na hora; o Piper corre no nosso servidor e costuma soar melhor nalgumas línguas, como o português. Troca quando quiseres com /voice set ou /voice detection — é por pessoa."
+      "Os dois são grátis. O Google (padrão) cobre as 35 línguas na hora; o Piper corre no nosso servidor e costuma soar melhor nalgumas línguas, como o português. Troca quando quiseres com /voice set — é por pessoa."
     ],
     [
       "Como desligo funcionalidades?",

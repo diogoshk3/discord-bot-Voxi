@@ -44,8 +44,8 @@
     "feat.9.d": "Der gesamte Vozen-Code ist öffentlich auf GitHub. Prüfe ihn, lerne von ihm oder öffne einen PR — keine Geheimnisse, keine Spyware.",
     "lang.eyebrow": "Sprachen",
     "lang.title": "Ein Server, jede Sprache.",
-    "lang.sub": "Vozen hört die Sprache jeder Nachricht und antwortet mit einer nativen Stimme. Portugiesisch, Englisch, Japanisch, Arabisch — sogar gemischt im selben Satz. Jeder legt seine eigene Stimme fest, mit den Namen in seiner eigenen Sprache.",
-    "lang.t1": "Automatische Spracherkennung",
+    "lang.sub": "Vozen spricht über 35 Sprachen. Jeder wählt seine eigene Stimme — Portugiesisch, Englisch, Japanisch, Arabisch und mehr — mit den Namen in seiner eigenen Sprache.",
+    "lang.t1": "Über 35 Sprachen",
     "lang.t2": "Eine native Stimme pro Sprache",
     "lang.t3": "Stimmennamen für jeden Nutzer lokalisiert",
     "games.eyebrow": "Minispiele",
@@ -159,7 +159,6 @@
       ["/voice preview", "Eine Stimmenprobe anhören"],
       ["/voice clone", "Deine eigene Stimme klonen (Premium)"],
       ["/voice effect", "Roboter, Echo, Dämon … Stimmeneffekte"],
-      ["/voice detection", "Native Stimme pro Sprache"],
       ["/voice nickname", "Wie Vozen dich laut anspricht"],
       ["/voice optout", "Nicht mehr automatisch vorgelesen werden"],
       ["/pronunciation", "Bring Vozen bei, ein Wort auszusprechen (nur deins)"]
@@ -213,7 +212,7 @@
     ],
     [
       "Google oder Piper — welche Stimmen-Engine?",
-      "Beide sind kostenlos. Google (die Voreinstellung) deckt alle 35 Sprachen sofort ab; Piper läuft auf unserem eigenen Server und klingt in manchen Sprachen wie Portugiesisch oft besser. Wechsle jederzeit mit /voice set oder /voice detection — pro Person."
+      "Beide sind kostenlos. Google (die Voreinstellung) deckt alle 35 Sprachen sofort ab; Piper läuft auf unserem eigenen Server und klingt in manchen Sprachen wie Portugiesisch oft besser. Wechsle jederzeit mit /voice set — pro Person."
     ],
     [
       "Wie schalte ich Funktionen aus?",

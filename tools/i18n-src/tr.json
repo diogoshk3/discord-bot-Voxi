@@ -44,8 +44,8 @@
     "feat.9.d": "Vozen'in tüm kodu GitHub'da herkese açık. İncele, öğren ya da bir PR aç — gizli bir şey yok, casus yazılım yok.",
     "lang.eyebrow": "Diller",
     "lang.title": "Tek sunucu, her dil.",
-    "lang.sub": "Vozen her mesajın dilini algılar ve ana dilde bir sesle yanıtlar. Portekizce, İngilizce, Japonca, Arapça — hatta aynı cümlede karışık halde. Herkes kendi sesini ayarlar, isimler de kendi dilinde gösterilir.",
-    "lang.t1": "Otomatik dil algılama",
+    "lang.sub": "Vozen 35'ten fazla dil konuşur. Herkes kendi sesini seçer — Portekizce, İngilizce, Japonca, Arapça ve daha fazlası — isimler de kendi dilinde gösterilir.",
+    "lang.t1": "35'ten fazla dil",
     "lang.t2": "Her dil için ana dilde bir ses",
     "lang.t3": "Her kullanıcıya göre yerelleştirilmiş ses isimleri",
     "games.eyebrow": "Mini oyunlar",
@@ -159,7 +159,6 @@
       ["/voice preview", "Bir ses örneği dinle"],
       ["/voice clone", "Kendi sesini klonla (Premium)"],
       ["/voice effect", "Robot, yankı, iblis… ses efektleri"],
-      ["/voice detection", "Her dil için ana dilde ses"],
       ["/voice nickname", "Vozen sana yüksek sesle nasıl seslenir"],
       ["/voice optout", "Otomatik okunmayı durdur"],
       ["/pronunciation", "Vozen'e bir kelimeyi nasıl söyleyeceğini öğret (sana özel)"]
@@ -213,7 +212,7 @@
     ],
     [
       "Google mı Piper mı — hangi ses motoru?",
-      "İkisi de ücretsiz. Google (varsayılan) 35 dilin tamamını anında kapsar; Piper kendi sunucumuzda çalışır ve bazı dillerde, örneğin Portekizce'de, çoğu zaman daha iyi ses verir. /voice set ya da /voice detection ile istediğin zaman değiştir — kişiye özeldir."
+      "İkisi de ücretsiz. Google (varsayılan) 35 dilin tamamını anında kapsar; Piper kendi sunucumuzda çalışır ve bazı dillerde, örneğin Portekizce'de, çoğu zaman daha iyi ses verir. /voice set ile istediğin zaman değiştir — kişiye özeldir."
     ],
     [
       "Özellikleri nasıl kapatırım?",

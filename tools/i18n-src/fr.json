@@ -44,8 +44,8 @@
     "feat.9.d": "Tout le code de Vozen est public sur GitHub. Auditez-le, apprenez-en, ou ouvrez une PR — aucun secret, aucun mouchard.",
     "lang.eyebrow": "Langues",
     "lang.title": "Un serveur, toutes les langues.",
-    "lang.sub": "Vozen entend la langue de chaque message et répond avec une voix native. Portugais, anglais, japonais, arabe — même mélangés dans la même phrase. Chacun choisit sa voix, avec les noms affichés dans sa propre langue.",
-    "lang.t1": "Détection automatique de la langue",
+    "lang.sub": "Vozen parle plus de 35 langues. Chacun choisit sa voix — portugais, anglais, japonais, arabe et plus — avec les noms affichés dans sa propre langue.",
+    "lang.t1": "Plus de 35 langues",
     "lang.t2": "Une voix native par langue",
     "lang.t3": "Noms de voix localisés pour chaque utilisateur",
     "games.eyebrow": "Mini-jeux",
@@ -159,7 +159,6 @@
       ["/voice preview", "Écouter un échantillon de voix"],
       ["/voice clone", "Cloner votre propre voix (Premium)"],
       ["/voice effect", "Robot, écho, démon… effets de voix"],
-      ["/voice detection", "Voix native par langue"],
       ["/voice nickname", "Comment Vozen vous appelle à voix haute"],
       ["/voice optout", "Ne plus être lu automatiquement"],
       ["/pronunciation", "Apprends à Vozen à prononcer un mot (perso)"]
@@ -213,7 +212,7 @@
     ],
     [
       "Google ou Piper — quel moteur de voix ?",
-      "Les deux sont gratuits. Google (par défaut) couvre les 35 langues instantanément ; Piper tourne sur notre propre serveur et sonne souvent mieux dans certaines langues, comme le portugais. Changez à tout moment avec /voice set ou /voice detection — c'est propre à chacun."
+      "Les deux sont gratuits. Google (par défaut) couvre les 35 langues instantanément ; Piper tourne sur notre propre serveur et sonne souvent mieux dans certaines langues, comme le portugais. Changez à tout moment avec /voice set — c'est propre à chacun."
     ],
     [
       "Comment désactiver des fonctionnalités ?",
