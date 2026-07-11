@@ -22,7 +22,7 @@ import type { BotDeps } from './bot/deps';
 import { removePlayer } from './bot/deps';
 import { GameManager } from './games/manager';
 import { systemClock } from './games/types';
-import { isGuildPremium } from './store/premium';
+import { isGuildPremium, grantUserPremium } from './store/premium';
 import { createVoiceSession, becomeSpeakerIfStage } from './voice/session';
 import { listVoicePresence, forgetVoicePresence } from './store/voicePresence';
 import { planRejoin, type ChannelState } from './voice/rejoin';
@@ -40,7 +40,7 @@ import { startLoopLagMonitor } from './health/loopLag';
 import { startEntitlementSync } from './premium/entitlementSync';
 import { startKofiWebhook } from './premium/kofiWebhook';
 import { createStatusApi } from './premium/statusApi';
-import { startVoteWebhookServer } from './vote';
+import { startVoteWebhookServer, VOTE_REWARD_HOURS } from './vote';
 
 function discoverModels(modelsDir: string): string[] {
   if (!existsSync(modelsDir)) return [];
@@ -249,9 +249,21 @@ async function main(): Promise<void> {
   // P11.5 — webhook top.gg OPCIONAL para registar votos. So arranca se
   // TOPGG_WEBHOOK_PORT estiver definida (porta dedicada, separada do health). Em
   // try/catch defensivo: um problema a abrir a porta NUNCA deve impedir o bot de
-  // arrancar.
+  // arrancar. RECOMPENSA (growth loop): cada upvote válido dá VOTE_REWARD_HOURS de
+  // perks Plus a quem votou (source 'vote' — EXTRA, nunca a qualidade base; votos
+  // acumulam via grantUserPremium, que estende a partir do expiry atual). Sem DM
+  // (hard rule: no unsolicited DMs) — a pessoa vê o estado no /premium.
   try {
-    startVoteWebhookServer(config);
+    startVoteWebhookServer(config, (userId) => {
+      try {
+        const exp = grantUserPremium(db, userId, VOTE_REWARD_HOURS / 24, 'vote', Date.now());
+        log.info(
+          `[vote] recompensa: +${VOTE_REWARD_HOURS}h de Plus para ${userId} (fim ${new Date(exp).toISOString()}).`,
+        );
+      } catch (err) {
+        log.error(`[vote] falha a conceder a recompensa do voto a ${userId} (ignorado)`, err);
+      }
+    });
   } catch (err) {
     log.error('[index] falha ao arrancar o webhook top.gg (ignorado)', err);
   }

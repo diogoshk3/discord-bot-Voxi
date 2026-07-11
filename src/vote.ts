@@ -42,6 +42,9 @@ import { metrics } from './metrics';
 import type { AppConfig } from './config/index';
 import { hardenServerTimeouts } from './http/serverHardening';
 
+/** Duração da recompensa por voto: um upvote válido dá estas horas de perks Plus. */
+export const VOTE_REWARD_HOURS = 12;
+
 export interface VoteWebhookInput {
   /** Valor do header Authorization do pedido (ou undefined se ausente). */
   authHeader: string | undefined;
@@ -49,6 +52,13 @@ export interface VoteWebhookInput {
   body: string;
   /** Secret esperado. Se undefined/vazio, a auth NAO e verificada. */
   secret: string | undefined;
+  /**
+   * Recompensa: chamado com o id de quem votou em CADA upvote válido (mesma condição
+   * que a métrica `votes`). O chamador liga aqui o grant de perks (ver index.ts). Um
+   * throw aqui NÃO parte a resposta — o top.gg não re-entrega webhooks falhados, por
+   * isso respondemos 200 na mesma e o erro fica ao critério do próprio callback logar.
+   */
+  onUpvote?: (userId: string) => void;
 }
 
 export interface VoteData {
@@ -98,7 +108,7 @@ export interface VoteWebhookResult {
  *     type === "test" => 200 mas NAO conta (e um ping de teste do dashboard).
  */
 export function handleVoteWebhook(input: VoteWebhookInput): VoteWebhookResult {
-  const { authHeader, body, secret } = input;
+  const { authHeader, body, secret, onUpvote } = input;
 
   // 1. Auth — so quando ha secret configurado (leitura literal do contrato).
   //    Comparacao constant-time (timingSafeEqual) para nao vazar o secret via
@@ -133,6 +143,13 @@ export function handleVoteWebhook(input: VoteWebhookInput): VoteWebhookResult {
 
   if (type === 'upvote' && user !== '') {
     metrics.inc('votes');
+    // Recompensa (perks Plus temporários): mesma condição que a métrica. Um throw do
+    // callback não pode partir o 200 — o voto contou e o top.gg não re-entrega.
+    try {
+      onUpvote?.(user);
+    } catch {
+      /* o callback é responsável pelo próprio logging (ver index.ts) */
+    }
   }
 
   return { status: 200, body: JSON.stringify({ status: 'ok' }), vote };
@@ -152,6 +169,7 @@ export function handleVoteWebhook(input: VoteWebhookInput): VoteWebhookResult {
  */
 export function startVoteWebhookServer(
   config: Pick<AppConfig, 'topggWebhookPort' | 'topggWebhookSecret' | 'topggWebhookAllowInsecure'>,
+  onUpvote?: (userId: string) => void,
 ): Server | undefined {
   const port = config.topggWebhookPort;
   if (port === undefined) return undefined;
@@ -208,6 +226,7 @@ export function startVoteWebhookServer(
         authHeader: typeof authHeader === 'string' ? authHeader : undefined,
         body,
         secret,
+        onUpvote,
       });
       res.writeHead(result.status, { 'Content-Type': 'application/json' });
       res.end(result.body);

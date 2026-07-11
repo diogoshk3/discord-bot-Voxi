@@ -1,7 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import type { Server } from 'node:http';
-import { handleVoteWebhook, startVoteWebhookServer } from '../src/vote';
+import type Database from 'better-sqlite3';
+import { handleVoteWebhook, startVoteWebhookServer, VOTE_REWARD_HOURS } from '../src/vote';
 import { metrics } from '../src/metrics';
+import { initDb } from '../src/store/db';
+import { grantUserPremium, isUserPremium, getUserPremiumExpiry } from '../src/store/premium';
 import type { AppConfig } from '../src/config/index';
 
 // Helper: AppConfig minima — so as 3 vars de webhook interessam ao server.
@@ -210,5 +213,82 @@ describe('startVoteWebhookServer — arranque opcional', () => {
     expect(resGet.status).toBe(404);
     const resWrong = await fetch(`http://127.0.0.1:${addr.port}/nope`, { method: 'POST' });
     expect(resWrong.status).toBe(404);
+  });
+});
+
+describe('recompensa por voto — upvote válido dá perks Plus temporários', () => {
+  beforeEach(() => metrics.reset());
+
+  it('handler: upvote válido chama onUpvote com o id de quem votou', () => {
+    const rewarded: string[] = [];
+    const res = handleVoteWebhook({
+      authHeader: SECRET,
+      body: UPVOTE,
+      secret: SECRET,
+      onUpvote: (userId) => rewarded.push(userId),
+    });
+    expect(res.status).toBe(200);
+    expect(rewarded).toEqual(['u-123']);
+  });
+
+  it('handler: type "test", payload sem user e auth errada NÃO chamam onUpvote', () => {
+    const rewarded: string[] = [];
+    const onUpvote = (userId: string) => rewarded.push(userId);
+    handleVoteWebhook({
+      authHeader: SECRET,
+      body: JSON.stringify({ user: 'u-1', type: 'test' }),
+      secret: SECRET,
+      onUpvote,
+    });
+    handleVoteWebhook({
+      authHeader: SECRET,
+      body: JSON.stringify({ type: 'upvote' }), // sem user
+      secret: SECRET,
+      onUpvote,
+    });
+    handleVoteWebhook({ authHeader: 'errado', body: UPVOTE, secret: SECRET, onUpvote });
+    expect(rewarded).toEqual([]);
+  });
+
+  it('handler: um onUpvote que lança NÃO parte a resposta (200 na mesma)', () => {
+    const res = handleVoteWebhook({
+      authHeader: SECRET,
+      body: UPVOTE,
+      secret: SECRET,
+      onUpvote: () => {
+        throw new Error('grant falhou');
+      },
+    });
+    expect(res.status).toBe(200);
+    expect(metrics.snapshot().votes).toBe(1); // o voto conta na mesma
+  });
+
+  it('integração: POST de upvote concede VOTE_REWARD_HOURS de Plus (source vote)', async () => {
+    const db: Database.Database = initDb(':memory:');
+    const NOW = 1_000_000;
+    let server: Server | undefined;
+    try {
+      server = startVoteWebhookServer(cfg(0, SECRET), (userId) => {
+        grantUserPremium(db, userId, VOTE_REWARD_HOURS / 24, 'vote', NOW);
+      });
+      expect(server).toBeDefined();
+      await new Promise<void>((resolve) => server!.once('listening', () => resolve()));
+      const addr = server!.address();
+      if (addr === null || typeof addr === 'string') throw new Error('endereco inesperado');
+
+      const res = await fetch(`http://127.0.0.1:${addr.port}/webhook/topgg`, {
+        method: 'POST',
+        headers: { Authorization: SECRET, 'Content-Type': 'application/json' },
+        body: UPVOTE,
+      });
+      expect(res.status).toBe(200);
+      // 12h de Plus: ativo já, expira exatamente NOW + VOTE_REWARD_HOURS.
+      expect(isUserPremium(db, 'u-123', NOW + 1000)).toBe(true);
+      expect(getUserPremiumExpiry(db, 'u-123')).toBe(NOW + VOTE_REWARD_HOURS * 3_600_000);
+      expect(isUserPremium(db, 'u-123', NOW + VOTE_REWARD_HOURS * 3_600_000 + 1)).toBe(false);
+    } finally {
+      server?.close();
+      db.close();
+    }
   });
 });
