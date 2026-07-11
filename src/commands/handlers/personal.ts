@@ -38,13 +38,12 @@ import { log } from '../../logging/logger';
 const MODAL_WAIT_MS = 5 * 60_000; // modais podem demorar — o Discord dá até ~15 min
 const SELECT_WAIT_MS = 60_000;
 
-/** Limite de pronúncias pessoais deste utilizador AQUI (Plus OU servidor Premium => 50). */
+/** Limite de pronúncias pessoais deste utilizador (só o Vozen Plus dá as 50 — o Premium
+    de servidor eleva as do SERVIDOR, não as pessoais). */
 function pronLimitFor(deps: BotDeps, i: ChatInputCommandInteraction): number {
-  const now = Date.now();
-  const premium =
-    isUserPremium(deps.db, i.user.id, now) ||
-    (i.guildId ? isGuildPremium(deps.db, i.guildId, now) : false);
-  return premium ? USER_PRON_LIMIT_PREMIUM : USER_PRON_LIMIT_FREE;
+  return isUserPremium(deps.db, i.user.id, Date.now())
+    ? USER_PRON_LIMIT_PREMIUM
+    : USER_PRON_LIMIT_FREE;
 }
 
 // ── /pronunciation ────────────────────────────────────────────────────────────────────
@@ -133,10 +132,7 @@ async function applyAddPronunciation(
     await send(t('pron.empty', locale));
     return;
   }
-  const now = Date.now();
-  const premium =
-    isUserPremium(deps.db, i.user.id, now) ||
-    (i.guildId ? isGuildPremium(deps.db, i.guildId, now) : false);
+  const premium = isUserPremium(deps.db, i.user.id, Date.now());
   const limit = premium ? USER_PRON_LIMIT_PREMIUM : USER_PRON_LIMIT_FREE;
   const res = addUserPronunciation(deps.db, i.user.id, term, replacement, limit);
   if (res === 'limit') {
