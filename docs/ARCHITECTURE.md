@@ -46,7 +46,7 @@ Cada pasta de `src/` e a sua responsabilidade (o que está realmente no código)
 | `store/premium.ts` | Premium/Plus por EXPIRY (`premium_guild`/`premium_user`, source `kofi`/`discord`/`manual`). **Passe** por-utilizador (`premium_pass` = N licenças + fim absoluto; `premium_pass_activation` = servidores ativados): `grantGuildPass`/`activateSeat`/`deactivateSeat` — o relógio corre no passe, `isGuildPremium` vale por linha direta **ou** por ativação de passe não-expirado. `syncDiscordEntitlements` reconcilia os entitlements nativos. | `db` |
 | `premium/kofi.ts` + `kofiWebhook.ts` | Webhook do Ko-fi (opção A): parse do payload + verificação de token + extração do Discord ID da mensagem + mapa produto→grant (premium/plus × mensal/anual) — puro; o servidor HTTP fino aplica via `grant*` (source `kofi`). Inerte sem `KOFI_WEBHOOK_TOKEN`. Compra → `/premium activate`. Vendas manuais/recuperação: `/vozengrant` (OWNER-ONLY, registado só na `OWNER_GUILD_ID`, gate pelo dono real da application). O MESMO servidor HTTP também roteia a API do Painel Premium (ver `statusApi.ts`) quando ativa. | `store/premium`, `premium/statusApi` |
 | `premium/statusApi.ts` | API de leitura do Painel Premium do site (`GET /api/me/premium`): valida o Bearer token na Discord (`/users/@me`, cache curto token→identidade), monta o estado via `buildPremiumStatus` e resolve nomes de servidor pelo cache do cliente. Nunca por ID arbitrário — a identidade vem sempre do token. OPT-IN por `PREMIUM_API_ENABLED`; CORS restrito a `PREMIUM_API_ORIGIN`. Montada no servidor de `kofiWebhook.ts`. | `store/premium` |
-| `i18n/index.ts` | `t(key, locale, params)` — tradução pura da UI com fallback (`locale` pedido → `en` → própria `key`) e interpolação de `{param}`. `DEFAULT_LOCALE='en'`, `SUPPORTED_LOCALES=['en','pt']`, `LOCALE_DISPLAY_NAMES` (endónimos das choices de `/config language`). | `i18n/catalog` |
+| `i18n/index.ts` | `t(key, locale, params)` — tradução pura da UI com fallback (`locale` pedido → `en` → própria `key`) e interpolação de `{param}`. `DEFAULT_LOCALE='en'`, `SUPPORTED_LOCALES` (35 locales de UI, ver `i18n/index.ts` + `i18n/locales/*.ts`), `LOCALE_DISPLAY_NAMES` (endónimos das choices de `/config language`). | `i18n/catalog` |
 | `i18n/catalog.ts` | Catálogo de strings da UI por chave, com `en` (base) e `pt`. | — |
 | `textCleaning/clean.ts` | Funções puras de limpeza: URL→"link", menções `@id`/`#id`→nome, remover code blocks, colapsar repetições, truncar a `maxChars`. **Strip de emoji alargado**: pictograma base + componentes zero-width (ZWJ `U+200D`, VS16 `U+FE0F`, keycap `U+20E3`) + regional indicators (bandeiras). Nomes resolvidos via callbacks. | — |
 | `textCleaning/abbreviations.ts` | `expandAbbreviations(text)`: expande gírias/abreviaturas de chat **só inglesas** (ex. `btw`→"by the way") para o TTS soar natural. Dicionário **EN-only, auditado anti-colisão** (cada chave re-vetada contra palavras comuns das línguas latinas suportadas), aplicado em **QUALQUER** língua (um "brb" é "brb" em qualquer chat — sem argumento de língua). Match por fronteira de palavra `\p{L}\p{N}`. `isAllEnglishAbbrev(text)`: true se todos os tokens (ignorando pontuação envolvente) forem chaves do dict — usado para `forceLang='eng'`. | — |
@@ -90,7 +90,7 @@ Cada pasta de `src/` e a sua responsabilidade (o que está realmente no código)
 | `games/types.ts` | `Clock` (relógio + timers **injetáveis**, `systemClock`; testes deterministas), `GameContext` (`say`/`send`/`t`/`after`/`award`/`end` + `seed`/`locale`/`defaultVoice`), `Game`, `GameDefinition`, `GameEnv`. | — |
 | `games/quizGame.ts` | Base `QuizGame` dos 7 jogos "voz → 1º a acertar" (loop de N rondas, timeout com **guarda de ronda**, placar local, resumo final `game.finish.*`). Cada jogo concreto só implementa `prepare`/`makeRound`/`emptyMessage`. | `games/types` |
 | `games/finish.ts` | `bump`/`sendStandings`: placar partilhado pelos jogos que **não** assentam no `QuizGame` (Reflexos, Vozen Diz). | `games/types` |
-| `games/*.ts` | Os 14 jogos: `guessLanguage`, `math`, `skipCount`, `spelling`, `spellOut`, `fastSpeech`, `accentSwap` (voz, sobre `QuizGame`); `reflexes`, `vozenSays`, `roulette` (timing/one-shot); `hangman`, `wordle`, `tictactoe`, `chess` (tabuleiro, texto — `chess` é 💎 Premium, `GameDefinition.premium`, tabuleiro em **application emojis** cburnett via `games/boardEmojis.ts` carregados no `ClientReady` para `GameEnv.boardEmojis`, com fallback ASCII; assets em `assets/chess/`, upload one-off via `tools/upload-app-emojis.mjs`; `wordle` desenha a grelha em tiles-emoji A–Z coloridos com fallback ANSI). Conteúdo *seeded* em `games/content/*`. | `games/*`, `content` |
+| `games/*.ts` | Os 16 jogos: `guessLanguage`, `math`, `skipCount`, `spelling`, `spellOut`, `fastSpeech`, `accentSwap` (voz, sobre `QuizGame`); `reflexes`, `vozenSays`, `roulette` (timing/one-shot); `hangman`, `wordle`, `tictactoe`, `chess` (tabuleiro, texto — `chess` é 💎 Premium, `GameDefinition.premium`, tabuleiro em **application emojis** cburnett via `games/boardEmojis.ts` carregados no `ClientReady` para `GameEnv.boardEmojis`, com fallback ASCII; assets em `assets/chess/`, upload one-off via `tools/upload-app-emojis.mjs`; `wordle` desenha a grelha em tiles-emoji A–Z coloridos com fallback ANSI). Conteúdo *seeded* em `games/content/*`. | `games/*`, `content` |
 | `games/index.ts` | Registo `GAME_DEFS` (16 jogos, incl. Heads or Tails) + `gameById`/`filterGameChoices` (autocomplete com nomes na língua do utilizador). Adicionar um jogo = criar o ficheiro e listá-lo aqui. `/game play` SEM jogo mostra um select menu (beginner-friendly). | todos os jogos |
 | `commands/handlers/personal.ts` | Ferramentas pessoais: `/pronunciation add\|remove\|list` (dicionário individual, `add` vazio abre um MODAL) e `/randomizer` (sorteio falado: `amount` 2–5 → modal, `options` csv, ou select do nº quando corrido vazio; fala via `speakRawText`). | `store/pronunciation`, `store/premium`, `handlers/core` |
 | `store/gameScore.ts` | Leaderboard SQLite (tabela `game_score`): `addPoints`/`addWin`/`persistGameScores` (transação: soma pontos + `+1 vitória` a quem mais pontuou), `getLeaderboard`/`getUserScore`/`getUserRank`. | `db` |
@@ -124,7 +124,7 @@ default-voice, **language**, show, reset, + subgrupos `blockword` e `pronunciati
 
 ### Minijogos (`/game`)
 
-**15 jogos** de grupo, geridos pelo `GameManager` (`src/games/`): **1 jogo ativo por
+**16 jogos** de grupo, geridos pelo `GameManager` (`src/games/`): **1 jogo ativo por
 guild** de cada vez. O comando `/game play <jogo>` arranca (autocomplete com os nomes
 na língua de quem invoca; jogos de **voz** exigem o bot numa call — `needsVoice`),
 `/game stop` pára, `/game list` lista, `/game leaderboard` mostra o top do servidor e
@@ -156,7 +156,7 @@ partida com vencedor, o Vozen anuncia-o **em voz alta** (`announceWinner`, chave
 de tabuleiro sem voz).
 
 A **interface está em inglês por defeito** (`guild_config.locale='en'`); cada guild
-pode trocar com `/config language` (`en`/`pt`). Todo o texto de resposta passa por
+pode trocar com `/config language` (35 locales de UI). Todo o texto de resposta passa por
 `t(key, locale, params)` com `locale = localeFor(deps, guildId)` (default `'en'`,
 inclusive em DMs).
 
@@ -286,12 +286,12 @@ da voz guardada do utilizador, senão é **sempre** `defaultSpeed` (`DEFAULT_SPE
   traduzida por `t(key, locale, params)`; `en` é a base e o default (`guild_config.locale`
   arranca em `'en'`). A cadeia de resolução é `locale pedido → en → própria key`, e os
   `{param}` ausentes ficam intactos — nenhuma chave em falta rebenta a resposta. Hoje
-  `SUPPORTED_LOCALES = ['en','pt']`; adicionar um locale a esse array **sem** o mapear
+  `SUPPORTED_LOCALES` (35 locales de UI); adicionar um locale a esse array **sem** o mapear
   em `LOCALE_DISPLAY_NAMES` é erro de compilação (mapas nunca dessincronizam em silêncio).
   Nota: o idioma da **voz/TTS** é independente da língua da **interface** e não passa
   pelo i18n (`LOCALE_NAMES`/`modelDisplayName` em `voiceMap.ts` são um mapa distinto).
 
-- **(h) Multi-segmento multi-língua atrás de flag (default OFF).** `selectEngine` é uma
+- **(h) Multi-segmento multi-língua atrás de flag (default ON — `MULTILINGUAL_SEGMENTS`).** `selectEngine` é uma
   função **pura** que, só com `multilingualSegments` ON, embrulha o motor base num
   `MultiSegmentEngine`; com a flag OFF devolve o base por identidade (`===`), pelo que o
   caminho de síntese fica byte-a-byte o de hoje (voz única para a frase). O
@@ -424,7 +424,7 @@ Estes cinco pontos são requisitos de correção do `GuildVoicePlayer`, não oti
   por run de script (Latin/Cyrillic/CJK/Arabic). Duas línguas do **mesmo script** na
   mesma frase (ex. inglês + francês, ambos Latin) não são separadas de forma fiável — o
   texto tende a ficar num só segmento com a língua dominante. Além disso a feature está
-  atrás da flag `MULTILINGUAL_SEGMENTS` (default OFF) e a síntese real depende de
+  atrás da flag `MULTILINGUAL_SEGMENTS` (default ON) e a síntese real depende de
   verificação ao vivo.
 - **`cym`/`isl`/`ltz` dormentes na deteção.** `LANG_TO_PREFIX` mapeia galês, islandês e
   luxemburguês, mas o **franc v5** não os emite (sem modelo de trigramas), pelo que hoje
