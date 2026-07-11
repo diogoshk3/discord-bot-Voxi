@@ -47,7 +47,7 @@
       href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/main-v22.css" />
+    <link rel="stylesheet" href="css/main-v23.css" />
 
     <!-- FAQ structured data (Google rich results). Mantém em sincronia com
          window.VOZEN_FAQ (js/i18n.js) — o JSON-LD tem de ser ESTÁTICO porque os
@@ -423,77 +423,58 @@
         <div class="wrap">
           <header class="head reveal">
             <span class="eyebrow eyebrow--amber" data-i18n="price.eyebrow">Pricing</span>
-            <h2 data-i18n="price.title">Free core. Fair Premium.</h2>
-            <p data-i18n="price.sub">Everything Vozen does today stays free — forever. Premium adds the extras that cost us real compute.</p>
+            <h2 data-i18n="price.choose.title">Choose who gets the upgrade.</h2>
+            <p data-i18n="price.choose.sub">Keep the core free, upgrade yourself, or unlock Premium for everyone in your server.</p>
           </header>
           <!-- O login/estado da conta vivem agora numa página dedicada (account.html),
                acessível pelo botão "Log in" da navbar. -->
-          <div class="bill-toggle reveal" role="group" aria-label="Billing period">
-            <button type="button" class="bill-toggle__btn is-active" data-bill="month" data-i18n="price.billMonthly">Monthly</button>
-            <button type="button" class="bill-toggle__btn" data-bill="year">
-              <span data-i18n="price.billYearly">Yearly</span>
-              <span class="bill-toggle__save">−20%</span>
-            </button>
+          <div class="price-toolbar reveal">
+            <p data-i18n="price.sub">Everything Vozen does today stays free — forever. Premium adds the extras that cost us real compute.</p>
+            <div class="bill-toggle" role="group" aria-label="Billing period">
+              <button type="button" class="bill-toggle__btn is-active" data-bill="month" data-i18n="price.billMonthly">Monthly</button>
+              <button type="button" class="bill-toggle__btn" data-bill="year">
+                <span data-i18n="price.billYearly">Yearly</span>
+                <span class="bill-toggle__save">−20%</span>
+              </button>
+            </div>
           </div>
           <div class="pricing">
-            <div class="price-card reveal">
-              <h3 data-i18n="price.free.name">Free</h3>
-              <div class="price-card__price">
-                <b data-i18n="price.free.price">€0</b>
-                <span data-i18n="price.free.per">forever</span>
+            <article class="free-plan reveal">
+              <div class="free-plan__identity">
+                <span class="free-plan__mark" aria-hidden="true">V</span>
+                <div>
+                  <span class="plan-kicker" data-i18n="price.free.per">forever</span>
+                  <h3 data-i18n="price.free.name">Free</h3>
+                </div>
               </div>
-              <ul class="ticks">
+              <div class="free-plan__price" data-i18n="price.free.price">€0</div>
+              <p data-i18n="price.free.pitch">All the essentials. No card, no trial.</p>
+              <ul class="free-plan__highlights" aria-label="Free plan highlights">
                 <li data-i18n="price.m.1">38 voices</li>
                 <li data-i18n="price.m.2">35 languages</li>
                 <li data-i18n="price.m.3">Auto-read your channel</li>
-                <li data-i18n="price.m.4">Jokes &amp; greetings</li>
-                <li data-i18n="price.m.5">13 of the 16 games</li>
-                <li data-i18n="price.m.6">Robot &amp; Echo voice effects</li>
-                <li data-i18n="price.m.7">Weekly leaderboard</li>
-                <li data-i18n="price.m.20">Daily talk streaks</li>
-                <li data-i18n="price.m.8">Full admin kit</li>
-                <li class="no" data-i18n="price.m.9">All 8 voice effects (deep, demon, radio…)</li>
-                <li class="no" data-i18n="price.m.10">Clone your voice (/voice clone)</li>
-                <li class="no" data-i18n="price.m.11">Word Chain game</li>
-                <li class="no" data-i18n="price.m.12">Wordle game</li>
-                <li class="no" data-i18n="price.m.13">Chess game</li>
-                <li class="no" data-i18n="price.m.14">/rizz</li>
-                <li class="no" data-i18n="price.m.15">50 personal pronunciations</li>
-                <li class="no" data-i18n="price.m.19">50 server pronunciations</li>
-                <li class="no" data-i18n="price.m.16">In the call 24/7</li>
-                <li class="no" data-i18n="price.m.17">Goes with you to any server</li>
-                <li class="no" data-i18n="price.m.18">Works for everyone in the server</li>
               </ul>
-            </div>
-            <div class="price-card price-card--plus reveal">
-              <span class="price-card__badge price-card__badge--plus">✦ <span data-i18n="price.plus.badge">PERSONAL</span></span>
+              <a class="free-plan__cta btn btn--ghost btn--sm" href="https://discord.com/oauth2/authorize?client_id=1523826014935842997&amp;permissions=3148800&amp;scope=bot%20applications.commands" target="_blank" rel="noopener" data-i18n="cta.add">Add to Discord</a>
+            </article>
+
+            <div class="paid-plans">
+            <article class="price-card price-card--plus reveal">
+              <div class="price-card__topline">
+                <span class="price-card__badge price-card__badge--plus"><span aria-hidden="true">✦</span> <span data-i18n="price.plus.badge">PERSONAL</span></span>
+              </div>
               <h3 data-i18n="price.plus.name">Vozen Plus</h3>
+              <p class="price-card__pitch" data-i18n="price.plus.pitch">Your premium voice perks follow you into every server.</p>
               <div class="price-card__price">
                 <span class="price-line"><b><span class="amt amt--m">€1.99</span><span class="amt amt--y">€18.99</span></b><s class="was was--y">€23.88</s></span>
                 <span class="per per--m" data-i18n="price.plus.per">/ month · per user</span>
                 <span class="per per--y" data-i18n="price.plus.perYear">/ year · per user</span>
               </div>
-              <ul class="ticks">
-                <li data-i18n="price.m.1">38 voices</li>
-                <li data-i18n="price.m.2">35 languages</li>
-                <li data-i18n="price.m.3">Auto-read your channel</li>
-                <li data-i18n="price.m.4">Jokes &amp; greetings</li>
-                <li data-i18n="price.m.5">13 of the 16 games</li>
-                <li data-i18n="price.m.6">Robot &amp; Echo voice effects</li>
-                <li data-i18n="price.m.7">Weekly leaderboard</li>
-                <li data-i18n="price.m.20">Daily talk streaks</li>
-                <li data-i18n="price.m.8">Full admin kit</li>
+              <ul class="ticks price-card__highlights">
                 <li data-i18n="price.m.9">All 8 voice effects (deep, demon, radio…)</li>
                 <li data-i18n="price.m.10">Clone your voice (/voice clone)</li>
-                <li data-i18n="price.m.11">Word Chain game</li>
-                <li data-i18n="price.m.12">Wordle game</li>
-                <li data-i18n="price.m.13">Chess game</li>
-                <li data-i18n="price.m.14">/rizz</li>
                 <li data-i18n="price.m.15">50 personal pronunciations</li>
                 <li data-i18n="price.m.17">Goes with you to any server</li>
-                <li class="no" data-i18n="price.m.16">In the call 24/7</li>
-                <li class="no" data-i18n="price.m.19">50 server pronunciations</li>
-                <li class="no" data-i18n="price.m.18">Works for everyone in the server</li>
+                <li data-i18n="price.m.11">Word Chain game</li>
               </ul>
               <p class="price-card__note" data-i18n="price.plus.note">€18.99/year (save ~20%) · buy on Ko-fi</p>
               <a class="price-card__buy js-kofi" href="https://ko-fi.com/rexy00" target="_blank" rel="noopener">Get Vozen Plus</a>
@@ -501,10 +482,14 @@
                 <span data-i18n="price.idNote">⚠️ Paste your Discord ID in the Ko-fi checkout message. That's what activates your plan instantly.</span>
                 <a href="/account" data-i18n="price.idNoteLink">Copy your ID →</a>
               </p>
-            </div>
-            <div class="price-card price-card--pro reveal">
-              <span class="price-card__badge">💎 <span data-i18n="price.pro.badge">PREMIUM</span></span>
+            </article>
+            <article class="price-card price-card--pro reveal">
+              <div class="price-card__topline">
+                <span class="price-card__badge"><span aria-hidden="true">◆</span> <span data-i18n="price.pro.badge">PREMIUM</span></span>
+                <span class="price-card__recommended" data-i18n="price.recommended">BEST FOR SERVERS</span>
+              </div>
               <h3 data-i18n="price.pro.name">Vozen Premium</h3>
+              <p class="price-card__pitch" data-i18n="price.pro.pitch">Unlock the full Vozen experience for everyone in your community.</p>
               <!-- Toggle de licenças: mesma tier, muda só o nº de servidores (e o preço). A
                    classe .is-10 no cartão faz o CSS trocar preço/período/riscado/deal/nota;
                    as variantes --s10 reutilizam as chaves i18n price.max.* (já em 10 línguas). -->
@@ -519,28 +504,15 @@
                 <span class="per per--y per--s3" data-i18n="price.pro.perYear">/ year · 3 servers</span>
                 <span class="per per--y per--s10" data-i18n="price.max.perYear">/ year · 10 servers</span>
               </div>
-              <p class="price-card__deal deal--s3" data-i18n="price.pro.deal">🎁 Three servers. One subscription.</p>
-              <p class="price-card__deal deal--s10" data-i18n="price.max.deal">🎁 Ten servers. One subscription.</p>
-              <ul class="ticks ticks--amber">
-                <li data-i18n="price.m.1">38 voices</li>
-                <li data-i18n="price.m.2">35 languages</li>
-                <li data-i18n="price.m.3">Auto-read your channel</li>
-                <li data-i18n="price.m.4">Jokes &amp; greetings</li>
-                <li data-i18n="price.m.5">13 of the 16 games</li>
-                <li data-i18n="price.m.6">Robot &amp; Echo voice effects</li>
-                <li data-i18n="price.m.7">Weekly leaderboard</li>
-                <li data-i18n="price.m.20">Daily talk streaks</li>
-                <li data-i18n="price.m.8">Full admin kit</li>
+              <p class="price-card__deal deal--s3" data-i18n="price.pro.deal">Three servers. One subscription.</p>
+              <p class="price-card__deal deal--s10" data-i18n="price.max.deal">Ten servers. One subscription.</p>
+              <ul class="ticks ticks--amber price-card__highlights">
+                <li data-i18n="price.m.18">Works for everyone in the server</li>
                 <li data-i18n="price.m.9">All 8 voice effects (deep, demon, radio…)</li>
                 <li data-i18n="price.m.10">Clone your voice (/voice clone)</li>
-                <li data-i18n="price.m.11">Word Chain game</li>
-                <li data-i18n="price.m.12">Wordle game</li>
-                <li data-i18n="price.m.13">Chess game</li>
-                <li data-i18n="price.m.14">/rizz</li>
-                <li data-i18n="price.m.15">50 personal pronunciations</li>
                 <li data-i18n="price.m.19">50 server pronunciations</li>
                 <li data-i18n="price.m.16">In the call 24/7</li>
-                <li data-i18n="price.m.18">Works for everyone in the server</li>
+                <li data-i18n="price.m.11">Word Chain game</li>
               </ul>
               <p class="price-card__note note--s3" data-i18n="price.pro.note">€37.99/year (save ~20%) · buy on Ko-fi</p>
               <p class="price-card__note note--s10" data-i18n="price.max.note">€75.99/year (save ~20%) · buy on Ko-fi</p>
@@ -549,7 +521,45 @@
                 <span data-i18n="price.idNote">⚠️ Paste your Discord ID in the Ko-fi checkout message. That's what activates your plan instantly.</span>
                 <a href="/account" data-i18n="price.idNoteLink">Copy your ID →</a>
               </p>
+            </article>
             </div>
+
+            <section class="plan-comparison reveal" aria-labelledby="planComparisonTitle">
+              <div class="plan-comparison__head">
+                <div>
+                  <span class="plan-kicker" data-i18n="price.eyebrow">Pricing</span>
+                  <h3 id="planComparisonTitle" data-i18n="price.compare.title">See every difference</h3>
+                  <p data-i18n="price.compare.sub">The complete plan comparison, without surprises.</p>
+                </div>
+                <span class="plan-comparison__checkout" data-i18n="price.checkout">Secure checkout on Ko-fi</span>
+              </div>
+              <div class="plan-table-wrap" tabindex="0" aria-label="Plan comparison table">
+                <table class="plan-table">
+                  <thead>
+                    <tr>
+                      <th scope="col" data-i18n="nav.features">Features</th>
+                      <th scope="col" data-i18n="price.free.name">Free</th>
+                      <th scope="col" data-i18n="price.plus.name">Vozen Plus</th>
+                      <th scope="col" data-i18n="price.pro.name">Vozen Premium</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><th scope="row" data-i18n="price.m.1">38 voices</th><td class="has">✓</td><td class="has">✓</td><td class="has">✓</td></tr>
+                    <tr><th scope="row" data-i18n="price.m.2">35 languages</th><td class="has">✓</td><td class="has">✓</td><td class="has">✓</td></tr>
+                    <tr><th scope="row" data-i18n="price.m.3">Auto-read your channel</th><td class="has">✓</td><td class="has">✓</td><td class="has">✓</td></tr>
+                    <tr><th scope="row" data-i18n="price.m.8">Full admin kit</th><td class="has">✓</td><td class="has">✓</td><td class="has">✓</td></tr>
+                    <tr><th scope="row" data-i18n="price.m.9">All 8 voice effects</th><td class="has-not">—</td><td class="has">✓</td><td class="has">✓</td></tr>
+                    <tr><th scope="row" data-i18n="price.m.10">Clone your voice</th><td class="has-not">—</td><td class="has">✓</td><td class="has">✓</td></tr>
+                    <tr><th scope="row" data-i18n="price.m.11">Word Chain game</th><td class="has-not">—</td><td class="has">✓</td><td class="has">✓</td></tr>
+                    <tr><th scope="row" data-i18n="price.m.15">50 personal pronunciations</th><td class="has-not">—</td><td class="has">✓</td><td class="has">✓</td></tr>
+                    <tr><th scope="row" data-i18n="price.m.17">Goes with you to any server</th><td class="has-not">—</td><td class="has">✓</td><td class="has-not">—</td></tr>
+                    <tr><th scope="row" data-i18n="price.m.19">50 server pronunciations</th><td class="has-not">—</td><td class="has-not">—</td><td class="has has--premium">✓</td></tr>
+                    <tr><th scope="row" data-i18n="price.m.16">In the call 24/7</th><td class="has-not">—</td><td class="has-not">—</td><td class="has has--premium">✓</td></tr>
+                    <tr><th scope="row" data-i18n="price.m.18">Works for everyone in the server</th><td class="has-not">—</td><td class="has-not">—</td><td class="has has--premium">✓</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
           </div>
         </div>
       </section>
@@ -612,7 +622,7 @@
       </div>
     </footer>
 
-    <script defer src="js/i18n-v19.js"></script>
+    <script defer src="js/i18n-v20.js"></script>
     <script defer src="js/main-v25.js"></script>
   </body>
 </html>
