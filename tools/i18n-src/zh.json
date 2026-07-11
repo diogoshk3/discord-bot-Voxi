@@ -141,7 +141,8 @@
     "price.m.17": "走到哪都跟着你",
     "price.m.18": "服务器里所有人可用",
     "price.idNote": "⚠️ 在 Ko-fi 结账留言里填入你的 Discord ID，这样才能立即激活你的方案。",
-    "price.idNoteLink": "复制我的 ID →"
+    "price.idNoteLink": "复制我的 ID →",
+    "price.m.19": "50 个服务器发音"
   },
   "commands": {
     "general": [
@@ -186,7 +187,7 @@
       ["/config autoread", "開啟／關閉自動朗讀"],
       ["/config blockword", "管理封鎖清單"],
       ["/config pronunciation", "自訂發音"],
-      ["/serverpronunciation", "全伺服器共用的發音（管理員，上限 3）"]
+      ["/serverpronunciation", "全服务器发音（管理员，3 个 · Premium 50 个）"]
     ]
   },
   "faq": [

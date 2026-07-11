@@ -141,7 +141,8 @@
     "price.m.17": "يرافقك في أي خادم",
     "price.m.18": "يعمل للجميع في الخادم",
     "price.idNote": "⚠️ ضع معرّف Discord في رسالة الشراء على Ko-fi. هذا ما يفعّل خطتك فورًا.",
-    "price.idNoteLink": "انسخ معرّفي →"
+    "price.idNoteLink": "انسخ معرّفي →",
+    "price.m.19": "50 نطقًا للخادم"
   },
   "commands": {
     "general": [
@@ -186,7 +187,7 @@
       ["/config autoread", "تشغيل/إيقاف القراءة التلقائية"],
       ["/config blockword", "إدارة قائمة الحظر"],
       ["/config pronunciation", "نطق مخصّص"],
-      ["/serverpronunciation", "نطق على مستوى الخادم للجميع (مشرف، بحد أقصى 3)"]
+      ["/serverpronunciation", "نطق لكامل الخادم (مشرف، 3 · 50 مع Premium)"]
     ]
   },
   "faq": [

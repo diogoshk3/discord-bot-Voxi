@@ -141,7 +141,8 @@
     "price.m.17": "Goes with you to any server",
     "price.m.18": "Works for everyone in the server",
     "price.idNote": "⚠️ Paste your Discord ID in the Ko-fi checkout message. That's what activates your plan instantly.",
-    "price.idNoteLink": "Copy your ID →"
+    "price.idNoteLink": "Copy your ID →",
+    "price.m.19": "50 server pronunciations"
   },
   "commands": {
     "general": [
@@ -186,7 +187,10 @@
       ["/config autoread", "Turn auto-read on/off"],
       ["/config blockword", "Manage the blocklist"],
       ["/config pronunciation", "Custom pronunciations"],
-      ["/serverpronunciation", "Server-wide pronunciations for everyone (admin, max 3)"]
+      [
+        "/serverpronunciation",
+        "Server-wide pronunciations for everyone (admin, 3 · 50 with Premium)"
+      ]
     ]
   },
   "faq": [

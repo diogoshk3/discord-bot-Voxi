@@ -141,7 +141,8 @@
     "price.m.17": "Begleitet dich auf jeden Server",
     "price.m.18": "Für alle auf dem Server",
     "price.idNote": "⚠️ Gib deine Discord-ID in die Ko-fi-Kaufnachricht ein. Das aktiviert deinen Plan sofort.",
-    "price.idNoteLink": "Meine ID kopieren →"
+    "price.idNoteLink": "Meine ID kopieren →",
+    "price.m.19": "50 Server-Aussprachen"
   },
   "commands": {
     "general": [
@@ -186,7 +187,7 @@
       ["/config autoread", "Auto-Vorlesen ein-/ausschalten"],
       ["/config blockword", "Die Sperrliste verwalten"],
       ["/config pronunciation", "Eigene Aussprachen"],
-      ["/serverpronunciation", "Serverweite Aussprachen für alle (Admin, max. 3)"]
+      ["/serverpronunciation", "Aussprachen für den ganzen Server (Admin, 3 · 50 mit Premium)"]
     ]
   },
   "faq": [

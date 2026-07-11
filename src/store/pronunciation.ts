@@ -7,14 +7,15 @@ import { cached, invalidate } from './cache';
 //  • PESSOAL (/pronunciation, tabela pronunciation_user): só afeta as mensagens do
 //    próprio autor; global (segue o user); limite 3 Free / 50 Premium.
 //  • SERVIDOR (/serverpronunciation, tabela pronunciation): afeta TODA a guild (admin);
-//    limite fixo 3. No pipeline aplica-se a PESSOAL primeiro (o termo do user ganha) e
-//    depois a de servidor.
+//    limite 3 Free / 50 com a guild Premium. No pipeline aplica-se a PESSOAL primeiro
+//    (o termo do user ganha) e depois a de servidor.
 
 /** Limites de pronúncias pessoais por plano. */
 export const USER_PRON_LIMIT_FREE = 3;
 export const USER_PRON_LIMIT_PREMIUM = 50;
-/** Limite (fixo) de pronúncias do SERVIDOR. */
+/** Limites de pronúncias do SERVIDOR por plano da guild. */
 export const SERVER_PRON_LIMIT = 3;
+export const SERVER_PRON_LIMIT_PREMIUM = 50;
 
 export type AddPronResult = 'ok' | 'limit';
 

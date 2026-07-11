@@ -9,6 +9,7 @@ import { handleInteraction } from '../src/commands/index';
 import type { BotDeps } from '../src/bot/deps';
 import { initDb } from '../src/store/db';
 import { getServerPronunciations } from '../src/store/pronunciation';
+import { grantGuildPremium } from '../src/store/premium';
 import type Database from 'better-sqlite3';
 
 const GUILD = 'g-spron';
@@ -92,6 +93,19 @@ describe('/serverpronunciation — admin, cap 3, para toda a guild', () => {
     await handleInteraction(i4 as any, makeDeps(db));
     expect(i4.replies.join('\n')).toMatch(/limit|limite|3/i);
     expect(getServerPronunciations(db, GUILD)).toHaveLength(3);
+  });
+
+  it('guild Premium: cap sobe para 50 (a 4.ª entrada passa, a 51.ª é bloqueada)', async () => {
+    grantGuildPremium(db, GUILD, 30, 'test', Date.now());
+    for (let n = 1; n <= 50; n++) {
+      const i = makeInteraction({ sub: 'add', optionsMap: { term: `t${n}`, say: `s${n}` } });
+      await handleInteraction(i as any, makeDeps(db));
+    }
+    expect(getServerPronunciations(db, GUILD)).toHaveLength(50);
+    const i51 = makeInteraction({ sub: 'add', optionsMap: { term: 'extra', say: 'x' } });
+    await handleInteraction(i51 as any, makeDeps(db));
+    expect(i51.replies.join('\n')).toMatch(/limit|limite|50/i);
+    expect(getServerPronunciations(db, GUILD)).toHaveLength(50);
   });
 
   it('remove um termo existente', async () => {

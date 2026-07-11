@@ -141,7 +141,8 @@
     "price.m.17": "Her sunucuya seninle gelir",
     "price.m.18": "Sunucudaki herkes için çalışır",
     "price.idNote": "⚠️ Ko-fi ödeme mesajına Discord ID’ni yaz. Planını anında etkinleştiren budur.",
-    "price.idNoteLink": "ID’mi kopyala →"
+    "price.idNoteLink": "ID’mi kopyala →",
+    "price.m.19": "50 sunucu telaffuzu"
   },
   "commands": {
     "general": [
@@ -186,7 +187,7 @@
       ["/config autoread", "Otomatik okumayı aç/kapat"],
       ["/config blockword", "Engel listesini yönet"],
       ["/config pronunciation", "Özel telaffuzlar"],
-      ["/serverpronunciation", "Herkes için sunucu telaffuzları (yönetici, en fazla 3)"]
+      ["/serverpronunciation", "Tüm sunucu için telaffuzlar (yönetici, 3 · Premium ile 50)"]
     ]
   },
   "faq": [

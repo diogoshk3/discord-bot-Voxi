@@ -141,7 +141,8 @@
     "price.m.17": "Te acompaña a cualquier servidor",
     "price.m.18": "Funciona para todos en el servidor",
     "price.idNote": "⚠️ Pon tu ID de Discord en el mensaje de compra de Ko-fi. Eso activa tu plan al instante.",
-    "price.idNoteLink": "Copiar mi ID →"
+    "price.idNoteLink": "Copiar mi ID →",
+    "price.m.19": "50 pronunciaciones del servidor"
   },
   "commands": {
     "general": [
@@ -186,7 +187,7 @@
       ["/config autoread", "Activa o desactiva la lectura automática"],
       ["/config blockword", "Gestiona la lista de bloqueo"],
       ["/config pronunciation", "Pronunciaciones personalizadas"],
-      ["/serverpronunciation", "Pronunciaciones del servidor para todos (admin, máx. 3)"]
+      ["/serverpronunciation", "Pronunciaciones para todo el servidor (admin, 3 · 50 con Premium)"]
     ]
   },
   "faq": [

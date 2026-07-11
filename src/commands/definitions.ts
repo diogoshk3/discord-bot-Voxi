@@ -581,10 +581,10 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
     .addSubcommand((s) => s.setName('list').setDescription('List your personal pronunciations'))
     .toJSON(),
   // /serverpronunciation — dicionário de pronúncia do SERVIDOR (admin): aplica-se às
-  // mensagens de TODA a gente. Limite fixo 3. `add` sem opções abre um modal.
+  // mensagens de TODA a gente. Limite 3 Free / 50 Premium. `add` sem opções abre um modal.
   new SlashCommandBuilder()
     .setName('serverpronunciation')
-    .setDescription('Server-wide pronunciations for everyone (admin, max 3)')
+    .setDescription('Server-wide pronunciations for everyone (admin, 3 · 50 with Premium)')
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addSubcommand((s) =>
       s

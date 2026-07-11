@@ -27,6 +27,7 @@ import {
   USER_PRON_LIMIT_FREE,
   USER_PRON_LIMIT_PREMIUM,
   SERVER_PRON_LIMIT,
+  SERVER_PRON_LIMIT_PREMIUM,
 } from '../../store/pronunciation';
 import { isUserPremium, isGuildPremium } from '../../store/premium';
 import { t } from '../../i18n/index';
@@ -148,7 +149,14 @@ async function applyAddPronunciation(
   await send(t('pron.set', locale, { term, replacement }));
 }
 
-// ── /serverpronunciation (admin, cap fixo 3, para toda a guild) ───────────────────────
+// ── /serverpronunciation (admin, cap 3 Free / 50 Premium, para toda a guild) ──────────
+
+/** Limite de pronúncias do SERVIDOR: 50 com a guild Premium, 3 caso contrário. */
+function serverPronLimit(deps: BotDeps, guildId: string): number {
+  return isGuildPremium(deps.db, guildId, Date.now())
+    ? SERVER_PRON_LIMIT_PREMIUM
+    : SERVER_PRON_LIMIT;
+}
 
 export async function handleServerPronunciation(
   i: ChatInputCommandInteraction,
@@ -169,7 +177,7 @@ export async function handleServerPronunciation(
       : t('spron.listEmpty', locale);
     await reply(
       i,
-      `${t('spron.listHeader', locale, { count: dict.length, limit: SERVER_PRON_LIMIT })}\n${out}`,
+      `${t('spron.listHeader', locale, { count: dict.length, limit: serverPronLimit(deps, i.guildId!) })}\n${out}`,
     );
     return;
   }
@@ -229,7 +237,7 @@ export async function handleServerPronunciation(
   );
 }
 
-/** Aplica o add de servidor (validação + cap 3) e responde à interação dada. */
+/** Aplica o add de servidor (validação + cap 3/50) e responde à interação dada. */
 async function applyAddServerPron(
   i: ChatInputCommandInteraction | ModalSubmitInteraction,
   deps: BotDeps,
@@ -245,9 +253,10 @@ async function applyAddServerPron(
     await send(t('pron.empty', locale));
     return;
   }
-  const res = addServerPronunciation(deps.db, i.guildId!, term, replacement, SERVER_PRON_LIMIT);
+  const limit = serverPronLimit(deps, i.guildId!);
+  const res = addServerPronunciation(deps.db, i.guildId!, term, replacement, limit);
   if (res === 'limit') {
-    await send(t('spron.limitHit', locale, { limit: SERVER_PRON_LIMIT }));
+    await send(t('spron.limitHit', locale, { limit }));
     return;
   }
   await send(t('spron.set', locale, { term, replacement }));

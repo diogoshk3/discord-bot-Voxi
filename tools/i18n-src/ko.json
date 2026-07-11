@@ -141,7 +141,8 @@
     "price.m.17": "어느 서버든 함께",
     "price.m.18": "서버의 모든 사람에게 적용",
     "price.idNote": "⚠️ Ko-fi 결제 메시지에 Discord ID를 입력하세요. 그러면 플랜이 즉시 활성화됩니다.",
-    "price.idNoteLink": "내 ID 복사 →"
+    "price.idNoteLink": "내 ID 복사 →",
+    "price.m.19": "서버 발음 50개"
   },
   "commands": {
     "general": [
@@ -186,7 +187,7 @@
       ["/config autoread", "자동 읽기 켜기/끄기"],
       ["/config blockword", "차단 목록 관리"],
       ["/config pronunciation", "사용자 지정 발음"],
-      ["/serverpronunciation", "서버 전체 공용 발음 (관리자, 최대 3개)"]
+      ["/serverpronunciation", "서버 전체 발음 (관리자, 3개 · Premium은 50개)"]
     ]
   },
   "faq": [
