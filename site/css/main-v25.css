@@ -1129,8 +1129,7 @@ body > *:not(.grain):not(.orbs):not(.nav) { position: relative; z-index: 2; }
 .plan-table tbody tr:hover { background: rgba(255, 255, 255, 0.025); }
 .plan-table .has { color: var(--aqua); }
 .plan-table .has--premium { color: var(--amber); }
-/* ✗ vermelho (mesmo tom da matriz dos cartões) para o que o plano NÃO inclui. */
-.plan-table .has-not { color: #ff5c5c; opacity: 0.85; }
+.plan-table .has-not { color: rgba(149, 156, 186, 0.42); }
 
 @media (max-width: 920px) {
   .price-toolbar { align-items: flex-start; }
