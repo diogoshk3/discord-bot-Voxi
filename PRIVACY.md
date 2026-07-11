@@ -64,6 +64,7 @@ Voice cloning (`/voice clone`, a Premium feature) is the **most sensitive** data
 - **Consent first.** You can record **your own** voice, or another person's voice **only after they grant explicit on-screen consent** — an Allow/Deny button that **only that person** can press. Without that "yes", nothing is recorded. `consent_at` records the moment of consent.
 - **Only the target is recorded.** Outside the recording window the bot is always `selfDeaf` (deafened); it uncovers its ears **only during the window** and records **only** the chosen person, never the rest of the channel. Afterwards it deafens again.
 - **Where it lives.** The sample is a `.wav` at `voice-clones/{user_id}-{timestamp}.wav` (next to the database); the `user_clone` table stores the path. The folder is local and deletable.
+- **Encrypted at rest.** If the operator sets `CLONE_KEY`, the sample file is **encrypted on disk** (AES-256-GCM) and only decrypted momentarily for synthesis. **The official public instance has this enabled.**
 - **Who controls it.** The sample is associated with whoever **ran the command** (that is the person who will speak with the voice), and it is that person who can delete it with `/voice clone delete` (removes the `.wav` and the row immediately).
 - **Synthesis.** The clone is generated **locally** (Python sidecar on the instance's machine) — the sample audio **is not sent anywhere external**.
 

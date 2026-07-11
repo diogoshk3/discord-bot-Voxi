@@ -84,11 +84,13 @@ violações ativas. Plano completo em `docs/PLAN-DISCORD-COMPLIANCE.md`. Deltas 
 - **Rot-guard de conformidade (NOVO).** As tabelas apagadas por purga/erase são listas
   explícitas com um teste (`tests/dataLifecycle.test.ts`) que FALHA se uma tabela nova com
   `guild_id`/`user_id` não for categorizada — mantém a purga/erase completas no futuro.
-- **Encriptação em repouso (ToS §5(c)) — LACUNA ABERTA.** O disco do VPS **não** é cifrado
-  (ext4 puro, verificado). A BD e os `.wav` de clones estão em claro. Plano e runbook de
-  incidentes em `docs/INCIDENT-RESPONSE.md` + COMPL·5; a migração da BD de produção precisa
-  de **aprovação explícita** do operador (é o passo mais arriscado). Alvo prioritário: os
-  `.wav` biométricos.
+- **Encriptação em repouso (ToS §5(c)) — clones CIFRADOS; BD em defer.** Os `.wav` de clone
+  (dado biométrico, o mais sensível) passam a ser cifrados em repouso com AES-256-GCM
+  (`tts/cloneCrypto`, testado); `CLONE_KEY` ativo em produção (verificado por round-trip).
+  Retrocompatível. **Ainda em claro:** a BD SQLite (Discord IDs, prefs, hashes de email) —
+  cifrá-la via SQLCipher é o passo mais arriscado do plano e fica em **defer deliberado**
+  (spike + backup + aprovação numa sessão dedicada). O disco do VPS não é cifrado ao nível
+  do volume (ext4 puro, verificado). Caveat: a `CLONE_KEY` vive no `.env` na mesma máquina.
 - **Regra permanente (NOVO).** `CLAUDE.md` tem uma secção "Discord compliance is mandatory"
   que toda a feature futura respeita.
 - **Portal (pendente do Diogo):** preencher Privacy/ToS URL; confirmar elegibilidade de

@@ -41,15 +41,15 @@ exigido pela lei.
 
 ## Reduzir o risco antes de acontecer (estado + plano)
 
-- **Encriptação em repouso (ToS §5(c)) — LACUNA.** O disco do VPS não é cifrado (verificado:
-  ext4 puro, sem LUKS). A BD e os `.wav` estão em claro. Plano (COMPL·5):
-  1. **Prioridade: cifrar os `.wav` de clones** (dado biométrico) — AES com chave em `.env`.
-  2. **BD:** avaliar `better-sqlite3-multiple-ciphers` (SQLCipher) como substituto drop-in —
-     **spike isolado primeiro**; a migração da BD de produção precisa de **backup + aprovação
-     explícita do operador** antes de correr (é o passo mais arriscado).
-  - **Caveat honesto:** com a chave (`DB_KEY`) no `.env` **na mesma máquina** que a BD, a
-    encriptação satisfia o requisito e protege contra roubo do disco/backup, mas **não**
-    contra quem já tem acesso root à máquina (a chave está ao lado dos dados). É uma camada,
-    não uma bala de prata.
+- **Encriptação em repouso (ToS §5(c)).** O disco do VPS não é cifrado ao nível do volume
+  (verificado: ext4 puro, sem LUKS). Estado:
+  1. **Clones `.wav` (dado biométrico) — FEITO.** Cifrados com AES-256-GCM (`tts/cloneCrypto`);
+     `CLONE_KEY` no `.env` de produção; round-trip verificado. Novos clones nascem cifrados.
+  2. **BD SQLite — em defer.** Avaliar `better-sqlite3-multiple-ciphers` (SQLCipher) como
+     substituto drop-in — **spike isolado primeiro**; a migração da BD de produção precisa de
+     **backup + aprovação explícita do operador** (é o passo mais arriscado do plano).
+  - **Caveat honesto:** com a chave (`CLONE_KEY`) no `.env` **na mesma máquina** que os
+    dados, a cifra protege contra roubo do disco/backup, mas **não** contra quem já tem root
+    (a chave está ao lado dos dados). É uma camada, não uma bala de prata.
 - **Já feito:** SSH só-chave, ufw deny-in, `.env`/`authorized_keys` a 600, APIs em loopback
   atrás do Caddy, `timingSafeEqual` no webhook, token do Ko-fi rodado, segredos nunca em git.
