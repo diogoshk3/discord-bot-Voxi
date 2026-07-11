@@ -455,17 +455,17 @@ body > *:not(.grain):not(.orbs):not(.nav) { position: relative; z-index: 2; }
           mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'/%3E%3C/svg%3E") center/13px no-repeat;
 }
 .ticks--amber li::before { background-color: var(--amber); box-shadow: 0 0 14px rgba(255, 194, 75, 0.6); }
-/* Ponto NÃO-incluído (matriz de preços): texto esbatido + marca ✗ sem brilho. Vem DEPOIS
-   da regra --amber para ganhar a esta em cartões âmbar (mesma especificidade). */
+/* Ponto NÃO-incluído (matriz de preços): texto esbatido + marca ✗ vermelha sem brilho. Vem
+   DEPOIS da regra --amber para ganhar a esta em cartões âmbar (mesma especificidade). */
 .ticks li.no { color: var(--text-2); }
 .ticks li.no::before,
 .ticks--amber li.no::before {
-  background-color: var(--text-2); box-shadow: none; opacity: 0.6;
+  background-color: #ff5c5c; box-shadow: none; opacity: 0.85;
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M19 6.4 17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12z'/%3E%3C/svg%3E") center/12px no-repeat;
           mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M19 6.4 17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12z'/%3E%3C/svg%3E") center/12px no-repeat;
 }
 /* Nota do Discord ID sob os botões de compra. */
-.price-card__idnote { margin: 12px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--text-2); }
+.price-card__idnote { margin: 10px 0 0; font-size: 12px; line-height: 1.5; color: var(--text-2); }
 .price-card__idnote a { color: var(--amber); font-weight: 600; white-space: nowrap; }
 
 .picker, .wordle {
@@ -967,7 +967,7 @@ body > *:not(.grain):not(.orbs):not(.nav) { position: relative; z-index: 2; }
 /* 3 cartões lado a lado; abaixo de ~920px empilham numa coluna. */
 @media (max-width: 920px) { .pricing { grid-template-columns: 1fr; max-width: 460px; } }
 .price-card {
-  position: relative; padding: 38px 24px; border-radius: var(--radius);
+  position: relative; padding: 30px 24px; border-radius: var(--radius);
   background: var(--glass); border: 1px solid var(--line); box-shadow: inset 0 1px 0 var(--hi);
   /* Coluna flex: os cartões esticam à mesma altura (grid) e a nota+botão fixam-se ao
      fundo (margin-top:auto na nota) → os botões de compra ficam todos ao mesmo nível,
@@ -977,12 +977,17 @@ body > *:not(.grain):not(.orbs):not(.nav) { position: relative; z-index: 2; }
 .price-card h3 { font-family: var(--f-body); font-size: 22px; font-weight: 700; margin-bottom: 4px; }
 /* Coluna: número grande em cima, período ("/ mês · por utilizador") numa linha PRÓPRIA por
    baixo — antes ficava ao lado e partia em duas linhas. */
-.price-card__price { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; margin: 4px 0 24px; }
+.price-card__price { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; margin: 4px 0 18px; }
 .price-card__price b { font-family: var(--f-display); font-weight: 800; font-size: 46px; color: var(--text-0); line-height: 1; }
 .price-card__price span { color: var(--text-2); font-size: 14px; }
-.price-card .ticks { gap: 9px; }
-.price-card .ticks li { font-size: 14.5px; padding-left: 30px; }
-.price-card .ticks li::before { top: 3px; }
+/* Matriz de 17-18 pontos: densidade apertada para o cartão caber no ecrã sem scroll. */
+.price-card .ticks { gap: 6px; }
+.price-card .ticks li { font-size: 13.5px; padding-left: 27px; }
+.price-card .ticks li::before {
+  top: 2px; width: 16px; height: 16px;
+  -webkit-mask-size: 12px;
+  mask-size: 12px;
+}
 .price-card--pro {
   border-color: rgba(255, 194, 75, 0.4);
   background: linear-gradient(180deg, rgba(255, 194, 75, 0.08), transparent 55%), var(--glass);
