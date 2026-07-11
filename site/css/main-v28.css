@@ -1100,7 +1100,11 @@ body > *:not(.grain):not(.orbs):not(.nav) { position: relative; z-index: 2; }
 .paid-plans .price-card__buy { padding: 14px 18px; border-radius: 12px; font-size: 15px; }
 .paid-plans .price-card__idnote { position: relative; }
 .paid-plans .seat-toggle { margin: 18px 0 12px; }
-.paid-plans .seat-toggle--spacer { visibility: hidden; pointer-events: none; margin-bottom: 7px; }
+.paid-plans .plan-scope { margin-bottom: 7px; border-color: rgba(102, 114, 255, 0.3); }
+.paid-plans .plan-scope .seat-toggle__btn {
+  cursor: default; color: #eef0ff; background: rgba(102, 114, 255, 0.16);
+  box-shadow: 0 6px 16px -10px rgba(102, 114, 255, 0.7);
+}
 .paid-plans .price-card__deal { margin: -6px 0 18px; }
 
 .plan-comparison {
@@ -1138,7 +1142,6 @@ body > *:not(.grain):not(.orbs):not(.nav) { position: relative; z-index: 2; }
   .free-plan__cta { grid-column: 3; grid-row: 1 / 4; }
   .paid-plans { grid-template-columns: 1fr; max-width: 620px; margin: 0 auto; }
   .paid-plans .price-card { min-height: 0; }
-  .paid-plans .seat-toggle--spacer { display: none; }
 }
 
 @media (max-width: 640px) {
