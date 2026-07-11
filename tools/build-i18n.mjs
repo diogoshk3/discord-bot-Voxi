@@ -67,7 +67,7 @@ const out =
   `window.VOZEN_COMMANDS = ${JSON.stringify(COMMANDS)};\n` +
   `window.VOZEN_FAQ = ${JSON.stringify(FAQ)};\n`;
 
-writeFileSync(join(ROOT, 'site', 'js', 'i18n-v20.js'), out);
+writeFileSync(join(ROOT, 'site', 'js', 'i18n-v21.js'), out);
 console.log(
-  `[build-i18n] ${LANGS.length} línguas · ${uiKeys.length} chaves ui · ${FAQ.length} FAQ -> site/js/i18n-v20.js`,
+  `[build-i18n] ${LANGS.length} línguas · ${uiKeys.length} chaves ui · ${FAQ.length} FAQ -> site/js/i18n-v21.js`,
 );

@@ -12,8 +12,10 @@ import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 
 /** Nº de licenças (servidores) de um passe de Premium. Decisão de produto: paga 1, usa 3. */
 export const PREMIUM_PASS_SEATS = 3;
-/** Licenças do tier "Premium Max" (nome do produto Ko-fi contém "max"): paga 1, usa 10. */
-export const PREMIUM_MAX_SEATS = 10;
+/** Licenças do tier "Premium Max" (nome do produto Ko-fi contém "max"): paga 1, usa 8.
+ * (Deal grande reduzido de 10 para 8 servidores a 2026-07-11; produtos novos usam
+ * "(8 servers)" no nome — este fallback só apanha nomes legados com "max".) */
+export const PREMIUM_MAX_SEATS = 8;
 
 export type KofiPlan = 'premium' | 'plus';
 
@@ -144,8 +146,9 @@ export function mapKofiToGrant(event: KofiEvent, now: number): KofiGrant | null 
 
 /**
  * Nº de licenças de um passe Premium, LIDO do nome do produto: "(N servers)" -> N
- * (ex.: "Vozen Premium (10 servers)" -> 10; "(3 servers)" -> 3). Fallback histórico para a
- * palavra "max" (10). Default 3. O N é limitado a 1..100 para um nome com gralha não gerar
+ * (ex.: "Vozen Premium (8 servers)" -> 8; "(3 servers)" -> 3; compras antigas "(10 servers)"
+ * continuam a renovar com 10 — grandfathering). Fallback histórico para a
+ * palavra "max" (8). Default 3. O N é limitado a 1..100 para um nome com gralha não gerar
  * um passe absurdo (o nome é do operador, mas isto é defesa barata).
  */
 function premiumSeats(lower: string): number {

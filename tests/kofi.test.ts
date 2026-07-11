@@ -91,13 +91,15 @@ describe('kofi — mapeamento produto -> grant', () => {
     const g = mapKofiToGrant(parseKofiPayload(kofiJson({ tier_name: 'Vozen Plus' }))!, now)!;
     expect(g.plan).toBe('plus');
   });
-  it('Premium Max mensal -> premium, 30 dias, 10 licenças', () => {
+  it('Premium Max mensal -> premium, 30 dias, 8 licenças (deal grande = 8 servidores)', () => {
     const g = mapKofiToGrant(parseKofiPayload(kofiJson({ tier_name: 'Vozen Premium Max' }))!, now)!;
     expect(g.plan).toBe('premium');
+    // Decisão de produto 2026-07-11: o deal grande passou de 10 para 8 servidores.
+    expect(PREMIUM_MAX_SEATS).toBe(8);
     expect(g.seats).toBe(PREMIUM_MAX_SEATS);
     expect(g.days).toBe(30);
   });
-  it('Premium Max anual -> 10 licenças, 365 dias', () => {
+  it('Premium Max anual -> 8 licenças, 365 dias', () => {
     const g = mapKofiToGrant(
       parseKofiPayload(kofiJson({ tier_name: 'Vozen Premium Max — Annual' }))!,
       now,
@@ -111,7 +113,26 @@ describe('kofi — mapeamento produto -> grant', () => {
   });
   // Nomes REAIS dos produtos no Ko-fi (2026-07): o nº de servidores vem do nome
   // "(N servers)", já não da palavra "max" (que foi retirada dos produtos).
-  it('produto real: "Premium (10 servers) 1 month" -> 10 licenças, 30 dias', () => {
+  // Desde 2026-07-11 o deal grande é "(8 servers)"; "(10 servers)" fica testado
+  // como grandfathering (renovações de compras antigas mantêm as 10 licenças).
+  it('produto real: "Premium (8 servers) 1 month" -> 8 licenças, 30 dias', () => {
+    const g = mapKofiToGrant(
+      parseKofiPayload(kofiJson({ tier_name: 'Vozen Premium (8 servers) 1 month' }))!,
+      now,
+    )!;
+    expect(g.plan).toBe('premium');
+    expect(g.seats).toBe(8);
+    expect(g.days).toBe(30);
+  });
+  it('produto real: "Premium (8 servers) 1 year" -> 8 licenças, 365 dias', () => {
+    const g = mapKofiToGrant(
+      parseKofiPayload(kofiJson({ tier_name: 'Vozen Premium (8 servers) 1 year' }))!,
+      now,
+    )!;
+    expect(g.seats).toBe(8);
+    expect(g.days).toBe(365);
+  });
+  it('grandfathering: "Premium (10 servers) 1 month" -> continua a dar 10 licenças', () => {
     const g = mapKofiToGrant(
       parseKofiPayload(kofiJson({ tier_name: 'Vozen Premium (10 servers) 1 month' }))!,
       now,
@@ -128,7 +149,7 @@ describe('kofi — mapeamento produto -> grant', () => {
     expect(g.seats).toBe(3);
     expect(g.days).toBe(365);
   });
-  it('produto real: "Premium (10 servers) 1 year" -> 10 licenças, 365 dias', () => {
+  it('grandfathering: "Premium (10 servers) 1 year" -> continua a dar 10 licenças', () => {
     const g = mapKofiToGrant(
       parseKofiPayload(kofiJson({ tier_name: 'Vozen Premium (10 servers) 1 year' }))!,
       now,

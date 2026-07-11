@@ -58,7 +58,7 @@
       "@type": "FAQPage",
       "mainEntity": [
         { "@type": "Question", "name": "Is Vozen really free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes — the core is free forever: all 38 voices in 35 languages, auto-read, greetings, most of the games and every admin control. Vozen Premium (from €3.99/month) only adds optional extras — the full voice-effect pack, voice cloning, 24/7 in-call, /rizz and three of the sixteen games. Nothing you already use moves behind a paywall." } },
-        { "@type": "Question", "name": "What does Premium include?", "acceptedAnswer": { "@type": "Answer", "text": "All 8 voice effects (deep, demon, radio, underwater…), voice cloning, 24/7 in-call, 50 personal pronunciations, the /rizz command and the premium games (Word Chain, Wordle, Chess). €3.99/month covers 3 servers, or €7.99/month covers 10; annual saves ~20%. Vozen Plus (€1.99/month) gives the same perks personally, on any server. Buy on Ko-fi and activate with /premium activate. When buying, paste your Discord ID in the Ko-fi checkout message so it activates instantly (copy it at vozen.org/account)." } },
+        { "@type": "Question", "name": "What does Premium include?", "acceptedAnswer": { "@type": "Answer", "text": "All 8 voice effects (deep, demon, radio, underwater…), voice cloning, 24/7 in-call, 50 personal pronunciations, the /rizz command and the premium games (Word Chain, Wordle, Chess). €3.99/month covers 3 servers, or €7.99/month covers 8; annual saves ~20%. Vozen Plus (€1.99/month) gives the same perks personally, on any server. Buy on Ko-fi and activate with /premium activate. When buying, paste your Discord ID in the Ko-fi checkout message so it activates instantly (copy it at vozen.org/account)." } },
         { "@type": "Question", "name": "How do I add Vozen to my server?", "acceptedAnswer": { "@type": "Answer", "text": "Click \"Add to Discord\", pick your server (you need Manage Server), and run /setup. That's it." } },
         { "@type": "Question", "name": "Which languages does it support?", "acceptedAnswer": { "@type": "Answer", "text": "35 languages with 38 neural voices — Portuguese, English, Spanish, French, German, Japanese, Arabic, Russian and many more, each with a native voice." } },
         { "@type": "Question", "name": "Do I need to configure anything?", "acceptedAnswer": { "@type": "Answer", "text": "No. /setup does it in one step. After that, everything works with sensible defaults — you can fine-tune later with /config." } },
@@ -498,20 +498,23 @@
               <p class="price-card__pitch" data-i18n="price.pro.pitch">Unlock the full Vozen experience for everyone in your community.</p>
               <!-- Toggle de licenças: mesma tier, muda só o nº de servidores (e o preço). A
                    classe .is-10 no cartão faz o CSS trocar preço/período/riscado/deal/nota;
-                   as variantes --s10 reutilizam as chaves i18n price.max.* (já em 10 línguas). -->
+                   as variantes --s10 reutilizam as chaves i18n price.max.* (já em 10 línguas).
+                   NOTA: data-seats="10"/.is-10/--s10/seats10 são IDENTIFICADORES internos
+                   legados — o deal grande passou a 8 servidores (2026-07-11); só o TEXTO
+                   visível diz 8, para não partir main.js/CSS com renames em cascata. -->
               <div class="seat-toggle" role="group" aria-label="Servers per subscription">
                 <button type="button" class="seat-toggle__btn is-active" data-seats="3" data-i18n="price.pro.seats3">3 servers</button>
-                <button type="button" class="seat-toggle__btn" data-seats="10" data-i18n="price.pro.seats10">10 servers</button>
+                <button type="button" class="seat-toggle__btn" data-seats="10" data-i18n="price.pro.seats10">8 servers</button>
               </div>
               <div class="price-card__price">
                 <span class="price-line"><b><span class="amt amt--m amt--s3">€3.99</span><span class="amt amt--m amt--s10">€7.99</span><span class="amt amt--y amt--s3">€37.99</span><span class="amt amt--y amt--s10">€75.99</span></b><s class="was was--y was--s3">€47.88</s><s class="was was--y was--s10">€95.88</s></span>
                 <span class="per per--m per--s3" data-i18n="price.pro.per">/ month · 3 servers</span>
-                <span class="per per--m per--s10" data-i18n="price.max.per">/ month · 10 servers</span>
+                <span class="per per--m per--s10" data-i18n="price.max.per">/ month · 8 servers</span>
                 <span class="per per--y per--s3" data-i18n="price.pro.perYear">/ year · 3 servers</span>
-                <span class="per per--y per--s10" data-i18n="price.max.perYear">/ year · 10 servers</span>
+                <span class="per per--y per--s10" data-i18n="price.max.perYear">/ year · 8 servers</span>
               </div>
               <p class="price-card__deal deal--s3" data-i18n="price.pro.deal">🎁 Three servers. One subscription.</p>
-              <p class="price-card__deal deal--s10" data-i18n="price.max.deal">🎁 Ten servers. One subscription.</p>
+              <p class="price-card__deal deal--s10" data-i18n="price.max.deal">🎁 Eight servers. One subscription.</p>
               <ul class="ticks ticks--amber price-card__highlights">
                 <li data-i18n="price.m.18">Works for everyone in the server</li>
                 <li data-i18n="price.m.9">All 8 voice effects (deep, demon, radio…)</li>
@@ -642,7 +645,7 @@
       </div>
     </footer>
 
-    <script defer src="js/i18n-v20.js"></script>
+    <script defer src="js/i18n-v21.js"></script>
     <script defer src="js/main-v25.js"></script>
   </body>
 </html>

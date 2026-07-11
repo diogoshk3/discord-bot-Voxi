@@ -125,12 +125,12 @@
     "nav.login": "Log in",
     "price.max.badge": "MAX",
     "price.max.name": "Vozen Premium Max",
-    "price.max.per": "/ month · 10 servers",
-    "price.max.perYear": "/ year · 10 servers",
-    "price.max.deal": "🎁 Ten servers. One subscription.",
+    "price.max.per": "/ month · 8 servers",
+    "price.max.perYear": "/ year · 8 servers",
+    "price.max.deal": "🎁 Eight servers. One subscription.",
     "price.max.note": "€75.99/year (save ~20%) · buy on Ko-fi",
     "price.pro.seats3": "3 servers",
-    "price.pro.seats10": "10 servers",
+    "price.pro.seats10": "8 servers",
     "price.m.1": "38 voices",
     "price.m.2": "35 languages",
     "price.m.3": "Auto-read your channel",
@@ -210,7 +210,7 @@
     ],
     [
       "What does Premium include?",
-      "All 8 voice effects (deep, demon, radio, underwater…), voice cloning, 24/7 in-call, 50 personal pronunciations, the /rizz command and the premium games (Word Chain, Wordle, Chess). €3.99/month covers 3 servers, or €7.99/month covers 10 (Premium Max); annual saves ~20%. Vozen Plus (€1.99/month) gives the same perks personally, on any server. Redeem codes with /premium activate. When buying on Ko-fi, paste your Discord ID in the checkout message so it activates instantly (copy it at vozen.org/account)."
+      "All 8 voice effects (deep, demon, radio, underwater…), voice cloning, 24/7 in-call, 50 personal pronunciations, the /rizz command and the premium games (Word Chain, Wordle, Chess). €3.99/month covers 3 servers, or €7.99/month covers 8 (Premium Max); annual saves ~20%. Vozen Plus (€1.99/month) gives the same perks personally, on any server. Redeem codes with /premium activate. When buying on Ko-fi, paste your Discord ID in the checkout message so it activates instantly (copy it at vozen.org/account)."
     ],
     [
       "How do I add Vozen to my server?",
