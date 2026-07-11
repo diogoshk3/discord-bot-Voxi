@@ -283,6 +283,52 @@ describe('kofiWebhook — API Premium HTTP', () => {
     db.close();
   });
 
+  // Cola HTTP do endpoint do painel: preflight, método, wiring do 200 + header CORS.
+  async function startApi(
+    getStatus: () => Promise<{ code: number; body: unknown }>,
+  ): Promise<string> {
+    const statusApi = { getStatus: vi.fn(getStatus), resolveIdentity: vi.fn() };
+    server = startKofiWebhook({
+      db,
+      token: undefined,
+      port: 0,
+      now: () => 1_000_000,
+      logInfo: () => {},
+      logError: () => {},
+      statusApi,
+      apiOrigin: 'https://vozen.org',
+    });
+    if (!server) throw new Error('servidor não arrancou');
+    await new Promise<void>((resolve) => server!.once('listening', () => resolve()));
+    const addr = server.address();
+    if (!addr || typeof addr === 'string') throw new Error('porta efémera indisponível');
+    return `http://127.0.0.1:${addr.port}/api/me/premium`;
+  }
+
+  it('OPTIONS -> 204 com CORS + Allow-Methods (preflight do browser)', async () => {
+    const url = await startApi(async () => ({ code: 200, body: {} }));
+    const res = await fetch(url, { method: 'OPTIONS' });
+    expect(res.status).toBe(204);
+    expect(res.headers.get('access-control-allow-origin')).toBe('https://vozen.org');
+    expect(res.headers.get('access-control-allow-methods')).toMatch(/GET/);
+  });
+
+  it('método não-GET/OPTIONS (ex. PUT) -> 405 com header CORS', async () => {
+    const url = await startApi(async () => ({ code: 200, body: {} }));
+    const res = await fetch(url, { method: 'PUT' });
+    expect(res.status).toBe(405);
+    expect(res.headers.get('access-control-allow-origin')).toBe('https://vozen.org');
+  });
+
+  it('GET com token válido -> 200 com o body do statusApi + Content-Type + CORS', async () => {
+    const url = await startApi(async () => ({ code: 200, body: { premium: true, plan: 'plus' } }));
+    const res = await fetch(url, { headers: { Authorization: 'Bearer bom' } });
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toMatch(/application\/json/);
+    expect(res.headers.get('access-control-allow-origin')).toBe('https://vozen.org');
+    expect(await res.json()).toEqual({ premium: true, plan: 'plus' });
+  });
+
   it('limita o mapa de rate-limit por IP para não crescer sem fim', async () => {
     const statusApi = {
       getStatus: vi.fn(async () => ({ code: 401, body: { error: 'invalid_token' } })),
@@ -473,5 +519,27 @@ describe('kofi — idempotência do webhook (retries do Ko-fi não duplicam o gr
     // E depois dos erros, um POST válido continua a funcionar.
     expect(await startAndPost(kofiJson({ kofi_transaction_id: 'tx-ok' }))).toBe(200);
     expect(getPremiumPass(db, DID)).not.toBeNull();
+  });
+
+  it('falha de DB no grant -> 503 (Ko-fi re-tenta), não 200 que perderia a compra', async () => {
+    server = startKofiWebhook({
+      db,
+      token: 'tok',
+      port: 0,
+      now: () => 1_000_000,
+      logInfo: () => {},
+      logError: () => {},
+    });
+    await new Promise<void>((resolve) => server!.once('listening', () => resolve()));
+
+    // Simula uma falha de escrita (SQLITE_BUSY, disco cheio, I/O) DURANTE a transação do
+    // grant — o payload é válido, só a persistência é que rebenta. O Ko-fi só re-tenta em
+    // não-2xx, por isso responder 200 aqui perdia a compra paga em silêncio.
+    (db as { transaction: unknown }).transaction = () => () => {
+      throw new Error('SQLITE_BUSY: simulado');
+    };
+
+    const status = await startAndPost(kofiJson({ kofi_transaction_id: 'tx-db-fail' }));
+    expect(status).toBe(503);
   });
 });

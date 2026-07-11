@@ -288,9 +288,14 @@ export function startKofiWebhook(deps: KofiWebhookDeps): Server | null {
         }
         res.writeHead(200).end('ok');
       } catch (err) {
-        logError('[kofi] erro a processar webhook (ignorado)', err);
+        // Distinguir "payload não-processável" de "falha ao PERSISTIR": os primeiros já
+        // responderam acima (400/401/200) e nunca chegam aqui; um throw aqui é a transação
+        // do grant a rebentar (SQLITE_BUSY, disco cheio, I/O). Responder 200 diria ao Ko-fi
+        // "recebido" e ele NÃO re-tentava → compra paga perdida. Respondemos 5xx para o
+        // Ko-fi reentregar; o ledger kofi_transaction torna o retry idempotente.
+        logError('[kofi] falha a PERSISTIR o grant — 503 para o Ko-fi re-tentar', err);
         try {
-          res.writeHead(200).end('ok');
+          res.writeHead(503).end('retry');
         } catch {
           /* resposta já enviada */
         }

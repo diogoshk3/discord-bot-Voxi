@@ -80,4 +80,24 @@ describe('premium_code — store (insert/get/redeem, uso único)', () => {
     insertPremiumCode(db, { code: 'FRESH', ...base, expiresAt: 5000 });
     expect(redeemPremiumCode(db, 'FRESH', 'user1', 2000).ok).toBe(true);
   });
+
+  it('ATÓMICO: se o applyGrant rebentar, o código NÃO fica queimado (rollback)', () => {
+    insertPremiumCode(db, { code: 'ATOM', ...base, plan: 'premium', seats: 3 });
+    // O grant (aplicado DENTRO da transação) rebenta — ex.: falha de escrita.
+    expect(() =>
+      redeemPremiumCode(db, 'ATOM', 'user1', 2000, () => {
+        throw new Error('grant falhou');
+      }),
+    ).toThrow('grant falhou');
+    // A reclamação do código tem de reverter junto: continua por usar.
+    expect(getPremiumCode(db, 'ATOM')?.redeemedBy).toBeNull();
+    // E um novo resgate (agora com grant OK) consome-o normalmente.
+    let granted = false;
+    const res = redeemPremiumCode(db, 'ATOM', 'user1', 3000, () => {
+      granted = true;
+    });
+    expect(res.ok).toBe(true);
+    expect(granted).toBe(true);
+    expect(getPremiumCode(db, 'ATOM')?.redeemedBy).toBe('user1');
+  });
 });

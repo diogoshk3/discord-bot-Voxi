@@ -70,17 +70,27 @@ export function getPremiumCode(db: Database.Database, code: string): PremiumCode
   };
 }
 
+/** O que o código concede — passado ao `applyGrant` para ele aplicar o premium. */
+export interface RedeemClaim {
+  plan: CodePlan;
+  days: number;
+  seats: number;
+}
+
 /**
  * Resgata um código ATOMICAMENTE (uso único). Numa transação: valida existência/uso/
- * expiração e reclama a linha com UPDATE ... WHERE redeemed_by IS NULL. Se dois resgates
- * corressem juntos, só um vê changes>0; o outro recebe 'used'. NÃO aplica o grant — devolve
- * o que o código concede para o chamador o aplicar (grantUserPremium/grantGuildPass).
+ * expiração, reclama a linha com UPDATE ... WHERE redeemed_by IS NULL e — na MESMA
+ * transação — aplica o grant via `applyGrant`. Se dois resgates corressem juntos, só um
+ * vê changes>0; o outro recebe 'used'. Se o `applyGrant` rebentar, a transação reverte e o
+ * código NÃO fica queimado (mesmo padrão do webhook Ko-fi: reclamar+conceder é atómico).
+ * `applyGrant` recebe o MESMO `db` (dentro da transação) e é síncrono (better-sqlite3).
  */
 export function redeemPremiumCode(
   db: Database.Database,
   code: string,
   userId: string,
   now: number,
+  applyGrant?: (db: Database.Database, claim: RedeemClaim) => void,
 ): RedeemResult {
   return db.transaction((): RedeemResult => {
     const row = getPremiumCode(db, code);
@@ -93,6 +103,8 @@ export function redeemPremiumCode(
       )
       .run(userId, now, code);
     if (upd.changes === 0) return { ok: false, reason: 'used' }; // corrida: alguém resgatou primeiro
+    // Grant DENTRO da transação: se rebentar, o UPDATE acima reverte junto.
+    applyGrant?.(db, { plan: row.plan, days: row.days, seats: row.seats });
     return { ok: true, plan: row.plan, days: row.days, seats: row.seats };
   })();
 }

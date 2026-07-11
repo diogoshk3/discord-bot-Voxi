@@ -314,7 +314,15 @@ export async function handleRedeem(i: ChatInputCommandInteraction, deps: BotDeps
   const locale = localeForUser(deps, i);
   const code = normalizeCode(i.options.getString('code', true));
   const now = Date.now();
-  const res = redeemPremiumCode(deps.db, code, i.user.id, now);
+  // O grant corre DENTRO da transação do resgate (via callback): se falhar, o código NÃO
+  // fica queimado. Capturamos o expiry no closure para a mensagem de sucesso.
+  let exp = 0;
+  const res = redeemPremiumCode(deps.db, code, i.user.id, now, (db, claim) => {
+    exp =
+      claim.plan === 'plus'
+        ? grantUserPremium(db, i.user.id, claim.days, 'redeem', now)
+        : grantGuildPass(db, i.user.id, claim.seats, claim.days, 'redeem', now);
+  });
   if (!res.ok) {
     const key =
       res.reason === 'not-found'
@@ -326,10 +334,8 @@ export async function handleRedeem(i: ChatInputCommandInteraction, deps: BotDeps
     return;
   }
   if (res.plan === 'plus') {
-    const exp = grantUserPremium(deps.db, i.user.id, res.days, 'redeem', now);
     await reply(i, t('redeem.okPlus', locale, { days: res.days, date: stampDate(exp) }));
   } else {
-    const exp = grantGuildPass(deps.db, i.user.id, res.seats, res.days, 'redeem', now);
     await reply(
       i,
       t('redeem.okPremium', locale, { days: res.days, seats: res.seats, date: stampDate(exp) }),
