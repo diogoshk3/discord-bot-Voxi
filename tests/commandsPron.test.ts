@@ -101,12 +101,12 @@ describe('/pronunciation — limite Free 3 vs Premium 50 + upsell (monetização
     expect(getUserPronunciations(db, USER)).toHaveLength(6);
   });
 
-  it('Premium do SERVIDOR NÃO eleva o limite pessoal (as 50 pessoais são só do Plus)', async () => {
+  it('Premium do SERVIDOR também eleva o limite pessoal (isGuildPremium no gate)', async () => {
     const { grantGuildPremium } = await import('../src/store/premium.js');
     grantGuildPremium(db, GUILD, 30, 'kofi', Date.now());
     for (const t of ['a', 'b', 'c', 'd']) {
       await add(db, t, `${t}-say`);
     }
-    expect(getUserPronunciations(db, USER)).toHaveLength(3); // continua 3: pessoal é do Plus
+    expect(getUserPronunciations(db, USER)).toHaveLength(4); // >3 porque a guild é premium
   });
 });
