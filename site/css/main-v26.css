@@ -1157,7 +1157,43 @@ body > *:not(.grain):not(.orbs):not(.nav) { position: relative; z-index: 2; }
   .price-card__topline { align-items: flex-start; }
   .price-card__pitch { min-height: 0; }
   .plan-comparison__head { align-items: flex-start; flex-direction: column; padding: 24px 22px; }
-  .plan-table th, .plan-table td { padding: 12px 14px; }
+
+  /* Cartões pagos: o badge + "recomendado" podem quebrar sem empurrar o título;
+     o seat-toggle ocupa a largura toda como o bill-toggle. */
+  .price-card__topline { flex-wrap: wrap; gap: 8px; }
+  .price-card__recommended { font-size: 10px; }
+  .paid-plans .seat-toggle { width: 100%; }
+  .paid-plans .seat-toggle__btn { flex: 1 1 0; min-width: 0; }
+
+  /* ── Tabela: blocos verticais + cabeçalho sticky ────────────────────────
+     Mata o scroll horizontal (a tabela tinha min-width:680px): cada linha vira
+     um bloco — nome da feature em cima, os 3 valores (Free/Plus/Premium) em 3
+     colunas por baixo, alinhados com o thead que fica colado abaixo da navbar
+     durante o scroll. O sticky exige que NENHUM ancestral tenha overflow≠visible
+     → libertamos .plan-comparison e .plan-table-wrap. */
+  .plan-comparison { overflow: visible; }
+  .plan-table-wrap { overflow-x: visible; }
+  .plan-table { display: block; min-width: 0; font-size: 13px; }
+  .plan-table thead { display: block; position: sticky; top: var(--nav-h); z-index: 6; background: rgba(7, 7, 13, 0.94); backdrop-filter: blur(10px); }
+  .plan-table thead tr { display: grid; grid-template-columns: repeat(3, 1fr); }
+  .plan-table thead th { padding: 11px 8px; font-size: 12px; border-bottom: 1px solid var(--line); }
+  .plan-table thead th:first-child { display: none; }
+  .plan-table tbody { display: block; }
+  .plan-table tbody tr { display: grid; grid-template-columns: repeat(3, 1fr); align-items: center; padding: 8px 0 11px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+  .plan-table tbody tr:nth-child(even) { background: rgba(255, 255, 255, 0.02); }
+  .plan-table tbody tr:hover { background: none; }
+  .plan-table tbody tr:nth-child(even):hover { background: rgba(255, 255, 255, 0.02); }
+  .plan-table tbody th { grid-column: 1 / -1; padding: 3px 15px 7px; font-size: 13px; font-weight: 600; color: var(--text-0); }
+  .plan-table tbody td { width: auto; padding: 0 8px; font-size: 17px; }
+  .plan-table tbody tr.group-b, .plan-table tbody tr.group-c { border-top: 2px solid rgba(255, 255, 255, 0.12); margin-top: 5px; padding-top: 12px; }
+}
+
+@media (max-width: 430px) {
+  .paid-plans .price-card { padding: 22px 18px; }
+  .paid-plans .price-card__price b, .paid-plans .price-card__price .amt { font-size: 44px; }
+  .free-plan { padding: 18px; }
+  .free-plan__highlights { gap: 6px 14px; }
+  .price-card__idnote { font-size: 11.5px; }
 }
 
 /* ── faq ────────────────────────────────────────────────── */

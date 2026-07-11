@@ -47,7 +47,7 @@
       href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/main-v25.css" />
+    <link rel="stylesheet" href="css/main-v26.css" />
 
     <!-- FAQ structured data (Google rich results). Mantém em sincronia com
          window.VOZEN_FAQ (js/i18n.js) — o JSON-LD tem de ser ESTÁTICO porque os
@@ -537,39 +537,42 @@
                 <span class="plan-comparison__checkout" data-i18n="price.checkout">Secure checkout on Ko-fi</span>
               </div>
               <div class="plan-table-wrap" tabindex="0" aria-label="Plan comparison table">
-                <table class="plan-table">
+                <!-- role=* explícitos: em mobile o CSS usa display:grid nas linhas (blocos
+                     verticais + cabeçalho sticky) e isso pode apagar a semântica de tabela
+                     nativa; os roles repõem-na para leitores de ecrã. -->
+                <table class="plan-table" role="table">
                   <thead>
-                    <tr>
-                      <th scope="col" data-i18n="nav.features">Features</th>
-                      <th scope="col" data-i18n="price.free.name">Free</th>
-                      <th scope="col" data-i18n="price.plus.name">Vozen Plus</th>
-                      <th scope="col" data-i18n="price.pro.name">Vozen Premium</th>
+                    <tr role="row">
+                      <th scope="col" role="columnheader" data-i18n="nav.features">Features</th>
+                      <th scope="col" role="columnheader" data-i18n="price.free.name">Free</th>
+                      <th scope="col" role="columnheader" data-i18n="price.plus.name">Vozen Plus</th>
+                      <th scope="col" role="columnheader" data-i18n="price.pro.name">Vozen Premium</th>
                     </tr>
                   </thead>
                   <tbody>
                     <!-- Bloco A — base grátis: incluído nos três planos. -->
-                    <tr><th scope="row" data-i18n="price.m.1">38 voices</th><td class="has">✓</td><td class="has">✓</td><td class="has">✓</td></tr>
-                    <tr><th scope="row" data-i18n="price.m.2">35 languages</th><td class="has">✓</td><td class="has">✓</td><td class="has">✓</td></tr>
-                    <tr><th scope="row" data-i18n="price.m.3">Auto-read your channel</th><td class="has">✓</td><td class="has">✓</td><td class="has">✓</td></tr>
-                    <tr><th scope="row" data-i18n="price.m.4">Jokes &amp; greetings</th><td class="has">✓</td><td class="has">✓</td><td class="has">✓</td></tr>
-                    <tr><th scope="row" data-i18n="price.m.5">13 of the 16 games</th><td class="has">✓</td><td class="has">✓</td><td class="has">✓</td></tr>
-                    <tr><th scope="row" data-i18n="price.m.6">Robot &amp; Echo voice effects</th><td class="has">✓</td><td class="has">✓</td><td class="has">✓</td></tr>
-                    <tr><th scope="row" data-i18n="price.m.7">Weekly leaderboard</th><td class="has">✓</td><td class="has">✓</td><td class="has">✓</td></tr>
-                    <tr><th scope="row" data-i18n="price.m.20">Daily talk streaks</th><td class="has">✓</td><td class="has">✓</td><td class="has">✓</td></tr>
-                    <tr><th scope="row" data-i18n="price.m.8">Full admin kit</th><td class="has">✓</td><td class="has">✓</td><td class="has">✓</td></tr>
+                    <tr role="row"><th scope="row" role="rowheader" data-i18n="price.m.1">38 voices</th><td role="cell" class="has">✓</td><td role="cell" class="has">✓</td><td role="cell" class="has">✓</td></tr>
+                    <tr role="row"><th scope="row" role="rowheader" data-i18n="price.m.2">35 languages</th><td role="cell" class="has">✓</td><td role="cell" class="has">✓</td><td role="cell" class="has">✓</td></tr>
+                    <tr role="row"><th scope="row" role="rowheader" data-i18n="price.m.3">Auto-read your channel</th><td role="cell" class="has">✓</td><td role="cell" class="has">✓</td><td role="cell" class="has">✓</td></tr>
+                    <tr role="row"><th scope="row" role="rowheader" data-i18n="price.m.4">Jokes &amp; greetings</th><td role="cell" class="has">✓</td><td role="cell" class="has">✓</td><td role="cell" class="has">✓</td></tr>
+                    <tr role="row"><th scope="row" role="rowheader" data-i18n="price.m.5">13 of the 16 games</th><td role="cell" class="has">✓</td><td role="cell" class="has">✓</td><td role="cell" class="has">✓</td></tr>
+                    <tr role="row"><th scope="row" role="rowheader" data-i18n="price.m.6">Robot &amp; Echo voice effects</th><td role="cell" class="has">✓</td><td role="cell" class="has">✓</td><td role="cell" class="has">✓</td></tr>
+                    <tr role="row"><th scope="row" role="rowheader" data-i18n="price.m.7">Weekly leaderboard</th><td role="cell" class="has">✓</td><td role="cell" class="has">✓</td><td role="cell" class="has">✓</td></tr>
+                    <tr role="row"><th scope="row" role="rowheader" data-i18n="price.m.20">Daily talk streaks</th><td role="cell" class="has">✓</td><td role="cell" class="has">✓</td><td role="cell" class="has">✓</td></tr>
+                    <tr role="row"><th scope="row" role="rowheader" data-i18n="price.m.8">Full admin kit</th><td role="cell" class="has">✓</td><td role="cell" class="has">✓</td><td role="cell" class="has">✓</td></tr>
                     <!-- Bloco B — extras pagos: iguais no Plus e no Premium. -->
-                    <tr><th scope="row" data-i18n="price.m.9">All 8 voice effects (deep, demon, radio…)</th><td class="has-not">—</td><td class="has">✓</td><td class="has">✓</td></tr>
-                    <tr><th scope="row" data-i18n="price.m.10">Clone your voice (/voice clone)</th><td class="has-not">—</td><td class="has">✓</td><td class="has">✓</td></tr>
-                    <tr><th scope="row" data-i18n="price.m.11">Word Chain game</th><td class="has-not">—</td><td class="has">✓</td><td class="has">✓</td></tr>
-                    <tr><th scope="row" data-i18n="price.m.12">Wordle game</th><td class="has-not">—</td><td class="has">✓</td><td class="has">✓</td></tr>
-                    <tr><th scope="row" data-i18n="price.m.13">Chess game</th><td class="has-not">—</td><td class="has">✓</td><td class="has">✓</td></tr>
-                    <tr><th scope="row" data-i18n="price.m.14">/rizz</th><td class="has-not">—</td><td class="has">✓</td><td class="has">✓</td></tr>
-                    <tr><th scope="row" data-i18n="price.m.15">50 personal pronunciations</th><td class="has-not">—</td><td class="has">✓</td><td class="has">✓</td></tr>
+                    <tr role="row" class="group-b"><th scope="row" role="rowheader" data-i18n="price.m.9">All 8 voice effects (deep, demon, radio…)</th><td role="cell" class="has-not">—</td><td role="cell" class="has">✓</td><td role="cell" class="has">✓</td></tr>
+                    <tr role="row"><th scope="row" role="rowheader" data-i18n="price.m.10">Clone your voice (/voice clone)</th><td role="cell" class="has-not">—</td><td role="cell" class="has">✓</td><td role="cell" class="has">✓</td></tr>
+                    <tr role="row"><th scope="row" role="rowheader" data-i18n="price.m.11">Word Chain game</th><td role="cell" class="has-not">—</td><td role="cell" class="has">✓</td><td role="cell" class="has">✓</td></tr>
+                    <tr role="row"><th scope="row" role="rowheader" data-i18n="price.m.12">Wordle game</th><td role="cell" class="has-not">—</td><td role="cell" class="has">✓</td><td role="cell" class="has">✓</td></tr>
+                    <tr role="row"><th scope="row" role="rowheader" data-i18n="price.m.13">Chess game</th><td role="cell" class="has-not">—</td><td role="cell" class="has">✓</td><td role="cell" class="has">✓</td></tr>
+                    <tr role="row"><th scope="row" role="rowheader" data-i18n="price.m.14">/rizz</th><td role="cell" class="has-not">—</td><td role="cell" class="has">✓</td><td role="cell" class="has">✓</td></tr>
+                    <tr role="row"><th scope="row" role="rowheader" data-i18n="price.m.15">50 personal pronunciations</th><td role="cell" class="has-not">—</td><td role="cell" class="has">✓</td><td role="cell" class="has">✓</td></tr>
                     <!-- Bloco C — exclusivos: pessoal (Plus) vs servidor (Premium). -->
-                    <tr><th scope="row" data-i18n="price.m.17">Goes with you to any server</th><td class="has-not">—</td><td class="has">✓</td><td class="has-not">—</td></tr>
-                    <tr><th scope="row" data-i18n="price.m.19">50 server pronunciations</th><td class="has-not">—</td><td class="has-not">—</td><td class="has has--premium">✓</td></tr>
-                    <tr><th scope="row" data-i18n="price.m.16">In the call 24/7</th><td class="has-not">—</td><td class="has-not">—</td><td class="has has--premium">✓</td></tr>
-                    <tr><th scope="row" data-i18n="price.m.18">Works for everyone in the server</th><td class="has-not">—</td><td class="has-not">—</td><td class="has has--premium">✓</td></tr>
+                    <tr role="row" class="group-c"><th scope="row" role="rowheader" data-i18n="price.m.17">Goes with you to any server</th><td role="cell" class="has-not">—</td><td role="cell" class="has">✓</td><td role="cell" class="has-not">—</td></tr>
+                    <tr role="row"><th scope="row" role="rowheader" data-i18n="price.m.19">50 server pronunciations</th><td role="cell" class="has-not">—</td><td role="cell" class="has-not">—</td><td role="cell" class="has has--premium">✓</td></tr>
+                    <tr role="row"><th scope="row" role="rowheader" data-i18n="price.m.16">In the call 24/7</th><td role="cell" class="has-not">—</td><td role="cell" class="has-not">—</td><td role="cell" class="has has--premium">✓</td></tr>
+                    <tr role="row"><th scope="row" role="rowheader" data-i18n="price.m.18">Works for everyone in the server</th><td role="cell" class="has-not">—</td><td role="cell" class="has-not">—</td><td role="cell" class="has has--premium">✓</td></tr>
                   </tbody>
                 </table>
               </div>
