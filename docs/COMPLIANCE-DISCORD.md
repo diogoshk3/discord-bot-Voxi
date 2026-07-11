@@ -36,6 +36,16 @@ o que o Vozen ainda não é. Portugal está nos locales suportados.
   servidores) → onboarding de monetização → criar SKUs (USD) → definir `PREMIUM_*_SKU_ID` na
   env (a sync ativa-se sozinha). Taxa do Discord: 15% (Growth Tier até $1M).
 
+**Atualização 2026-07-11 (estado do portal):** o separador Monetization mostra o onboarding
+"Monetize seu aplicativo" com "Comece agora" — ou seja, a app **pode iniciar** o onboarding
+de Premium Apps (não está bloqueada). Mas **completá-lo** exige preencher requisitos legais,
+**verificar a app + Team**, e configurar pagamentos/impostos (Discord fica com ~15%). É uma
+decisão de **negócio**, não só um checkbox. **Decisão (interim):** manter a venda via Ko-fi;
+vender só por Ko-fi é um **risco residual baixo** (não uma violação clara) enquanto o
+onboarding de Premium Apps não estiver **completo**. **Gate:** completar o onboarding + criar
+SKUs com **preço ≤ Ko-fi** quando se formalizar o negócio (ou naturalmente ao verificar a app
+aos ~75 servidores). O `.env` já documenta `PREMIUM_GUILD_SKU_ID`/`PREMIUM_USER_SKU_ID`.
+
 ### 2.2 Transparência dos dados — FECHADO na Fase 1
 `PRIVACY.md` estava desatualizado (faltavam tabelas, em especial o **clone de voz**).
 Corrigido: todas as tabelas documentadas, secção 2.3 dedicada ao clone (WAVs, consentimento,
