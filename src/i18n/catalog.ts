@@ -319,6 +319,10 @@ export const catalog: Record<string, Entry> = {
     en: '🔒 **{effect}** is a Premium effect. Free effects: 🤖 Robot and 🔊 Echo. Unlock all with Vozen Premium — see `/premium`.',
     pt: '🔒 **{effect}** é um efeito Premium. Efeitos grátis: 🤖 Robot e 🔊 Echo. Desbloqueia todos com o Vozen Premium — vê `/premium`.',
   },
+  'voice.engine.gcloudLocked': {
+    en: '🔒 **💎 Google HD** is a Premium voice engine. Unlock it with Vozen Plus (personal) or Vozen Premium (server) — see `/premium`. Meanwhile your voice stays on the free Google engine.',
+    pt: '🔒 O motor **💎 Google HD** é Premium. Desbloqueia-o com o Vozen Plus (pessoal) ou o Vozen Premium (servidor) — vê `/premium`. Entretanto a tua voz fica no motor Google grátis.',
+  },
   'voice.notInVoice': {
     en: "I'm not in a voice channel yet — run /join first.",
     pt: 'Ainda nao estou num canal de voz — usa /join primeiro.',

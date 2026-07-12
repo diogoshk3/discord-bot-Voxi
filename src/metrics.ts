@@ -24,6 +24,12 @@ export interface MetricsSnapshot {
   synthCount: number;
   synthP50Ms: number;
   synthP95Ms: number;
+  // Motor Google HD (gcloud, perk Premium): sinteses REAIS feitas a Google (cache-miss),
+  // total de chars faturados a Google, e quantas vezes caiu no gTTS por orcamento/limite
+  // (fallback). Observabilidade de CUSTO — cada char conta ($4/1M).
+  gcloudSynths: number;
+  gcloudChars: number;
+  gcloudFallbacks: number;
 }
 
 /** Tamanho da janela deslizante de latencias mantida em memoria. */
@@ -46,6 +52,9 @@ class Metrics {
   voiceReconnects = 0;
   votes = 0;
   loopStalls = 0;
+  gcloudSynths = 0;
+  gcloudChars = 0;
+  gcloudFallbacks = 0;
   // Latencia: contador total + janela deslizante das ultimas amostras (ms).
   synthCount = 0;
   private synthMs: number[] = [];
@@ -56,6 +65,14 @@ class Metrics {
    */
   inc(counter: Exclude<keyof MetricsSnapshot, 'synthCount' | 'synthP50Ms' | 'synthP95Ms'>): void {
     (this[counter] as number)++;
+  }
+
+  /** Soma `amount` a um contador escalar (ex.: gcloudChars, que cresce por N chars). */
+  add(
+    counter: Exclude<keyof MetricsSnapshot, 'synthCount' | 'synthP50Ms' | 'synthP95Ms'>,
+    amount: number,
+  ): void {
+    (this[counter] as number) += amount;
   }
 
   /** Regista a latencia (ms) de UMA sintese. Mantem uma janela deslizante. */
@@ -82,6 +99,9 @@ class Metrics {
       synthCount: this.synthCount,
       synthP50Ms: Math.round(percentileOf(sorted, 50)),
       synthP95Ms: Math.round(percentileOf(sorted, 95)),
+      gcloudSynths: this.gcloudSynths,
+      gcloudChars: this.gcloudChars,
+      gcloudFallbacks: this.gcloudFallbacks,
     };
   }
 
@@ -96,6 +116,9 @@ class Metrics {
     this.voiceReconnects = 0;
     this.votes = 0;
     this.loopStalls = 0;
+    this.gcloudSynths = 0;
+    this.gcloudChars = 0;
+    this.gcloudFallbacks = 0;
     this.synthCount = 0;
     this.synthMs = [];
   }

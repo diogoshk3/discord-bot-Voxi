@@ -137,6 +137,9 @@ describe('metrics — API básica', () => {
       synthCount: 0,
       synthP50Ms: 0,
       synthP95Ms: 0,
+      gcloudSynths: 0,
+      gcloudChars: 0,
+      gcloudFallbacks: 0,
     });
   });
 
@@ -218,6 +221,9 @@ describe('metrics — API básica', () => {
       synthCount: 0,
       synthP50Ms: 0,
       synthP95Ms: 0,
+      gcloudSynths: 0,
+      gcloudChars: 0,
+      gcloudFallbacks: 0,
     });
   });
 

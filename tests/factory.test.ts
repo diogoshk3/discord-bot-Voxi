@@ -28,6 +28,12 @@ function baseConfig(overrides: Partial<AppConfig> = {}): AppConfig {
     ratePerMin: 5,
     ttsEngine: 'piper',
     openaiApiKey: undefined,
+    googleTtsApiKey: undefined,
+    gcloudMaxChars: 500,
+    gcloudPlusMonthlyChars: 100_000,
+    gcloudPass3MonthlyChars: 400_000,
+    gcloudPass8MonthlyChars: 1_000_000,
+    gcloudDailyCharBudget: 300_000,
     multilingualSegments: false,
     topggWebhookAllowInsecure: false,
     // Campos obrigatórios do AppConfig que o typecheck dos testes passou a exigir.

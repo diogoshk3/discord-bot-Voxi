@@ -19,6 +19,7 @@ import { bumpTalk, getTopSpeakers, type TalkBump } from '../store/talkStats';
 import { renderLeaderboard } from '../leaderboard/randomPost';
 import { getUserPronunciations, getServerPronunciations } from '../store/pronunciation';
 import { getUserVoice } from '../store/userVoice';
+import { resolveUserEngine } from '../tts/resolveEngine';
 import { isOptedOut } from '../store/optout';
 import { prepareSpeech, redactRequest, hasReadableText } from './prepareSpeech';
 import { t } from '../i18n/index';
@@ -282,8 +283,20 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
       media,
       announceSpeaker: announce ? speakerName : undefined,
     });
-    // Motor escolhido pelo autor (google default | piper). O PerUserEngineRouter usa isto.
-    req.engine = userVoice?.engine;
+    // Motor escolhido pelo autor (google default | piper | kokoro | gcloud). O resolver
+    // partilhado despromove 'gcloud'->'google' se o Premium não estiver ativo (gate
+    // runtime) e (Fase 3) anexa o descritor de orçamento — os DOIS campos (engine +
+    // gcloudBudget) são exatamente o que o ResolvedEngine devolve. O PerUserEngineRouter
+    // despacha por req.engine.
+    const resolvedEngine = resolveUserEngine(
+      deps.db,
+      message.guildId,
+      message.author.id,
+      userVoice?.engine,
+      Date.now(),
+    );
+    req.engine = resolvedEngine.engine;
+    req.gcloudBudget = resolvedEngine.gcloudBudget;
 
     // Blocklist: em vez de saltar a mensagem inteira, REDIGE as palavras bloqueadas do
     // texto REALMENTE falado (req.text + segmentos) — o Vozen lê a mensagem SEM dizer

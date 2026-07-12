@@ -12,6 +12,7 @@ import type { BotDeps } from '../../bot/deps';
 import { getPlayer, removePlayer, getLimiter } from '../../bot/deps';
 import { createVoiceSession, becomeSpeakerIfStage } from '../../voice/session';
 import { getUserVoice } from '../../store/userVoice';
+import { resolveUserEngine } from '../../tts/resolveEngine';
 import { getGuildConfig } from '../../store/guildConfig';
 import { getBlocklist } from '../../store/blocklist';
 import { getUserPronunciations, getServerPronunciations } from '../../store/pronunciation';
@@ -156,8 +157,12 @@ export async function speakRawText(
     defaultSpeed: deps.config.defaultSpeed,
     media: media.map((kind) => ({ kind })),
   });
-  // Motor escolhido pelo user (google default | piper) — usado pelo PerUserEngineRouter.
-  req.engine = userVoice?.engine;
+  // Motor escolhido pelo user — resolvido pelo gate partilhado (gcloud->google sem
+  // Premium; Fase 3 anexa o orçamento). Os dois campos que o resolver devolve são
+  // exatamente engine + gcloudBudget do SynthRequest.
+  const resolvedEngine = resolveUserEngine(deps.db, guildId, userId, userVoice?.engine, Date.now());
+  req.engine = resolvedEngine.engine;
+  req.gcloudBudget = resolvedEngine.gcloudBudget;
 
   // Blocklist: REDIGE as palavras bloqueadas (o Vozen lê o resto sem as dizer). Só devolve
   // 'blocked' se, depois de as remover, não sobrar nada legível (era só palavra bloqueada).

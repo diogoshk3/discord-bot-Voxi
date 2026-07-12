@@ -26,11 +26,21 @@ export interface SynthRequest {
   // fallback single-voice (flag do motor OFF) e a base da chave de cache.
   segments?: { text: string; model: string }[];
   // MOTOR escolhido PELO UTILIZADOR para esta fala: 'google' (gTTS, default),
-  // 'piper' (self-host) ou 'kokoro' (neural opt-in — cai no gTTS nas línguas que não
-  // suporta / em falha). Ausente/undefined = 'google'. O PerUserEngineRouter despacha
-  // por este campo; entra na chave de cache (quando 'piper' ou 'kokoro') para não
-  // cruzar áudio entre users de motores diferentes.
-  engine?: 'google' | 'piper' | 'kokoro';
+  // 'piper' (self-host), 'kokoro' (neural opt-in — cai no gTTS nas línguas que não
+  // suporta / em falha) ou 'gcloud' (Google Cloud TTS Standard, perk Premium — cai no
+  // gTTS sem key / por falha / por orçamento). Ausente/undefined = 'google'. O
+  // PerUserEngineRouter despacha por este campo; entra na chave de cache (quando
+  // 'piper'/'kokoro'/'gcloud') para não cruzar áudio entre users de motores diferentes.
+  engine?: 'google' | 'piper' | 'kokoro' | 'gcloud';
+  // ORÇAMENTO gcloud (Premium): descritor pré-resolvido no build-time (onde há
+  // identidade+db) que viaja com o pedido até ao chokepoint (GCloudEngine), que conta os
+  // chars SÓ na chamada real à Google (cache-miss). `scope`/`key` identificam o pool a
+  // debitar; `seats` (só p/ scope 'pass') define o tier de allowance (3->400k, senão 1M).
+  // O TETO concreto é calculado no motor a partir da config (o resolver fica sem config).
+  // Ausente num pedido engine:'gcloud' => fail-SAFE (o GCloudEngine recusa e cai no gTTS):
+  // um caminho não-gated nunca gasta $ silencioso. Fora da cacheKey (não altera o áudio).
+  // Ver tts/gcloudUsage.ts + resolveUserEngine.
+  gcloudBudget?: { scope: 'user' | 'pass' | 'guild'; key: string; seats?: number };
   // EFEITO de voz (premium) a aplicar ao WAV DEPOIS da síntese (robot/echo/deep...).
   // Ausente/'none' => voz limpa. NÃO entra na cacheKey (o EffectEngine tem cache própria
   // keyed por cacheKey+efeito), por isso o áudio limpo continua partilhado entre users.

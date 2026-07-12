@@ -11,6 +11,7 @@ import { handleInteraction } from '../src/commands/index';
 import type { BotDeps } from '../src/bot/deps';
 import { initDb } from '../src/store/db';
 import { getUserVoice } from '../src/store/userVoice';
+import { grantUserPremium, grantGuildPremium } from '../src/store/premium';
 import type Database from 'better-sqlite3';
 
 const GUILD = 'g-vset';
@@ -31,7 +32,7 @@ function makeVoiceInteraction(opts: {
   sub: string;
   model?: string;
   speed?: number | null;
-  engine?: 'google' | 'piper';
+  engine?: 'google' | 'piper' | 'kokoro' | 'gcloud';
 }) {
   const replies: string[] = [];
   return {
@@ -123,6 +124,44 @@ describe('/voice set — copy beginner-friendly', () => {
 // silent-clamp (5.0 -> 2.0) e respondia "sucesso" a 2× — uma surpresa silenciosa. O
 // principiante deve receber um erro amigavel com o intervalo permitido e NADA e
 // gravado (nao clamp-com-aviso: rejeicao). Boundaries 0.5 e 2.0 continuam validos.
+// Gate Premium do motor Google HD (gcloud): só quem tem Vozen Plus (user) ou Vozen
+// Premium (servidor) o pode ESCOLHER. Sem Premium -> mensagem locked + NADA gravado
+// (a voz não fica presa num motor pago). Mesmo padrão dos efeitos premium.
+describe('/voice set — gate do motor Google HD (gcloud)', () => {
+  let db: Database.Database;
+  beforeEach(() => {
+    db = initDb(':memory:');
+  });
+  afterEach(() => {
+    db.close();
+  });
+
+  it('gcloud SEM Premium -> mensagem locked e NÃO grava a voz', async () => {
+    const i = makeVoiceInteraction({ sub: 'set', model: 'en_US-amy-medium', engine: 'gcloud' });
+    await handleInteraction(i as any, makeDeps(db));
+    expect(i.replies).toHaveLength(1);
+    expect(i.replies[0]).toContain('Google HD');
+    expect(i.replies[0]).toMatch(/🔒|Premium/);
+    // Nada gravado: a escolha paga foi recusada.
+    expect(getUserVoice(db, GUILD, USER)).toBeNull();
+  });
+
+  it('gcloud COM Vozen Plus (user) -> grava gcloud e confirma "Google HD"', async () => {
+    grantUserPremium(db, USER, 30, 'test', Date.now());
+    const i = makeVoiceInteraction({ sub: 'set', model: 'en_US-amy-medium', engine: 'gcloud' });
+    await handleInteraction(i as any, makeDeps(db));
+    expect(getUserVoice(db, GUILD, USER)?.engine).toBe('gcloud');
+    expect(i.replies[0]).toContain('Google HD');
+  });
+
+  it('gcloud COM Premium do servidor (guild) -> grava gcloud', async () => {
+    grantGuildPremium(db, GUILD, 30, 'test', Date.now());
+    const i = makeVoiceInteraction({ sub: 'set', model: 'en_US-amy-medium', engine: 'gcloud' });
+    await handleInteraction(i as any, makeDeps(db));
+    expect(getUserVoice(db, GUILD, USER)?.engine).toBe('gcloud');
+  });
+});
+
 describe('/voice set — speed fora do intervalo (0.5–2.0)', () => {
   let db: Database.Database;
   beforeEach(() => {

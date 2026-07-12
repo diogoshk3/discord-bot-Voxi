@@ -2,8 +2,9 @@ import type Database from 'better-sqlite3';
 // Tabela CACHEADA (lida a cada mensagem): todo o setter TEM de chamar invalidate.
 import { cached, invalidate } from './cache';
 
-/** Motor de TTS escolhido pelo utilizador: 'google' (gTTS, default), 'piper' ou 'kokoro'. */
-export type UserEngine = 'google' | 'piper' | 'kokoro';
+/** Motor de TTS escolhido pelo utilizador: 'google' (gTTS, default), 'piper', 'kokoro' ou
+ *  'gcloud' (Google HD — Google Cloud TTS Standard, perk Premium; sem key comporta-se como gTTS). */
+export type UserEngine = 'google' | 'piper' | 'kokoro' | 'gcloud';
 
 interface UserVoiceRow {
   voice_model: string;
@@ -29,7 +30,14 @@ export function getUserVoice(
     return {
       model: r.voice_model,
       speed: r.speed,
-      engine: r.engine === 'piper' ? 'piper' : r.engine === 'kokoro' ? 'kokoro' : 'google',
+      engine:
+        r.engine === 'piper'
+          ? 'piper'
+          : r.engine === 'kokoro'
+            ? 'kokoro'
+            : r.engine === 'gcloud'
+              ? 'gcloud'
+              : 'google',
     } as {
       model: string;
       speed: number;

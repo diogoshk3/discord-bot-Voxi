@@ -78,13 +78,16 @@ export class MultiSegmentEngine implements TTSEngine {
       for (const seg of segments) {
         const model = pickVoice(seg.lang, this.availableModels, req.model);
         // Cada segmento passa pelo motor base (cache single-voice do base
-        // reutilizada — sintese legitima de um substring). Herda o `engine` da
-        // mensagem para o PerUserEngineRouter usar o motor certo do utilizador.
+        // reutilizada — sintese legitima de um substring). Herda o `engine` E o
+        // `gcloudBudget` da mensagem: o PerUserEngineRouter usa o motor certo do
+        // utilizador e o GCloudEngine (chokepoint) precisa do orçamento — sem ele,
+        // uma mensagem multilíngue de um user Premium cairia em gTTS (fail-safe).
         const path = await this.base.synth({
           text: seg.text,
           model,
           speed: req.speed,
           engine: req.engine,
+          gcloudBudget: req.gcloudBudget,
         });
         wavs.push(readFileSync(path));
       }
@@ -120,6 +123,7 @@ export class MultiSegmentEngine implements TTSEngine {
         model: seg.model,
         speed: req.speed,
         engine: req.engine,
+        gcloudBudget: req.gcloudBudget,
       });
     }
 
@@ -148,6 +152,7 @@ export class MultiSegmentEngine implements TTSEngine {
           model: seg.model,
           speed: req.speed,
           engine: req.engine,
+          gcloudBudget: req.gcloudBudget,
         });
         wavs.push(readFileSync(path));
       }
@@ -165,6 +170,7 @@ export class MultiSegmentEngine implements TTSEngine {
         model: req.model,
         speed: req.speed,
         engine: req.engine,
+        gcloudBudget: req.gcloudBudget,
       });
     }
   }

@@ -189,6 +189,20 @@ export function initDb(path: string): Database.Database {
       CREATE INDEX IF NOT EXISTS idx_pass_activation_guild
         ON premium_pass_activation (guild_id);
 
+      -- Consumo MENSAL de chars do motor Google HD (gcloud), por pool. Salvaguarda de
+      -- custo PERSISTENTE (em memoria, um restart zerava o mes). scope = 'user' (pool
+      -- pessoal do Plus), 'pass' (pool partilhado do passe, keyed pelo dono), 'guild'
+      -- (servidor Premium direto sem passe) ou 'global'; key = o id do pool; month =
+      -- 'YYYY-MM' UTC (roda sozinho no dia 1). O motor conta SO em cache-miss (chamada
+      -- real a Google). Ver tts/gcloudUsage.ts.
+      CREATE TABLE IF NOT EXISTS gcloud_usage (
+        scope TEXT NOT NULL,
+        key   TEXT NOT NULL,
+        month TEXT NOT NULL,
+        chars INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (scope, key, month)
+      );
+
       -- Mapa HASH(email)->Discord ID para o webhook do Ko-fi. O comprador escreve o Discord
       -- ID na 1.ª compra (guardado aqui, indexado pelo HASH do email); nas RENOVAÇÕES o Ko-fi
       -- já não reenvia a mensagem, por isso reencontramos o Discord ID pelo hash do email.

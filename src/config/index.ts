@@ -21,6 +21,19 @@ export interface AppConfig {
   ratePerMin: number;
   ttsEngine: TtsEngineKind;
   openaiApiKey?: string;
+  // Motor "Google HD" por-utilizador (Google Cloud TTS Standard, perk Premium). API key
+  // (Google Cloud > Text-to-Speech). AUSENTE => o caminho 'gcloud' É o gTTS (identidade):
+  // escolher Google HD comporta-se como o default e NÃO há custo. A key vive SÓ no .env
+  // do VPS (nunca no repo), restrita à API TTS. Env: GOOGLE_TTS_API_KEY.
+  googleTtsApiKey?: string;
+  // Salvaguardas de custo do Google HD (allowances). Todas ajustáveis por env SEM deploy.
+  // Economia: $4/1M chars, free tier 4M/mês. Pior caso (allowance esgotado, free tier
+  // gasto): Plus $0.40 vs €1.99; passe 3s $1.60 vs €3.99; passe 8s $4.00 vs €7.99.
+  gcloudMaxChars: number; // pedido acima disto -> gTTS direto (default 500)
+  gcloudPlusMonthlyChars: number; // pool PESSOAL do Plus, por pessoa/mês (default 100 000)
+  gcloudPass3MonthlyChars: number; // pool do passe de 3 servidores/mês (default 400 000)
+  gcloudPass8MonthlyChars: number; // pool do passe de 8 servidores/mês (default 1 000 000)
+  gcloudDailyCharBudget: number; // backstop GLOBAL/dia em memória (0 = desligado; default 300 000)
   presenceText?: string;
   healthPort?: number;
   shards?: string;
@@ -227,6 +240,20 @@ export function loadConfig(): AppConfig {
     ratePerMin: numEnvPositive('RATE_PER_MIN', 8, { integer: true }),
     ttsEngine: engineEnv(),
     openaiApiKey: strEnv('OPENAI_API_KEY', '') || undefined,
+    // Google HD (Google Cloud TTS Standard). Ausente => caminho 'gcloud' = gTTS (inerte).
+    googleTtsApiKey: strEnv('GOOGLE_TTS_API_KEY', '') || undefined,
+    // Allowances do Google HD (ver comentário na interface). numEnvPositive: env
+    // inválida/<=0 cai no default seguro com aviso. O backstop diário permite 0 (desligado),
+    // por isso usa numEnv (não exige > 0).
+    gcloudMaxChars: numEnvPositive('GCLOUD_MAX_CHARS', 500, { integer: true }),
+    gcloudPlusMonthlyChars: numEnvPositive('GCLOUD_PLUS_MONTHLY_CHARS', 100_000, { integer: true }),
+    gcloudPass3MonthlyChars: numEnvPositive('GCLOUD_PASS3_MONTHLY_CHARS', 400_000, {
+      integer: true,
+    }),
+    gcloudPass8MonthlyChars: numEnvPositive('GCLOUD_PASS8_MONTHLY_CHARS', 1_000_000, {
+      integer: true,
+    }),
+    gcloudDailyCharBudget: numEnv('GCLOUD_DAILY_CHAR_BUDGET', 300_000),
     // P9.3 — texto opcional da presenca; vazio/ausente => undefined e buildPresence
     // usa o seu default de marca. Override exato quando definido.
     presenceText: strEnv('PRESENCE_TEXT', '') || undefined,

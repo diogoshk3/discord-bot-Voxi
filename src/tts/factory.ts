@@ -1,9 +1,12 @@
 // src/tts/factory.ts
+import type Database from 'better-sqlite3';
 import type { AppConfig } from '../config/index';
 import type { TTSEngine } from './engine';
 import { AudioCache } from './cache';
 import { PiperEngine } from './piper';
 import { NeuralEngine } from './neural';
+import { GCloudEngine, type GcloudUsage, type GcloudLimits } from './gcloud';
+import { getGcloudMonthlyChars, addGcloudMonthlyChars } from '../store/gcloudUsage';
 import { GTTSEngine } from './gtts';
 import { MultiSegmentEngine } from './multiSegment';
 import { RouterEngine } from './router';
@@ -26,7 +29,11 @@ import { log } from '../logging/logger';
  * PerUserEngineRouter que despacha por `req.engine`. É o motor-base da instância pública
  * — cada pessoa escolhe o seu motor em `/voice set`, com o Google por defeito.
  */
-export function createPerUserEngine(config: AppConfig, cache: AudioCache): TTSEngine {
+export function createPerUserEngine(
+  config: AppConfig,
+  cache: AudioCache,
+  db?: Database.Database,
+): TTSEngine {
   const gtts = new GTTSEngine(cache.withNamespace('gtts'), {
     chunkConcurrency: config.gttsChunkConcurrency,
   });
@@ -56,10 +63,44 @@ export function createPerUserEngine(config: AppConfig, cache: AudioCache): TTSEn
         { engine: google, langs: null, label: 'gtts' },
       ])
     : google;
+  // Google HD (OPT-IN Premium, /voice set engine:Google HD): COM GOOGLE_TTS_API_KEY, o
+  // caminho 'gcloud' é um RouterEngine que tenta a API oficial Google Cloud TTS e CAI no
+  // gTTS (google) por FALHA/timeout/orçamento (o GCloudEngine lança nesses casos) — quem
+  // opta nunca fica sem voz. SEM key, o caminho 'gcloud' É o próprio gTTS (identidade),
+  // por isso escolher Google HD comporta-se como o default e não há custo. O gTTS de toda
+  // a gente fica INALTERADO em qualquer caso. Gate + contagem de custo: Fases 2 e 3.
+  // Contadores mensais PERSISTENTES (SQLite) + tetos de custo (config). Sem db (ex.
+  // testes de wiring), o motor não conta mas continua a aplicar maxChars/fail-safe.
+  const gcloudUsage: GcloudUsage | undefined = db
+    ? {
+        getMonthly: (s, k, m) => getGcloudMonthlyChars(db, s, k, m),
+        addMonthly: (s, k, m, c) => addGcloudMonthlyChars(db, s, k, m, c),
+      }
+    : undefined;
+  const gcloudLimits: GcloudLimits = {
+    maxChars: config.gcloudMaxChars,
+    plusMonthly: config.gcloudPlusMonthlyChars,
+    pass3Monthly: config.gcloudPass3MonthlyChars,
+    pass8Monthly: config.gcloudPass8MonthlyChars,
+    dailyBudget: config.gcloudDailyCharBudget,
+  };
+  const gcloud: TTSEngine = config.googleTtsApiKey
+    ? new RouterEngine([
+        {
+          engine: new GCloudEngine(config.googleTtsApiKey, cache.withNamespace('gcloud'), {
+            usage: gcloudUsage,
+            limits: gcloudLimits,
+          }),
+          langs: null,
+          label: 'gcloud',
+        },
+        { engine: google, langs: null, label: 'gtts' },
+      ])
+    : google;
   log.info(
-    `[factory] motor por-utilizador ativo: google+breaker (${config.gttsBreakerThreshold} falhas -> ${config.gttsBreakerCooldownMs}ms) + piper + kokoro (${kokoroCmd ? 'sidecar detetado' : 'sem sidecar -> = gTTS'}) (opção do user).`,
+    `[factory] motor por-utilizador ativo: google+breaker (${config.gttsBreakerThreshold} falhas -> ${config.gttsBreakerCooldownMs}ms) + piper + kokoro (${kokoroCmd ? 'sidecar detetado' : 'sem sidecar -> = gTTS'}) + gcloud (${config.googleTtsApiKey ? 'key detetada' : 'sem key -> = gTTS'}) (opção do user).`,
   );
-  return new PerUserEngineRouter(google, piper, kokoro);
+  return new PerUserEngineRouter(google, piper, kokoro, gcloud);
 }
 
 function makePiper(config: AppConfig, cache: AudioCache): TTSEngine {

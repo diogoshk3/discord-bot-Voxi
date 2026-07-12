@@ -108,7 +108,7 @@ async function main(): Promise<void> {
   const baseEngine =
     config.ttsEngine === 'neural'
       ? createEngine(config, cache)
-      : createPerUserEngine(config, cache);
+      : createPerUserEngine(config, cache, db); // db => contadores persistentes do Google HD
   // Decoradores externos, de dentro para fora:
   //   selectEngine (multi-segmento) -> CloneEngine (voz clonada) -> ProsodyEngine
   //   (entoação de pergunta) -> EffectEngine (efeito de voz)

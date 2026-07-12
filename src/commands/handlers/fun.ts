@@ -4,6 +4,7 @@ import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 import type { BotDeps } from '../../bot/deps';
 import { getPlayer, getLimiter } from '../../bot/deps';
 import { getUserVoice } from '../../store/userVoice';
+import { resolveUserEngine } from '../../tts/resolveEngine';
 import { getGuildConfig } from '../../store/guildConfig';
 import { isGuildPremium, isUserPremium } from '../../store/premium';
 import { getBirthday, setBirthday, clearBirthday, isValidBirthday } from '../../store/birthday';
@@ -61,7 +62,9 @@ export async function handleLaugh(i: ChatInputCommandInteraction, deps: BotDeps)
     model,
     speed,
     singleVoice: true,
-    engine: stored?.engine, // ri no MESMO motor que o user escolheu
+    // ri no MESMO motor que o user escolheu; o resolver aplica o gate gcloud (->google
+    // sem Premium) e anexa o orçamento (Fase 3) — devolve engine + gcloudBudget.
+    ...resolveUserEngine(deps.db, i.guildId!, i.user.id, stored?.engine, Date.now()),
   };
   // say() devolve false quando a fila esta no cap: nesse caso reutilizamos tts.busy.
   const queued = await player.say(req);
@@ -122,7 +125,14 @@ export async function handleJoke(i: ChatInputCommandInteraction, deps: BotDeps):
   // seguir a escolha do utilizador — tal como /laugh e /voice preview. Sem isto, um
   // user de Piper ouvia as piadas no Google (inconsistente com tudo o resto).
   const stored = getUserVoice(deps.db, i.guildId!, i.user.id);
-  const engine = stored?.engine;
+  // Resolver partilhado: gcloud->google sem Premium (gate) + orçamento (Fase 3).
+  const resolvedEngine = resolveUserEngine(
+    deps.db,
+    i.guildId!,
+    i.user.id,
+    stored?.engine,
+    Date.now(),
+  );
 
   // pickJoke e PURO/seeded; em runtime usamos Date.now() como seed (variedade sem
   // sacrificar a testabilidade determinista da funcao).
@@ -132,7 +142,13 @@ export async function handleJoke(i: ChatInputCommandInteraction, deps: BotDeps):
   // Enfileira SEMPRE a piada sozinha primeiro. O reply baseia-se NESTA fala: se a
   // fila estiver cheia (say false), respondemos busy e nao enfileiramos o riso.
   // singleVoice: a lingua da piada e CONHECIDA (escolhida), a deteccao nao manda.
-  const queued = await player.say({ text: joke, model, speed, singleVoice: true, engine });
+  const queued = await player.say({
+    text: joke,
+    model,
+    speed,
+    singleVoice: true,
+    ...resolvedEngine,
+  });
 
   // Se `risos` E a piada entrou na fila, enfileira o RISO como fala SEPARADA com uma
   // pausa real de 2s A FRENTE (leadSilenceMs). Assim o Vozen fala a piada, PAUSA ~2s,
@@ -144,7 +160,7 @@ export async function handleJoke(i: ChatInputCommandInteraction, deps: BotDeps):
       text: laughterFor(lang.prefix),
       model,
       speed,
-      engine,
+      ...resolvedEngine,
       leadSilenceMs: JOKE_LAUGH_PAUSE_MS,
       // singleVoice: sem isto, um edge-case multi-script perderia o leadSilenceMs
       // (o caminho por-segmento chama base.synth sem ele). A lingua e conhecida.
@@ -210,13 +226,26 @@ export async function handleRizz(i: ChatInputCommandInteraction, deps: BotDeps):
     deps.config.defaultVoice ||
     'en_US-amy-medium';
   const stored = getUserVoice(deps.db, i.guildId!, i.user.id);
-  const engine = stored?.engine; // segue o motor do user (como /joke e /laugh)
+  // segue o motor do user (como /joke e /laugh), com o gate gcloud + orçamento (Fase 3).
+  const resolvedEngine = resolveUserEngine(
+    deps.db,
+    i.guildId!,
+    i.user.id,
+    stored?.engine,
+    Date.now(),
+  );
 
   const line = pickLine(langKey, Date.now());
   const speed = deps.config.defaultSpeed;
 
   // Enfileira SEMPRE a frase sozinha primeiro; o reply baseia-se NESTA fala.
-  const queued = await player.say({ text: line, model, speed, singleVoice: true, engine });
+  const queued = await player.say({
+    text: line,
+    model,
+    speed,
+    singleVoice: true,
+    ...resolvedEngine,
+  });
 
   // Efeito sonoro "rizz" a seguir (fala SEPARADA, tocada direto via assetPath — sem motor
   // nem cache). Best-effort: se a fila encher entretanto, simplesmente nao toca o efeito
@@ -282,14 +311,21 @@ export async function handleMicroFun(
         cfg.defaultVoice ||
         deps.config.defaultVoice ||
         'en_US-amy-medium';
-      const engine = getUserVoice(deps.db, i.guildId!, i.user.id)?.engine;
+      const stored = getUserVoice(deps.db, i.guildId!, i.user.id);
+      const resolvedEngine = resolveUserEngine(
+        deps.db,
+        i.guildId!,
+        i.user.id,
+        stored?.engine,
+        Date.now(),
+      );
       // singleVoice: a língua da frase é CONHECIDA (o banco), a deteção não manda.
       void player.say({
         text: spoken,
         model,
         speed: deps.config.defaultSpeed,
         singleVoice: true,
-        engine,
+        ...resolvedEngine,
       });
     }
   }

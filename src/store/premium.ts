@@ -151,6 +151,32 @@ export function listPassActivations(db: Database.Database, userId: string): stri
   ).map((r) => r.guild_id);
 }
 
+/**
+ * Dono (e nº de seats) do passe ATIVO que cobre esta guild — para saber a que POOL de
+ * allowance do Google HD debitar (o pool é do PASSE, partilhado entre os servidores dele,
+ * keyed pelo dono). Só passes não-expirados. `premium_pass_activation` não tem UNIQUE em
+ * guild_id, por isso dois donos PODERIAM ter ativado a mesma guild — desempate
+ * DETERMINÍSTICO pelo `activated_at` mais antigo (o primeiro a cobrir a guild). null se
+ * nenhum passe ativo cobre a guild (ex.: Premium direto por redeem/discord, sem passe).
+ */
+export function resolveGuildPassOwner(
+  db: Database.Database,
+  guildId: string,
+  now: number,
+): { ownerId: string; seats: number } | null {
+  const row = db
+    .prepare(
+      `SELECT a.user_id AS owner, p.seats AS seats
+       FROM premium_pass_activation a
+       JOIN premium_pass p ON p.user_id = a.user_id
+       WHERE a.guild_id = ? AND p.expires_at > ?
+       ORDER BY a.activated_at ASC
+       LIMIT 1`,
+    )
+    .get(guildId, now) as { owner: string; seats: number } | undefined;
+  return row ? { ownerId: row.owner, seats: row.seats } : null;
+}
+
 /** Quantas licenças o utilizador tem em uso agora. */
 export function countActiveSeats(db: Database.Database, userId: string): number {
   const row = db

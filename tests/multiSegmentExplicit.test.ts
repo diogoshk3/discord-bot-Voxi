@@ -87,6 +87,34 @@ describe('MultiSegmentEngine — segmentos EXPLICITOS (req.segments)', () => {
     expect(dataSize).toBeGreaterThan(8); // 4 + silencio + 4
   });
 
+  it('PROPAGA engine + gcloudBudget para CADA sub-pedido (senão o Google HD cai em gTTS)', async () => {
+    // Regressão (review Fase 4): o motor gcloud é gated no chokepoint pelo req.gcloudBudget.
+    // Se o caminho por-segmento não o herdasse, uma mensagem multilíngue de um user Premium
+    // chegava ao GCloudEngine SEM orçamento -> fail-safe -> gTTS (Google HD só funcionava nos
+    // comandos-novidade, não no chat normal). Cada segmento TEM de levar engine + gcloudBudget.
+    const { engine: base, calls } = makeBase();
+    const eng = new MultiSegmentEngine(base, AVAILABLE, cache);
+    const budget = { scope: 'user', key: 'u1' } as const;
+    const req: SynthRequest = {
+      text: 'isto ta a funcionar by the way',
+      model: 'pt_PT-tugao-medium',
+      speed: 1,
+      engine: 'gcloud',
+      gcloudBudget: budget,
+      segments: [
+        { text: 'isto ta a funcionar', model: 'pt_PT-tugao-medium' },
+        { text: 'by the way', model: 'en_US-amy-medium' },
+      ],
+    };
+
+    await eng.synth(req);
+    expect(calls).toHaveLength(2);
+    for (const c of calls) {
+      expect(c.engine).toBe('gcloud');
+      expect(c.gcloudBudget).toEqual(budget);
+    }
+  });
+
   it('req.segments length 1 -> UMA chamada ao base com o {text,model} do segmento', async () => {
     const { engine: base, calls } = makeBase();
     const eng = new MultiSegmentEngine(base, AVAILABLE, cache);

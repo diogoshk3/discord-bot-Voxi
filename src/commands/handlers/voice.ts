@@ -21,6 +21,7 @@ import { isVoiceEffect, isPremiumEffect, effectLabel, type VoiceEffect } from '.
 import { sanitizeSpeakerName } from '../../language/speakerName';
 import { formatVoiceList, makeLocalizedNamer } from '../../language/voiceMap';
 import type { SynthRequest } from '../../tts/engine';
+import { resolveUserEngine } from '../../tts/resolveEngine';
 import {
   getClone,
   saveClone,
@@ -411,11 +412,24 @@ export async function handleVoice(i: ChatInputCommandInteraction, deps: BotDeps)
     // Clamp preservado: no-op para valores fornecidos validos (ja em [0.5,2.0]); mantem
     // o comportamento antigo para o caminho omitido->defaultSpeed.
     const clamped = Math.min(2.0, Math.max(0.5, speed));
-    // Motor por-utilizador: opção nova (google/piper). Se OMITIDA, PRESERVA o motor
-    // atual do user — senão mudar só a voz reporia o motor para Google (read-first).
-    const engineOpt = i.options.getString('engine') as 'google' | 'piper' | 'kokoro' | null;
+    // Motor por-utilizador: opção nova (google/piper/kokoro/gcloud). Se OMITIDA, PRESERVA
+    // o motor atual do user — senão mudar só a voz reporia o motor para Google (read-first).
+    const engineOpt = i.options.getString('engine') as
+      'google' | 'piper' | 'kokoro' | 'gcloud' | null;
     const currentEngine = getUserVoice(deps.db, i.guildId!, i.user.id)?.engine ?? 'google';
     const engine = engineOpt ?? currentEngine;
+    // GATE Premium: o motor Google HD (gcloud) exige Vozen Plus (user) OU Premium do
+    // servidor. Só aqui, ao GUARDAR — em runtime o resolveUserEngine revalida (Premium
+    // expirado -> gTTS). Mesmo padrão dos efeitos premium (voice.effect.locked).
+    if (engine === 'gcloud') {
+      const now = Date.now();
+      const unlocked =
+        isUserPremium(deps.db, i.user.id, now) || isGuildPremium(deps.db, i.guildId!, now);
+      if (!unlocked) {
+        await reply(i, t('voice.engine.gcloudLocked', locale));
+        return;
+      }
+    }
     setUserVoice(deps.db, i.guildId!, i.user.id, model, clamped, engine);
     // Copy beginner-friendly: nome da voz NA LÍNGUA DO UTILIZADOR (i.locale) + id cru
     // copy-pasteável. Inclui o motor escolhido.
@@ -425,7 +439,14 @@ export async function handleVoice(i: ChatInputCommandInteraction, deps: BotDeps)
         name: makeLocalizedNamer(i.locale, deps.availableModels)(model),
         model,
         speed: clamped,
-        engine: engine === 'piper' ? 'Piper' : engine === 'kokoro' ? 'Kokoro' : 'Google',
+        engine:
+          engine === 'piper'
+            ? 'Piper'
+            : engine === 'kokoro'
+              ? 'Kokoro'
+              : engine === 'gcloud'
+                ? 'Google HD'
+                : 'Google',
       }),
     );
   } else if (sub === 'list') {
@@ -524,7 +545,9 @@ export async function handleVoice(i: ChatInputCommandInteraction, deps: BotDeps)
       model,
       speed,
       singleVoice: true,
-      engine: stored?.engine,
+      // o preview tem de soar ao que o user vai ouvir; o resolver aplica o gate gcloud
+      // (->google sem Premium) e o orçamento (Fase 3) — engine + gcloudBudget.
+      ...resolveUserEngine(deps.db, i.guildId!, i.user.id, stored?.engine, Date.now()),
     };
     // say() devolve false quando a fila esta no cap: nesse caso NAO mentir "a
     // reproduzir" — reutilizamos a mesma chave tts.busy do /tts (consistencia).
