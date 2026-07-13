@@ -436,6 +436,23 @@
     btn.innerHTML = `${avatarMarkup(u, "nav__login-av", 24)}<span>${esc(u.username || "Account")}</span>`;
   }
 
+  // Card "Ativar uma compra": o comprador cola o código do recibo Ko-fi e reclama a compra
+  // que chegou sem Discord ID (o checkout de subscrição não tem caixa de mensagem). POST
+  // autenticado a /api/link — ver doClaim. Aparece sempre que a pessoa está logada.
+  function claimCard() {
+    return (
+      `<div class="ppanel__claim">` +
+      `<span class="ppanel__claimtitle">${t("claim.title")}</span>` +
+      `<p class="ppanel__claimhint">${t("claim.hint")}</p>` +
+      `<form class="ppanel__claimform" id="ppClaimForm">` +
+      `<input type="text" id="ppClaimCode" class="ppanel__claiminput" placeholder="${esc(t("claim.placeholder"))}" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="email" maxlength="120">` +
+      `<button type="submit" class="ppanel__claimbtn" id="ppClaimBtn">${t("claim.btn")}</button>` +
+      `</form>` +
+      `<p class="ppanel__claimmsg" id="ppClaimMsg" role="status" aria-live="polite" hidden></p>` +
+      `</div>`
+    );
+  }
+
   function renderOk(d) {
     const u = d.user || {};
     const av = avatarMarkup(u, "ppanel__av", 128);
@@ -476,8 +493,66 @@
       `<div class="ppanel__statusgrid">` +
       statusRow("Vozen Premium", premiumActive, premiumParts.join(" &middot; ")) +
       statusRow("Vozen Plus", plusActive, plusDetail) +
-      `</div>${servers}`
+      `</div>${servers}${claimCard()}`
     );
+  }
+
+  // Submete o código do recibo a POST {API_BASE}/api/link (autenticado com o token do OAuth).
+  // 200 => ativado (recarrega o painel); 404 => código não encontrado; 429 => rate-limit;
+  // 401 => token expirou (re-login). Nunca expõe qual código é válido (404 genérico do backend).
+  async function doClaim(ev) {
+    ev.preventDefault();
+    const el = document.getElementById("premiumPanel");
+    const input = el && el.querySelector("#ppClaimCode");
+    const btn = el && el.querySelector("#ppClaimBtn");
+    const msg = el && el.querySelector("#ppClaimMsg");
+    if (!input || !btn) return;
+    const code = (input.value || "").trim();
+    const setMsg = (text, kind) => {
+      if (!msg) return;
+      msg.hidden = false;
+      msg.textContent = text;
+      msg.className = "ppanel__claimmsg" + (kind ? " is-" + kind : "");
+    };
+    if (!code) {
+      setMsg(t("claim.notfound"), "err");
+      return;
+    }
+    const tok = storedToken();
+    if (!tok) {
+      login();
+      return;
+    }
+    const prev = btn.textContent;
+    btn.disabled = true;
+    input.disabled = true;
+    btn.textContent = t("claim.working");
+    try {
+      const res = await fetch(PREMIUM_API_BASE + "/api/link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + tok },
+        body: JSON.stringify({ code }),
+      });
+      if (res.ok) {
+        setMsg(t("claim.ok"), "ok");
+        input.value = "";
+        window.setTimeout(loadPanel, 1200); // reflete o novo estado no painel
+        return;
+      }
+      if (res.status === 401) {
+        login();
+        return;
+      }
+      if (res.status === 429) setMsg(t("claim.ratelimited"), "err");
+      else if (res.status === 404) setMsg(t("claim.notfound"), "err");
+      else setMsg(t("claim.error"), "err");
+    } catch {
+      setMsg(t("claim.error"), "err");
+    } finally {
+      btn.disabled = false;
+      input.disabled = false;
+      btn.textContent = prev;
+    }
   }
 
   function renderPanel() {
@@ -511,6 +586,7 @@
     byId("ppLogin")?.addEventListener("click", login);
     byId("ppLogout")?.addEventListener("click", logout);
     byId("ppRetry")?.addEventListener("click", loadPanel);
+    byId("ppClaimForm")?.addEventListener("submit", doClaim);
     el.querySelector(".ppanel__id")?.addEventListener("click", async (ev) => {
       const btn = ev.currentTarget;
       const id = btn.dataset.id || "";

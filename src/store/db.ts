@@ -223,6 +223,25 @@ export function initDb(path: string): Database.Database {
         processed_at   INTEGER NOT NULL
       );
 
+      -- Compras Ko-fi PENDENTES: chegaram pelo webhook mas SEM Discord ID associável (o
+      -- checkout de subscrição do Ko-fi não tem caixa de mensagem fiável). Ficam aqui à
+      -- espera de o comprador as RECLAMAR no site (login Discord + código do recibo). Indexadas
+      -- pela PK transaction_id (que o comprador tem no recibo — chave forte) e por email_hash
+      -- (para renovações órfãs); email_hash pode ser NULL se o payload não trouxe email, e aí
+      -- a compra só é reclamável pelo tx id. claimed_at NULL = por reclamar. Ver store/
+      -- kofiPending.ts; uma purga remove as antigas (minimização de dados).
+      CREATE TABLE IF NOT EXISTS kofi_pending (
+        transaction_id TEXT PRIMARY KEY,
+        email_hash     TEXT,
+        plan           TEXT NOT NULL,
+        days           INTEGER NOT NULL,
+        seats          INTEGER NOT NULL,
+        created_at     INTEGER NOT NULL,
+        claimed_at     INTEGER
+      );
+      CREATE INDEX IF NOT EXISTS idx_kofi_pending_email
+        ON kofi_pending (email_hash);
+
       -- 24/7 in-call (Premium): canal de voz onde o bot estava, por guild. Guardado ao
       -- entrar numa call (só servidores Premium) e apagado no /leave e no guildDelete —
       -- NÃO no funil genérico removePlayer nem no shutdown, para SOBREVIVER a um restart

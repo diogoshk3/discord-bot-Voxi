@@ -1,5 +1,14 @@
 {
   "ui": {
+    "claim.title": "구매 활성화",
+    "claim.hint": "Ko-fi에서 Plus 또는 Premium을 구매하셨나요? 결제에 사용한 이메일을 입력하면 이 Discord 계정에서 활성화해 드립니다.",
+    "claim.placeholder": "Ko-fi에서 사용한 이메일",
+    "claim.btn": "활성화",
+    "claim.working": "활성화 중…",
+    "claim.ok": "완료! 구매가 이제 이 계정에서 활성화되었습니다.",
+    "claim.notfound": "해당 코드로 구매를 찾을 수 없습니다. Ko-fi 영수증에서 확인 후 다시 시도하세요.",
+    "claim.ratelimited": "시도가 너무 많습니다. 몇 분 후 다시 시도하세요.",
+    "claim.error": "문제가 발생했습니다. 잠시 후 다시 시도하세요.",
     "nav.features": "기능",
     "nav.games": "게임",
     "nav.commands": "명령어",
@@ -149,7 +158,7 @@
     "price.m.16": "24시간 통화 참여",
     "price.m.17": "어느 서버든 함께",
     "price.m.18": "서버의 모든 사람에게 적용",
-    "price.idNote": "⚠️ Ko-fi 결제 메시지에 Discord ID를 입력하세요. 그러면 플랜이 즉시 활성화됩니다.",
+    "price.idNote": "⚠️ Ko-fi에서 구매한 후 vozen.org/account에서 플랜을 활성화하세요 — Discord로 로그인만 하면 됩니다.",
     "price.idNoteLink": "내 ID 복사 →",
     "price.m.19": "서버 발음 50개",
     "price.m.20": "매일 대화 스트릭"
@@ -207,7 +216,7 @@
     ],
     [
       "Premium에는 무엇이 포함되나요?",
-      "8가지 음성 효과 전부 (저음, 악마, 라디오, 수중…), 프리미엄 뉴럴 음성과 함께, 모두 나가도 음성 채널에 계속 상주합니다. 서버당 월 €3.99 또는 연 €37.99, 아니면 서버를 넘나들며 따라오는 개인 혜택을 위한 Vozen Plus (월 €1.99). 코드는 /premium activate으로 사용하세요. Ko-fi에서 구매할 때 메시지에 Discord ID를 입력하면 즉시 활성화됩니다 (vozen.org/account에서 복사)."
+      "8가지 음성 효과 전부 (저음, 악마, 라디오, 수중…), 프리미엄 뉴럴 음성과 함께, 모두 나가도 음성 채널에 계속 상주합니다. 서버당 월 €3.99 또는 연 €37.99, 아니면 서버를 넘나들며 따라오는 개인 혜택을 위한 Vozen Plus (월 €1.99). 코드는 /premium activate으로 사용하세요. Ko-fi에서 구매한 후 vozen.org/account에서 활성화하세요 — Discord로 로그인하고 결제에 사용한 이메일을 입력하세요."
     ],
     [
       "서버에 Vozen을 어떻게 추가하나요?",

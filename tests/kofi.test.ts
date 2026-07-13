@@ -14,6 +14,7 @@ import {
 } from '../src/premium/kofi';
 import { applyKofiGrant, resolveKofiDiscordId } from '../src/premium/kofiWebhook';
 import { startKofiWebhook } from '../src/premium/kofiWebhook';
+import { findUnclaimedPendingByTx } from '../src/store/kofiPending';
 
 const DID = '123456789012345678'; // 18 dígitos
 const EMAIL = 'buyer@example.com';
@@ -562,6 +563,52 @@ describe('kofi — idempotência do webhook (retries do Ko-fi não duplicam o gr
 
     const status = await startAndPost(kofiJson({ kofi_transaction_id: 'tx-db-fail' }));
     expect(status).toBe(503);
+  });
+
+  it('compra SEM Discord ID -> guarda um PENDENTE reclamável (tx id + hash do email)', async () => {
+    // Regressão do fluxo real (logs de produção): a subscrição do Ko-fi não tem caixa de
+    // mensagem, por isso a compra chega sem Discord ID. Em vez de só logar, guardamos um
+    // pendente para o comprador reclamar no site. Indexado pelo tx id (recibo) e pelo hash do
+    // email (renovações), NUNCA o email em claro.
+    server = startKofiWebhook({
+      db,
+      token: 'tok',
+      port: 0,
+      now: () => 1_000_000,
+      logInfo: () => {},
+      logError: () => {},
+    });
+    await new Promise<void>((resolve) => server!.once('listening', () => resolve()));
+
+    // Mensagem sem Discord ID (mas com email do comprador, como o Ko-fi real envia).
+    expect(
+      await startAndPost(kofiJson({ message: 'obrigado!', kofi_transaction_id: 'tx-pend-1' })),
+    ).toBe(200);
+    const p = findUnclaimedPendingByTx(db, 'tx-pend-1')!;
+    expect(p).not.toBeNull();
+    expect(p.plan).toBe('premium'); // tier default do kofiJson é "Vozen Premium — Monthly"
+    expect(p.seats).toBe(PREMIUM_PASS_SEATS);
+    expect(p.days).toBe(30);
+    expect(p.emailHash).toBe(hashKofiEmail('tok', EMAIL)); // hash, nunca o email
+    // E NÃO ativou nada direto (não há Discord ID ainda).
+    expect(getPremiumPass(db, DID)).toBeNull();
+  });
+
+  it('compra COM Discord ID -> ativa direto e NÃO cria pendente', async () => {
+    server = startKofiWebhook({
+      db,
+      token: 'tok',
+      port: 0,
+      now: () => 1_000_000,
+      logInfo: () => {},
+      logError: () => {},
+    });
+    await new Promise<void>((resolve) => server!.once('listening', () => resolve()));
+
+    // kofiJson traz por defeito "Discord: <DID>" na mensagem -> ativa já.
+    expect(await startAndPost(kofiJson({ kofi_transaction_id: 'tx-direto' }))).toBe(200);
+    expect(getPremiumPass(db, DID)).not.toBeNull();
+    expect(findUnclaimedPendingByTx(db, 'tx-direto')).toBeNull(); // nada pendente
   });
 
   it('grant manual: NÃO regista o nome do comprador (PII), só o tx id', async () => {

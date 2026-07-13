@@ -1,5 +1,14 @@
 {
   "ui": {
+    "claim.title": "Activar una compra",
+    "claim.hint": "¿Compraste Plus o Premium en Ko-fi? Escribe el correo con el que pagaste y lo activaremos en esta cuenta de Discord.",
+    "claim.placeholder": "Correo usado en Ko-fi",
+    "claim.btn": "Activar",
+    "claim.working": "Activando…",
+    "claim.ok": "¡Listo! Tu compra ya está activa en esta cuenta.",
+    "claim.notfound": "No encontramos ninguna compra con ese código. Compruébalo en tu recibo de Ko-fi e inténtalo de nuevo.",
+    "claim.ratelimited": "Demasiados intentos. Espera unos minutos e inténtalo de nuevo.",
+    "claim.error": "Algo salió mal. Inténtalo de nuevo en un momento.",
     "nav.features": "Funciones",
     "nav.games": "Juegos",
     "nav.commands": "Comandos",
@@ -149,7 +158,7 @@
     "price.m.16": "En la llamada 24/7",
     "price.m.17": "Te acompaña a cualquier servidor",
     "price.m.18": "Funciona para todos en el servidor",
-    "price.idNote": "⚠️ Pon tu ID de Discord en el mensaje de compra de Ko-fi. Eso activa tu plan al instante.",
+    "price.idNote": "⚠️ Tras comprar en Ko-fi, activa tu plan en vozen.org/account — inicia sesión con Discord.",
     "price.idNoteLink": "Copiar mi ID →",
     "price.m.19": "50 pronunciaciones del servidor",
     "price.m.20": "Rachas diarias de charla"
@@ -207,7 +216,7 @@
     ],
     [
       "¿Qué incluye Premium?",
-      "Los 8 efectos de voz (grave, demonio, radio, bajo el agua…), con voces neuronales premium, y permanece en tu canal de voz aunque todos se vayan. €3.99/mes o €37.99/año por servidor, o Vozen Plus (€1.99/mes) para ventajas personales que te acompañan entre servidores. Canjea códigos con /premium activate. Al comprar en Ko-fi, pon tu ID de Discord en el mensaje para activarlo al instante (cópialo en vozen.org/account)."
+      "Los 8 efectos de voz (grave, demonio, radio, bajo el agua…), con voces neuronales premium, y permanece en tu canal de voz aunque todos se vayan. €3.99/mes o €37.99/año por servidor, o Vozen Plus (€1.99/mes) para ventajas personales que te acompañan entre servidores. Canjea códigos con /premium activate. Al comprar en Ko-fi, actívalo en vozen.org/account — inicia sesión con Discord e introduce el correo con el que pagaste."
     ],
     [
       "¿Cómo añado Vozen a mi servidor?",

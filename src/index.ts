@@ -7,6 +7,7 @@ import { startBotListUpdater } from './botLists';
 import { log } from './logging/logger';
 import { initDb } from './store/db';
 import { startDepartedPurgeJob } from './store/guildDeparted';
+import { startPendingPurgeJob } from './store/kofiPending';
 import { AudioCache } from './tts/cache';
 import { createEngine, createPerUserEngine, selectEngine } from './tts/factory';
 import { syntheticGttsModels } from './language/voiceMap';
@@ -362,6 +363,16 @@ async function main(): Promise<void> {
       );
     } catch (err) {
       log.error('[index] falha ao arrancar o job de purga de servidores saídos (ignorado)', err);
+    }
+    // Minimização de dados: purga as compras Ko-fi PENDENTES (por reclamar) com >90 dias.
+    // Corre já e depois 1x/dia. O comprador reclama muito antes; as renovações não dependem
+    // de pendentes antigos (usam o mapa email->Discord ID). Best-effort.
+    try {
+      startPendingPurgeJob(db, (removed) =>
+        log.info(`[retencao] purgadas ${removed} compra(s) Ko-fi pendente(s) antiga(s).`),
+      );
+    } catch (err) {
+      log.error('[index] falha ao arrancar o job de purga de pendentes Ko-fi (ignorado)', err);
     }
     // 24/7 in-call: repõe os servidores Premium nos canais onde estavam antes do
     // restart/deploy (as ligações de voz morrem no encerramento; as linhas de

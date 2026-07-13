@@ -1,5 +1,14 @@
 {
   "ui": {
+    "claim.title": "Activer un achat",
+    "claim.hint": "Vous avez acheté Plus ou Premium sur Ko-fi ? Saisissez l'e-mail utilisé pour le paiement et nous l'activerons sur ce compte Discord.",
+    "claim.placeholder": "E-mail utilisé sur Ko-fi",
+    "claim.btn": "Activer",
+    "claim.working": "Activation…",
+    "claim.ok": "C’est fait ! Votre achat est maintenant actif sur ce compte.",
+    "claim.notfound": "Aucun achat trouvé pour ce code. Vérifiez-le sur votre reçu Ko-fi et réessayez.",
+    "claim.ratelimited": "Trop de tentatives. Patientez quelques minutes et réessayez.",
+    "claim.error": "Une erreur s'est produite. Réessayez dans un instant.",
     "nav.features": "Fonctionnalités",
     "nav.games": "Jeux",
     "nav.commands": "Commandes",
@@ -149,7 +158,7 @@
     "price.m.16": "Dans l’appel 24/7",
     "price.m.17": "Te suit sur tous les serveurs",
     "price.m.18": "Marche pour tout le serveur",
-    "price.idNote": "⚠️ Mets ton ID Discord dans le message d’achat Ko-fi. C’est ce qui active ton offre instantanément.",
+    "price.idNote": "⚠️ Après l’achat sur Ko-fi, activez votre offre sur vozen.org/account — connectez-vous avec Discord.",
     "price.idNoteLink": "Copier mon ID →",
     "price.m.19": "50 prononciations du serveur",
     "price.m.20": "Séries de discussion quotidiennes"
@@ -207,7 +216,7 @@
     ],
     [
       "Que comprend Premium ?",
-      "Les 8 effets de voix (grave, démon, radio, sous l'eau…), avec des voix neuronales premium, et il reste dans ton salon vocal même quand tout le monde part. €3.99/mois ou €37.99/an par serveur, ou Vozen Plus (€1.99/mois) pour des avantages personnels qui vous suivent d'un serveur à l'autre. Activez vos codes avec /premium activate. Lors de l’achat sur Ko-fi, mets ton ID Discord dans le message pour l’activer instantanément (copie-le sur vozen.org/account)."
+      "Les 8 effets de voix (grave, démon, radio, sous l'eau…), avec des voix neuronales premium, et il reste dans ton salon vocal même quand tout le monde part. €3.99/mois ou €37.99/an par serveur, ou Vozen Plus (€1.99/mois) pour des avantages personnels qui vous suivent d'un serveur à l'autre. Activez vos codes avec /premium activate. Après l’achat sur Ko-fi, activez sur vozen.org/account — connectez-vous avec Discord et saisissez l’e-mail utilisé."
     ],
     [
       "Comment ajouter Vozen à mon serveur ?",

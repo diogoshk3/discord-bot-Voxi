@@ -14,6 +14,8 @@ import {
   lookupKofiSupporter,
   recordKofiTransaction,
 } from '../store/premium';
+import { recordPendingGrant } from '../store/kofiPending';
+import { claimPendingGrant } from './claim';
 import {
   parseKofiPayload,
   verifyKofiToken,
@@ -44,6 +46,12 @@ export interface KofiWebhookDeps {
 const API_RATE_MAX = 30; // pedidos
 const API_RATE_WINDOW_MS = 10_000; // por 10s
 const API_RATE_MAX_ENTRIES = 2048;
+
+// Claim (POST /api/link): limite MUITO mais apertado — é anti-brute-force do código da
+// transação. 5 tentativas / 10 min / IP: chega de sobra para um comprador legítimo e torna
+// impraticável adivinhar um tx id (UUID) por força bruta.
+const CLAIM_RATE_MAX = 5;
+const CLAIM_RATE_WINDOW_MS = 10 * 60 * 1000;
 
 interface RateState {
   count: number;
@@ -114,22 +122,27 @@ function pruneRateMap(rate: Map<string, RateState>, now: number, maxEntries: num
   }
 }
 
-/** true se o IP passou do limite na janela atual (e regista o pedido). */
+/**
+ * true se o IP passou do limite `max` na janela `windowMs` (e regista o pedido). Parametrizável
+ * para servir tanto a leitura do painel (30/10s) como o claim (5/10min).
+ */
 function isRateLimited(
   rate: Map<string, RateState>,
   ip: string,
   now: number,
   maxEntries: number,
+  max: number,
+  windowMs: number,
 ): boolean {
   const cur = rate.get(ip);
   if (!cur || cur.reset <= now) {
     if (cur) rate.delete(ip);
     pruneRateMap(rate, now, maxEntries);
-    rate.set(ip, { count: 1, reset: now + API_RATE_WINDOW_MS });
+    rate.set(ip, { count: 1, reset: now + windowMs });
     return false;
   }
   cur.count += 1;
-  return cur.count > API_RATE_MAX;
+  return cur.count > max;
 }
 
 interface ApiCtx {
@@ -167,7 +180,16 @@ function handleApiRequest(
     res.writeHead(405, cors).end('method not allowed');
     return;
   }
-  if (isRateLimited(ctx.rate, clientIp(req), ctx.now(), ctx.rateMaxEntries)) {
+  if (
+    isRateLimited(
+      ctx.rate,
+      clientIp(req),
+      ctx.now(),
+      ctx.rateMaxEntries,
+      API_RATE_MAX,
+      API_RATE_WINDOW_MS,
+    )
+  ) {
     res.writeHead(429, cors).end('{"error":"rate_limited"}');
     return;
   }
@@ -193,6 +215,126 @@ function handleApiRequest(
     });
 }
 
+interface ClaimCtx {
+  statusApi: StatusApi;
+  apiOrigin: string;
+  db: Database.Database;
+  now: () => number;
+  rate: Map<string, RateState>;
+  rateMaxEntries: number;
+  logError: (m: string, err: unknown) => void;
+  /** Token do webhook Ko-fi = chave do HMAC do email (para casar o claim por email). */
+  token: string | undefined;
+}
+
+/**
+ * Trata POST /api/link: o comprador (logado com Discord) cola o código do recibo e reclama a
+ * compra pendente. CORS restrito, rate-limit apertado (anti-brute-force do código), valida a
+ * identidade na Discord (statusApi.resolveIdentity) e delega em claimPendingGrant. 404 genérico
+ * para não dar um oráculo de códigos válidos.
+ */
+function handleClaimRequest(
+  req: import('node:http').IncomingMessage,
+  res: import('node:http').ServerResponse,
+  ctx: ClaimCtx,
+): void {
+  const cors: Record<string, string> = {
+    'Access-Control-Allow-Origin': ctx.apiOrigin,
+    Vary: 'Origin',
+  };
+  if (req.method === 'OPTIONS') {
+    res
+      .writeHead(204, {
+        ...cors,
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+        'Access-Control-Max-Age': '600',
+      })
+      .end();
+    return;
+  }
+  if (req.method !== 'POST') {
+    res.writeHead(405, cors).end('method not allowed');
+    return;
+  }
+  if (
+    isRateLimited(
+      ctx.rate,
+      clientIp(req),
+      ctx.now(),
+      ctx.rateMaxEntries,
+      CLAIM_RATE_MAX,
+      CLAIM_RATE_WINDOW_MS,
+    )
+  ) {
+    res
+      .writeHead(429, { ...cors, 'Content-Type': 'application/json' })
+      .end('{"error":"rate_limited"}');
+    return;
+  }
+  const auth = req.headers['authorization'];
+  const bearer =
+    typeof auth === 'string' && auth.startsWith('Bearer ') ? auth.slice(7).trim() : null;
+
+  let body = '';
+  let aborted = false;
+  req.on('data', (chunk) => {
+    body += chunk;
+    if (body.length > 4_000) {
+      aborted = true;
+      res.writeHead(413, cors).end('too large');
+      req.destroy();
+    }
+  });
+  req.on('end', () => {
+    if (aborted) return;
+    const respond = (code: number, payload: unknown): void => {
+      res
+        .writeHead(code, { ...cors, 'Content-Type': 'application/json' })
+        .end(JSON.stringify(payload));
+    };
+    let code: string | null = null;
+    try {
+      const parsed = JSON.parse(body || '{}') as { code?: unknown };
+      if (typeof parsed.code === 'string') code = parsed.code;
+    } catch {
+      respond(400, { error: 'bad_request' });
+      return;
+    }
+    if (!bearer) {
+      respond(401, { error: 'no_token' });
+      return;
+    }
+    if (!code) {
+      respond(400, { error: 'bad_request' });
+      return;
+    }
+    ctx.statusApi
+      .resolveIdentity(bearer)
+      .then((identity) => {
+        if (!identity) {
+          respond(401, { error: 'invalid_token' });
+          return;
+        }
+        const outcome = claimPendingGrant(ctx.db, identity.id, code!, ctx.token, ctx.now());
+        if (!outcome.ok) {
+          respond(404, { error: 'not_found' });
+          return;
+        }
+        respond(200, { ok: true, items: outcome.items });
+      })
+      .catch((err) => {
+        ctx.logError('[claim] erro a processar o claim', err);
+        try {
+          respond(500, { error: 'internal' });
+        } catch {
+          /* resposta já enviada */
+        }
+      });
+  });
+  req.on('error', (err) => ctx.logError('[claim] erro no request do claim', err));
+}
+
 /**
  * Arranca o servidor HTTP do Premium. Roteia:
  *   - GET/OPTIONS /api/me/premium -> Painel Premium (se `statusApi` presente), com CORS
@@ -206,6 +348,7 @@ export function startKofiWebhook(deps: KofiWebhookDeps): Server | null {
     return null;
   }
   const rate = new Map<string, RateState>();
+  const claimRate = new Map<string, RateState>(); // bucket SEPARADO do claim (limite apertado)
   const rateMaxEntries = Math.max(1, Math.floor(deps.apiRateMaxEntries ?? API_RATE_MAX_ENTRIES));
 
   const server = createServer((req, res) => {
@@ -214,6 +357,21 @@ export function startKofiWebhook(deps: KofiWebhookDeps): Server | null {
     // ── Painel Premium: GET/OPTIONS /api/me/premium ────────────────────────────────
     if (statusApi && apiOrigin && path === '/api/me/premium') {
       handleApiRequest(req, res, { statusApi, apiOrigin, now, rate, rateMaxEntries, logError });
+      return;
+    }
+
+    // ── Claim de compra pendente: POST/OPTIONS /api/link ───────────────────────────
+    if (statusApi && apiOrigin && path === '/api/link') {
+      handleClaimRequest(req, res, {
+        statusApi,
+        apiOrigin,
+        db,
+        now,
+        rate: claimRate,
+        rateMaxEntries,
+        logError,
+        token,
+      });
       return;
     }
 
@@ -257,17 +415,40 @@ export function startKofiWebhook(deps: KofiWebhookDeps): Server | null {
           ...grant,
           discordId: resolveKofiDiscordId(db, event, grant, now(), token),
         };
+        // HASH do email (nunca em claro) para indexar um eventual pendente — ver hashKofiEmail.
+        const emailHash = event.email && token ? hashKofiEmail(token, event.email) : null;
         // IDEMPOTÊNCIA: o Ko-fi reentrega em timeout/não-2xx. Registo do tx + grant são
         // UMA transação: num duplicado confirmamos 200 sem re-aplicar (o grant acumula
         // expiry — ver kofi_transaction em db.ts); se o grant falhar, o registo reverte
         // e um retry legítimo volta a ser aceite. Sem tx id (payload atípico) aplica na
         // mesma — fica o log para auditoria manual.
-        const applied = db.transaction((): { dup: boolean; exp: number | null } => {
-          if (event.transactionId && !recordKofiTransaction(db, event.transactionId, now())) {
-            return { dup: true, exp: null };
-          }
-          return { dup: false, exp: applyKofiGrant(db, resolved, now()) };
-        })();
+        const applied = db.transaction(
+          (): { dup: boolean; exp: number | null; pending: boolean } => {
+            if (event.transactionId && !recordKofiTransaction(db, event.transactionId, now())) {
+              return { dup: true, exp: null, pending: false };
+            }
+            const exp = applyKofiGrant(db, resolved, now());
+            // Sem Discord ID associável (o checkout de subscrição do Ko-fi não tem caixa de
+            // mensagem): em vez de perder a compra, guardamo-la como PENDENTE para o comprador a
+            // RECLAMAR no site (login Discord + código do recibo). Precisa do tx id como chave
+            // (o comprador tem-no no recibo); sem tx id (atípico) fica só o log/grant manual.
+            let pending = false;
+            if (exp == null && event.transactionId) {
+              pending = recordPendingGrant(
+                db,
+                {
+                  transactionId: event.transactionId,
+                  emailHash,
+                  plan: grant.plan,
+                  days: grant.days,
+                  seats: grant.seats,
+                },
+                now(),
+              );
+            }
+            return { dup: false, exp, pending };
+          },
+        )();
         if (applied.dup) {
           logInfo(`[kofi] entrega DUPLICADA ignorada (tx=${event.transactionId}).`);
           res.writeHead(200).end('ok');
@@ -275,12 +456,13 @@ export function startKofiWebhook(deps: KofiWebhookDeps): Server | null {
         }
         const exp = applied.exp;
         if (exp == null) {
-          // Comprou mas não pôs (ou pôs mal) o Discord ID → resolve-se à mão com /vozengrant.
+          // Comprou mas não pôs o Discord ID (o normal nas subscrições): fica PENDENTE, o
+          // comprador reclama no site; em último caso resolve-se à mão com /vozengrant.
           // Minimização de PII: NÃO registamos o nome do comprador; o tx id chega para
           // reconciliar a compra no painel do Ko-fi (onde o nome/email vivem).
           logError(
-            `[kofi] compra SEM Discord ID válido — grant MANUAL: ${grant.plan} ${grant.days}d, ` +
-              `tx=${event.transactionId ?? '?'}`,
+            `[kofi] compra SEM Discord ID — ${applied.pending ? 'PENDENTE (reclamável no site)' : 'grant MANUAL'}: ` +
+              `${grant.plan} ${grant.days}d, tx=${event.transactionId ?? '?'}`,
             null,
           );
         } else {

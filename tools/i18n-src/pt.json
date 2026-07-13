@@ -1,5 +1,14 @@
 {
   "ui": {
+    "claim.title": "Ativar uma compra",
+    "claim.hint": "Compraste Plus ou Premium no Ko-fi? Escreve o email com que pagaste e ativamos nesta conta Discord.",
+    "claim.placeholder": "Email usado no Ko-fi",
+    "claim.btn": "Ativar",
+    "claim.working": "A ativar…",
+    "claim.ok": "Feito! A tua compra está agora ativa nesta conta.",
+    "claim.notfound": "Não encontrámos nenhuma compra com esse código. Confirma-o no recibo do Ko-fi e tenta de novo.",
+    "claim.ratelimited": "Demasiadas tentativas. Espera uns minutos e tenta de novo.",
+    "claim.error": "Algo correu mal. Tenta de novo daqui a pouco.",
     "nav.features": "Funcionalidades",
     "nav.games": "Jogos",
     "nav.commands": "Comandos",
@@ -149,7 +158,7 @@
     "price.m.16": "Na call 24/7",
     "price.m.17": "Vai contigo para qualquer servidor",
     "price.m.18": "Funciona para todos no servidor",
-    "price.idNote": "⚠️ Põe o teu Discord ID na mensagem da compra no Ko-fi. É isso que ativa o teu plano na hora.",
+    "price.idNote": "⚠️ Depois de comprares no Ko-fi, ativa o teu plano em vozen.org/account — basta entrar com o Discord.",
     "price.idNoteLink": "Copiar o meu ID →",
     "price.m.19": "50 pronúncias do servidor",
     "price.m.20": "Streaks diários de conversa"
@@ -207,7 +216,7 @@
     ],
     [
       "O que inclui o Premium?",
-      "Os 8 efeitos de voz (grave, demónio, rádio, debaixo de água…), clone de voz, 24/7 na call, 50 pronúncias pessoais, o comando /rizz e os jogos premium (Cadeia de Palavras, Termo, Xadrez). €3,99/mês cobre 3 servidores, ou €7,99/mês cobre 8 (Premium Max); o anual poupa ~20%. O Vozen Plus (€1,99/mês) dá as mesmas vantagens só para ti, em qualquer servidor. Resgata códigos com /premium activate. Ao comprar no Ko-fi, põe o teu Discord ID na mensagem da compra para ativar na hora (copia-o em vozen.org/account)."
+      "Os 8 efeitos de voz (grave, demónio, rádio, debaixo de água…), clone de voz, 24/7 na call, 50 pronúncias pessoais, o comando /rizz e os jogos premium (Cadeia de Palavras, Termo, Xadrez). €3,99/mês cobre 3 servidores, ou €7,99/mês cobre 8 (Premium Max); o anual poupa ~20%. O Vozen Plus (€1,99/mês) dá as mesmas vantagens só para ti, em qualquer servidor. Resgata códigos com /premium activate. Ao comprar no Ko-fi, ativa em vozen.org/account — entra com o Discord e escreve o email com que pagaste."
     ],
     [
       "Como adiciono o Vozen ao meu servidor?",

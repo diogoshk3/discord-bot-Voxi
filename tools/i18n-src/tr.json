@@ -1,5 +1,14 @@
 {
   "ui": {
+    "claim.title": "Bir satın alımı etkinleştir",
+    "claim.hint": "Ko-fi'de Plus veya Premium mi aldın? Ödeme yaptığın e-postayı gir, bu Discord hesabında etkinleştirelim.",
+    "claim.placeholder": "Ko-fi'de kullanılan e-posta",
+    "claim.btn": "Etkinleştir",
+    "claim.working": "Etkinleştiriliyor…",
+    "claim.ok": "Tamam! Satın alımın artık bu hesapta etkin.",
+    "claim.notfound": "Bu koda ait bir satın alma bulunamadı. Ko-fi makbuzundan kontrol edip tekrar dene.",
+    "claim.ratelimited": "Çok fazla deneme. Lütfen birkaç dakika bekleyip tekrar dene.",
+    "claim.error": "Bir şeyler ters gitti. Lütfen birazdan tekrar dene.",
     "nav.features": "Özellikler",
     "nav.games": "Oyunlar",
     "nav.commands": "Komutlar",
@@ -149,7 +158,7 @@
     "price.m.16": "7/24 aramada",
     "price.m.17": "Her sunucuya seninle gelir",
     "price.m.18": "Sunucudaki herkes için çalışır",
-    "price.idNote": "⚠️ Ko-fi ödeme mesajına Discord ID’ni yaz. Planını anında etkinleştiren budur.",
+    "price.idNote": "⚠️ Ko-fi’den satın aldıktan sonra planını vozen.org/account adresinde etkinleştir — Discord ile giriş yap.",
     "price.idNoteLink": "ID’mi kopyala →",
     "price.m.19": "50 sunucu telaffuzu",
     "price.m.20": "Günlük konuşma serileri"
@@ -207,7 +216,7 @@
     ],
     [
       "Premium neleri içerir?",
-      "8 ses efektinin tamamı (kalın, iblis, radyo, su altı…), premium nöral seslerle, ve kanal boşalsa bile ses kanalında kalır. Sunucu başına €3.99/ay ya da €37.99/yıl veya sunucular arasında seninle gelen kişisel ayrıcalıklar için Vozen Plus (€1.99/ay). Kodları /premium activate ile kullan. Ko-fi’de satın alırken Discord ID’ni mesaja yaz ki anında etkinleşsin (vozen.org/account’tan kopyala)."
+      "8 ses efektinin tamamı (kalın, iblis, radyo, su altı…), premium nöral seslerle, ve kanal boşalsa bile ses kanalında kalır. Sunucu başına €3.99/ay ya da €37.99/yıl veya sunucular arasında seninle gelen kişisel ayrıcalıklar için Vozen Plus (€1.99/ay). Kodları /premium activate ile kullan. Ko-fi’de satın aldıktan sonra vozen.org/account’ta etkinleştir — Discord ile giriş yap ve ödediğin e-postayı gir."
     ],
     [
       "Vozen'i sunucuma nasıl eklerim?",
