@@ -12,20 +12,20 @@ envelopes). São obra própria → **sem direitos de terceiros / CC0**. Reproduz
 `node tools/gen-sfx.mjs`. Cada chave bate com `src/content/sounds.ts` (o teste
 `tests/sounds.test.ts` falha se divergir).
 
-| Ficheiro | Som | Origem | Licença |
-|---|---|---|---|
-| `airhorn.wav` | Air horn (2 buzinadas) | gerado (`gen-sfx.mjs`) | CC0 (obra própria) |
-| `ding.wav` | Ding (sino) | gerado (`gen-sfx.mjs`) | CC0 (obra própria) |
-| `buzzer.wav` | Buzzer de resposta errada | gerado (`gen-sfx.mjs`) | CC0 (obra própria) |
-| `tada.wav` | Ta-da! (arpejo) | gerado (`gen-sfx.mjs`) | CC0 (obra própria) |
-| `sad-trombone.wav` | Sad trombone (womp womp) | gerado (`gen-sfx.mjs`) | CC0 (obra própria) |
-| `beep.wav` | Beep | gerado (`gen-sfx.mjs`) | CC0 (obra própria) |
+| Ficheiro           | Som                       | Origem                 | Licença            |
+| ------------------ | ------------------------- | ---------------------- | ------------------ |
+| `airhorn.wav`      | Air horn (2 buzinadas)    | gerado (`gen-sfx.mjs`) | CC0 (obra própria) |
+| `ding.wav`         | Ding (sino)               | gerado (`gen-sfx.mjs`) | CC0 (obra própria) |
+| `buzzer.wav`       | Buzzer de resposta errada | gerado (`gen-sfx.mjs`) | CC0 (obra própria) |
+| `tada.wav`         | Ta-da! (arpejo)           | gerado (`gen-sfx.mjs`) | CC0 (obra própria) |
+| `sad-trombone.wav` | Sad trombone (womp womp)  | gerado (`gen-sfx.mjs`) | CC0 (obra própria) |
+| `beep.wav`         | Beep                      | gerado (`gen-sfx.mjs`) | CC0 (obra própria) |
 
 ## Outros
 
-| Ficheiro | Uso | Origem | Licença |
-|---|---|---|---|
-| `rizz.wav` | Efeito do `/rizz` | (pré-existente) | — |
+| Ficheiro   | Uso               | Origem          | Licença |
+| ---------- | ----------------- | --------------- | ------- |
+| `rizz.wav` | Efeito do `/rizz` | (pré-existente) | —       |
 
 > Ao adicionar um clip CC0 de terceiros (ex. freesound.org CC0): dropar o `.wav` aqui,
 > registá-lo nesta tabela com a URL da fonte, e adicionar a entrada em
