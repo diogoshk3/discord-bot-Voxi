@@ -34,6 +34,14 @@ export const SOUNDS: SoundClip[] = [
   { key: 'tada', name: 'Ta-da!', emoji: '🎉' },
   { key: 'sad-trombone', name: 'Sad trombone', emoji: '🎺' },
   { key: 'beep', name: 'Beep', emoji: '🔊' },
+  { key: 'coin', name: 'Coin', emoji: '🪙' },
+  { key: 'pop', name: 'Pop', emoji: '🫧' },
+  { key: 'laser', name: 'Laser', emoji: '🛸' },
+  { key: 'success', name: 'Success', emoji: '✅' },
+  { key: 'error', name: 'Error', emoji: '⛔' },
+  { key: 'boing', name: 'Boing', emoji: '🪀' },
+  { key: 'sparkle', name: 'Sparkle', emoji: '✨' },
+  { key: 'whoosh', name: 'Whoosh', emoji: '💨' },
 ];
 
 const BY_KEY = new Map(SOUNDS.map((s) => [s.key, s] as const));

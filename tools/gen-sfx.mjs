@@ -49,6 +49,42 @@ function glide(seconds, f0, f1, osc = saw, gain = 0.5) {
 
 const silence = (seconds) => new Float64Array(Math.floor(seconds * SR));
 
+// PRNG determinístico (mulberry32): ruído REPRODUTÍVEL — o gen-sfx tem de dar sempre o
+// mesmo WAV (Math.random tornaria a geração não-determinística).
+function mulberry32(seed) {
+  return function () {
+    seed |= 0;
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+/** Ruído branco (semente fixa -> determinístico). Base de whoosh/percussão. */
+function noise(seconds, gain = 0.5, seed = 1) {
+  const n = Math.floor(seconds * SR);
+  const rng = mulberry32(seed);
+  const out = new Float64Array(n);
+  for (let i = 0; i < n; i++) out[i] = (rng() * 2 - 1) * gain;
+  return out;
+}
+/** Passa-baixo de 1 pólo: suaviza o ruído (chiado -> "whoosh"/"sh"). */
+function lowpass(buf, alpha = 0.05) {
+  const out = new Float64Array(buf.length);
+  let y = 0;
+  for (let i = 0; i < buf.length; i++) {
+    y += alpha * (buf[i] - y);
+    out[i] = y;
+  }
+  return out;
+}
+/** Envelope em meia-onda (sobe e desce) — swells como o whoosh. */
+function swell(buf) {
+  const n = buf.length;
+  for (let i = 0; i < n; i++) buf[i] *= Math.sin((Math.PI * i) / n);
+  return buf;
+}
+
 /** Concatena vários Float64Array. */
 function concat(parts) {
   const total = parts.reduce((a, p) => a + p.length, 0);
@@ -146,6 +182,45 @@ const CLIPS = {
     ]),
   // Beep simples.
   beep: () => fade(note(0.22, 800, sine, 0.5, 0.6)),
+  // Coin estilo plataformas: B5 curto -> E6 sustido.
+  coin: () =>
+    concat([
+      fade(note(0.07, 987.77, sine, 0.08, 0.5), 3),
+      fade(note(0.5, 1318.51, sine, 0.35, 0.5)),
+    ]),
+  // Pop: blip com queda rápida de tom.
+  pop: () => fade(glide(0.08, 1400, 400, sine, 0.7), 3),
+  // Laser "pew": glissando descendente em square.
+  laser: () => fade(glide(0.4, 2000, 180, square, 0.4)),
+  // Success: corridinha ascendente C5-D5-E5-G5 + C6 sustido (level-up).
+  success: () =>
+    concat([
+      fade(note(0.08, 523.25, sine, 0.1, 0.5), 3),
+      fade(note(0.08, 587.33, sine, 0.1, 0.5), 3),
+      fade(note(0.08, 659.25, sine, 0.1, 0.5), 3),
+      fade(note(0.08, 783.99, sine, 0.1, 0.5), 3),
+      fade(mix([note(0.5, 1046.5, sine, 0.4, 0.5), note(0.5, 1568, sine, 0.3, 0.15)])),
+    ]),
+  // Error "uh-oh": duas notas graves descendentes em square.
+  error: () =>
+    concat([
+      fade(note(0.22, 196, square, 0.25, 0.45)),
+      silence(0.05),
+      fade(note(0.4, 155.56, square, 0.4, 0.45)),
+    ]),
+  // Boing: mola — sobe e volta a descer (glissando saw).
+  boing: () =>
+    concat([fade(glide(0.12, 180, 520, saw, 0.5), 3), fade(glide(0.4, 520, 150, saw, 0.5))]),
+  // Sparkle: brilho mágico — 4 notas altas rápidas + a última a ressoar.
+  sparkle: () =>
+    concat([
+      fade(note(0.08, 1046.5, sine, 0.1, 0.4), 3),
+      fade(note(0.08, 1318.51, sine, 0.1, 0.4), 3),
+      fade(note(0.08, 1567.98, sine, 0.1, 0.4), 3),
+      fade(note(0.45, 2093, sine, 0.35, 0.4)),
+    ]),
+  // Whoosh: ruído passa-baixo com envelope em swell.
+  whoosh: () => fade(swell(lowpass(noise(0.45, 0.9, 7), 0.06))),
 };
 
 mkdirSync(OUT_DIR, { recursive: true });

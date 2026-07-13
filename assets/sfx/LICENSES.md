@@ -20,6 +20,14 @@ envelopes). São obra própria → **sem direitos de terceiros / CC0**. Reproduz
 | `tada.wav`         | Ta-da! (arpejo)           | gerado (`gen-sfx.mjs`) | CC0 (obra própria) |
 | `sad-trombone.wav` | Sad trombone (womp womp)  | gerado (`gen-sfx.mjs`) | CC0 (obra própria) |
 | `beep.wav`         | Beep                      | gerado (`gen-sfx.mjs`) | CC0 (obra própria) |
+| `coin.wav`         | Coin (moeda B5→E6)        | gerado (`gen-sfx.mjs`) | CC0 (obra própria) |
+| `pop.wav`          | Pop (blip)                | gerado (`gen-sfx.mjs`) | CC0 (obra própria) |
+| `laser.wav`        | Laser (pew descendente)   | gerado (`gen-sfx.mjs`) | CC0 (obra própria) |
+| `success.wav`      | Success (corrida + C6)    | gerado (`gen-sfx.mjs`) | CC0 (obra própria) |
+| `error.wav`        | Error (uh-oh grave)       | gerado (`gen-sfx.mjs`) | CC0 (obra própria) |
+| `boing.wav`        | Boing (mola)              | gerado (`gen-sfx.mjs`) | CC0 (obra própria) |
+| `sparkle.wav`      | Sparkle (brilho mágico)   | gerado (`gen-sfx.mjs`) | CC0 (obra própria) |
+| `whoosh.wav`       | Whoosh (ruído + swell)    | gerado (`gen-sfx.mjs`) | CC0 (obra própria) |
 
 ## Outros
 
