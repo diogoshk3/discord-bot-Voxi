@@ -31,6 +31,7 @@
 | Que dados? | MVP **curado**: nomes de clip + assets no repo. **Zero dado de utilizador novo.** |
 | Art. 4/8/10–13 (conteúdo) | Clips curados livres de direitos; `assets/sfx/LICENSES.md` regista fonte+licença (preferir CC0). |
 | Reprodução | Toca na call onde o bot já está (função declarada de áudio). |
+| Nitro / Soundboard nativo | **Verificado 2026-07-13: não é circunvenção.** A Developer Policy proíbe contornar features de *privacy/safety/security*, limites da API, e comercializar serviços do Discord — **não** proíbe bots de oferecerem funcionalidade semelhante a perks Nitro. O `/sound` toca áudio pela ligação de voz (o mesmo mecanismo do TTS e de qualquer music bot); **não** usa os endpoints do Soundboard nativo, não injeta sons nos slots do servidor nem desbloqueia nada do cliente. Precedente: Blerp (soundboard com 1M+ sons) opera publicamente há anos. Vermelho apenas se algum dia: usarmos a API do Soundboard nativo para contornar limites de slots/boosts, ou vendermos acesso a serviços do Discord. |
 | UGC (upload) | **Fora de âmbito nesta vaga.** Se um dia houver: TERMS responsabiliza o uploader + moderação + limites. |
 
 - [ ] Portão fechado: sem tabela nova, sem PII, clips com proveniência registada.
