@@ -45,6 +45,11 @@ interface ActiveSession {
 
 // Uma sessão de transcrição por servidor.
 const activeSessions = new Map<string, ActiveSession>();
+// Guildas com um /transcribe start EM CURSO (reservadas antes do 1.º await, libertadas
+// no finally). Sem isto, dois `start` quase simultâneos liam `activeSessions` ANTES de
+// `activeSessions.set` correr (só acontece depois do await no anúncio) e ambos passavam
+// no gate — duplicava o listener de speaking (transcrição em duplicado + sessão órfã).
+const startingGuilds = new Set<string>();
 
 /** Ids dos HUMANOS (não-bots) no canal de voz onde o bot está. */
 function humanIdsInVoice(i: ChatInputCommandInteraction, channelId: string): string[] {
@@ -89,7 +94,7 @@ export async function handleTranscribe(
     isPremium: isGuildPremium(deps.db, guildId, Date.now()),
     sidecarAvailable: cmd !== null,
     botInVoice: connection !== null,
-    alreadyRunning: activeSessions.has(guildId),
+    alreadyRunning: activeSessions.has(guildId) || startingGuilds.has(guildId),
   });
   if (verdict !== 'ok') {
     const key = {
@@ -102,97 +107,131 @@ export async function handleTranscribe(
     await reply(i, t(key, locale));
     return;
   }
-  // A partir daqui verdict==='ok' garante cmd e connection não-nulos.
-  const conn = connection as VoiceConnection;
-  const channel = i.channel;
-  if (!channel || !channel.isTextBased() || channel.isDMBased() || !('send' in channel)) {
-    await reply(i, t('stt.noChannel', locale));
-    return;
-  }
-
-  const { channelId: voiceChannelId } = conn.joinConfig;
-  if (!voiceChannelId) {
-    await reply(i, t('stt.notInVoice', locale));
-    return;
-  }
-
-  // FORÇA a língua da transcrição: a escolhida em `language:` ganha; senão o locale do
-  // servidor (2 letras, ex. 'pt'). A auto-deteção do Whisper em fala real curta transcreve
-  // mal (PT sai como checo/sueco); o sidecar cai na auto-deteção se a língua for inválida.
-  const lang = resolveTranscribeLang(i.options.getString('language'), locale);
-  if (cmd) cmd.args.push('--lang', lang);
-  const transcriber = new WhisperTranscriber(cmd);
-  transcriber.prewarm();
-
-  // Des-ensurdece o bot SÓ agora (senão o receiver não recebe áudio). selfMute mantém-se
-  // (o bot não fala pela transcrição). Restaurado no stop.
-  conn.rejoin({ channelId: voiceChannelId, selfDeaf: false, selfMute: true });
-
-  const session = new TranscriptionSession({
-    hasConsent: (uid) => hasSttConsent(deps.db, uid, guildId),
-    displayName: (uid) => {
-      const m = i.guild?.members.cache.get(uid);
-      return sanitizeSpeakerName(m?.displayName ?? m?.user.username ?? uid);
-    },
-    transcribe: (wav) => transcriber.transcribe(wav),
-    post: (text) => channel.send({ content: text, allowedMentions: { parse: [] } }).then(() => {}),
-    toWav: (pcm, out) => pcmToWavFile(pcm, out),
-    capture: makeReceiverCapture(conn),
-  });
-
-  const onSpeaking = (uid: string): void => {
-    void session.onSpeakingStart(uid);
-  };
-  conn.receiver.speaking.on('start', onSpeaking);
-
-  // Anúncio no canal COM o botão de consentimento inline (transparência + 1-clique na call).
-  const consentRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setCustomId('sttconsent')
-      .setLabel(t('stt.consentBtn', locale))
-      .setStyle(ButtonStyle.Success)
-      .setEmoji('✅'),
-  );
-  const announceMsg = await channel.send({
-    content: t('stt.announceStart', locale),
-    components: [consentRow],
-  });
-
-  const collector = announceMsg.createMessageComponentCollector({
-    componentType: ComponentType.Button,
-  });
-  const active: ActiveSession = {
-    session,
-    transcriber,
-    connection: conn,
-    voiceChannelId,
-    onSpeaking,
-    announceMsg,
-    collector,
-    autoStopTimer: null,
-    everConsented: false,
-  };
-  activeSessions.set(guildId, active);
-
-  collector.on('collect', (btn) => {
-    grantSttConsent(deps.db, btn.user.id, guildId, Date.now());
-    active.everConsented = true;
-    void btn.reply({ content: t('stt.consentThanks', locale), flags: MessageFlags.Ephemeral });
-  });
-
-  // Auto-stop: verifica periodicamente se ainda faz sentido continuar (call vazia, ou
-  // ninguém consentido resta depois de já ter havido consentimento).
-  active.autoStopTimer = setInterval(() => {
-    const humans = humanIdsInVoice(i, voiceChannelId);
-    if (
-      shouldAutoStop(humans, (uid) => hasSttConsent(deps.db, uid, guildId), active.everConsented)
-    ) {
-      void stopSession(guildId, deps, locale, 'auto');
+  // Reserva a guild JÁ (antes de qualquer await) — dois /transcribe start quase
+  // simultâneos passavam ambos no gate acima e duplicavam listeners (mesmo padrão do
+  // guard activeCloneRecordings no clone). O finally cobre TODO early-return abaixo
+  // (noChannel, notInVoice) e o caminho feliz — assim que activeSessions.set correr,
+  // é essa entrada que passa a bastar como "already running".
+  startingGuilds.add(guildId);
+  try {
+    // A partir daqui verdict==='ok' garante cmd e connection não-nulos.
+    const conn = connection as VoiceConnection;
+    const channel = i.channel;
+    if (!channel || !channel.isTextBased() || channel.isDMBased() || !('send' in channel)) {
+      await reply(i, t('stt.noChannel', locale));
+      return;
     }
-  }, 15_000);
-  active.autoStopTimer.unref?.();
 
-  await reply(i, t('stt.started', locale));
+    const { channelId: voiceChannelId } = conn.joinConfig;
+    if (!voiceChannelId) {
+      await reply(i, t('stt.notInVoice', locale));
+      return;
+    }
+
+    // FORÇA a língua da transcrição: a escolhida em `language:` ganha; senão o locale do
+    // servidor (2 letras, ex. 'pt'). A auto-deteção do Whisper em fala real curta transcreve
+    // mal (PT sai como checo/sueco); o sidecar cai na auto-deteção se a língua for inválida.
+    const lang = resolveTranscribeLang(i.options.getString('language'), locale);
+    if (cmd) cmd.args.push('--lang', lang);
+    const transcriber = new WhisperTranscriber(cmd);
+    transcriber.prewarm();
+
+    // Des-ensurdece o bot SÓ agora (senão o receiver não recebe áudio). selfMute fica
+    // FALSE como em todos os outros join/rejoin — um bot self-muted não transmite áudio,
+    // o que silenciava o TTS da guild inteira durante a transcrição.
+    conn.rejoin({ channelId: voiceChannelId, selfDeaf: false, selfMute: false });
+
+    const session = new TranscriptionSession({
+      hasConsent: (uid) => hasSttConsent(deps.db, uid, guildId),
+      displayName: (uid) => {
+        const m = i.guild?.members.cache.get(uid);
+        return sanitizeSpeakerName(m?.displayName ?? m?.user.username ?? uid);
+      },
+      transcribe: (wav) => transcriber.transcribe(wav),
+      post: (text) =>
+        channel.send({ content: text, allowedMentions: { parse: [] } }).then(() => {}),
+      toWav: (pcm, out) => pcmToWavFile(pcm, out),
+      capture: makeReceiverCapture(conn),
+    });
+
+    const onSpeaking = (uid: string): void => {
+      void session.onSpeakingStart(uid);
+    };
+    conn.receiver.speaking.on('start', onSpeaking);
+
+    // Anúncio no canal COM o botão de consentimento inline (transparência + 1-clique na call).
+    const consentRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setCustomId('sttconsent')
+        .setLabel(t('stt.consentBtn', locale))
+        .setStyle(ButtonStyle.Success)
+        .setEmoji('✅'),
+    );
+    const announceMsg = await channel.send({
+      content: t('stt.announceStart', locale),
+      components: [consentRow],
+    });
+
+    const collector = announceMsg.createMessageComponentCollector({
+      componentType: ComponentType.Button,
+    });
+    const active: ActiveSession = {
+      session,
+      transcriber,
+      connection: conn,
+      voiceChannelId,
+      onSpeaking,
+      announceMsg,
+      collector,
+      autoStopTimer: null,
+      everConsented: false,
+    };
+    activeSessions.set(guildId, active);
+
+    collector.on('collect', (btn) => {
+      grantSttConsent(deps.db, btn.user.id, guildId, Date.now());
+      active.everConsented = true;
+      void btn.reply({ content: t('stt.consentThanks', locale), flags: MessageFlags.Ephemeral });
+    });
+
+    // Auto-stop: verifica periodicamente se ainda faz sentido continuar (call vazia, ou
+    // ninguém consentido resta depois de já ter havido consentimento).
+    active.autoStopTimer = setInterval(() => {
+      const humans = humanIdsInVoice(i, voiceChannelId);
+      if (
+        shouldAutoStop(humans, (uid) => hasSttConsent(deps.db, uid, guildId), active.everConsented)
+      ) {
+        void stopSession(guildId, deps, locale, 'auto');
+      }
+    }, 15_000);
+    active.autoStopTimer.unref?.();
+
+    await reply(i, t('stt.started', locale));
+  } finally {
+    startingGuilds.delete(guildId);
+  }
+}
+
+/**
+ * Teardown externo: chamado pelo FUNIL de saída de voz (removePlayer) quando o bot
+ * sai da call (kick, /leave, saída-por-sozinho) a meio de uma transcrição. Melhor-
+ * -esforço e idempotente (no-op se não havia sessão) — NÃO tenta `rejoin` (a ligação
+ * já morreu nesse ponto) nem anuncia no canal, ao contrário de stopSession.
+ */
+export function stopTranscriptionForGuild(guildId: string): void {
+  const a = activeSessions.get(guildId);
+  if (!a) return;
+  activeSessions.delete(guildId);
+  a.session.stop();
+  try {
+    a.connection.receiver.speaking.off('start', a.onSpeaking);
+  } catch {
+    // ligação pode já ter morrido
+  }
+  a.collector.stop('voice-left');
+  if (a.autoStopTimer) clearInterval(a.autoStopTimer);
+  a.transcriber.dispose();
+  a.announceMsg.edit({ components: [] }).catch(() => {});
 }
 
 /** Pára a sessão do servidor: restaura selfDeaf, limpa listeners/timers, anuncia. */
@@ -204,23 +243,14 @@ async function stopSession(
 ): Promise<boolean> {
   const a = activeSessions.get(guildId);
   if (!a) return false;
-  activeSessions.delete(guildId);
-  a.session.stop();
-  try {
-    a.connection.receiver.speaking.off('start', a.onSpeaking);
-  } catch {
-    // best-effort
-  }
-  a.collector.stop('stopped');
-  if (a.autoStopTimer) clearInterval(a.autoStopTimer);
-  a.transcriber.dispose();
-  // Volta a ensurdecer o bot (deixa de ouvir).
+  stopTranscriptionForGuild(guildId);
+  // Volta a ensurdecer o bot (deixa de ouvir) — só aqui, porque só aqui a ligação
+  // ainda existe (o teardown por saída-de-voz acima NUNCA deve tentar rejoin nela).
   try {
     a.connection.rejoin({ channelId: a.voiceChannelId, selfDeaf: true, selfMute: false });
   } catch {
     // a ligação pode já ter caído
   }
-  a.announceMsg.edit({ components: [] }).catch(() => {});
   const ch = a.announceMsg.channel;
   if (ch && ch.isTextBased() && 'send' in ch) {
     await ch.send({ content: t('stt.announceStop', locale) }).catch(() => {});

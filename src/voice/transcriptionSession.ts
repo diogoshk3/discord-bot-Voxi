@@ -49,6 +49,10 @@ export class TranscriptionSession {
   private stopped = false;
   private readonly active = new Set<string>();
   private seq = 0;
+  // Componente aleatório por-instância: sem isto, duas sessões concorrentes (guildas
+  // diferentes) geravam o MESMO nome de ficheiro temporário (só o pid+seq variavam, e o
+  // seq de cada instância recomeça em 0) e podiam pisar-se a escrever o WAV uma da outra.
+  private readonly id = Math.random().toString(36).slice(2, 8);
 
   constructor(private readonly deps: TranscriptionSessionDeps) {}
 
@@ -80,7 +84,10 @@ export class TranscriptionSession {
 
   private async handleUtterance(userId: string, pcm: Buffer): Promise<void> {
     if (this.stopped) return;
-    const out = join(this.deps.tmpDir ?? tmpdir(), `vozen-stt-${process.pid}-${this.seq++}.wav`);
+    const out = join(
+      this.deps.tmpDir ?? tmpdir(),
+      `vozen-stt-${process.pid}-${this.id}-${this.seq++}.wav`,
+    );
     try {
       const wav = await this.deps.toWav(pcm, out);
       const { text } = await this.deps.transcribe(wav);

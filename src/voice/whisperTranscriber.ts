@@ -113,10 +113,12 @@ export class WhisperTranscriber {
       child.stdout!.on('data', (c: Buffer) => this.onData(c));
       child.stderr!.on('data', (c: Buffer) => log.info(`[whisper-py] ${c.toString().trim()}`));
       child.on('exit', (code) => {
+        if (this.child !== child) return; // evento de um child JÁ substituído — ignora
         log.warn(`[whisper] sidecar saiu (code ${code})`);
         this.teardown();
       });
       child.on('error', (err) => {
+        if (this.child !== child) return; // evento de um child JÁ substituído — ignora
         log.warn('[whisper] falha no sidecar:', err);
         this.teardown();
       });

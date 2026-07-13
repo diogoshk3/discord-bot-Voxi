@@ -11,6 +11,7 @@ import type { DuplicateTracker } from '../moderation/antispam';
 import type { GameManager } from '../games/manager';
 import { invalidateGuild } from '../store/cache';
 import { forgetVoicePresence } from '../store/voicePresence';
+import { stopTranscriptionForGuild } from '../commands/handlers/transcribe';
 import { log } from '../logging/logger';
 
 export interface BotDeps {
@@ -89,6 +90,9 @@ export function removePlayer(
   // nao deve morrer por uma saida de voz nao relacionada. O teardown total de qualquer
   // jogo (guild removida) vive no handleGuildDelete.
   deps.games?.onVoiceLeft(guildId);
+  // STT: se havia uma sessão de transcrição, morre com a saída da call — senão o
+  // sidecar Whisper, o listener de speaking e o intervalo de auto-stop ficavam órfãos.
+  stopTranscriptionForGuild(guildId);
   // Esquece o último locutor: ao voltar à call, o xsaid volta a anunciar quem falou.
   deps.lastSpeaker?.delete(guildId);
   const p = deps.players.get(guildId);

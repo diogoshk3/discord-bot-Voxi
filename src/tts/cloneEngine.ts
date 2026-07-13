@@ -201,10 +201,12 @@ export class CloneEngine implements TTSEngine {
       child.stdout!.on('data', (c: Buffer) => this.onData(c));
       child.stderr!.on('data', (c: Buffer) => log.info(`[clone-py] ${c.toString().trim()}`));
       child.on('exit', (code) => {
+        if (this.child !== child) return; // evento de um child JÁ substituído — ignora
         log.warn(`[clone] sidecar saiu (code ${code})`);
         this.teardown();
       });
       child.on('error', (err) => {
+        if (this.child !== child) return; // evento de um child JÁ substituído — ignora
         log.warn('[clone] falha no sidecar:', err);
         this.teardown();
       });
