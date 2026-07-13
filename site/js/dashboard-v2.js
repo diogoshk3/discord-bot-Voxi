@@ -166,6 +166,21 @@
   var BTN = "btn btn--primary";
   var MUTED = "color:var(--muted,#9a9ab0)";
 
+  /* Grelha de servidores: classes precisam de :hover/:focus, impossível em style=""
+     inline — injetamos um <style> uma vez (CSP style-src tem 'unsafe-inline'). */
+  var GUILD_CSS =
+    ".dash-guilds{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:14px;margin-top:16px}" +
+    ".dash-guild{display:flex;flex-direction:column;align-items:center;gap:10px;padding:16px 10px;background:var(--bg-0,#0a0a12);border:1px solid var(--line-2,#23233a);border-radius:14px;cursor:pointer;font:inherit;color:var(--text,#e9e9f2);transition:border-color .15s ease,transform .15s ease}" +
+    ".dash-guild:hover,.dash-guild:focus-visible{border-color:var(--aqua,#38e0c8);transform:translateY(-2px)}" +
+    ".dash-guild:active{transform:scale(.97)}" +
+    ".dash-guild__img,.dash-guild__ph{width:64px;height:64px;border-radius:50%;flex:none}" +
+    ".dash-guild__img{object-fit:cover;background:var(--panel-2,#12121c)}" +
+    ".dash-guild__ph{display:flex;align-items:center;justify-content:center;background:var(--panel-2,#12121c);border:1px solid var(--line-2,#23233a);font-weight:700;font-size:1.05rem;color:var(--aqua,#38e0c8)}" +
+    ".dash-guild__name{font-size:.92rem;line-height:1.3;text-align:center;overflow-wrap:anywhere}";
+  var styleEl = document.createElement("style");
+  styleEl.textContent = GUILD_CSS;
+  document.head.appendChild(styleEl);
+
   function view(html) {
     root.innerHTML = html;
   }
@@ -219,10 +234,38 @@
     }
   }
 
+  /* CDN de ícones da Discord (img-src já permite cdn.discordapp.com no CSP).
+     Ícones animados têm hash "a_..." e servem-se como .gif. */
+  function guildIconUrl(g) {
+    if (!g.icon) return null;
+    var ext = String(g.icon).indexOf("a_") === 0 ? "gif" : "png";
+    return "https://cdn.discordapp.com/icons/" + g.id + "/" + g.icon + "." + ext + "?size=128";
+  }
+  function guildInitials(name) {
+    var parts = String(name).trim().split(/\s+/).slice(0, 2);
+    var out = "";
+    for (var i = 0; i < parts.length; i++) out += parts[i].charAt(0);
+    return out.toUpperCase() || "?";
+  }
+
   function renderPicker(guilds) {
-    var opts = guilds
-      .map(function (g) {
-        return '<option value="' + esc(g.id) + '">' + esc(g.name) + "</option>";
+    var cards = guilds
+      .map(function (g, i) {
+        var url = guildIconUrl(g);
+        var art = url
+          ? '<img class="dash-guild__img" src="' + esc(url) + '" alt="">'
+          : '<span class="dash-guild__ph" aria-hidden="true">' +
+            esc(guildInitials(g.name)) +
+            "</span>";
+        return (
+          '<button type="button" class="dash-guild" data-i="' +
+          i +
+          '">' +
+          art +
+          '<span class="dash-guild__name">' +
+          esc(g.name) +
+          "</span></button>"
+        );
       })
       .join("");
     view(
@@ -232,20 +275,32 @@
         esc(t("pick")) +
         '</h2><p style="' +
         MUTED +
-        ';margin:0 0 14px">' +
+        ';margin:0">' +
         esc(t("pickHint")) +
-        '</p><select id="dashGuild" style="width:100%;max-width:420px;padding:11px 12px;border-radius:12px;background:var(--bg-0,#0a0a12);color:var(--text,#e9e9f2);border:1px solid var(--line-2,#23233a);font:inherit"><option value="">—</option>' +
-        opts +
-        "</select></div>",
+        '</p><div class="dash-guilds">' +
+        cards +
+        "</div></div>",
     );
-    var sel = document.getElementById("dashGuild");
-    if (sel)
-      sel.addEventListener("change", function () {
-        var g = guilds.filter(function (x) {
-          return x.id === sel.value;
-        })[0];
-        if (g) loadForm(g, guilds);
-      });
+    var btns = root.querySelectorAll(".dash-guild");
+    function onPick(ev) {
+      var g = guilds[Number(ev.currentTarget.getAttribute("data-i"))];
+      if (g) loadForm(g, guilds);
+    }
+    // Ícone que falhe a carregar (hash antigo, CDN em baixo) vira placeholder de iniciais.
+    function onImgFail(ev) {
+      var img = ev.currentTarget;
+      var idx = Number(img.parentNode.getAttribute("data-i"));
+      var ph = document.createElement("span");
+      ph.className = "dash-guild__ph";
+      ph.setAttribute("aria-hidden", "true");
+      ph.textContent = guildInitials((guilds[idx] || {}).name || "?");
+      img.parentNode.replaceChild(ph, img);
+    }
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].addEventListener("click", onPick);
+      var img = btns[i].querySelector(".dash-guild__img");
+      if (img) img.addEventListener("error", onImgFail);
+    }
   }
 
   function toggleRow(key, on) {
