@@ -22,7 +22,7 @@
   - Frontend: `site/dashboard.html` + `dashboard-v1.js` (login OAuth `identify guilds` via **redirect /account reutilizado** — sem passo no portal; bounce `returnTo` no `main.js`→v27), seletor de servidor, form de 11 campos (9 toggles + maxChars + ratePerMin), guardar. Verificado no browser (en+pt, sem erros de CSP).
   - PRIVACY: secção 1.1 disclosa o login do site (scopes `identify`/`guilds`, transitório, não guardado).
   - *MVP:* i18n do corpo é en+pt inline (resto cai no en); locale/canal/voz/blocklist/pronúncias ficam para 3b.
-- Fase 4 (STT): por começar (depende do spike VPS).
+- **Fase 4 (STT): spike ✅ VIÁVEL** (ver `docs/SPIKE-STT.md`): faster-whisper `base` transcreve ~13.6 s de fala em **~2.2 s** no VPS idle (limiar 5 s, 56 % de folga). Falta o **build** (grande): sidecar Whisper persistente + consent-first por-locutor (padrão do clone) + `UtteranceCollector` sobre o `recorder.ts` + routing das transcrições para canal + zero persistência de áudio + i18n + testes.
 
 ## Objetivo / Goal
 
