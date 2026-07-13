@@ -116,6 +116,14 @@
             <div class="premium-panel" id="premiumPanel" aria-live="polite"></div>
 
             <aside class="account-rail" aria-label="Account summary">
+              <!-- Descoberta do dashboard: sem este cartão, quem faz login na conta não
+                   tinha NENHUM caminho para a página de configuração (/dashboard). -->
+              <div class="account-card account-card--accent">
+                <span class="account-card__icon">⚙</span>
+                <b data-i18n="dash.cardTitle">Server dashboard</b>
+                <p data-i18n="dash.cardBody">Configure Vozen on your servers from the browser — no slash commands needed.</p>
+                <a class="btn btn--primary btn--sm" href="/dashboard" style="margin-top: 12px" data-i18n="dash.cardBtn">Open dashboard</a>
+              </div>
               <div class="account-card account-card--accent">
                 <span class="account-card__icon">◆</span>
                 <b>3 server licenses</b>
