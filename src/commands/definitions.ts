@@ -599,12 +599,14 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
       s
         .setName('remove')
         .setDescription('Remove one of your personal pronunciations')
+        // AUTOCOMPLETE: lista as pronúncias guardadas (escolher > escrever de cor).
         .addStringOption((o) =>
           o
             .setName('term')
-            .setDescription('The word to remove')
+            .setDescription('The word to remove — pick from your saved pronunciations')
             .setRequired(true)
-            .setMaxLength(100),
+            .setMaxLength(100)
+            .setAutocomplete(true),
         ),
     )
     .addSubcommand((s) => s.setName('list').setDescription('List your personal pronunciations'))
@@ -630,12 +632,14 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
       s
         .setName('remove')
         .setDescription('Remove one of the server pronunciations')
+        // AUTOCOMPLETE: lista as pronúncias do servidor (escolher > escrever de cor).
         .addStringOption((o) =>
           o
             .setName('term')
-            .setDescription('The word to remove')
+            .setDescription("The word to remove — pick from the server's pronunciations")
             .setRequired(true)
-            .setMaxLength(100),
+            .setMaxLength(100)
+            .setAutocomplete(true),
         ),
     )
     .addSubcommand((s) => s.setName('list').setDescription("List the server's pronunciations"))

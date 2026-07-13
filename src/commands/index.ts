@@ -5,6 +5,7 @@ import { JOKE_LANGUAGES } from '../content/jokes';
 import { filterGameChoices, filterWordChainLanguages } from '../games/index';
 import { log } from '../logging/logger';
 import { t, SUPPORTED_LOCALES, LOCALE_DISPLAY_NAMES } from '../i18n/index';
+import { getUserPronunciations, getServerPronunciations } from '../store/pronunciation';
 
 // Handlers extraídos por domínio (plano 015): index.ts fica como registry/dispatcher fino.
 import { handleJoin, handleLeave, handleTts, handleSkip, handleShutup } from './handlers/core';
@@ -117,6 +118,26 @@ export function filterLocaleChoices(query: string): { name: string; value: strin
  * nome à mão. Beginner-friendly. Qualquer outra opção -> [] (sem sugestões).
  */
 /**
+ * Choices do autocomplete do `/pronunciation remove` (e `/serverpronunciation remove`):
+ * lista as pronúncias GUARDADAS em vez de obrigar a escrever o termo de cor. Casa por
+ * substring do termo OU da substituição (quem só se lembra do "como se diz" também
+ * encontra). name = "termo → substituição" (legível); value = o termo CRU — é o que o
+ * handler passa ao removeUserPronunciation/removeServerPronunciation. PURA/testável.
+ */
+export function filterPronunciationChoices(
+  entries: { term: string; replacement: string }[],
+  query: string,
+): { name: string; value: string }[] {
+  const q = query.trim().toLowerCase();
+  return entries
+    .filter(
+      (e) => !q || e.term.toLowerCase().includes(q) || e.replacement.toLowerCase().includes(q),
+    )
+    .slice(0, 25)
+    .map((e) => ({ name: `${e.term} → ${e.replacement}`, value: e.term }));
+}
+
+/**
  * Sanitiza choices de autocomplete para os limites do Discord: máx. 25 entradas,
  * `name` 1–100 chars, `value` ≤100 chars. UMA entrada inválida faz a API rejeitar o
  * payload INTEIRO com 400 → o cliente mostra "Falha ao carregar opções". Este é o
@@ -159,6 +180,19 @@ function computeAutocompleteChoices(
   if (focused.name === 'game') {
     const base = (i.locale || '').split('-')[0].toLowerCase() || 'en';
     return filterGameChoices(focused.value, base);
+  }
+  // /pronunciation remove + /serverpronunciation remove: a opção `term` lista as
+  // pronúncias JÁ GUARDADAS (pessoais ou do servidor) — escolher em vez de escrever.
+  if (focused.name === 'term') {
+    if (i.commandName === 'pronunciation') {
+      return filterPronunciationChoices(getUserPronunciations(deps.db, i.user.id), focused.value);
+    }
+    if (i.commandName === 'serverpronunciation') {
+      return i.guildId
+        ? filterPronunciationChoices(getServerPronunciations(deps.db, i.guildId), focused.value)
+        : [];
+    }
+    return [];
   }
   // /voice clone record `user`: lista quem está na call COM o bot (os únicos alvos
   // válidos — gravar exige estar no canal do bot). Fora de uma call, lista vazia.
