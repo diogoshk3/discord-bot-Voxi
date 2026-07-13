@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { evaluateTranscribeStart, shouldAutoStop } from '../src/commands/transcribeGate';
+import {
+  evaluateTranscribeStart,
+  shouldAutoStop,
+  resolveTranscribeLang,
+} from '../src/commands/transcribeGate';
 
 // Gates PUROS do /transcribe (Fase 4). Decidem SEM IO se a transcrição pode arrancar e
 // quando deve auto-parar — o handler só traduz o veredito em resposta/ação.
@@ -59,5 +63,19 @@ describe('shouldAutoStop', () => {
 
   it('call vazia de humanos -> pára (mesmo que ninguém tenha consentido ainda)', () => {
     expect(shouldAutoStop([], consented, false)).toBe(true);
+  });
+});
+
+describe('resolveTranscribeLang', () => {
+  it('a língua escolhida no comando ganha ao locale do servidor', () => {
+    expect(resolveTranscribeLang('en', 'pt')).toBe('en');
+  });
+  it('sem escolha (null/vazio) cai no locale do servidor', () => {
+    expect(resolveTranscribeLang(null, 'pt')).toBe('pt');
+    expect(resolveTranscribeLang('', 'pt')).toBe('pt');
+    expect(resolveTranscribeLang('  ', 'pt')).toBe('pt');
+  });
+  it('apara e normaliza para minúsculas (código de língua limpo)', () => {
+    expect(resolveTranscribeLang(' EN ', 'pt')).toBe('en');
   });
 });

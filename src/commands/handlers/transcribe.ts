@@ -24,7 +24,7 @@ import { TranscriptionSession, makeReceiverCapture } from '../../voice/transcrip
 import { pcmToWavFile } from '../../voice/recorder';
 import { hasSttConsent, grantSttConsent, revokeSttConsent } from '../../store/sttConsent';
 import { isGuildPremium } from '../../store/premium';
-import { evaluateTranscribeStart, shouldAutoStop } from '../transcribeGate';
+import { evaluateTranscribeStart, shouldAutoStop, resolveTranscribeLang } from '../transcribeGate';
 import { sanitizeSpeakerName } from '../../language/speakerName';
 import { localeFor, reply } from '../helpers';
 import { t } from '../../i18n/index';
@@ -116,10 +116,11 @@ export async function handleTranscribe(
     return;
   }
 
-  // FORÇA a língua da transcrição = locale do servidor (2 letras, ex. 'pt'). A auto-deteção
-  // do Whisper em fala real curta transcreve mal (PT sai como checo/sueco); o sidecar cai na
-  // auto-deteção se o locale não for uma língua suportada.
-  if (cmd) cmd.args.push('--lang', locale);
+  // FORÇA a língua da transcrição: a escolhida em `language:` ganha; senão o locale do
+  // servidor (2 letras, ex. 'pt'). A auto-deteção do Whisper em fala real curta transcreve
+  // mal (PT sai como checo/sueco); o sidecar cai na auto-deteção se a língua for inválida.
+  const lang = resolveTranscribeLang(i.options.getString('language'), locale);
+  if (cmd) cmd.args.push('--lang', lang);
   const transcriber = new WhisperTranscriber(cmd);
   transcriber.prewarm();
 

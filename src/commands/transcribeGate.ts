@@ -50,3 +50,16 @@ export function shouldAutoStop(
   if (!everConsented) return false;
   return humanIdsInChannel.every((id) => !hasConsent(id));
 }
+
+/**
+ * Língua a FORÇAR na transcrição: a escolhida no comando (`/transcribe start language:…`)
+ * ganha; sem escolha, cai no locale do servidor. Normaliza para minúsculas sem espaços (um
+ * código ISO limpo para o sidecar Whisper).
+ */
+export function resolveTranscribeLang(
+  chosen: string | null | undefined,
+  guildLocale: string,
+): string {
+  const c = (chosen ?? '').trim().toLowerCase();
+  return c || guildLocale;
+}

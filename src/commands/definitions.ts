@@ -204,6 +204,13 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
         .setName('start')
         .setDescription(
           'Start transcribing the voice call to this channel (Manage Server, Premium)',
+        )
+        .addStringOption((o) =>
+          o
+            .setName('language')
+            .setDescription('Language spoken in the call (defaults to the server language)')
+            .setRequired(false)
+            .setAutocomplete(true),
         ),
     )
     .addSubcommand((s) =>
