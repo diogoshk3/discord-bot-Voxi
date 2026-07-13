@@ -116,6 +116,10 @@ export async function handleTranscribe(
     return;
   }
 
+  // FORÇA a língua da transcrição = locale do servidor (2 letras, ex. 'pt'). A auto-deteção
+  // do Whisper em fala real curta transcreve mal (PT sai como checo/sueco); o sidecar cai na
+  // auto-deteção se o locale não for uma língua suportada.
+  if (cmd) cmd.args.push('--lang', locale);
   const transcriber = new WhisperTranscriber(cmd);
   transcriber.prewarm();
 
