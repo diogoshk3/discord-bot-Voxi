@@ -47,6 +47,10 @@ export interface GuildConfig {
   // pessoa (streak de dias seguidos, estilo TikTok). LIGADO por defeito; desliga-se com
   // /config streaks. O streak em si é sempre calculado (alimenta o /topspeakers).
   streakAnnounce: boolean;
+  // soundboard: permite o /sound (clips de som na call). LIGADO por defeito; um admin
+  // pode desligá-lo com /config soundboard. O rate-limit por-utilizador já limita o
+  // spam; este toggle é o kill-switch por-servidor.
+  soundboard: boolean;
 }
 
 const DEFAULTS: GuildConfig = {
@@ -69,6 +73,7 @@ const DEFAULTS: GuildConfig = {
   antispam: false, // NÃO filtrar spam por defeito (opt-in, decisão do Diogo)
   stayInCall: false, // 24/7 in-call DESLIGADO por defeito (opt-in, mesmo com Premium)
   streakAnnounce: true, // aviso de streak 🔥 LIGADO por defeito
+  soundboard: true, // /sound LIGADO por defeito (admin desliga com /config soundboard)
 };
 
 interface GuildConfigRow {
@@ -90,6 +95,7 @@ interface GuildConfigRow {
   antispam: number | null;
   stay_in_call: number | null;
   streak_announce: number | null;
+  soundboard: number | null;
 }
 
 type SqlValue = string | number | null;
@@ -230,6 +236,13 @@ export const GUILD_CONFIG_COLUMNS: GuildConfigColumn[] = [
     sqlType: 'INTEGER NOT NULL DEFAULT 1',
     toDb: asBool,
     fromDb: (r) => (r == null ? DEFAULTS.streakAnnounce : r === 1),
+  },
+  {
+    prop: 'soundboard',
+    column: 'soundboard',
+    sqlType: 'INTEGER NOT NULL DEFAULT 1',
+    toDb: asBool,
+    fromDb: (r) => (r == null ? DEFAULTS.soundboard : r === 1),
   },
 ];
 

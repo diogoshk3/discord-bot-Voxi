@@ -16,6 +16,7 @@ import {
 } from 'discord.js';
 import { EFFECT_CHOICES } from '../tts/effects';
 import { GREET_LANGUAGE_CHOICES } from '../voice/greeting';
+import { SOUND_CHOICES } from '../content/sounds';
 
 const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
   // /invite — gatilho do loop viral: qualquer utilizador pode pedir o link de
@@ -89,6 +90,19 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
     )
     .addBooleanOption((o) =>
       o.setName('sound').setDescription('Add the rizz sound effect at the end?').setRequired(true),
+    )
+    .toJSON(),
+  // /sound — toca um clip curto do soundboard na call. `name` (OPCIONAL) usa choices
+  // (biblioteca curada <=25); sem argumento, o handler responde com a lista dos sons.
+  new SlashCommandBuilder()
+    .setName('sound')
+    .setDescription('Play a sound clip in the voice channel')
+    .addStringOption((o) =>
+      o
+        .setName('name')
+        .setDescription('Which sound to play (leave empty to list them)')
+        .setRequired(false)
+        .addChoices(...SOUND_CHOICES),
     )
     .toJSON(),
   // Micro-comandos divertidos (falados na voz + resposta pública). Funcionam sem estar
@@ -409,6 +423,14 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
       s
         .setName('streaks')
         .setDescription('Show the 🔥 daily streak notice when someone speaks (on by default)')
+        .addBooleanOption((o) => o.setName('active').setDescription('on/off').setRequired(true)),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName('soundboard')
+        .setDescription(
+          'Allow /sound (play sound clips in the call) on this server (on by default)',
+        )
         .addBooleanOption((o) => o.setName('active').setDescription('on/off').setRequired(true)),
     )
     .addSubcommand((s) =>

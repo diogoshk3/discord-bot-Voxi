@@ -15,6 +15,7 @@ import {
   handleLaugh,
   handleJoke,
   handleRizz,
+  handleSound,
   handleMicroFun,
   handleBirthday,
 } from './handlers/fun';
@@ -242,6 +243,8 @@ export async function handleInteraction(
         return await handleJoke(i, deps);
       case 'rizz':
         return await handleRizz(i, deps);
+      case 'sound':
+        return await handleSound(i, deps);
       case '8ball':
         return await handleMicroFun(i, deps, '8ball');
       case 'fortune':

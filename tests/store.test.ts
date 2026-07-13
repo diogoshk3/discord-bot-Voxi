@@ -107,6 +107,7 @@ describe('store', () => {
         antispam: false, // filtro de spam DESLIGADO por defeito
         stayInCall: false, // 24/7 in-call DESLIGADO por defeito
         streakAnnounce: true, // aviso de streak 🔥 LIGADO por defeito
+        soundboard: true, // /sound LIGADO por defeito
       });
     });
 
@@ -154,6 +155,7 @@ describe('store', () => {
         antispam: false, // filtro de spam DESLIGADO por defeito
         stayInCall: false, // 24/7 in-call DESLIGADO por defeito
         streakAnnounce: true, // aviso de streak 🔥 LIGADO por defeito
+        soundboard: true, // /sound LIGADO por defeito
       });
     });
 
@@ -235,6 +237,7 @@ describe('store', () => {
         antispam: true,
         stayInCall: true,
         streakAnnounce: false,
+        soundboard: false,
       };
       setGuildConfig(db, G, full);
       expect(getGuildConfig(db, G)).toEqual(full);
@@ -287,6 +290,7 @@ describe('store', () => {
           antispam: false,
           stayInCall: false,
           streakAnnounce: true,
+          soundboard: true,
         });
         // Todas as colunas do descritor passam a existir depois da migração.
         const info = migrated.pragma('table_info(guild_config)') as Array<{ name: string }>;

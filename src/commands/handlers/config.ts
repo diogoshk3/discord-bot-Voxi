@@ -133,6 +133,11 @@ export async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps
     const on = i.options.getBoolean('active', true);
     setGuildConfig(deps.db, i.guildId!, { streakAnnounce: on });
     await reply(i, on ? t('config.streaksOn', locale) : t('config.streaksOff', locale));
+  } else if (sub === 'soundboard') {
+    // Kill-switch por-servidor do /sound (clips de som na call). LIGADO por defeito.
+    const on = i.options.getBoolean('active', true);
+    setGuildConfig(deps.db, i.guildId!, { soundboard: on });
+    await reply(i, on ? t('config.soundboardOn', locale) : t('config.soundboardOff', locale));
   } else if (sub === 'greet') {
     // Saudação de voz a quem entra na call. LIGADA por defeito.
     const on = i.options.getBoolean('active', true);
@@ -200,6 +205,7 @@ export async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps
       t('config.showReadBots', locale, { value: cfg.readBots ? on : off }),
       t('config.showTextInVoice', locale, { value: cfg.textInVoice ? on : off }),
       t('config.showAntispam', locale, { value: cfg.antispam ? on : off }),
+      t('config.showSoundboard', locale, { value: cfg.soundboard ? on : off }),
       t('config.showGreet', locale, {
         value: cfg.greetOnJoin ? on : off,
         language:

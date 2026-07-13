@@ -379,6 +379,24 @@ export const catalog: Record<string, Entry> = {
     pt: '🔒 O **/rizz** é um extra Premium. Desbloqueia com o Vozen Plus (tu) ou Premium (este servidor). Vê `/premium`.',
   },
 
+  // ── /sound (soundboard: toca um clip curto na call via assetPath) ──────────
+  'sound.playing': {
+    en: '🔊 Playing **{name}**…',
+    pt: '🔊 A tocar **{name}**…',
+  },
+  'sound.unknown': {
+    en: "I don't have that sound. Run `/sound` to see the list.",
+    pt: 'Não tenho esse som. Usa `/sound` para veres a lista.',
+  },
+  'sound.list': {
+    en: '🔊 **Sounds:** {sounds}\nPlay one with `/sound name:<sound>` (I need to be in your voice channel).',
+    pt: '🔊 **Sons:** {sounds}\nToca um com `/sound name:<som>` (tenho de estar no teu canal de voz).',
+  },
+  'sound.disabled': {
+    en: '🔇 The soundboard is **off** on this server. An admin can enable it with `/config soundboard`.',
+    pt: '🔇 O soundboard está **desligado** neste servidor. Um admin pode ligá-lo com `/config soundboard`.',
+  },
+
   // ── Micro-comandos divertidos (/8ball, /fortune, /fact, /wyr) ──────────────
   'fun.eightball': {
     en: '🎱 **{question}**\n> {answer}',
@@ -760,6 +778,14 @@ export const catalog: Record<string, Entry> = {
     en: 'Streak notices **off** — Vozen still tracks streaks (see `/topspeakers`) but stays quiet about them.',
     pt: 'Avisos de streak **desligados** — o Vozen continua a contar os streaks (vê `/topspeakers`) mas não os anuncia.',
   },
+  'config.soundboardOn': {
+    en: 'Soundboard **on** — anyone can play clips with `/sound`.',
+    pt: 'Soundboard **ligado** — qualquer pessoa pode tocar clips com `/sound`.',
+  },
+  'config.soundboardOff': {
+    en: 'Soundboard **off** — `/sound` is disabled on this server.',
+    pt: 'Soundboard **desligado** — o `/sound` está desativado neste servidor.',
+  },
   'config.greetOn': {
     en: "✅ I'll greet people by name when they join the voice channel.",
     pt: '✅ Vou saudar as pessoas pelo nome quando entrarem no canal de voz.',
@@ -823,6 +849,10 @@ export const catalog: Record<string, Entry> = {
   'config.showAntispam': {
     en: 'Anti-spam: {value}',
     pt: 'Anti-spam: {value}',
+  },
+  'config.showSoundboard': {
+    en: 'Soundboard (/sound): {value}',
+    pt: 'Soundboard (/sound): {value}',
   },
   'config.showGreet': {
     en: 'Greet on join: {value} ({language})',
@@ -1157,6 +1187,7 @@ export const catalog: Record<string, Entry> = {
     en:
       '• /joke — I tell a short joke (pick a language + optional laughter) · e.g. /joke English\n' +
       '• /rizz — I drop a pickup line (pick a language + optional rizz sound) · 💎 Premium\n' +
+      '• /sound — I play a sound clip in the call · e.g. /sound name:airhorn (or /sound to list them)\n' +
       '• /laugh — I laugh out loud in your current voice\n' +
       '• /8ball · /fortune · /fact · /wyr — I answer/read out loud (and in chat)\n' +
       '• /birthday set — I wish you a happy birthday when you join on your day\n' +
@@ -1165,6 +1196,7 @@ export const catalog: Record<string, Entry> = {
     pt:
       '• /joke — conto uma piada curta (escolhe a lingua + risos opcionais) · ex. /joke Portuguese\n' +
       '• /rizz — mando uma cantada (escolhe a lingua + efeito rizz opcional) · 💎 Premium\n' +
+      '• /sound — toco um clip de som na call · ex. /sound name:airhorn (ou /sound para os listar)\n' +
       '• /laugh — rio-me em voz alta na tua voz atual\n' +
       '• /8ball · /fortune · /fact · /wyr — respondo/leio em voz alta (e no chat)\n' +
       '• /birthday set — digo-te parabens quando entrares na call no teu dia\n' +

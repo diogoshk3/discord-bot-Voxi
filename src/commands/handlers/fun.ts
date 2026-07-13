@@ -12,6 +12,7 @@ import type { SynthRequest } from '../../tts/engine';
 import { laughterFor } from '../../content/laughter';
 import { jokeLangByKey, pickJoke } from '../../content/jokes';
 import { pickLine } from '../../content/pickupLines';
+import { SOUNDS, soundByKey, soundFilename } from '../../content/sounds';
 import {
   funLocaleOf,
   pickEightball,
@@ -255,6 +256,71 @@ export async function handleRizz(i: ChatInputCommandInteraction, deps: BotDeps):
   }
 
   await i.editReply(queued ? t('rizz.playing', locale, { line }) : t('tts.busy', locale));
+}
+
+// Diretório dos clips do soundboard (raiz do repo /assets/sfx). Em runtime este modulo
+// vive em dist/commands/handlers/, por isso subimos 3 niveis (mesmo padrao do RIZZ_SFX_PATH).
+const SFX_DIR = join(__dirname, '..', '..', '..', 'assets', 'sfx');
+
+/**
+ * /sound [name] — toca um clip curto do soundboard na call (biblioteca CURADA, sem
+ * upload). Sem `name`, responde com a LISTA de sons (descoberta). O clip e tocado DIRETO
+ * via assetPath (sem motor/cache/efeitos) — a mesma canalizacao do efeito do /rizz. Exige
+ * um player ativo (bot numa call) e tem rate-limit por-utilizador (anti-spam sonoro).
+ */
+export async function handleSound(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
+  await i.deferReply({ flags: MessageFlags.Ephemeral });
+  const locale = localeForUser(deps, i);
+
+  // Kill-switch por-servidor: um admin pode desligar o /sound com /config soundboard.
+  const cfg = getGuildConfig(deps.db, i.guildId!);
+  if (!cfg.soundboard) {
+    await i.editReply(t('sound.disabled', locale));
+    return;
+  }
+
+  // Sem argumento -> lista os sons disponiveis (nao precisa de estar numa call).
+  const key = i.options.getString('name');
+  if (!key) {
+    const list = SOUNDS.map((s) => `${s.emoji ?? '🔊'} \`${s.key}\``).join(' · ');
+    await i.editReply(t('sound.list', locale, { sounds: list }));
+    return;
+  }
+
+  // `name` vem de choices, mas via API pode chegar uma key invalida -> mensagem clara.
+  const clip = soundByKey(key);
+  if (!clip) {
+    await i.editReply(t('sound.unknown', locale));
+    return;
+  }
+
+  const player = getPlayer(deps, i.guildId!);
+  if (!player) {
+    await i.editReply(t('tts.notInVoice', locale));
+    return;
+  }
+
+  // rate-limit por-utilizador (MESMO limiter do /tts): sem isto um user podia encher a
+  // fila de voz com clips e afogar o TTS de toda a gente. APOS o deferReply.
+  const rl = getLimiter(deps, i.guildId!, cfg.ratePerMin);
+  if (!rl.allow(i.user.id, Date.now())) {
+    await i.editReply(t('tts.tooFast', locale));
+    return;
+  }
+
+  // Clip fixo tocado DIRETO (assetPath salta motor/cache/efeitos). model/speed sao
+  // placeholders exigidos pelo tipo SynthRequest — ignorados quando ha assetPath.
+  const model = cfg.defaultVoice || deps.config.defaultVoice || 'en_US-amy-medium';
+  const queued = await player.say({
+    text: '',
+    model,
+    speed: deps.config.defaultSpeed,
+    singleVoice: true,
+    assetPath: join(SFX_DIR, soundFilename(clip.key)),
+  });
+  await i.editReply(
+    queued ? t('sound.playing', locale, { name: clip.name }) : t('tts.busy', locale),
+  );
 }
 
 type MicroFunKind = '8ball' | 'fortune' | 'fact' | 'wyr';
