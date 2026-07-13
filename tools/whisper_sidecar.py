@@ -20,6 +20,13 @@ import sys
 import json
 import argparse
 
+# Limiares ANTI-ALUCINACAO (ver o filtro no loop). O Whisper inventa frases sobre
+# silencio/ruido; estes cortes usam a confianca do proprio modelo para as descartar.
+#  - no_speech_prob > 0.6  => o segmento e provavelmente NAO-fala (silencio/ruido).
+#  - avg_logprob   < -1.0  => transcricao de baixa confianca (tipicamente alucinada).
+NO_SPEECH_MAX = 0.6
+AVG_LOGPROB_MIN = -1.0
+
 
 def main() -> None:
     ap = argparse.ArgumentParser()
@@ -42,15 +49,31 @@ def main() -> None:
         if not path:
             continue
         try:
+            kwargs = dict(
+                beam_size=1,
+                vad_filter=True,
+                # Sem isto, o Whisper repete/arrasta texto de segmentos anteriores (loops).
+                condition_on_previous_text=False,
+            )
             try:
-                segments, info = model.transcribe(
-                    path, language=forced, beam_size=1, vad_filter=True
-                )
+                segments, info = model.transcribe(path, language=forced, **kwargs)
             except ValueError:
                 # Lingua forcada nao suportada pelo modelo -> cai na auto-detecao.
-                segments, info = model.transcribe(path, beam_size=1, vad_filter=True)
-            text = " ".join(s.text.strip() for s in segments).strip()
-            print(json.dumps({"text": text, "lang": info.language}), flush=True)
+                segments, info = model.transcribe(path, **kwargs)
+            # ANTI-ALUCINACAO: o Whisper INVENTA frases sobre silencio/ruido. Filtra por
+            # confianca do proprio modelo — descarta segmentos provavelmente-nao-fala
+            # (no_speech_prob alto) ou de baixa confianca (avg_logprob baixo). Isto e o que
+            # mata o "manda texto aleatorio quando ninguem fala".
+            kept = []
+            for s in segments:
+                if getattr(s, "no_speech_prob", 0.0) > NO_SPEECH_MAX:
+                    continue
+                if getattr(s, "avg_logprob", 0.0) < AVG_LOGPROB_MIN:
+                    continue
+                txt = s.text.strip()
+                if txt:
+                    kept.append(txt)
+            print(json.dumps({"text": " ".join(kept).strip(), "lang": info.language}), flush=True)
         except Exception as e:  # noqa: BLE001 — devolve o erro ao chamador, nunca crasha o sidecar
             print(json.dumps({"error": str(e)[:200]}), flush=True)
 
