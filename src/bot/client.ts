@@ -35,6 +35,12 @@ export function createClient(): Client {
       GatewayIntentBits.GuildMembers,
     ],
     partials: [Partials.Channel],
+    // Default GLOBAL de segurança: nenhum conteúdo postado pelo bot pinga
+    // @everyone/@here/roles/utilizadores a partir do TEXTO — desarma o vetor de
+    // mass-mention (risco de ban) em qualquer send/reply/editReply que ecoe input
+    // do utilizador (jogos, /8ball, /randomizer…). Uma chamada que precise mesmo de
+    // pingar tem de fazer o seu próprio override explícito de allowedMentions.
+    allowedMentions: { parse: [] },
   });
 }
 

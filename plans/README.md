@@ -194,3 +194,62 @@ Nenhum depende de outro (ficheiros disjuntos).
   conscientemente adiada (`PLAN-VAGA5-FEATURES.md:104` deixou "apagar OU documentar"; escolheu-se
   documentar). Enhancement de uma decisão, não um defeito: "apaga as minhas transcrições" é
   expectativa natural e diferenciador. Custo M + tabela nova (rot-guard/PRIVACY). Opção, não bug.
+
+## Auditoria de segurança DEEP — 2026-07-14 (commit `f1a1ac1`)
+
+`/improve deep security` a pedido do Diogo ("research intensa na proteção do bot"), **planeamento
+only — o Opus executa**. 8 auditores read-only em paralelo (superfície HTTP · segredos/logs ·
+injeção SQL/shell/path · abuso/DoS · dados/privacidade · Discord ToS/conta · ops/deploy ·
+dependências) → ~26 achados vetados → **10 planos (023-032)**. Baseline: 1731 testes verdes.
+
+**Resultado macro:** a **injeção está LIMPA** (SQL parametrizado; sidecars com `spawn` array-args +
+stdin, sem `shell:true`; paths por hash/allowlist/`isSafeModelName`) e a **superfície HTTP está bem
+endurecida** (authz do dashboard sem IDOR/mass-assignment, rota `/webhook/topgg` na ordem certa,
+claim sem oráculo, CSRF N/A, health sem leak). O peso está em **compliance/privacidade, config
+fail-safe, pipeline de deploy e exaustão de recursos**.
+
+| Plan | Título | Prio | Esf | Depende | Estado |
+| ---- | ------ | ---- | --- | ------- | ------ |
+| 023  | Default global `allowedMentions:{parse:[]}` no Client (mass-mention/ban-risk, DISCORD-01) | P1 | S | — | TODO |
+| 024  | Guards de config fail-safe (segredo presente-mas-vazio · CLONE_KEY · listener redundante — SECRET-01/02) | P1 | S | — | TODO |
+| 025  | Completude do data-lifecycle: alargar rot-guard + apagar/disclosar `kofi_supporter` & `gcloud_usage` (DATA-01/02/03) | P1 | S-M | — | TODO |
+| 026  | Reconciliar `PRIVACY.md` §1 (schema real) + §2.4 (áudio STT) (DATA-04/05) | P2 | M | 025 (coord. `gcloud_usage`) | TODO |
+| 027  | Endurecer o pipeline de deploy: gate de testes + `set -e` + triggers `scripts/**`/`tools/**` (OPS-01/02/03) | P1 | S | — | TODO |
+| 028  | Rotação de logs do supervisor a meio-do-run (evitar disco cheio → outage) (OPS-04) | P1 | S | — | TODO |
+| 029  | Cap global de concorrência STT + teardown de erro do `/transcribe start` (ABUSE-01, DISCORD-02) | P1 | S-M | — | TODO |
+| 030  | Fechar lacunas de rate-limit (`/voice preview` · throttle do feedback · gate `/game`) (ABUSE-03/02/04) | P2 | S | — | TODO |
+| 031  | Encolher superfície de install-scripts + pinar `faster-whisper` (DEP-01/02/03) | P2 | S-M | 027 (mesmo `deploy-bot.yml`) | TODO |
+| 032  | Bundle de hardening: scrubber · aborted-guard · sweep de `.wav` órfão · `.env.example` · decisão da intent (SECRET-03, HTTP-01, DATA-06, SECRET-04, DISCORD-03) | P3 | S (C=M) | — | TODO |
+
+**Ordem sugerida:** os P1 primeiro e são quase todos independentes — 023, 024, 027, 028 são
+isolados e de verificação limpa (bons para paralelo). 025 antes de 026 (coordenam o `gcloud_usage`).
+031 depois/junto de 027 (ambos editam `deploy-bot.yml`). 029 é o mais delicado (contador simétrico +
+invariante de re-ensurdecer). 032 são 5 itens independentes; o item C (sweep biométrico) é MED-risco
+(testar contra `sample_path`, não heurística de nome).
+
+### Áreas LIMPAS (negativos bem sustentados — não são planos)
+
+- **Injeção** (SQL/shell/path/eval): sem vulnerabilidades. `escapeRegExp`, allowlists `as const`,
+  `spawn` array-only, stdin-isolation, hash SHA-1 nos paths, `isSafeModelName`, guard `/^\d{5,25}$/`.
+- **HTTP**: authz do dashboard (MANAGE_GUILD server-side + whitelist de patch), `/api/me/premium`
+  por token, claim sem oráculo, rate-limit/body-caps/timeouts nos 3 servidores.
+- **`npm audit`**: 0 CVEs (os `overrides` cobrem undici/trim/tar; opus DoS aceite).
+- **DMs não solicitadas**: nenhuma. Token nunca logado. Idempotência Ko-fi + XFF-last + timingSafeEqual OK.
+
+### Considerados e rejeitados / não-agora
+
+- **franc/trim ReDoS**: validado como NÃO-problema — o `override trim@0.0.3` chega, franc está off
+  por defeito (`MULTILINGUAL_SEGMENTS`) e, quando on, só vê input com cap (≤2000). Override
+  load-bearing e suficiente.
+- **`vote_reward` cresce sem limite**: upsert 1 linha/votante, apagável por `/privacy erase` —
+  negligível a qualquer escala real.
+- **Encriptação em repouso (SQLCipher)**: decisão já adiada (COMPL·5); o plano 024 só AVISA quando
+  `CLONE_KEY` falta, não muda o comportamento.
+
+### Achado de DIREÇÃO (maintainer — não planeado)
+
+- **[OPS-05] Sharding inerte + launcher não-supervisionado**: `BOT_SHARDS` é no-op no caminho
+  supervisionado; o único launcher sharded (`shard.js`) ignora o single-instance lock, o backoff e a
+  rotação de logs. Não fazer agora (single-process aguenta a escala atual). **Pré-escala** (~2500
+  guilds, quando o Discord força sharding): passar o `shard.js` pelo supervisor OU portar o lock/
+  backoff/rotação para o launcher sharded. Efeito L.
