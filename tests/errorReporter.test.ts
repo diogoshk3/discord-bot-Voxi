@@ -44,6 +44,48 @@ describe('formatErrorMessage', () => {
     // corpo = 1500; invólucro (cabeçalho + code fences) é pequeno e fixo
     expect(msg.length).toBeLessThanOrEqual(1500 + 100);
   });
+
+  // Plano 032 (SECRET-03): alarga o scrubber para além do token Discord + Bearer. Valores
+  // SINTÉTICOS abaixo (nunca reais) — só têm a FORMA de uma chave/header real.
+  it('SECRET-03: redige uma chave da OpenAI (sk-...)', () => {
+    const fake = `sk-${'F'.repeat(40)}`;
+    const msg = formatErrorMessage(new Error(`401 ao chamar a OpenAI com ${fake}`), 'ctx');
+    expect(msg).not.toContain(fake);
+    expect(msg).toContain('[chave-redigida]');
+  });
+
+  it('SECRET-03: redige o valor do header x-goog-api-key', () => {
+    const fake = `AIzaSyFAKE${'X'.repeat(20)}`;
+    const msg = formatErrorMessage(
+      new Error(`Google TTS 403: header x-goog-api-key: ${fake} rejeitado`),
+      'ctx',
+    );
+    expect(msg).not.toContain(fake);
+    expect(msg).toContain('[chave-redigida]');
+  });
+
+  it('SECRET-03: redige o valor da query key= (API REST da Google)', () => {
+    const fake = `AIzaSyQUERYFAKE${'Y'.repeat(15)}`;
+    const msg = formatErrorMessage(
+      new Error(`GET https://texttospeech.googleapis.com/v1/text:synthesize?key=${fake} falhou`),
+      'ctx',
+    );
+    expect(msg).not.toContain(fake);
+    expect(msg).toContain('[chave-redigida]');
+  });
+
+  it('SECRET-03: redige um header authorization genérico (não-Bearer, ex. Basic)', () => {
+    const fake = 'ZmFrZTp1c2Vy'; // placeholder base64, nunca um segredo real
+    const msg = formatErrorMessage(new Error(`403: Authorization: Basic ${fake}`), 'ctx');
+    expect(msg).not.toContain(fake);
+    expect(msg).toContain('[redigido]');
+  });
+
+  it('SECRET-03: continua a redigir Bearer normalmente (o padrão genérico não regride isto)', () => {
+    const msg = formatErrorMessage(new Error('Authorization: Bearer abc.def-123'), 'ctx');
+    expect(msg).not.toContain('abc.def-123');
+    expect(msg).toContain('Bearer [redigido]');
+  });
 });
 
 describe('createErrorReporter', () => {

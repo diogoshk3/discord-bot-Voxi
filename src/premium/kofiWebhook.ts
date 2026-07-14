@@ -290,6 +290,11 @@ function handleClaimRequest(
   let body = '';
   let aborted = false;
   req.on('data', (chunk) => {
+    // HTTP-01: guarda defensivo — se o pedido já foi abortado (413), ignora chunks
+    // adicionais (o mesmo padrão de vote.ts). Hoje inofensivo (req.destroy() já parou os
+    // eventos 'data'), mas protege contra um refactor futuro que faça `await` antes do
+    // destroy().
+    if (aborted) return;
     body += chunk;
     if (body.length > 4_000) {
       aborted = true;
@@ -464,6 +469,8 @@ function handleDashboardRequest(
       let body = '';
       let aborted = false;
       req.on('data', (chunk) => {
+        // HTTP-01: guarda defensivo (ver claim acima) — ignora chunks pós-abort.
+        if (aborted) return;
         body += chunk;
         if (body.length > MAX_DASHBOARD_BODY) {
           aborted = true;
@@ -529,6 +536,8 @@ function handleTopggRequest(
   let body = '';
   let aborted = false;
   req.on('data', (chunk) => {
+    // HTTP-01: guarda defensivo (ver claim acima) — ignora chunks pós-abort.
+    if (aborted) return;
     body += chunk;
     if (body.length > 64_000) {
       aborted = true;
@@ -626,6 +635,8 @@ export function startKofiWebhook(deps: KofiWebhookDeps): Server | null {
     let body = '';
     let aborted = false;
     req.on('data', (chunk) => {
+      // HTTP-01: guarda defensivo (ver claim acima) — ignora chunks pós-abort.
+      if (aborted) return;
       body += chunk;
       if (body.length > 64_000) {
         aborted = true;

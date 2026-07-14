@@ -9,6 +9,7 @@ import { initDb } from './store/db';
 import { startDepartedPurgeJob } from './store/guildDeparted';
 import { startPendingPurgeJob } from './store/kofiPending';
 import { purgeOldGcloudUsage, monthKeyUTC } from './store/gcloudUsage';
+import { sweepOrphanClones } from './store/voiceCloneSweep';
 import { AudioCache } from './tts/cache';
 import { createEngine, createPerUserEngine, selectEngine } from './tts/factory';
 import { syntheticGttsModels } from './language/voiceMap';
@@ -413,6 +414,25 @@ async function main(): Promise<void> {
     } catch (err) {
       log.error('[index] falha ao arrancar o job de purga de pendentes Ko-fi (ignorado)', err);
     }
+    // DATA-06: sweep de reconciliação de .wav ÓRFÃOS em voice-clones/ — a rede de
+    // segurança dos unlinks best-effort do eraseUser/`/voice clone delete` (se o processo
+    // morrer entre apagar a linha e apagar o ficheiro, ou o unlink rebentar, a amostra
+    // biométrica fica sem nenhuma linha `user_clone` a referi-la). Corre SÓ UMA VEZ no
+    // arranque (`once(ClientReady...)`), nunca em intervalo — órfãos só se acumulam num
+    // crash, não continuamente. O match é contra os `sample_path` REAIS da BD, nunca por
+    // heurística de nome (ver voiceCloneSweep.ts). Best-effort: nunca impede o arranque.
+    try {
+      const voiceClonesDir = path.join(path.dirname(config.dbPath), 'voice-clones');
+      const sweep = sweepOrphanClones(db, voiceClonesDir);
+      if (sweep.removed.length > 0 || sweep.failed.length > 0) {
+        log.info(
+          `[retencao] sweep de clones órfãos: ${sweep.removed.length} apagado(s) de ` +
+            `${sweep.scanned} .wav varrido(s)${sweep.failed.length ? `, ${sweep.failed.length} falhou/falharam a apagar` : ''}.`,
+        );
+      }
+    } catch (err) {
+      log.error('[index] falha no sweep de clones órfãos (ignorado)', err);
+    }
     // Retenção do gcloud_usage (contadores mensais de chars): apaga meses com mais de ~3
     // meses. Corre já e depois 1x/dia. Evita crescimento sem fim; o gate de custo só olha
     // para o mês corrente. Timer unref'd (nunca segura o processo). Best-effort.
@@ -422,7 +442,9 @@ async function main(): Promise<void> {
           const cutoff = monthKeyUTC(Date.now() - 92 * 86_400_000);
           const removed = purgeOldGcloudUsage(db, cutoff);
           if (removed > 0) {
-            log.info(`[retencao] purgadas ${removed} linha(s) antigas de gcloud_usage (< ${cutoff}).`);
+            log.info(
+              `[retencao] purgadas ${removed} linha(s) antigas de gcloud_usage (< ${cutoff}).`,
+            );
           }
         } catch (err) {
           log.error('[retencao] falha na purga do gcloud_usage (ignorado)', err);

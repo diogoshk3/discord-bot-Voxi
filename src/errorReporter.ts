@@ -34,19 +34,36 @@ function hashError(error: unknown): string {
 const MAX_BODY = 1500;
 // Forma de um token de bot do Discord (3 blocos base64url separados por '.').
 const DISCORD_TOKEN_RE = /[\w-]{23,28}\.[\w-]{6,7}\.[\w-]{27,}/g;
+// Chave da OpenAI ("sk-..."): pode aparecer solta em erros do SDK, não só em
+// Authorization (ex.: mensagens de erro do cliente HTTP que ecoam a config).
+const OPENAI_KEY_RE = /sk-[A-Za-z0-9_-]{20,}/g;
+// Header x-goog-api-key (Google Cloud TTS/Translate): valor da chave.
+const GOOGLE_HEADER_RE = /x-goog-api-key['":\s]*[:=]\s*['"]?[A-Za-z0-9_-]{10,}/gi;
+// Query param key=... — a API REST da Google aceita a chave na própria URL
+// (?key=<chave>), por isso um erro HTTP pode ecoar o URL completo.
+const GOOGLE_QUERY_KEY_RE = /([?&]key=)[A-Za-z0-9_-]{10,}/gi;
 // Credencial "Bearer xxx" (headers HTTP ecoados em mensagens de erro).
 const BEARER_RE = /Bearer\s+[\w.~+/=-]+/gi;
+// Header Authorization genérico (esquemas != Bearer, ex. Basic, ou uma chave crua sem
+// esquema). O lookahead exclui "Bearer" (já tratado acima, com o marcador "Bearer […]");
+// o valor tem de COMEÇAR por um char não-espaço para o \s* anterior não conseguir "devolver"
+// o espaço e assim contornar o lookahead ao ficar posicionado mesmo antes de "Bearer".
+const AUTH_HEADER_RE = /authorization\s*[:=]\s*['"]?(?!Bearer\b)[^\s"'`,;\r\n][^"'`,;\r\n]*/gi;
 
 /**
- * SEC-03: o texto de um erro pode ecoar credenciais (token do bot num erro do
- * discord.js, header Authorization num erro HTTP). Redige-as ANTES do envio para
- * o webhook (que é um canal de chat) e limita o tamanho — redigir primeiro,
- * cortar depois, para um corte nunca deixar meio token visível.
+ * SEC-03 / SECRET-03: o texto de um erro pode ecoar credenciais (token do bot num erro
+ * do discord.js, chave da OpenAI/Google, header Authorization num erro HTTP). Redige-as
+ * ANTES do envio para o webhook (que é um canal de chat) e limita o tamanho — redigir
+ * primeiro, cortar depois, para um corte nunca deixar meio token/chave visível.
  */
 function scrub(text: string): string {
   return text
     .replace(DISCORD_TOKEN_RE, '[token-redigido]')
+    .replace(OPENAI_KEY_RE, '[chave-redigida]')
+    .replace(GOOGLE_HEADER_RE, 'x-goog-api-key: [chave-redigida]')
+    .replace(GOOGLE_QUERY_KEY_RE, '$1[chave-redigida]')
     .replace(BEARER_RE, 'Bearer [redigido]')
+    .replace(AUTH_HEADER_RE, 'authorization: [redigido]')
     .slice(0, MAX_BODY);
 }
 
