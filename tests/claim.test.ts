@@ -1,9 +1,11 @@
 // tests/claim.test.ts — reclamar (claim) uma compra Ko-fi pendente.
 //
 // O checkout de subscrição do Ko-fi não tem caixa de mensagem, e um comprador GUEST nem tem
-// histórico de transações — o único identificador fiável que ele controla é o EMAIL (o que
-// usou no pagamento). Por isso o claim casa por email (via principal) OU pelo código da
-// transação (via secundária, para quem tenha o tx id). Ver src/premium/claim.ts.
+// histórico de transações — mas o EMAIL não é segredo (ver plano 021: para quem o conheça,
+// era possível roubar o Premium de outra pessoa via qualquer conta Discord logada, durante os
+// 90 dias de retenção do pendente). Por isso o claim aceita SÓ o CÓDIGO da transação do recibo
+// (chave forte que só o comprador tem); um input com '@' (email) é rejeitado com o motivo
+// `use_receipt_code`, sem sequer tocar na BD. Ver src/premium/claim.ts.
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import type Database from 'better-sqlite3';
 import { initDb } from '../src/store/db';
@@ -13,12 +15,11 @@ import { hashKofiEmail } from '../src/premium/kofi';
 import { isUserPremium, getPremiumPass, lookupKofiSupporter } from '../src/store/premium';
 
 const DID = '123456789012345678';
-const DAY = 86_400_000;
 const TOKEN = 'kofi-webhook-secret';
 const EMAIL = 'buyer@example.com';
 const EMAIL_HASH = hashKofiEmail(TOKEN, EMAIL);
 
-describe('claimPendingGrant — reclamar compra pendente (email ou código)', () => {
+describe('claimPendingGrant — reclamar compra pendente (só por código, plano 021)', () => {
   let db: Database.Database;
   const now = 1_000_000;
   beforeEach(() => {
@@ -37,54 +38,37 @@ describe('claimPendingGrant — reclamar compra pendente (email ou código)', ()
     ...over,
   });
 
-  // ── Via principal: EMAIL ────────────────────────────────────────────────────────────
-  it('email do Ko-fi -> ativa Plus no Discord ID + marca reclamado', () => {
+  // ── EMAIL (plano 021: já não é prova de posse — rejeitado, sem tocar na BD) ─────────
+  it('input tipo email -> use_receipt_code (não aplica nada, pendente continua por reclamar)', () => {
     recordPendingGrant(db, pend(), now);
     const out = claimPendingGrant(db, DID, EMAIL, TOKEN, now + 10);
-    expect(out.ok).toBe(true);
-    if (out.ok) {
-      expect(out.items).toHaveLength(1);
-      expect(out.items[0].expiresAt).toBe(now + 10 + 30 * DAY);
-    }
-    expect(isUserPremium(db, DID, now + 20)).toBe(true);
-    expect(findUnclaimedPendingByTx(db, 'tx-1')).toBeNull();
+    expect(out).toEqual({ ok: false, reason: 'use_receipt_code' });
+    expect(isUserPremium(db, DID, now + 20)).toBe(false);
+    expect(findUnclaimedPendingByTx(db, 'tx-1')).not.toBeNull(); // continua por reclamar
+    expect(lookupKofiSupporter(db, EMAIL_HASH)).toBeNull(); // nada memorizado
   });
 
-  it('email normalizado (maiúsculas/espaços) casa na mesma (mesmo hash)', () => {
+  it('email normalizado (maiúsculas/espaços) -> use_receipt_code também', () => {
     recordPendingGrant(db, pend(), now);
-    expect(claimPendingGrant(db, DID, '  BUYER@Example.COM ', TOKEN, now).ok).toBe(true);
+    expect(claimPendingGrant(db, DID, '  BUYER@Example.COM ', TOKEN, now)).toEqual({
+      ok: false,
+      reason: 'use_receipt_code',
+    });
   });
 
-  it('email com VÁRIAS compras (renovações órfãs) -> reclama todas (acumula)', () => {
-    recordPendingGrant(db, pend({ transactionId: 'tx-1' }), now);
-    recordPendingGrant(db, pend({ transactionId: 'tx-2' }), now + 100);
-    const out = claimPendingGrant(db, DID, EMAIL, TOKEN, now + 200);
-    expect(out.ok).toBe(true);
-    if (out.ok) expect(out.items).toHaveLength(2);
-    expect(isUserPremium(db, DID, now + 200 + 59 * DAY)).toBe(true); // 2×30 dias
+  it('email desconhecido -> use_receipt_code igual (sem oráculo: nunca consulta a BD)', () => {
+    expect(claimPendingGrant(db, DID, 'stranger@x.com', TOKEN, now)).toEqual({
+      ok: false,
+      reason: 'use_receipt_code',
+    });
   });
 
-  it('email memoriza email->Discord ID (renovações futuras resolvem-se sozinhas)', () => {
+  it('email SEM token do webhook -> use_receipt_code na mesma (já não depende do hash)', () => {
     recordPendingGrant(db, pend(), now);
-    claimPendingGrant(db, DID, EMAIL, TOKEN, now);
-    expect(lookupKofiSupporter(db, EMAIL_HASH)).toBe(DID);
-  });
-
-  it('email desconhecido -> not_found (sem ativar nada)', () => {
-    recordPendingGrant(db, pend(), now);
-    expect(claimPendingGrant(db, DID, 'stranger@x.com', TOKEN, now).ok).toBe(false);
-    expect(isUserPremium(db, DID, now)).toBe(false);
-  });
-
-  it('email SEM token do webhook -> not_found (não dá para hashear)', () => {
-    recordPendingGrant(db, pend(), now);
-    expect(claimPendingGrant(db, DID, EMAIL, undefined, now).ok).toBe(false);
-  });
-
-  it('2.º claim do mesmo email -> not_found (uso único)', () => {
-    recordPendingGrant(db, pend(), now);
-    expect(claimPendingGrant(db, DID, EMAIL, TOKEN, now).ok).toBe(true);
-    expect(claimPendingGrant(db, DID, EMAIL, TOKEN, now).ok).toBe(false);
+    expect(claimPendingGrant(db, DID, EMAIL, undefined, now)).toEqual({
+      ok: false,
+      reason: 'use_receipt_code',
+    });
   });
 
   // ── Via secundária: CÓDIGO (tx id) ──────────────────────────────────────────────────
@@ -122,6 +106,21 @@ describe('claimPendingGrant — reclamar compra pendente (email ou código)', ()
     expect(out.ok).toBe(true);
     if (out.ok) expect(out.items).toHaveLength(1);
     expect(findUnclaimedPendingByTx(db, 'tx-other')).not.toBeNull();
+  });
+
+  it('código memoriza email->Discord ID (renovações futuras resolvem-se sozinhas)', () => {
+    recordPendingGrant(db, pend(), now);
+    claimPendingGrant(db, DID, 'tx-1', TOKEN, now);
+    expect(lookupKofiSupporter(db, EMAIL_HASH)).toBe(DID);
+  });
+
+  it('2.º claim do mesmo código -> not_found (uso único, nunca dobra o grant)', () => {
+    recordPendingGrant(db, pend(), now);
+    expect(claimPendingGrant(db, DID, 'tx-1', TOKEN, now).ok).toBe(true);
+    expect(claimPendingGrant(db, DID, 'tx-1', TOKEN, now)).toEqual({
+      ok: false,
+      reason: 'not_found',
+    });
   });
 
   it('input vazio -> not_found', () => {

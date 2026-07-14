@@ -1,12 +1,13 @@
 {
   "ui": {
     "claim.title": "Activate a purchase",
-    "claim.hint": "Bought Plus or Premium on Ko-fi? Enter the email you paid with and we'll activate it on this Discord account.",
-    "claim.placeholder": "Email used on Ko-fi",
+    "claim.hint": "Bought Plus or Premium on Ko-fi? Paste the transaction code from your Ko-fi receipt email and we'll activate it on this Discord account.",
+    "claim.placeholder": "Transaction code from your Ko-fi receipt",
     "claim.btn": "Activate",
     "claim.working": "Activating…",
     "claim.ok": "Done! Your purchase is now active on this account.",
     "claim.notfound": "No purchase found for that code. Double-check it on your Ko-fi receipt and try again.",
+    "claim.useReceiptCode": "Please paste the transaction code from your Ko-fi receipt email instead of your email address.",
     "claim.ratelimited": "Too many attempts. Please wait a few minutes and try again.",
     "claim.error": "Something went wrong. Please try again in a moment.",
     "nav.features": "Features",

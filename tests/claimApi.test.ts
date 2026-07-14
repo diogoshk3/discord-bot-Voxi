@@ -1,8 +1,10 @@
 // tests/claimApi.test.ts — endpoint HTTP POST /api/link (claim autenticado por OAuth Discord).
 //
-// O comprador, logado no site com Discord (OAuth), cola o código do recibo. O endpoint valida
-// a identidade (statusApi.resolveIdentity), reclama o pendente e ativa. Rate-limit próprio
-// (anti-brute-force do código), uso único, CORS restrito. Ver src/premium/kofiWebhook.ts.
+// O comprador, logado no site com Discord (OAuth), cola o código da transação do recibo. O
+// endpoint valida a identidade (statusApi.resolveIdentity), reclama o pendente e ativa.
+// Rate-limit próprio (anti-brute-force do código), uso único, CORS restrito. Um `code` com
+// '@' (email) é rejeitado com 400 `use_receipt_code` — plano 021, o email não é aceite como
+// prova de posse. Ver src/premium/kofiWebhook.ts.
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import type { Server } from 'node:http';
 import type Database from 'better-sqlite3';
@@ -97,7 +99,7 @@ describe('POST /api/link — claim autenticado', () => {
     expect(findUnclaimedPendingByTx(db, 'tx-ok')).toBeNull();
   });
 
-  it('email do Ko-fi -> 200, ativa Plus (via principal do guest)', async () => {
+  it('email do Ko-fi -> 400 use_receipt_code (plano 021: email já não ativa nada)', async () => {
     const emailHash = hashKofiEmail('tok', 'buyer@example.com'); // 'tok' = token do webhook no start()
     recordPendingGrant(
       db,
@@ -106,9 +108,11 @@ describe('POST /api/link — claim autenticado', () => {
     );
     const url = await start(makeStatusApi({ bom: { id: DID } }));
     const res = await post(url, { code: 'buyer@example.com' }, { authorization: 'Bearer bom' });
-    expect(res.status).toBe(200);
-    expect(isUserPremium(db, DID, 2_000_000)).toBe(true);
-    expect(findUnclaimedPendingByTx(db, 'tx-em')).toBeNull();
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe('use_receipt_code');
+    expect(isUserPremium(db, DID, 2_000_000)).toBe(false);
+    expect(findUnclaimedPendingByTx(db, 'tx-em')).not.toBeNull(); // continua por reclamar
   });
 
   it('código desconhecido -> 404 (genérico, sem oráculo)', async () => {

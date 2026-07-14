@@ -457,7 +457,7 @@
       `<span class="ppanel__claimtitle">${t("claim.title")}</span>` +
       `<p class="ppanel__claimhint">${t("claim.hint")}</p>` +
       `<form class="ppanel__claimform" id="ppClaimForm">` +
-      `<input type="text" id="ppClaimCode" class="ppanel__claiminput" placeholder="${esc(t("claim.placeholder"))}" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="email" maxlength="120">` +
+      `<input type="text" id="ppClaimCode" class="ppanel__claiminput" placeholder="${esc(t("claim.placeholder"))}" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="120">` +
       `<button type="submit" class="ppanel__claimbtn" id="ppClaimBtn">${t("claim.btn")}</button>` +
       `</form>` +
       `<p class="ppanel__claimmsg" id="ppClaimMsg" role="status" aria-live="polite" hidden></p>` +
@@ -509,9 +509,11 @@
     );
   }
 
-  // Submete o código do recibo a POST {API_BASE}/api/link (autenticado com o token do OAuth).
-  // 200 => ativado (recarrega o painel); 404 => código não encontrado; 429 => rate-limit;
-  // 401 => token expirou (re-login). Nunca expõe qual código é válido (404 genérico do backend).
+  // Submete o código da transação a POST {API_BASE}/api/link (autenticado com o token do OAuth).
+  // 200 => ativado (recarrega o painel); 400 "use_receipt_code" => colaram um email em vez do
+  // código (plano 021: o email já não é aceite como prova de posse); 404 => código não
+  // encontrado; 429 => rate-limit; 401 => token expirou (re-login). Nunca expõe qual código é
+  // válido (404 genérico do backend).
   async function doClaim(ev) {
     ev.preventDefault();
     const el = document.getElementById("premiumPanel");
@@ -555,9 +557,22 @@
         login();
         return;
       }
-      if (res.status === 429) setMsg(t("claim.ratelimited"), "err");
-      else if (res.status === 404) setMsg(t("claim.notfound"), "err");
-      else setMsg(t("claim.error"), "err");
+      if (res.status === 429) {
+        setMsg(t("claim.ratelimited"), "err");
+        return;
+      }
+      if (res.status === 404) {
+        setMsg(t("claim.notfound"), "err");
+        return;
+      }
+      let errCode = "";
+      try {
+        const errBody = await res.json();
+        if (errBody && typeof errBody.error === "string") errCode = errBody.error;
+      } catch {
+        /* corpo sem JSON válido — cai no erro genérico abaixo */
+      }
+      setMsg(errCode === "use_receipt_code" ? t("claim.useReceiptCode") : t("claim.error"), "err");
     } catch {
       setMsg(t("claim.error"), "err");
     } finally {

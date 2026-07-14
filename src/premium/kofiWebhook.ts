@@ -322,6 +322,12 @@ function handleClaimRequest(
         }
         const outcome = claimPendingGrant(ctx.db, identity.id, code!, ctx.token, ctx.now());
         if (!outcome.ok) {
+          // use_receipt_code (plano 021): o input parecia um email — pede o código do recibo
+          // em vez de um 404 genérico, para o site conseguir mostrar uma mensagem útil.
+          if (outcome.reason === 'use_receipt_code') {
+            respond(400, { error: 'use_receipt_code' });
+            return;
+          }
           respond(404, { error: 'not_found' });
           return;
         }

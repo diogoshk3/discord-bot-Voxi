@@ -1,12 +1,13 @@
 {
   "ui": {
     "claim.title": "激活购买",
-    "claim.hint": "在 Ko-fi 上购买了 Plus 或 Premium？输入你付款时使用的邮箱，我们就会在此 Discord 账户上激活。",
-    "claim.placeholder": "Ko-fi 使用的邮箱",
+    "claim.hint": "在 Ko-fi 上购买了 Plus 或 Premium？粘贴 Ko-fi 收据邮件中的交易代码，我们就会在此 Discord 账户上激活。",
+    "claim.placeholder": "Ko-fi 收据中的交易代码",
     "claim.btn": "激活",
     "claim.working": "正在激活…",
     "claim.ok": "完成！你的购买现已在此账户上生效。",
     "claim.notfound": "找不到该代码对应的购买。请在 Ko-fi 收据上核对后重试。",
+    "claim.useReceiptCode": "请粘贴 Ko-fi 收据邮件中的交易代码，而不是你的邮箱地址。",
     "claim.ratelimited": "尝试次数过多。请几分钟后再试。",
     "claim.error": "出了点问题。请稍后再试。",
     "nav.features": "功能",

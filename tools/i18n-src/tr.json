@@ -1,12 +1,13 @@
 {
   "ui": {
     "claim.title": "Bir satın alımı etkinleştir",
-    "claim.hint": "Ko-fi'de Plus veya Premium mi aldın? Ödeme yaptığın e-postayı gir, bu Discord hesabında etkinleştirelim.",
-    "claim.placeholder": "Ko-fi'de kullanılan e-posta",
+    "claim.hint": "Ko-fi'de Plus veya Premium mi aldın? Ko-fi makbuz e-postandaki işlem kodunu yapıştır, bu Discord hesabında etkinleştirelim.",
+    "claim.placeholder": "Ko-fi makbuzundaki işlem kodu",
     "claim.btn": "Etkinleştir",
     "claim.working": "Etkinleştiriliyor…",
     "claim.ok": "Tamam! Satın alımın artık bu hesapta etkin.",
     "claim.notfound": "Bu koda ait bir satın alma bulunamadı. Ko-fi makbuzundan kontrol edip tekrar dene.",
+    "claim.useReceiptCode": "Lütfen e-posta adresin yerine Ko-fi makbuz e-postandaki işlem kodunu yapıştır.",
     "claim.ratelimited": "Çok fazla deneme. Lütfen birkaç dakika bekleyip tekrar dene.",
     "claim.error": "Bir şeyler ters gitti. Lütfen birazdan tekrar dene.",
     "nav.features": "Özellikler",

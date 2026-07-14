@@ -1,12 +1,13 @@
 {
   "ui": {
     "claim.title": "구매 활성화",
-    "claim.hint": "Ko-fi에서 Plus 또는 Premium을 구매하셨나요? 결제에 사용한 이메일을 입력하면 이 Discord 계정에서 활성화해 드립니다.",
-    "claim.placeholder": "Ko-fi에서 사용한 이메일",
+    "claim.hint": "Ko-fi에서 Plus 또는 Premium을 구매하셨나요? Ko-fi 영수증 이메일의 거래 코드를 붙여넣으면 이 Discord 계정에서 활성화해 드립니다.",
+    "claim.placeholder": "Ko-fi 영수증의 거래 코드",
     "claim.btn": "활성화",
     "claim.working": "활성화 중…",
     "claim.ok": "완료! 구매가 이제 이 계정에서 활성화되었습니다.",
     "claim.notfound": "해당 코드로 구매를 찾을 수 없습니다. Ko-fi 영수증에서 확인 후 다시 시도하세요.",
+    "claim.useReceiptCode": "이메일 주소 대신 Ko-fi 영수증 이메일의 거래 코드를 붙여넣어 주세요.",
     "claim.ratelimited": "시도가 너무 많습니다. 몇 분 후 다시 시도하세요.",
     "claim.error": "문제가 발생했습니다. 잠시 후 다시 시도하세요.",
     "nav.features": "기능",

@@ -9,7 +9,6 @@
 
 import type Database from 'better-sqlite3';
 import { grantUserPremium, grantGuildPass, rememberKofiSupporter } from '../store/premium';
-import { hashKofiEmail } from './kofi';
 import {
   findUnclaimedPendingByTx,
   listUnclaimedPendingByEmailHash,
@@ -25,7 +24,10 @@ export interface ClaimedItem {
   expiresAt: number;
 }
 
-export type ClaimOutcome = { ok: true; items: ClaimedItem[] } | { ok: false; reason: 'not_found' };
+export type ClaimOutcome =
+  | { ok: true; items: ClaimedItem[] }
+  | { ok: false; reason: 'not_found' }
+  | { ok: false; reason: 'use_receipt_code' };
 
 /** Aplica UM pendente ao Discord ID (Plus por-utilizador ou passe de Premium). source='kofi'. */
 function applyPending(
@@ -42,13 +44,15 @@ function applyPending(
 }
 
 /**
- * Reclama uma compra Ko-fi pendente. O `input` é o EMAIL do Ko-fi (via principal — o único
- * identificador que um comprador GUEST controla de forma fiável) OU o CÓDIGO da transação (via
- * secundária, para quem tenha o tx id do recibo). A identidade Discord vem já validada por
- * OAuth. Aplica ao `discordId` TODAS as compras pendentes do MESMO email (renovações órfãs),
- * marca-as reclamadas e memoriza email->Discord ID (renovações futuras resolvem-se sozinhas).
- * Transacional e de USO ÚNICO. `webhookToken` é a chave do HMAC do email (hashKofiEmail) — sem
- * ele o caminho por email não funciona (o hash não bate com o guardado no pendente).
+ * Reclama uma compra Ko-fi pendente. O `input` deve ser o CÓDIGO da transação do recibo Ko-fi
+ * (chave forte que só o comprador tem). Um `input` do tipo EMAIL (contém '@') é REJEITADO com
+ * `use_receipt_code` sem tocar na BD — o email NÃO é aceite como prova de posse: não é segredo,
+ * e para qualquer conta Discord logada que o soubesse era possível reclamar o Premium de outra
+ * pessoa durante os 90 dias de retenção do pendente (ver "## Decision" no plano 021). A
+ * identidade Discord vem já validada por OAuth. Aplica ao `discordId` TODAS as compras
+ * pendentes do MESMO email (renovações órfãs), marca-as reclamadas e memoriza email->Discord ID
+ * (renovações futuras resolvem-se sozinhas). Transacional e de USO ÚNICO. `webhookToken` já não
+ * é usado no caminho por email (mantido na assinatura por estabilidade).
  */
 export function claimPendingGrant(
   db: Database.Database,
@@ -64,13 +68,10 @@ export function claimPendingGrant(
     let emailHashForRemember: string | null;
 
     if (trimmed.includes('@')) {
-      // Via EMAIL: hasheia com o token do webhook (mesma função do lado do webhook, por isso
-      // bate com o email_hash guardado). Sem token não dá para hashear -> not_found.
-      if (!webhookToken) return { ok: false, reason: 'not_found' };
-      const emailHash = hashKofiEmail(webhookToken, trimmed);
-      targets = listUnclaimedPendingByEmailHash(db, emailHash);
-      if (targets.length === 0) return { ok: false, reason: 'not_found' };
-      emailHashForRemember = emailHash;
+      // Via EMAIL: plano 021 — já não é aceite como prova de posse (não é segredo). Devolve
+      // use_receipt_code SEM tocar na BD: a resposta não varia consoante o email pertença ou
+      // não a uma compra pendente, por isso não há oráculo nenhum a explorar aqui.
+      return { ok: false, reason: 'use_receipt_code' };
     } else {
       // Via CÓDIGO (tx id): acha o pendente e, por ele, todas as compras do mesmo email.
       const match = findUnclaimedPendingByTx(db, trimmed);

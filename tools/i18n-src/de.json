@@ -1,12 +1,13 @@
 {
   "ui": {
     "claim.title": "Kauf aktivieren",
-    "claim.hint": "Plus oder Premium auf Ko-fi gekauft? Gib die E-Mail ein, mit der du bezahlt hast, und wir aktivieren es für dieses Discord-Konto.",
-    "claim.placeholder": "Auf Ko-fi verwendete E-Mail",
+    "claim.hint": "Plus oder Premium auf Ko-fi gekauft? Füge den Transaktionscode aus deiner Ko-fi-Quittungs-E-Mail ein, und wir aktivieren es für dieses Discord-Konto.",
+    "claim.placeholder": "Transaktionscode aus deiner Ko-fi-Quittung",
     "claim.btn": "Aktivieren",
     "claim.working": "Wird aktiviert…",
     "claim.ok": "Fertig! Dein Kauf ist jetzt für dieses Konto aktiv.",
     "claim.notfound": "Kein Kauf für diesen Code gefunden. Prüfe ihn auf deiner Ko-fi-Quittung und versuche es erneut.",
+    "claim.useReceiptCode": "Bitte füge stattdessen den Transaktionscode aus deiner Ko-fi-Quittungs-E-Mail ein, nicht deine E-Mail-Adresse.",
     "claim.ratelimited": "Zu viele Versuche. Bitte warte ein paar Minuten und versuche es erneut.",
     "claim.error": "Etwas ist schiefgelaufen. Bitte versuche es gleich noch einmal.",
     "nav.features": "Funktionen",
