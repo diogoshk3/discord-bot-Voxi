@@ -16,15 +16,26 @@ export interface TranscribeStartInput {
   botInVoice: boolean;
   /** Já existe uma sessão de transcrição a correr neste servidor. */
   alreadyRunning: boolean;
+  /**
+   * O cap GLOBAL de sessões STT concorrentes (todas as guilds, processo inteiro) já foi
+   * atingido — plano 029/ABUSE-01. Cada sessão arranca um processo Python dedicado com o
+   * seu próprio modelo Whisper em RAM (ao contrário do Kokoro, que é um singleton
+   * partilhado); sem cap, N guilds Premium a transcrever ao mesmo tempo podem fazer OOM
+   * ao processo inteiro (todas as guilds perdem TTS, não só o STT degrada).
+   */
+  atCapacity: boolean;
 }
 
 export type TranscribeStartVerdict =
-  'ok' | 'noManage' | 'notPremium' | 'unavailable' | 'notInVoice' | 'alreadyRunning';
+  'ok' | 'noManage' | 'notPremium' | 'unavailable' | 'notInVoice' | 'alreadyRunning' | 'atCapacity';
 
 /**
  * Ordem dos gates: authz (Manage-Guild) ANTES do entitlement (Premium) — a quem não pode
  * gerir o servidor dizemos "não tens permissão", não "compra Premium". Depois disponibilidade
- * (sidecar), presença na call e sessão já a correr.
+ * (sidecar), presença na call, sessão já a correr NESTA guild e só por fim o cap GLOBAL
+ * (atCapacity). O estado por-guild (alreadyRunning) vem ANTES do global de propósito: é mais
+ * específico e mais útil para quem invoca ("já está a correr aqui" > "o sistema está cheio")
+ * — e evita mostrar "sistema cheio" a quem só teria de facto "already running".
  */
 export function evaluateTranscribeStart(i: TranscribeStartInput): TranscribeStartVerdict {
   if (!i.canManage) return 'noManage';
@@ -32,6 +43,7 @@ export function evaluateTranscribeStart(i: TranscribeStartInput): TranscribeStar
   if (!i.sidecarAvailable) return 'unavailable';
   if (!i.botInVoice) return 'notInVoice';
   if (i.alreadyRunning) return 'alreadyRunning';
+  if (i.atCapacity) return 'atCapacity';
   return 'ok';
 }
 

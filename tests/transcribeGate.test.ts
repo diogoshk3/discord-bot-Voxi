@@ -15,6 +15,7 @@ describe('evaluateTranscribeStart', () => {
     sidecarAvailable: true,
     botInVoice: true,
     alreadyRunning: false,
+    atCapacity: false,
   };
 
   it('tudo verde -> ok', () => {
@@ -43,6 +44,32 @@ describe('evaluateTranscribeStart', () => {
 
   it('authz vence entitlement: sem Manage E sem Premium -> noManage', () => {
     expect(evaluateTranscribeStart({ ...ok, canManage: false, isPremium: false })).toBe('noManage');
+  });
+
+  // Plano 029 (ABUSE-01): cap GLOBAL de sessões STT concorrentes (todas as guilds,
+  // processo inteiro) — sem isto, N guilds Premium a transcrever ao mesmo tempo
+  // multiplicam cópias do modelo Whisper em RAM e podem fazer OOM ao processo inteiro.
+  it('cap global atingido -> atCapacity', () => {
+    expect(evaluateTranscribeStart({ ...ok, atCapacity: true })).toBe('atCapacity');
+  });
+
+  it('já a correr NESTA guild vence atCapacity: estado por-guild é mais específico que o global', () => {
+    expect(evaluateTranscribeStart({ ...ok, alreadyRunning: true, atCapacity: true })).toBe(
+      'alreadyRunning',
+    );
+  });
+
+  it('atCapacity só dispara depois de authz/entitlement/disponibilidade/voz passarem', () => {
+    expect(evaluateTranscribeStart({ ...ok, canManage: false, atCapacity: true })).toBe('noManage');
+    expect(evaluateTranscribeStart({ ...ok, isPremium: false, atCapacity: true })).toBe(
+      'notPremium',
+    );
+    expect(evaluateTranscribeStart({ ...ok, sidecarAvailable: false, atCapacity: true })).toBe(
+      'unavailable',
+    );
+    expect(evaluateTranscribeStart({ ...ok, botInVoice: false, atCapacity: true })).toBe(
+      'notInVoice',
+    );
   });
 });
 

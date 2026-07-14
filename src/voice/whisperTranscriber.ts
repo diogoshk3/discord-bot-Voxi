@@ -14,11 +14,45 @@
 
 import { spawn, type ChildProcess } from 'node:child_process';
 import { log } from '../logging/logger';
+import { Semaphore } from '../tts/semaphore';
 
 /** Teto por transcrição (o spike deu ~2.2s p/ 13.6s de fala; teto generoso mas finito). */
 const TRANSCRIBE_TIMEOUT_MS = 30_000;
 /** Teto à espera do {ready} (load do modelo `base` ~1-2s em CPU; 1.ª vez descarrega ~140MB). */
 const READY_TIMEOUT_MS = 120_000;
+
+/**
+ * Cap de CONCORRÊNCIA GLOBAL de sessões STT (todas as guilds, processo inteiro) — plano
+ * 029/ABUSE-01. Cada `new WhisperTranscriber` arranca um processo Python PERSISTENTE com o
+ * seu próprio modelo faster-whisper `base` em RAM (centenas de MB); ao contrário do Kokoro
+ * (singleton partilhado por todas as guilds), os Whisper multiplicam-se COM as sessões. Sem
+ * cap, N guilds Premium a transcrever ao mesmo tempo = N cópias do modelo em RAM — no VPS
+ * (que já faz OOM a ~3.3GB, ver CLAUDE.md) chega para matar o processo INTEIRO (todas as
+ * guilds perdem TTS, não só o STT degrada). `docs/SPIKE-STT.md` já recomendava "cap de 1
+ * transcrição concorrente"; isto aplica-o a nível de PROCESSO — o cap-1 DENTRO de uma sessão
+ * (stdin série, ver `pump()`/`onLine()` abaixo) já existia mas nunca cruzava sessões.
+ * Default 1; override por `STT_MAX_CONCURRENCY` (inteiro positivo) em instâncias com mais RAM.
+ */
+export function resolveSttConcurrency(): number {
+  const env = process.env.STT_MAX_CONCURRENCY;
+  if (env !== undefined && env.trim() !== '') {
+    const n = Number(env);
+    if (Number.isInteger(n) && n > 0) return n;
+  }
+  return 1;
+}
+
+/** Nº máximo de sessões STT concorrentes neste processo (lido UMA vez ao carregar o módulo). */
+export const MAX_CONCURRENT_STT = resolveSttConcurrency();
+
+/**
+ * Semáforo GLOBAL de sessões STT, partilhado por TODAS as guilds deste processo. O handler
+ * (`/transcribe start`) reserva um permit com `tryAcquire()` ANTES de arrancar a sessão
+ * (síncrono — nunca espera, `null` sinaliza cap atingido) e liberta-o em TODOS os caminhos de
+ * teardown via o closure de release devolvido (já idempotente — chamar duas vezes não
+ * over-liberta, ver `Semaphore.makeRelease`).
+ */
+export const globalSttSemaphore = new Semaphore(MAX_CONCURRENT_STT);
 
 export interface Transcript {
   text: string;

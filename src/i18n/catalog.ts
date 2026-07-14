@@ -55,6 +55,10 @@ export const catalog: Record<string, Entry> = {
     en: 'Transcription is already running on this server. Use `/transcribe stop` first.',
     pt: 'A transcrição já está a correr neste servidor. Usa `/transcribe stop` primeiro.',
   },
+  'stt.atCapacity': {
+    en: 'Too many transcriptions are running right now across all servers. Please try again shortly.',
+    pt: 'Há demasiadas transcrições a correr agora em todos os servidores. Tenta outra vez daqui a pouco.',
+  },
   'stt.noChannel': {
     en: "I can't post transcripts in this channel. Try running the command from a normal text channel.",
     pt: 'Não consigo postar transcrições neste canal. Tenta correr o comando de um canal de texto normal.',
@@ -62,6 +66,10 @@ export const catalog: Record<string, Entry> = {
   'stt.started': {
     en: '✅ Transcription started. Anyone who presses **Consent** in the announcement will be transcribed to this channel.',
     pt: '✅ Transcrição iniciada. Quem carregar em **Consinto** no anúncio passa a ser transcrito para este canal.',
+  },
+  'stt.startFailed': {
+    en: "Couldn't start transcription (failed to post the announcement). I've undone everything — nothing is being recorded. Please try again.",
+    pt: 'Não consegui arrancar a transcrição (falhou a publicação do anúncio). Desfiz tudo — nada está a ser gravado. Tenta outra vez.',
   },
   'stt.announceStart': {
     en: '🎙️ **Live transcription is ON in this channel.** Only people who consent are transcribed — press the button below to allow your speech to be written here. You can withdraw anytime with `/transcribe revoke`.',

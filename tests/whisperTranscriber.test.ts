@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { EventEmitter } from 'node:events';
-import { WhisperTranscriber } from '../src/voice/whisperTranscriber';
+import { WhisperTranscriber, resolveSttConcurrency } from '../src/voice/whisperTranscriber';
 
 // Sidecar Whisper FALSO: imprime {ready} SOZINHO ao arrancar (sem warmup prompt, como o
 // tools/whisper_sidecar.py real), depois responde a cada linha (=caminho WAV) com
@@ -81,5 +81,32 @@ describe('WhisperTranscriber', () => {
     await t.transcribe('/tmp/1.wav');
     await t.transcribe('/tmp/2.wav');
     expect(counter.spawns).toBe(1);
+  });
+});
+
+// Cap GLOBAL de concorrência STT (plano 029/ABUSE-01): default 1 (SPIKE-STT), com override
+// por STT_MAX_CONCURRENCY — mesmo padrão de resolvePiperConcurrency (src/tts/piper.ts).
+describe('resolveSttConcurrency', () => {
+  const ORIGINAL = process.env.STT_MAX_CONCURRENCY;
+  afterEach(() => {
+    if (ORIGINAL === undefined) delete process.env.STT_MAX_CONCURRENCY;
+    else process.env.STT_MAX_CONCURRENCY = ORIGINAL;
+  });
+
+  it('sem env -> default 1 (cap-1 recomendado pelo SPIKE-STT)', () => {
+    delete process.env.STT_MAX_CONCURRENCY;
+    expect(resolveSttConcurrency()).toBe(1);
+  });
+
+  it('STT_MAX_CONCURRENCY=3 -> respeita o override', () => {
+    process.env.STT_MAX_CONCURRENCY = '3';
+    expect(resolveSttConcurrency()).toBe(3);
+  });
+
+  it('valor inválido (0, negativo, não-inteiro, lixo) -> cai no default 1', () => {
+    for (const bad of ['0', '-1', '1.5', 'abc', '  ']) {
+      process.env.STT_MAX_CONCURRENCY = bad;
+      expect(resolveSttConcurrency()).toBe(1);
+    }
   });
 });
