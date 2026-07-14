@@ -290,6 +290,31 @@ describe('handleMessage — ramos não cobertos pelos testes existentes', () => 
     expect(metrics.snapshot().messagesRateLimited).toBe(1);
   });
 
+  // ── 9c. ABUSE-02: feedback de rate-limit throttled por (guild,user) ───────
+  // Author DEDICADO ('user-fb-1') para não colidir com o cooldown já consumido pelo
+  // teste 9 (a instância de RateLimitFeedbackCooldown é module-singleton em
+  // messageHandler.ts, partilhada por todas as chamadas de handleMessage do processo).
+  it('flood rate-limited: só a 1.ª mensagem dropada reage com 🐢, as seguintes ficam silenciosas', async () => {
+    metrics.reset();
+    setGuildConfig(db, GUILD, { ratePerMin: 0 });
+    const deps = makeDeps(db, say);
+    const msg1 = makeMessage({ authorId: 'user-fb-1' });
+    const msg2 = makeMessage({ authorId: 'user-fb-1' });
+    const msg3 = makeMessage({ authorId: 'user-fb-1' });
+
+    await handleMessage(msg1, deps);
+    await handleMessage(msg2, deps);
+    await handleMessage(msg3, deps);
+
+    expect(say).not.toHaveBeenCalled();
+    // A métrica conta TODOS os drops — não é afetada pelo throttle do feedback visível.
+    expect(metrics.snapshot().messagesRateLimited).toBe(3);
+    // Só a 1.ª mensagem reage; a 2.ª e a 3.ª (mesma janela) ficam silenciosas.
+    expect(msg1.react).toHaveBeenCalledWith('🐢');
+    expect(msg2.react).not.toHaveBeenCalled();
+    expect(msg3.react).not.toHaveBeenCalled();
+  });
+
   // ── 9b. Ordem dos filtros: mensagem NÃO-legível não consome token ─────────
   // BUG (Fable): o rate-limit corria ANTES do cleanText/guard-de-legível, por isso um
   // emoji/link (que nunca ia ser falado) queimava o orçamento e silenciava a mensagem

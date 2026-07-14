@@ -9,7 +9,7 @@ import {
 } from 'discord.js';
 import { getVoiceConnection } from '@discordjs/voice';
 import type { BotDeps } from '../../bot/deps';
-import { getPlayer } from '../../bot/deps';
+import { getPlayer, getLimiter } from '../../bot/deps';
 import { brandEmbed } from '../../ui/theme';
 import { getUserVoice, setUserVoice, resetUserVoice } from '../../store/userVoice';
 import { getGuildConfig } from '../../store/guildConfig';
@@ -524,6 +524,17 @@ export async function handleVoice(i: ChatInputCommandInteraction, deps: BotDeps)
     }
 
     const cfg = getGuildConfig(deps.db, i.guildId!);
+
+    // rate-limit por-utilizador (MESMO limiter do /tts e /laugh — ABUSE-03): sem isto
+    // o preview enfileirava sem limite -> monopolizava a fila de voz (1 worker por
+    // guild) e forçava sinteses cache-miss ao ciclar a opcao `model:`. Mesmo padrao
+    // do handleLaugh em fun.ts.
+    const rl = getLimiter(deps, i.guildId!, cfg.ratePerMin);
+    if (!rl.allow(i.user.id, Date.now())) {
+      await reply(i, t('tts.tooFast', locale));
+      return;
+    }
+
     const stored = getUserVoice(deps.db, i.guildId!, i.user.id);
     // Preview NAO passa por resolveSynth de proposito: resolveSynth agora deixa a
     // LINGUA da mensagem decidir a voz, mas o /voice preview e um DEMO de UMA voz

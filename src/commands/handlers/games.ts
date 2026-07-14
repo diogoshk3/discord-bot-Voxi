@@ -4,6 +4,7 @@ import {
   ChatInputCommandInteraction,
   ComponentType,
   MessageFlags,
+  PermissionFlagsBits,
   StringSelectMenuBuilder,
 } from 'discord.js';
 import type { BotDeps } from '../../bot/deps';
@@ -147,6 +148,15 @@ export async function handleGame(i: ChatInputCommandInteraction, deps: BotDeps):
   }
 
   if (sub === 'stop') {
+    // Gate ManageGuild (ABUSE-04): sem isto, QUALQUER membro parava o jogo de outro
+    // (troll de play->stop->play sem fricção). Sem "starter próprio pode parar" por
+    // agora — o GameManager (src/games/manager.ts) não guarda quem iniciou a partida;
+    // seguir esse caminho exigiria adicionar esse estado lá, fora do âmbito deste
+    // plano (030) — segue como follow-up. Mesmo padrão do /transcribe stop.
+    if (!(i.memberPermissions?.has(PermissionFlagsBits.ManageGuild) ?? false)) {
+      await reply(i, t('error.needManageGuild', locale));
+      return;
+    }
     const ok = deps.games.stop(i.guildId!);
     await reply(i, ok ? t('game.stop.ok', locale) : t('game.stop.none', locale));
     return;

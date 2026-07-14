@@ -89,6 +89,57 @@ function reactRateLimited(message: Message): void {
   }
 }
 
+/**
+ * Janela do cooldown do FEEDBACK de rate-limit (não confundir com a janela do próprio
+ * RateLimiter — são independentes): 1 minuto. Ver RateLimitFeedbackCooldown.
+ */
+export const RATE_LIMIT_FEEDBACK_WINDOW_MS = 60 * 1000;
+/** Teto de entradas (anti-crescimento); evict da mais antiga ao exceder — igual ao GreetCooldown/DuplicateTracker. */
+const RATE_LIMIT_FEEDBACK_MAX_ENTRIES = 10_000;
+
+/**
+ * Cooldown do feedback VISÍVEL de rate-limit (🐢 + log), por (guild, user) — ABUSE-02.
+ * Sem isto, um flood num canal autoread virava UMA reação REST + UMA escrita de log POR
+ * MENSAGEM largada (tempestade de I/O capaz de encher o disco). A MÉTRICA
+ * `messagesRateLimited` continua a contar TODOS os drops (ver handleMessage) — só o
+ * feedback visível é que é throttled. Mesmo padrão cap+evict de GreetCooldown/
+ * DuplicateTracker: janela FIXA (um drop suprimido não a estende), relógio injetável
+ * para testes, Map preserva ordem de inserção -> evict simples da mais antiga.
+ */
+export class RateLimitFeedbackCooldown {
+  private readonly last = new Map<string, number>();
+
+  constructor(private readonly now: () => number = () => Date.now()) {}
+
+  private static keyOf(guildId: string, userId: string): string {
+    return `${guildId}:${userId}`;
+  }
+
+  /**
+   * O feedback a (guild, user) deve sair AGORA? True se nunca notificado ou se já
+   * passou >= RATE_LIMIT_FEEDBACK_WINDOW_MS desde a última notificação — regista o
+   * instante (consome a janela). False dentro da janela, SEM renovar o timestamp.
+   */
+  shouldNotify(guildId: string, userId: string): boolean {
+    const key = RateLimitFeedbackCooldown.keyOf(guildId, userId);
+    const nowMs = this.now();
+    const prev = this.last.get(key);
+    if (prev !== undefined && nowMs - prev < RATE_LIMIT_FEEDBACK_WINDOW_MS) return false;
+    this.last.delete(key); // reinsere no fim (MRU) para o evict acertar na mais antiga
+    this.last.set(key, nowMs);
+    if (this.last.size > RATE_LIMIT_FEEDBACK_MAX_ENTRIES) {
+      const oldest = this.last.keys().next().value as string | undefined;
+      if (oldest !== undefined) this.last.delete(oldest);
+    }
+    return true;
+  }
+}
+
+// Instância partilhada por processo (estado em memória, não persiste — reset no
+// restart é aceitável, mesmo trade-off do GreetCooldown/DuplicateTracker). Não vive em
+// BotDeps porque este ficheiro é o único consumidor (âmbito do plano 030).
+const rateLimitFeedbackCooldown = new RateLimitFeedbackCooldown();
+
 export async function handleMessage(message: Message, deps: BotDeps): Promise<void> {
   try {
     if (!message.guild || !message.guildId) return;
@@ -125,8 +176,10 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
       // Observabilidade do routing dos jogos: uma partida em THREAD só funciona se as
       // mensagens da thread chegarem aqui (channelId == id da thread). Se um dia isto
       // deixar de acontecer, os palpites falhariam em SILÊNCIO — este log torna o
-      // caminho visível (confirma que o jogo está a receber input).
-      log.info(`[game] mensagem consumida no canal ${message.channelId}`);
+      // caminho visível (confirma que o jogo está a receber input). log.debug (não
+      // info — ABUSE-02): dispara POR MENSAGEM enquanto o jogo decorre; a nível info
+      // um jogo movimentado enchia o log persistente. LOG_LEVEL=debug continua a ver.
+      log.debug(`[game] mensagem consumida no canal ${message.channelId}`);
       return;
     }
 
@@ -204,13 +257,21 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     // rate-limit por user (limiter persistente por guild). Corre AGORA — DEPOIS do guard de
     // texto legível — para que uma mensagem que nunca ia ser falada (emoji/link/vazio) NÃO
     // queime o orçamento e silencie a mensagem legível seguinte (bug antigo: o rate-limit
-    // corria antes do cleanText). O drop é VISÍVEL: reação 🐢 + métrica + log info — antes
-    // era um `return` silencioso e parecia "o bot não fala".
+    // corria antes do cleanText). O drop é VISÍVEL: reação 🐢 + métrica + log — antes era
+    // um `return` silencioso e parecia "o bot não fala".
     const rl = getLimiter(deps, message.guildId, cfg.ratePerMin);
     if (!rl.allow(message.author.id, Date.now())) {
+      // A MÉTRICA conta TODOS os drops (nunca throttled — é o contador real de abuso).
       metrics.inc('messagesRateLimited');
-      log.info(`[rate] mensagem de ${message.author.id} saltada (limite ${cfg.ratePerMin}/min)`);
-      reactRateLimited(message);
+      // log.debug (não info — ABUSE-02): um flood dropava UM log POR MENSAGEM a nível
+      // info, tempestade de escrita no log persistente. LOG_LEVEL=debug continua a ver.
+      log.debug(`[rate] mensagem de ${message.author.id} saltada (limite ${cfg.ratePerMin}/min)`);
+      // Feedback VISÍVEL (🐢, chamada REST) throttled por (guild,user) — ABUSE-02: sem
+      // isto, o mesmo flood gerava uma reação REST por mensagem largada. Só a 1.ª de
+      // cada janela reage; as seguintes ficam silenciosas (a métrica acima não é afetada).
+      if (rateLimitFeedbackCooldown.shouldNotify(message.guildId, message.author.id)) {
+        reactRateLimited(message);
+      }
       return;
     }
 

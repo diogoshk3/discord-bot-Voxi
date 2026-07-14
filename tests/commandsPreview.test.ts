@@ -11,6 +11,7 @@ import { handleInteraction } from '../src/commands/index';
 import type { BotDeps } from '../src/bot/deps';
 import { initDb } from '../src/store/db';
 import { setUserVoice } from '../src/store/userVoice';
+import { setGuildConfig } from '../src/store/guildConfig';
 import type Database from 'better-sqlite3';
 
 const GUILD = 'g-preview';
@@ -143,5 +144,26 @@ describe('/voice preview', () => {
     expect(req.text).toBe(SAMPLE);
     expect(req.model).toBe('pt_PT-tugão-medium');
     expect(req.speed).toBe(1.2);
+  });
+
+  // ABUSE-03: /voice preview NÃO tinha rate-limit — dava para spamar sem limite,
+  // monopolizando a fila (1 worker) da guild e forçando cache-miss ao ciclar `model:`.
+  // Mesmo padrão do /laugh (getLimiter().allow() antes de construir o SynthRequest).
+  it('rate-limit: 2.ª invocação rápida (ratePerMin:1) responde tts.tooFast e NÃO chama say outra vez', async () => {
+    setGuildConfig(db, GUILD, { ratePerMin: 1 });
+    const say = vi.fn().mockResolvedValue(true);
+    const deps = makeDeps(db, { say });
+
+    // 1.ª invocação: consome o único token -> toca a amostra normalmente.
+    const i1 = makePreviewInteraction({ model: 'en_US-amy-medium' });
+    await handleInteraction(i1 as any, deps);
+    expect(say).toHaveBeenCalledOnce();
+
+    // 2.ª invocação (mesmo utilizador, mesmo minuto): limiter bloqueia ANTES do say.
+    const i2 = makePreviewInteraction({ model: 'en_US-amy-medium' });
+    await handleInteraction(i2 as any, deps);
+    expect(say).toHaveBeenCalledOnce(); // continua 1 — a 2.ª não chegou a enfileirar
+    // t('tts.tooFast', 'en') = "Whoa, slow down a little — try again in a moment."
+    expect(i2.replies.some((r) => /slow down/i.test(r))).toBe(true);
   });
 });
