@@ -89,7 +89,12 @@ const sentKeys = (send: ReturnType<typeof vi.fn>): string[] =>
 let wordByLetter: Map<string, string[]>;
 beforeAll(() => {
   const file = join(__dirname, '..', 'assets', 'wordlists', 'pt.txt');
-  const words = readFileSync(file, 'utf8').split('\n').filter(Boolean);
+  // Split em /\r?\n/ (NAO so '\n'): num checkout CRLF (Windows, core.autocrlf=true) o
+  // '\n' deixaria um '\r' final na palavra (ex.: "gabar\r"). Essa palavra e usada como
+  // conteudo da mensagem E na asserção say({ text: word }); o jogo fala a forma
+  // normalizada (sem '\r'), pelo que a asserção nunca casaria e o say nao seria detetado
+  // — a raiz do teste flaky (0 chamadas ao say). Em LF fica byte-a-byte identico.
+  const words = readFileSync(file, 'utf8').split(/\r?\n/).filter(Boolean);
   wordByLetter = new Map();
   for (const w of words) {
     if (w.length < 5 || w.length > 9) continue;

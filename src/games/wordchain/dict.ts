@@ -29,7 +29,12 @@ export function loadDictionary(lang: WordChainLang): Dictionary | null {
     return null;
   }
   try {
-    const words = readFileSync(file, 'utf8').split('\n');
+    // Split em /\r?\n/ (NAO so '\n'): num checkout CRLF (Windows, core.autocrlf=true)
+    // cada palavra ficaria com um '\r' final e o Set do dicionario guardaria "gabar\r".
+    // O input do jogador e sempre normalizado+trimado (validate() faz normalize(raw.trim()),
+    // sem '\r'), por isso has("gabar") falharia e TODAS as palavras seriam rejeitadas —
+    // o bug de "0 palavras aceites". Em LF o comportamento e byte-a-byte identico.
+    const words = readFileSync(file, 'utf8').split(/\r?\n/);
     const dict = new WordSetDictionary(words.filter(Boolean));
     cache.set(lang, dict);
     return dict;
