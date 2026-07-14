@@ -51,6 +51,7 @@ export const USER_ERASE_TABLES = [
   'pronunciation_user',
   'user_clone',
   'stt_consent',
+  'vote_reward',
 ] as const;
 
 /**

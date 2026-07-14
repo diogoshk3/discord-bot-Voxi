@@ -42,9 +42,6 @@ import { metrics } from './metrics';
 import type { AppConfig } from './config/index';
 import { hardenServerTimeouts } from './http/serverHardening';
 
-/** Duração da recompensa por voto: um upvote válido dá estas horas de perks Plus. */
-export const VOTE_REWARD_HOURS = 12;
-
 export interface VoteWebhookInput {
   /** Valor do header Authorization do pedido (ou undefined se ausente). */
   authHeader: string | undefined;

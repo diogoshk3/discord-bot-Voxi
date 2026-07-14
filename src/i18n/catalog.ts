@@ -1209,11 +1209,21 @@ export const catalog: Record<string, Entry> = {
     pt: 'O Vozen ainda nao tem o link de voto configurado (CLIENT_ID em falta). Avisa o admin do bot.',
   },
   'vote.link': {
-    en: 'Vote for Vozen (free, every 12h) and help more people find it:\n{url}',
-    pt: 'Vota no Vozen (grátis, a cada 12h) e ajuda mais gente a encontrá-lo:\n{url}',
+    en: 'Vote for Vozen (free, every 12h) and get **24h of Vozen Plus** for yourself 🎁 (once a month) — plus you help more people find it:\n{url}',
+    pt: 'Vota no Vozen (grátis, a cada 12h) e ganha **24h de Vozen Plus** para ti 🎁 (1× por mês) — e ainda ajudas mais gente a encontrá-lo:\n{url}',
   },
   'invite.button': { en: 'Add Vozen', pt: 'Adicionar o Vozen' },
   'vote.button': { en: 'Vote on top.gg', pt: 'Votar no top.gg' },
+  // Upsell curto (uma linha) para anexar onde um utilizador FREE já é upsellado.
+  'vote.upsell': {
+    en: '🗳️ No Plus? Vote for Vozen on top.gg → **24h of Plus free** (once a month): {url}',
+    pt: '🗳️ Sem Plus? Vota no Vozen no top.gg → **24h de Plus grátis** (1× por mês): {url}',
+  },
+  // Estado no /premium quando a recompensa por voto está em cooldown ({date} = <t:..:R>).
+  'vote.cooldownStatus': {
+    en: '🗳️ You already claimed your vote reward — vote again for another **24h of Plus** {date}.',
+    pt: '🗳️ Já ganhaste a recompensa por voto — podes ganhar mais **24h de Plus** {date}.',
+  },
 
   // ── /help chrome (tudo o que NAO e a lista de comandos, que vem de commandDefs) ──
   // O titulo vira DESCRICAO do embed (embeds nao renderizam markdown no titulo),

@@ -23,7 +23,8 @@ import type { BotDeps } from './bot/deps';
 import { removePlayer } from './bot/deps';
 import { GameManager } from './games/manager';
 import { systemClock } from './games/types';
-import { isGuildPremium, grantUserPremium } from './store/premium';
+import { isGuildPremium } from './store/premium';
+import { claimVoteReward, VOTE_REWARD_HOURS } from './store/voteReward';
 import { createVoiceSession, becomeSpeakerIfStage } from './voice/session';
 import { listVoicePresence, forgetVoicePresence } from './store/voicePresence';
 import { planRejoin, type ChannelState } from './voice/rejoin';
@@ -42,7 +43,7 @@ import { startEntitlementSync } from './premium/entitlementSync';
 import { startKofiWebhook } from './premium/kofiWebhook';
 import { createStatusApi } from './premium/statusApi';
 import { createDashboardApi } from './premium/dashboardApi';
-import { startVoteWebhookServer, VOTE_REWARD_HOURS } from './vote';
+import { startVoteWebhookServer } from './vote';
 
 function discoverModels(modelsDir: string): string[] {
   if (!existsSync(modelsDir)) return [];
@@ -251,17 +252,24 @@ async function main(): Promise<void> {
   // P11.5 — webhook top.gg OPCIONAL para registar votos. So arranca se
   // TOPGG_WEBHOOK_PORT estiver definida (porta dedicada, separada do health). Em
   // try/catch defensivo: um problema a abrir a porta NUNCA deve impedir o bot de
-  // arrancar. RECOMPENSA (growth loop): cada upvote válido dá VOTE_REWARD_HOURS de
-  // perks Plus a quem votou (source 'vote' — EXTRA, nunca a qualidade base; votos
-  // acumulam via grantUserPremium, que estende a partir do expiry atual). Sem DM
-  // (hard rule: no unsolicited DMs) — a pessoa vê o estado no /premium.
+  // arrancar. RECOMPENSA (growth loop): cada upvote ELEGÍVEL dá VOTE_REWARD_HOURS de
+  // perks Plus a quem votou (source 'vote' — EXTRA, nunca a qualidade base). A recompensa
+  // tem um COOLDOWN de 30 dias por conta (claimVoteReward): votar mais vezes conta para o
+  // top.gg mas não empilha Plus grátis — evita bancar meses de Plus a canibalizar o pago.
+  // Sem DM (hard rule: no unsolicited DMs) — a pessoa vê o estado no /vote e /premium.
   try {
     startVoteWebhookServer(config, (userId) => {
       try {
-        const exp = grantUserPremium(db, userId, VOTE_REWARD_HOURS / 24, 'vote', Date.now());
-        log.info(
-          `[vote] recompensa: +${VOTE_REWARD_HOURS}h de Plus para ${userId} (fim ${new Date(exp).toISOString()}).`,
-        );
+        const res = claimVoteReward(db, userId, Date.now());
+        if (res.granted) {
+          log.info(
+            `[vote] recompensa: +${VOTE_REWARD_HOURS}h de Plus para ${userId} (fim ${new Date(res.expiresAt!).toISOString()}).`,
+          );
+        } else {
+          log.info(
+            `[vote] voto de ${userId} contou, mas a recompensa está em cooldown (elegível ${new Date(res.nextEligibleAt!).toISOString()}).`,
+          );
+        }
       } catch (err) {
         log.error(`[vote] falha a conceder a recompensa do voto a ${userId} (ignorado)`, err);
       }

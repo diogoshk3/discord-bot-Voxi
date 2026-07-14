@@ -34,6 +34,8 @@ import { INVITE_PERMISSIONS, formatDuration, localeForUser, reply } from '../hel
 import { commandDefs } from '../index';
 import { insertPremiumCode, redeemPremiumCode } from '../../store/premiumCode';
 import { generateCodeString, normalizeCode } from '../../premium/codeGen';
+import { voteRewardStatus } from '../../store/voteReward';
+import { voteUpsellLine } from '../voteUpsell';
 
 /**
  * /topspeakers — ranking público de quem teve mais mensagens LIDAS pelo Vozen nesta guild,
@@ -124,8 +126,10 @@ export async function handleServerStats(
       );
     }
   } else {
-    // Free: teaser -> upsell (descoberta do perk).
+    // Free: teaser -> upsell (descoberta do perk) + convite a votar (24h de Plus grátis).
     lines.push(t('serverstats.upsell', locale));
+    const vote = voteUpsellLine(locale, deps.config.clientId);
+    if (vote) lines.push(vote);
   }
 
   await i.reply({ content: lines.join('\n'), allowedMentions: { parse: [] } });
@@ -133,6 +137,8 @@ export async function handleServerStats(
 
 // Discord renderiza <t:SEGUNDOS:D> como data localizada por-utilizador.
 const stampDate = (ms: number): string => `<t:${Math.floor(ms / 1000)}:D>`;
+// <t:SEGUNDOS:R> = tempo RELATIVO localizado ("daqui a 3 dias").
+const stampRelative = (ms: number): string => `<t:${Math.floor(ms / 1000)}:R>`;
 
 /** Nomes dos servidores (best-effort via cache; fallback = id) para as mensagens do passe. */
 function serverNames(deps: BotDeps, ids: string[]): string {
@@ -191,6 +197,17 @@ async function handlePremiumInfo(i: ChatInputCommandInteraction, deps: BotDeps):
   const desc = anyActive
     ? lines
     : [t('premium.pitch', locale), '', t('premium.buyHint', locale, { link: deps.config.kofiUrl })];
+  // Sem Plus: oferece a via GRÁTIS (votar → 24h). Se já ganhou a recompensa este mês,
+  // mostra QUANDO volta a poder — para não mandar votar em vão (cooldown de 30 dias).
+  if (!anyActive) {
+    const vs = voteRewardStatus(deps.db, i.user.id, now);
+    if (vs.eligible) {
+      const vote = voteUpsellLine(locale, deps.config.clientId);
+      if (vote) desc.push('', vote);
+    } else if (vs.nextEligibleAt !== null) {
+      desc.push('', t('vote.cooldownStatus', locale, { date: stampRelative(vs.nextEligibleAt) }));
+    }
+  }
   const embed = brandEmbed(anyActive ? 'premium' : 'brand')
     .setTitle(t('premium.title', locale))
     .setDescription(desc.join('\n'));

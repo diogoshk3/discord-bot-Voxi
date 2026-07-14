@@ -142,6 +142,14 @@ export function initDb(path: string): Database.Database {
         source     TEXT NOT NULL DEFAULT ''
       );
 
+      -- Recompensa por VOTO no top.gg (GROWTH·1): guarda só o instante do último Plus
+      -- ganho por voto, para o cooldown de 30 dias (uma recompensa por conta por mês).
+      -- Dado pessoal minimalista (só facto+timestamp), apagável por /privacy erase.
+      CREATE TABLE IF NOT EXISTS vote_reward (
+        user_id     TEXT PRIMARY KEY,
+        rewarded_at INTEGER NOT NULL
+      );
+
       -- Efeito de voz por-(guild,user): filtro ffmpeg aplicado ao TTS da pessoa (premium,
       -- com 2 amostras gratis). Sem linha => 'none' (voz limpa). Tabela NOVA.
       CREATE TABLE IF NOT EXISTS user_effect (

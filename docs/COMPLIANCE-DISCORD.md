@@ -74,6 +74,11 @@ ser "dados sensíveis/biométricos" (RGPD, regra 16).
   Piper se a Google fechar a porta. (Risco de terceiros, não do Discord.)
 - **Breach:** o ToS de developer (§5) obriga a notificar o Discord e os afetados em caso de
   acesso não autorizado a Dados da API. Documentar o processo antes de escalar.
+- **Recompensa por voto (growth loop):** um voto no top.gg dá **24h de Vozen Plus** grátis
+  (`source='vote'`, `vote_reward`), limitado a **1× a cada 30 dias** por conta. Conforme com
+  o top.gg — que **permite** incentivar VOTOS (nunca REVIEWS/ratings, que ficam de fora por
+  design; a copy pede sempre "votar"). Sem DM (hard rule). Dados: só `{user_id, rewarded_at}`,
+  disclosado no PRIVACY.md e apagável por `/privacy erase`.
 - **Rever:** o artigo da política foi atualizado em 2026-07-07 — reavaliar periodicamente.
 
 ## Atualização 2026-07-11 (re-auditoria + novo trabalho)

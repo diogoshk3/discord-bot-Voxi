@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import type { Server } from 'node:http';
 import type Database from 'better-sqlite3';
-import { handleVoteWebhook, startVoteWebhookServer, VOTE_REWARD_HOURS } from '../src/vote';
+import { handleVoteWebhook, startVoteWebhookServer } from '../src/vote';
 import { metrics } from '../src/metrics';
 import { initDb } from '../src/store/db';
-import { grantUserPremium, isUserPremium, getUserPremiumExpiry } from '../src/store/premium';
+import { isUserPremium, getUserPremiumExpiry } from '../src/store/premium';
+import { claimVoteReward, VOTE_REWARD_HOURS } from '../src/store/voteReward';
 import type { AppConfig } from '../src/config/index';
 
 // Helper: AppConfig minima — so as 3 vars de webhook interessam ao server.
@@ -263,29 +264,38 @@ describe('recompensa por voto — upvote válido dá perks Plus temporários', (
     expect(metrics.snapshot().votes).toBe(1); // o voto conta na mesma
   });
 
-  it('integração: POST de upvote concede VOTE_REWARD_HOURS de Plus (source vote)', async () => {
+  it('integração: POST de upvote concede 24h de Plus, e um 2º voto no mesmo mês NÃO acumula (cooldown)', async () => {
     const db: Database.Database = initDb(':memory:');
     const NOW = 1_000_000;
     let server: Server | undefined;
     try {
+      // A recompensa passa pelo claimVoteReward (grant + cooldown de 30 dias), tal como
+      // no index.ts. NOW fixo para o teste ser determinístico (o cooldown compara a NOW).
       server = startVoteWebhookServer(cfg(0, SECRET), (userId) => {
-        grantUserPremium(db, userId, VOTE_REWARD_HOURS / 24, 'vote', NOW);
+        claimVoteReward(db, userId, NOW);
       });
       expect(server).toBeDefined();
       await new Promise<void>((resolve) => server!.once('listening', () => resolve()));
       const addr = server!.address();
       if (addr === null || typeof addr === 'string') throw new Error('endereco inesperado');
 
-      const res = await fetch(`http://127.0.0.1:${addr.port}/webhook/topgg`, {
-        method: 'POST',
-        headers: { Authorization: SECRET, 'Content-Type': 'application/json' },
-        body: UPVOTE,
-      });
+      const post = (): Promise<Response> =>
+        fetch(`http://127.0.0.1:${addr.port}/webhook/topgg`, {
+          method: 'POST',
+          headers: { Authorization: SECRET, 'Content-Type': 'application/json' },
+          body: UPVOTE,
+        });
+
+      const res = await post();
       expect(res.status).toBe(200);
-      // 12h de Plus: ativo já, expira exatamente NOW + VOTE_REWARD_HOURS.
+      // 24h de Plus: ativo já, expira exatamente NOW + VOTE_REWARD_HOURS.
       expect(isUserPremium(db, 'u-123', NOW + 1000)).toBe(true);
       expect(getUserPremiumExpiry(db, 'u-123')).toBe(NOW + VOTE_REWARD_HOURS * 3_600_000);
       expect(isUserPremium(db, 'u-123', NOW + VOTE_REWARD_HOURS * 3_600_000 + 1)).toBe(false);
+
+      // 2º voto (mesmo NOW = dentro do cooldown): o Plus NÃO se estende.
+      await post();
+      expect(getUserPremiumExpiry(db, 'u-123')).toBe(NOW + VOTE_REWARD_HOURS * 3_600_000);
     } finally {
       server?.close();
       db.close();

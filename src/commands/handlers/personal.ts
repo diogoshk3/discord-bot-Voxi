@@ -31,6 +31,7 @@ import {
 } from '../../store/pronunciation';
 import { isUserPremium, isGuildPremium } from '../../store/premium';
 import { t } from '../../i18n/index';
+import { voteUpsellLine } from '../voteUpsell';
 import { localeForUser, reply } from '../helpers';
 import { speakRawText } from './core';
 import { log } from '../../logging/logger';
@@ -140,10 +141,14 @@ async function applyAddPronunciation(
   const limit = premium ? USER_PRON_LIMIT_PREMIUM : USER_PRON_LIMIT_FREE;
   const res = addUserPronunciation(deps.db, i.user.id, term, replacement, limit);
   if (res === 'limit') {
-    await send(
-      t('pron.limitHit', locale, { limit }) +
-        (premium ? '' : `\n${t('pron.limitUpsell', locale, { url: deps.config.kofiUrl })}`),
-    );
+    const parts = [t('pron.limitHit', locale, { limit })];
+    if (!premium) {
+      // Via paga (Ko-fi) + via GRÁTIS (votar → 24h de Plus) lado a lado.
+      parts.push(t('pron.limitUpsell', locale, { url: deps.config.kofiUrl }));
+      const vote = voteUpsellLine(locale, deps.config.clientId);
+      if (vote) parts.push(vote);
+    }
+    await send(parts.join('\n'));
     return;
   }
   await send(t('pron.set', locale, { term, replacement }));
