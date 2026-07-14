@@ -56,10 +56,5 @@
     "trim": "0.0.3",
     "tar": "^7.5.19"
   },
-  "allowScripts": {
-    "better-sqlite3@11.10.0": true,
-    "esbuild@0.28.1": true,
-    "@discordjs/opus@0.10.0": true,
-    "ffmpeg-static@5.3.0": true
-  }
+  "//scripts-policy": "sec(031): a chave `allowScripts` que esteve aqui ERA INERTE — nada a consumia (sem @lavamoat/allow-scripts, sem .npmrc ignore-scripts), por isso o `npm ci` corria os install scripts das 363 deps na íntegra (CI + deploy automático para o VPS). Substituída por `npm ci --ignore-scripts` + `npm rebuild <pkg>` explícito em ci.yml e deploy-bot.yml: só os 4 pacotes que PRECISAM de correr o próprio script (fetch de binário/prebuild nativo) o fazem — better-sqlite3, @discordjs/opus, esbuild, ffmpeg-static. Novo dep nativo? Junta-o à lista de `npm rebuild` nos dois workflows (esta chave já não é lida por nada)."
 }

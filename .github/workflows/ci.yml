@@ -21,11 +21,17 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: npm
-      # `npm ci` runs install scripts normally: the `allowScripts` key in
-      # package.json is inert here (no @lavamoat/allow-scripts installed, no
-      # .npmrc ignore-scripts), so native deps (better-sqlite3, @discordjs/opus,
-      # sodium-native) build/fetch prebuilds on ubuntu for Node 22/24.
-      - run: npm ci
+      # sec(031): scripts de install BLOQUEADOS por omissão (--ignore-scripts) — reduz
+      # a superfície de RCE no install de 363 deps (todo o grafo transitivo) para só
+      # as 4 que PRECISAM de correr o próprio script (fetch de binário/prebuild
+      # nativo): better-sqlite3, @discordjs/opus, esbuild, ffmpeg-static. Reconstruídas
+      # a seguir, explicitamente (sodium-native e @snazzah/davey, usado pelo
+      # @discordjs/voice, não têm install script — prebuilds via optionalDependencies —
+      # por isso não entram nesta lista).
+      - run: npm ci --ignore-scripts
+      # Novo dep nativo? Junta-o aqui E ao passo homólogo em deploy-bot.yml — sem isto
+      # o `require()` falha em runtime com o binário nativo por compilar/descarregar.
+      - run: npm rebuild better-sqlite3 @discordjs/opus esbuild ffmpeg-static
       - run: npm run build
       - run: npm run typecheck
       - run: npm run lint

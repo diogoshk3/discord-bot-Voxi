@@ -8,7 +8,9 @@ cd "$(dirname "$0")/.."
 
 echo "[setup-whisper] a criar tools/whisper-venv…"
 python3 -m venv tools/whisper-venv
-tools/whisper-venv/bin/pip install --disable-pip-version-check -q faster-whisper
+# sec(031): versões PINADAS em requirements-whisper.txt (antes instalava faster-whisper
+# sem versão — resolução não determinística). Espelha setup-clone/setup-kokoro (`-r`).
+tools/whisper-venv/bin/pip install --disable-pip-version-check -q -r tools/requirements-whisper.txt
 
 echo "[setup-whisper] pronto. O modelo (base ~140MB) descarrega no 1.º arranque do sidecar."
 tools/whisper-venv/bin/python - <<'PY'

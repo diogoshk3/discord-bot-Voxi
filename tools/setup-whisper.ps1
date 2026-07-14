@@ -35,9 +35,10 @@ if (-not (Test-Path $py)) {
   & $basePy[0] @pyArgs -m venv $venv
 }
 
-# 3) deps (faster-whisper traz o CTranslate2; sem PyTorch)
+# 3) deps (faster-whisper traz o CTranslate2; sem PyTorch). sec(031): versões PINADAS
+#    em requirements-whisper.txt (antes instalava faster-whisper sem versão nenhuma).
 & $py -m pip install --upgrade pip
-& $py -m pip install --disable-pip-version-check faster-whisper
+& $py -m pip install --disable-pip-version-check -r (Join-Path $PSScriptRoot "requirements-whisper.txt")
 
 # 4) verificação (o modelo `base` ~140MB descarrega no 1.º arranque do sidecar)
 & $py -c "import faster_whisper, ctranslate2; print(f'faster-whisper {faster_whisper.__version__} | ctranslate2 {ctranslate2.__version__}')"
