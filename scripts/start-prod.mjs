@@ -17,39 +17,24 @@ import { spawn, spawnSync } from 'node:child_process';
 import { createServer } from 'node:net';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { createWriteStream, mkdirSync, renameSync, rmSync, statSync } from 'node:fs';
 import { decideOnExit, prewarmNative, STABLE_RESET_MS } from './supervisorPolicy.mjs';
+import { makeRotatingWriter } from './logRotation.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 // LOG PERSISTENTE em ficheiro (logs/vozen.log). Antes disto o stdio era 'inherit':
 // os logs viviam só no terminal que arrancou o supervisor e PERDIAM-SE quando esse
 // terminal fechava — quando um bug intermitente (ex.: autocomplete "Falha ao
-// carregar opções") acontecia, nunca havia evidência para diagnosticar. Rotação
-// simples por tamanho: >8MB roda para vozen.log.1 (mantém 1 geração).
+// carregar opções") acontecia, nunca havia evidência para diagnosticar. Rotação por
+// tamanho: >8MB roda para vozen.log.1 (mantém 1 geração) — tanto no arranque como A
+// MEIO-do-run (plano 028: antes só rodava no arranque; um child em crash-loop
+// inundava o ficheiro sem limite até encher o disco). Lógica extraída para
+// scripts/logRotation.mjs (testada em tests/logRotation.test.ts); nunca lança.
 const LOG_DIR = join(ROOT, 'logs');
-const LOG_FILE = join(LOG_DIR, 'vozen.log');
 const LOG_MAX_BYTES = 8 * 1024 * 1024;
-let logStream = null;
-try {
-  mkdirSync(LOG_DIR, { recursive: true });
-  try {
-    if (statSync(LOG_FILE).size > LOG_MAX_BYTES) {
-      rmSync(`${LOG_FILE}.1`, { force: true });
-      renameSync(LOG_FILE, `${LOG_FILE}.1`);
-    }
-  } catch {
-    // ficheiro ainda não existe — nada a rodar
-  }
-  logStream = createWriteStream(LOG_FILE, { flags: 'a' });
-  logStream.on('error', () => {
-    logStream = null; // disco cheio/lock: degrada para só-consola, nunca crasha
-  });
-} catch {
-  // sem pasta de logs possível: segue só com a consola
-}
+const logWriter = makeRotatingWriter(LOG_DIR, 'vozen.log', LOG_MAX_BYTES);
 const toFile = (chunk) => {
-  if (logStream) logStream.write(chunk);
+  logWriter.write(chunk);
 };
 const log = (m) => {
   const line = `[start-prod] ${m}`;
