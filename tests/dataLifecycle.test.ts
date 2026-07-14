@@ -120,11 +120,9 @@ describe('eraseUser', () => {
         'engine x',
       );
       // Identificadores do utilizador guardados sob OUTRO nome (bespoke erase).
-      db.prepare('INSERT INTO kofi_supporter (email_hash, discord_id, updated_at) VALUES (?,?,?)').run(
-        'hash-de-U',
-        'U',
-        1,
-      );
+      db.prepare(
+        'INSERT INTO kofi_supporter (email_hash, discord_id, updated_at) VALUES (?,?,?)',
+      ).run('hash-de-U', 'U', 1);
       db.prepare('INSERT INTO gcloud_usage (scope, key, month, chars) VALUES (?,?,?,?)').run(
         'user',
         'U',
@@ -212,7 +210,10 @@ describe('rot-guard: categorização vs schema real', () => {
         // de identificador (além de user_id/guild_id, já cobertos acima) obriga a tabela a
         // estar categorizada numa das 4 listas OU tratada/isenta explicitamente.
         const idCols = cols.filter(
-          (c) => c !== 'user_id' && c !== 'guild_id' && (/_(id|by)$/.test(c) || c === 'key' || c === 'discord_id'),
+          (c) =>
+            c !== 'user_id' &&
+            c !== 'guild_id' &&
+            (/_(id|by)$/.test(c) || c === 'key' || c === 'discord_id'),
         );
         if (idCols.length > 0) {
           expect(
