@@ -10,6 +10,8 @@ on:
     branches: [main]
     paths:
       - 'src/**'
+      - 'scripts/**'
+      - 'tools/**'
       - 'package.json'
       - 'package-lock.json'
       - 'tsconfig.json'
@@ -31,11 +33,25 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
+          # Plan 027 (OPS-02/OPS-03): abordagem escolhida foi o gate de testes NO SCRIPT
+          # (correr `vitest` no VPS), não `workflow_run` sobre a CI. Motivo: `workflow_run`
+          # não suporta filtro `paths:`, e a CI (ci.yml) corre em todo o push à main sem
+          # filtro de paths — mudar para `workflow_run` fazia o deploy disparar também em
+          # pushes só de docs/site, e esvaziava o Step 1 (paths: scripts/**, tools/**) que
+          # é o que fecha o gap do supervisor/sidecars não fazerem deploy. `npm ci` normal
+          # instala devDependencies (o `vitest` está em devDependencies) — a service systemd
+          # define NODE_ENV=production só para o processo do bot (Environment= no unit file),
+          # não para esta sessão SSH, logo não afeta o `npm ci` aqui.
+          # `set -euo pipefail` tem de ser a PRIMEIRA linha: qualquer falha (pull/ci/build/
+          # testes) aborta ANTES do restart, deixando o serviço antigo (a funcionar) intacto
+          # em vez de reiniciar para uma árvore a meio/partida e entrar em crash-loop.
           script: |
+            set -euo pipefail
             cd ~/discord-bot-Vozen
             git pull --ff-only
             npm ci
             npm run build
+            npx vitest run
             sudo -n systemctl restart vozen.service
             sleep 20
             systemctl is-active vozen.service
