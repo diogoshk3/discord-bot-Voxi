@@ -26,6 +26,7 @@ import {
 } from './kofi';
 import type { StatusApi } from './statusApi';
 import type { DashboardApi } from './dashboardApi';
+import { handleVoteWebhook } from '../vote';
 
 export interface KofiWebhookDeps {
   db: Database.Database;
@@ -43,6 +44,12 @@ export interface KofiWebhookDeps {
   dashboardApi?: DashboardApi;
   /** Limite defensivo do mapa de rate-limit da API. Default 2048. */
   apiRateMaxEntries?: number;
+  // Webhook top.gg (recompensa de voto) montado no MESMO servidor público (POST /webhook/topgg)
+  // — evita uma porta dedicada + rota de Caddy nova. Ausente/vazio => a rota NÃO é servida
+  // (sem secret qualquer um forjaria votos). Ver ./vote (handleVoteWebhook, auth constant-time).
+  topggWebhookSecret?: string;
+  /** Chamado com o id de quem votou em cada upvote válido (liga o grant da recompensa). */
+  onUpvote?: (userId: string) => void;
 }
 
 // Rate-limit simples por IP para a API do painel (janela deslizante). Sem dependências:
@@ -498,16 +505,63 @@ function handleDashboardRequest(
   json(404, { error: 'not_found' });
 }
 
+interface TopggCtx {
+  secret: string;
+  onUpvote?: (userId: string) => void;
+  logError: (m: string, err: unknown) => void;
+}
+
+/**
+ * Trata POST /webhook/topgg (recompensa de voto): recolhe o corpo e delega no handler PURO
+ * handleVoteWebhook (mesma lógica/segurança do servidor dedicado — auth constant-time, parse
+ * defensivo). Só é montado quando há `topggWebhookSecret`; sem secret NÃO se aceitam votos
+ * (qualquer um forjaria a recompensa). Cap de 64KB anti-DoS, como o webhook do Ko-fi.
+ */
+function handleTopggRequest(
+  req: import('node:http').IncomingMessage,
+  res: import('node:http').ServerResponse,
+  ctx: TopggCtx,
+): void {
+  if (req.method !== 'POST') {
+    res.writeHead(405).end('method not allowed');
+    return;
+  }
+  let body = '';
+  let aborted = false;
+  req.on('data', (chunk) => {
+    body += chunk;
+    if (body.length > 64_000) {
+      aborted = true;
+      res.writeHead(413).end('too large');
+      req.destroy();
+    }
+  });
+  req.on('end', () => {
+    if (aborted) return;
+    const authHeader = req.headers['authorization'];
+    const result = handleVoteWebhook({
+      authHeader: typeof authHeader === 'string' ? authHeader : undefined,
+      body,
+      secret: ctx.secret,
+      onUpvote: ctx.onUpvote,
+    });
+    res.writeHead(result.status, { 'Content-Type': 'application/json' }).end(result.body);
+  });
+  req.on('error', (err) => ctx.logError('[vote] erro no request do webhook top.gg', err));
+}
+
 /**
  * Arranca o servidor HTTP do Premium. Roteia:
  *   - GET/OPTIONS /api/me/premium -> Painel Premium (se `statusApi` presente), com CORS
+ *   - POST /webhook/topgg -> recompensa de voto (se `topggWebhookSecret` presente)
  *   - POST (qualquer outro caminho) -> webhook do Ko-fi (se `token` presente)
- * No-op (devolve null) se NÃO houver nem token do Ko-fi nem API do painel. Devolve o Server.
+ * No-op (devolve null) se não houver webhook Ko-fi, API do painel nem webhook top.gg.
  */
 export function startKofiWebhook(deps: KofiWebhookDeps): Server | null {
   const { db, token, port, now, logInfo, logError, statusApi, apiOrigin, dashboardApi } = deps;
-  if (!token && !statusApi) {
-    logInfo('[premium] servidor HTTP inativo (sem webhook Ko-fi nem API do painel).');
+  const { topggWebhookSecret, onUpvote } = deps;
+  if (!token && !statusApi && !topggWebhookSecret) {
+    logInfo('[premium] servidor HTTP inativo (sem webhook Ko-fi, API do painel nem top.gg).');
     return null;
   }
   const rate = new Map<string, RateState>();
@@ -552,6 +606,15 @@ export function startKofiWebhook(deps: KofiWebhookDeps): Server | null {
         rateMaxEntries,
         logError,
       });
+      return;
+    }
+
+    // ── Webhook top.gg (recompensa de voto): POST /webhook/topgg ────────────────────
+    // Viaja no MESMO servidor público (api.vozen.org) para não exigir porta+Caddy dedicados.
+    // ANTES do catch-all do Ko-fi (que apanha QUALQUER POST) — senão um POST /webhook/topgg
+    // seria tratado como payload do Ko-fi. Só ativo com secret (senão qualquer um forja votos).
+    if (topggWebhookSecret && path === '/webhook/topgg') {
+      handleTopggRequest(req, res, { secret: topggWebhookSecret, onUpvote, logError });
       return;
     }
 

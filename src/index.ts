@@ -249,31 +249,33 @@ async function main(): Promise<void> {
     log.error('[index] falha ao arrancar o servidor de health (ignorado)', err);
   }
 
-  // P11.5 — webhook top.gg OPCIONAL para registar votos. So arranca se
-  // TOPGG_WEBHOOK_PORT estiver definida (porta dedicada, separada do health). Em
-  // try/catch defensivo: um problema a abrir a porta NUNCA deve impedir o bot de
-  // arrancar. RECOMPENSA (growth loop): cada upvote ELEGÍVEL dá VOTE_REWARD_HOURS de
-  // perks Plus a quem votou (source 'vote' — EXTRA, nunca a qualidade base). A recompensa
-  // tem um COOLDOWN de 30 dias por conta (claimVoteReward): votar mais vezes conta para o
-  // top.gg mas não empilha Plus grátis — evita bancar meses de Plus a canibalizar o pago.
-  // Sem DM (hard rule: no unsolicited DMs) — a pessoa vê o estado no /vote e /premium.
-  try {
-    startVoteWebhookServer(config, (userId) => {
-      try {
-        const res = claimVoteReward(db, userId, Date.now());
-        if (res.granted) {
-          log.info(
-            `[vote] recompensa: +${VOTE_REWARD_HOURS}h de Plus para ${userId} (fim ${new Date(res.expiresAt!).toISOString()}).`,
-          );
-        } else {
-          log.info(
-            `[vote] voto de ${userId} contou, mas a recompensa está em cooldown (elegível ${new Date(res.nextEligibleAt!).toISOString()}).`,
-          );
-        }
-      } catch (err) {
-        log.error(`[vote] falha a conceder a recompensa do voto a ${userId} (ignorado)`, err);
+  // RECOMPENSA por voto (growth loop): cada upvote ELEGÍVEL dá VOTE_REWARD_HOURS de Plus a
+  // quem votou (source 'vote' — EXTRA, nunca a qualidade base). COOLDOWN de 30 dias por conta
+  // (claimVoteReward): votar mais vezes conta para o top.gg mas não empilha Plus grátis (não
+  // canibaliza o pago). Sem DM (hard rule) — a pessoa vê o estado no /vote e /premium. O MESMO
+  // callback serve os dois pontos de entrada do webhook (ver a seguir).
+  const rewardVote = (userId: string): void => {
+    try {
+      const res = claimVoteReward(db, userId, Date.now());
+      if (res.granted) {
+        log.info(
+          `[vote] recompensa: +${VOTE_REWARD_HOURS}h de Plus para ${userId} (fim ${new Date(res.expiresAt!).toISOString()}).`,
+        );
+      } else {
+        log.info(
+          `[vote] voto de ${userId} contou, mas a recompensa está em cooldown (elegível ${new Date(res.nextEligibleAt!).toISOString()}).`,
+        );
       }
-    });
+    } catch (err) {
+      log.error(`[vote] falha a conceder a recompensa do voto a ${userId} (ignorado)`, err);
+    }
+  };
+
+  // P11.5 — webhook top.gg em PORTA DEDICADA (opcional): só arranca com TOPGG_WEBHOOK_PORT.
+  // Em produção usamos antes a rota /webhook/topgg no servidor da API (ver startKofiWebhook
+  // abaixo), que já é pública via Caddy — dispensa porta+rota dedicadas. try/catch defensivo.
+  try {
+    startVoteWebhookServer(config, rewardVote);
   } catch (err) {
     log.error('[index] falha ao arrancar o webhook top.gg (ignorado)', err);
   }
@@ -316,6 +318,10 @@ async function main(): Promise<void> {
       statusApi,
       dashboardApi,
       apiOrigin: config.premiumApiEnabled ? config.premiumApiOrigin : undefined,
+      // Recompensa de voto na MESMA porta pública (POST /webhook/topgg) — dispensa Caddy
+      // dedicado. Só ativa com TOPGG_WEBHOOK_SECRET (sem porta própria).
+      topggWebhookSecret: config.topggWebhookSecret,
+      onUpvote: rewardVote,
     });
   } catch (err) {
     log.error('[index] falha ao arrancar o servidor HTTP do Premium (ignorado)', err);
