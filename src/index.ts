@@ -10,6 +10,7 @@ import { startDepartedPurgeJob } from './store/guildDeparted';
 import { startPendingPurgeJob } from './store/kofiPending';
 import { purgeOldGcloudUsage, monthKeyUTC } from './store/gcloudUsage';
 import { sweepOrphanClones } from './store/voiceCloneSweep';
+import { sweepOrphanSttTemps } from './voice/transcriptionSession';
 import { AudioCache } from './tts/cache';
 import {
   createEngine,
@@ -444,6 +445,16 @@ async function main(): Promise<void> {
       }
     } catch (err) {
       log.error('[index] orphaned clone sweep failed (ignored)', err);
+    }
+    // Sweep dos WAV temporários de STT órfãos no tmpdir (crash entre toWav e o rmSync do
+    // finally). Mesma classe do sweep de clones; corre só no arranque, antes de qualquer
+    // sessão STT. Best-effort — nunca impede o arranque.
+    try {
+      const removed = sweepOrphanSttTemps();
+      if (removed > 0)
+        log.info(`[retencao] sweep de temporários STT órfãos: ${removed} apagado(s).`);
+    } catch (err) {
+      log.error('[index] orphaned STT temp sweep failed (ignored)', err);
     }
     // Retenção do gcloud_usage (contadores mensais de chars): apaga meses com mais de ~3
     // meses. Corre já e depois 1x/dia. Evita crescimento sem fim; o gate de custo só olha

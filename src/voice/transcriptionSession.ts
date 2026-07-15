@@ -12,7 +12,7 @@
 
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { rmSync } from 'node:fs';
+import { rmSync, readdirSync, statSync, unlinkSync } from 'node:fs';
 import type { Readable, Duplex } from 'node:stream';
 import { EndBehaviorType, type VoiceConnection } from '@discordjs/voice';
 import prism from 'prism-media';
@@ -104,6 +104,44 @@ export class TranscriptionSession {
       }
     }
   }
+}
+
+/** Nome dos WAV temporários de STT: prefixo próprio do bot -> seguro varrer por padrão. */
+const STT_TMP_RE = /^vozen-stt-[\w-]+\.wav$/;
+/** Idade mínima para considerar um temp órfão (um WAV vivo é apagado em ~2s). */
+const STT_ORPHAN_MIN_AGE_MS = 5 * 60_000;
+
+/**
+ * Reconciliação de arranque (DATA-hygiene): apaga WAV temporários de STT que ficaram
+ * ÓRFÃOS no tmpdir. handleUtterance apaga cada WAV no `finally`, mas um SIGKILL (OOM/deploy)
+ * entre o `toWav` e o `finally`, ou um `rmSync` bloqueado no Windows, deixa gravação
+ * consentida no disco além do "apagado imediatamente" prometido na PRIVACY §2.4 — a mesma
+ * classe de falha que o sweep de clones (voiceCloneSweep) cobre e este não cobria.
+ *
+ * Seguro por dois motivos: (1) o prefixo `vozen-stt-` é do próprio bot; (2) o guard de
+ * idade (>5 min) nunca apanha um WAV vivo, mesmo que outro processo Vozen partilhe o tmpdir.
+ * Corre no ClientReady (antes de qualquer sessão STT), best-effort. Devolve o nº apagado.
+ */
+export function sweepOrphanSttTemps(dir: string = tmpdir(), now: number = Date.now()): number {
+  let entries: string[];
+  try {
+    entries = readdirSync(dir);
+  } catch {
+    return 0; // tmpdir inacessível — no-op
+  }
+  let removed = 0;
+  for (const f of entries) {
+    if (!STT_TMP_RE.test(f)) continue;
+    const p = join(dir, f);
+    try {
+      if (now - statSync(p).mtimeMs < STT_ORPHAN_MIN_AGE_MS) continue; // recente -> pode estar vivo
+      unlinkSync(p);
+      removed++;
+    } catch {
+      // best-effort: já removido / bloqueado
+    }
+  }
+  return removed;
 }
 
 // ── Captura real (integração — plumbing Opus do receiver, espelhado do recorder) ──────────

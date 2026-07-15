@@ -1,4 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
+import { mkdtempSync, writeFileSync, existsSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import {
   TranscriptionSession,
   type TranscriptionSessionDeps,
@@ -79,5 +82,40 @@ describe('TranscriptionSession', () => {
     s.stop();
     await s.onSpeakingStart('yes');
     expect(captured).toEqual([]);
+  });
+
+  it('transcribe() a falhar: engole o erro, não posta e não rebenta a sessão', async () => {
+    const { deps, posts } = makeDeps({
+      transcribe: vi.fn(async () => {
+        throw new Error('sidecar morreu a meio');
+      }),
+    });
+    const s = new TranscriptionSession(deps as unknown as TranscriptionSessionDeps);
+    await expect(s.onSpeakingStart('yes')).resolves.toBeUndefined();
+    expect(posts).toEqual([]);
+  });
+
+  it('o WAV temporário é apagado após a utterance MESMO quando a transcrição falha (PRIVACY §2.4)', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'vozen-stt-test-'));
+    try {
+      const written: string[] = [];
+      const { deps } = makeDeps({
+        tmpDir: dir,
+        toWav: vi.fn(async (_pcm: Buffer, out: string) => {
+          writeFileSync(out, 'wav'); // escreve mesmo o ficheiro (não é só o path)
+          written.push(out);
+          return out;
+        }),
+        transcribe: vi.fn(async () => {
+          throw new Error('boom'); // caminho de falha: o finally tem de apagar na mesma
+        }),
+      });
+      const s = new TranscriptionSession(deps as unknown as TranscriptionSessionDeps);
+      await s.onSpeakingStart('yes');
+      expect(written).toHaveLength(1);
+      expect(existsSync(written[0])).toBe(false); // gravação consentida não persiste
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
