@@ -196,6 +196,10 @@ export async function recordUserSample(
         clearTimeout(roundTimer);
         clearInterval(stopPoll);
         decoder.removeAllListeners();
+        // Destruir SEMPRE a fonte: um erro do lado do decoder chega aqui sem passar pelo
+        // stopBoth, e sem isto a subscription do receiver (opus) ficava viva (leak).
+        // Idempotente — quando `finish` vem de stopBoth, o opus já está destruído.
+        opus.destroy();
         resolve(received);
       };
       decoder.once('end', finish);

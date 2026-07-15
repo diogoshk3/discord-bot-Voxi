@@ -181,15 +181,26 @@ export class GCloudEngine implements TTSEngine {
     throw new GcloudBudgetError(reason);
   }
 
-  /** Debita o consumo APÓS a chamada real (cache-miss bem-sucedido). */
-  private accountUsage(req: SynthRequest, chars: number): void {
+  /**
+   * Reserva o consumo ANTES da chamada real (cache-miss). Debitar já — em vez de após o
+   * `await` — fecha a race check-then-act: duas sínteses concorrentes do MESMO pool (um
+   * passe cobre várias guilds) veriam ambas o total antigo e ambas passariam o teto.
+   */
+  private reserveUsage(req: SynthRequest, chars: number): void {
     if (this.limits && req.gcloudBudget && this.usage) {
       const month = monthKeyUTC(this.now());
       this.usage.addMonthly(req.gcloudBudget.scope, req.gcloudBudget.key, month, chars);
     }
     if (this.limits && this.limits.dailyBudget > 0) this.dailyUsed += chars;
-    metrics.inc('gcloudSynths');
-    metrics.add('gcloudChars', chars);
+  }
+
+  /** Devolve a reserva quando a síntese falha (uma chamada falhada não gasta orçamento). */
+  private refundUsage(req: SynthRequest, chars: number): void {
+    if (this.limits && req.gcloudBudget && this.usage) {
+      const month = monthKeyUTC(this.now());
+      this.usage.addMonthly(req.gcloudBudget.scope, req.gcloudBudget.key, month, -chars);
+    }
+    if (this.limits && this.limits.dailyBudget > 0) this.dailyUsed -= chars;
   }
 
   async synth(req: SynthRequest): Promise<string> {
@@ -200,10 +211,19 @@ export class GCloudEngine implements TTSEngine {
     // Cache-miss => vai haver chamada real. Aplica os tetos ANTES de gastar $.
     const chars = req.text.length;
     this.enforceBudget(req, chars);
+    // Reserva o consumo ANTES do await (fecha a race check-then-act — ver reserveUsage).
+    this.reserveUsage(req, chars);
 
-    let wav = await this.fetchSpeech(req);
-    // Só chega aqui se a síntese teve sucesso -> contabiliza o custo real.
-    this.accountUsage(req, chars);
+    let wav: Buffer;
+    try {
+      wav = await this.fetchSpeech(req);
+    } catch (err) {
+      this.refundUsage(req, chars); // síntese falhada -> devolve a reserva
+      throw err;
+    }
+    // Sucesso -> contabiliza as métricas do custo real.
+    metrics.inc('gcloudSynths');
+    metrics.add('gcloudChars', chars);
     // Silêncio de arranque (mesma semântica do Piper/gTTS): PREPENDido ao WAV.
     if (req.leadSilenceMs && req.leadSilenceMs > 0) {
       wav = concatWavs([silenceWav(req.leadSilenceMs), wav], { silenceMs: 0 });

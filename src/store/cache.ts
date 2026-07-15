@@ -113,6 +113,9 @@ const USER_KEYED = new Set([
   'tts_optout',
   'user_effect',
   'user_clone',
+  // pronunciation_user é apagada pelo eraseUser (RGPD) mas cacheada por userId; sem estar
+  // aqui, invalidateUser não a limpava e as pronúncias apagadas persistiam em memória.
+  'pronunciation_user',
 ]);
 
 /**

@@ -156,6 +156,9 @@ export function makeReceiverCapture(
         const last = collector.flush();
         if (last) onUtterance(last.pcm);
         decoder.removeAllListeners();
+        // Destruir SEMPRE a fonte: um erro do lado do decoder chega aqui sem passar pelo
+        // stopBoth, e sem isto a subscription do receiver (opus) ficava viva (leak).
+        opus.destroy();
         resolve();
       };
       decoder.once('end', finish);

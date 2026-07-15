@@ -1,10 +1,18 @@
 # Plano — Mega-auditoria e melhoria total do Vozen (bot TTS)
 
-> Planeado com Fable 5 (2026-07-15). Execução: Opus. Só planeamento nesta fase.
-> Factos do recon: working tree com **167 ficheiros por commitar**; **106 ficheiros
-> de `src/` ainda com comentários em PT** (a regra de inglês já existe no CLAUDE.md);
-> `plans/` tem 34 planos do ciclo /improve de 2026-07-07, quase todos DONE;
-> baseline anterior: 1298 testes verdes. O bot está EM PRODUÇÃO.
+> Planeado com Fable 5 (2026-07-15). Execução: Opus. O bot está EM PRODUÇÃO.
+>
+> **FASE 0 CONCLUÍDA (2026-07-15).** A árvore suja (146 mod + 22 untracked) era trabalho
+> anterior COERENTE por commitar (tradução PT→EN, kofi, entitlements, voice, testes),
+> não lixo — provado pelos 4 gates verdes ANTES do commit. Verificado que todos os dados
+> de runtime (`data.db`/`tts.db`/`audio-cache`/`voice-clones`/`logs`/`.env`) estão
+> gitignored e que `docs/speech-data/` + `docs/eval/` são só dados linguísticos/templates
+> (sem PII). Commitado como 1 snapshot honesto (`diogoshk3`, sem trailer). NÃO empurrado
+> (o repo tem remote; push é decisão do dono).
+>
+> **BASELINE (commit deste snapshot):** `npm run build` = 0 · `npm run typecheck` = 0 ·
+> `npx vitest run` = **1805 testes / 176 ficheiros, todos verdes** · `npm run lint` = 0.
+> `git status` limpo.
 
 ## Objetivo
 

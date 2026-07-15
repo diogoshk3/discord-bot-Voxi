@@ -142,6 +142,38 @@ describe('recordUserSample — ronda nunca fica presa (regressão da propagaçã
     expect(seen[seen.length - 1]).toBe(result.voicedMs);
   }, 5_000);
 
+  it('um erro do decoder destrói a fonte opus (não vaza a subscription)', async () => {
+    const opuses: Readable[] = [];
+    const decoders: Transform[] = [];
+    let stop = false;
+    const promise = recordUserSample(
+      FAKE_CONNECTION,
+      'userErr',
+      { targetVoicedMs: 10_000, maxWallMs: 5_000, roundSilenceMs: 5_000, shouldStop: () => stop },
+      {
+        subscribe: () => {
+          const o = fakeSubscribe();
+          opuses.push(o);
+          return o;
+        },
+        makeDecoder: () => {
+          const d = fakePassthroughDecoder();
+          decoders.push(d);
+          return d;
+        },
+      },
+    );
+    // Deixa a 1.ª ronda montar; força um erro DO LADO DO DECODER (não via stopBoth) e
+    // termina o loop antes do poll de 200ms — isola o caminho `finish` (end/close/error).
+    await new Promise((r) => setTimeout(r, 60));
+    const firstOpus = opuses[0];
+    stop = true; // impede uma nova ronda depois de a atual resolver
+    decoders[0].emit('error', new Error('pacote opus corrompido'));
+    await promise;
+    // Sem o fix, o `finish` não destruía o opus → a subscription do receiver vazava.
+    expect(firstOpus.destroyed).toBe(true);
+  }, 5_000);
+
   it('ronda totalmente silenciosa não fica presa — o guarda-tempo de ronda corta e tenta de novo', async () => {
     const opus = fakeSubscribe(); // nunca recebe push() nenhum — silêncio absoluto
     const start = Date.now();

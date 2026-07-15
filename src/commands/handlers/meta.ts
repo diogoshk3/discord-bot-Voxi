@@ -31,7 +31,7 @@ import {
 import { randomInt } from 'node:crypto';
 import { t } from '../../i18n/index';
 import { INVITE_PERMISSIONS, formatDuration, localeForUser, reply } from '../helpers';
-import { commandDefs } from '../index';
+import { commandDefs } from '../definitions';
 import { insertPremiumCode, redeemPremiumCode } from '../../store/premiumCode';
 import { generateCodeString, normalizeCode } from '../../premium/codeGen';
 import { voteRewardStatus } from '../../store/voteReward';
