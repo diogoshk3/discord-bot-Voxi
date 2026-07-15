@@ -154,8 +154,11 @@ export const GUILD_CONFIG_COLUMNS: GuildConfigColumn[] = [
   },
   {
     prop: 'ratePerMin',
+    // DEFAULT 8: alinhado com o CREATE TABLE (db.ts) e com DEFAULTS.ratePerMin. Estava
+    // 5 (drift inerte — setGuildConfig escreve sempre a coluna, o default nunca era lido),
+    // agora coberto pelo teste de paridade de dflt_value.
     column: 'rate_per_min',
-    sqlType: 'INTEGER NOT NULL DEFAULT 5',
+    sqlType: 'INTEGER NOT NULL DEFAULT 8',
     toDb: asIs,
     fromDb: (r) => r,
   },

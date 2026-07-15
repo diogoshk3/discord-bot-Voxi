@@ -39,6 +39,24 @@ describe('validateConfigEnv', () => {
     expect(validateConfigEnv({})).toHaveLength(0);
   });
 
+  it('GOOGLE_TTS_API_KEY presente mas vazio -> um warning (chave PAGA nao pode ser clobbered em silencio)', () => {
+    const findings = validateConfigEnv({ GOOGLE_TTS_API_KEY: '' });
+    expect(findings).toHaveLength(1);
+    expect(findings[0].level).toBe('warn');
+    expect(findings[0].message).toMatch(/GOOGLE_TTS_API_KEY/);
+  });
+
+  it('GOOGLE_TTS_API_KEY preenchido / ausente -> sem finding', () => {
+    expect(validateConfigEnv({ GOOGLE_TTS_API_KEY: 'k' })).toHaveLength(0);
+    expect(validateConfigEnv({})).toHaveLength(0);
+  });
+
+  it('OPENAI_API_KEY presente mas vazio -> um warning', () => {
+    const findings = validateConfigEnv({ OPENAI_API_KEY: '' });
+    expect(findings).toHaveLength(1);
+    expect(findings[0].message).toMatch(/OPENAI_API_KEY/);
+  });
+
   it('TOPGG_WEBHOOK_PORT definido + TOPGG_WEBHOOK_SECRET nao-vazio -> aviso de listener redundante', () => {
     const findings = validateConfigEnv({ TOPGG_WEBHOOK_PORT: '3002', TOPGG_WEBHOOK_SECRET: 'x' });
     expect(findings).toHaveLength(1);

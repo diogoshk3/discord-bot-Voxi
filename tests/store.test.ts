@@ -218,6 +218,25 @@ describe('store', () => {
       expect(actual).toEqual(expected);
     });
 
+    it('descritor: DEFAULT de cada coluna bate com o CREATE TABLE (dflt_value) — apanha drift', () => {
+      // O teste de nomes acima não vê os DEFAULTs; o rate_per_min chegou a divergir
+      // (db.ts=8 vs descritor=5). Comparar os defaults fecha essa lacuna.
+      const info = db.pragma('table_info(guild_config)') as Array<{
+        name: string;
+        dflt_value: string | number | null;
+      }>;
+      const byName = new Map(info.map((c) => [c.name, c.dflt_value]));
+      const declaredDefault = (sqlType: string): string | null => {
+        const m = sqlType.match(/DEFAULT\s+(.+?)\s*$/i);
+        return m ? m[1].trim() : null;
+      };
+      for (const col of GUILD_CONFIG_COLUMNS) {
+        const actual = byName.get(col.column);
+        const normalized = actual == null ? null : String(actual);
+        expect(normalized).toBe(declaredDefault(col.sqlType));
+      }
+    });
+
     it('round-trip de TODOS os campos com valores não-default', () => {
       const full = {
         ttsChannelId: 'c1',

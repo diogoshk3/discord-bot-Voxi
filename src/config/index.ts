@@ -233,7 +233,15 @@ export interface ConfigFinding {
 // linha duplicada no .env (dotenv v16: chaves duplicadas => a ÚLTIMA ganha) em
 // vez de "feature desligada de propósito" (que é a env AUSENTE). Qualquer
 // segredo novo com o mesmo risco deve ser acrescentado aqui.
-const EMPTY_SECRET_VARS = ['TOPGG_WEBHOOK_SECRET', 'KOFI_WEBHOOK_TOKEN'] as const;
+const EMPTY_SECRET_VARS = [
+  'TOPGG_WEBHOOK_SECRET',
+  'KOFI_WEBHOOK_TOKEN',
+  // Chaves de API PAGAS: se uma linha residual `CHAVE=` vazia sobrepuser a boa, o motor
+  // Premium respetivo cai em silêncio para o default gratuito (Google HD) ou falha o
+  // arranque (OpenAI neural) — nos dois casos vale avisar em vez de degradar sem rasto.
+  'GOOGLE_TTS_API_KEY',
+  'OPENAI_API_KEY',
+] as const;
 
 /**
  * Plano 024 (SECRET-01) — validação PURA da env crua: não lê `process.env`
