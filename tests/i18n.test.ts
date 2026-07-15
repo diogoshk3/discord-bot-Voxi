@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { t, SUPPORTED_LOCALES, DEFAULT_LOCALE, LOCALE_DISPLAY_NAMES } from '../src/i18n/index';
 import { locales } from '../src/i18n/locales/index';
+import { catalog } from '../src/i18n/catalog';
 
 describe('i18n — t(key, locale, params)', () => {
   it('DEFAULT_LOCALE is "en" and "en" is a supported locale', () => {
@@ -152,5 +153,56 @@ describe('i18n — SUPPORTED_LOCALES + endonyms (35 voice languages)', () => {
     expect(N.ar).toBe('العربية');
     expect(N.el).toBe('Ελληνικά');
     expect(N.uk).toBe('Українська');
+  });
+});
+
+// Regression guard for SILENT locale drift — the class of bug that let a renamed key
+// fall back to EN forever (undetected), and a mangled {placeholder} break interpolation
+// at runtime. Non-brittle by design: it does NOT require every catalog key to be
+// translated (EN fallback is intentional), and it TOLERATES a value that OMITS a
+// placeholder (graceful degradation). It only flags actual corruption.
+describe('i18n — locale integrity (per-locale registry vs catalog)', () => {
+  const catalogKeys = new Set(Object.keys(catalog));
+  const codes = Object.keys(locales);
+  const tokensOf = (s: string): Set<string> => new Set(s.match(/\{[^}]+\}/g) ?? []);
+
+  it('registers translations for the voice languages (sanity: the registry is populated)', () => {
+    expect(codes.length).toBeGreaterThanOrEqual(30);
+  });
+
+  it('no locale has a key ABSENT from the catalog (a renamed/typo key silently falls back to EN forever)', () => {
+    const offenders: string[] = [];
+    for (const code of codes) {
+      for (const key of Object.keys(locales[code])) {
+        if (!catalogKeys.has(key)) offenders.push(`${code}:${key}`);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it('every locale value is a non-empty string', () => {
+    const offenders: string[] = [];
+    for (const code of codes) {
+      for (const [key, value] of Object.entries(locales[code])) {
+        if (typeof value !== 'string' || value.trim().length === 0)
+          offenders.push(`${code}:${key}`);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it('no locale INVENTS a placeholder absent from its English source (catches {name} -> {nome} mangling)', () => {
+    const offenders: string[] = [];
+    for (const code of codes) {
+      for (const [key, value] of Object.entries(locales[code])) {
+        const en = catalog[key]?.en;
+        if (typeof en !== 'string') continue; // key-not-in-catalog is covered by the test above
+        const enTokens = tokensOf(en);
+        for (const tok of tokensOf(value)) {
+          if (!enTokens.has(tok)) offenders.push(`${code}:${key} ${tok}`);
+        }
+      }
+    }
+    expect(offenders).toEqual([]);
   });
 });
