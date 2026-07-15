@@ -48,7 +48,14 @@ jobs:
           script: |
             set -euo pipefail
             cd ~/discord-bot-Vozen
-            git pull --ff-only
+            # Sync to the remote by RESET, not `pull --ff-only`. The VPS is a pure deploy
+            # mirror (never committed to locally), so it must track origin/main even across
+            # a history rewrite. `pull --ff-only` aborts on a force-push divergence and wedges
+            # the deploy (it did — runs 29376170682/29377052289); reset is immune and re-aligns
+            # the checkout to exactly what was pushed. Untracked/ignored files (.env, the .db,
+            # audio-cache) are NOT touched by reset.
+            git fetch origin
+            git reset --hard origin/main
             # sec(031): ver o comentário equivalente em ci.yml — só 4 pacotes nativos
             # correm o próprio install script (rebuild explícito a seguir); os outros
             # ~359 ficam bloqueados (--ignore-scripts) mesmo no deploy automático para
