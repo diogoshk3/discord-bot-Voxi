@@ -102,6 +102,21 @@ describe('purgeGuild', () => {
       db.close();
     }
   });
+
+  it('invalidates the tts_lang_detect_on cache (otherwise serves the purged opt-in as still ON)', () => {
+    const db = initDb(':memory:');
+    try {
+      setDetection(db, 'G', 'U', true);
+      // Populates the in-memory cache (key `G:U`) with ON.
+      expect(isDetectionOn(db, 'G', 'U')).toBe(true);
+      // The guild purge deletes the row AND must invalidate the guild's cache.
+      purgeGuild(db, 'G');
+      // Without GUILD_KEYED coverage, this returns the cached ON (purged opt-in persisting).
+      expect(isDetectionOn(db, 'G', 'U')).toBe(false);
+    } finally {
+      db.close();
+    }
+  });
 });
 
 describe('eraseUser', () => {
