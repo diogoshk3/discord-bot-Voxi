@@ -4,7 +4,8 @@ import { handleMessage } from '../src/commands/messageHandler';
 import type { BotDeps } from '../src/bot/deps';
 import { initDb } from '../src/store/db';
 import { setGuildConfig } from '../src/store/guildConfig';
-import { bumpTalk } from '../src/store/talkStats';
+import { bumpTalk, getTopSpeakers } from '../src/store/talkStats';
+import { CountGate } from '../src/moderation/countGate';
 
 const GUILD = 'g-lb';
 const CHAN = 'chan-tts';
@@ -89,5 +90,20 @@ describe('handleMessage — automatic leaderboard (F2)', () => {
     await handleMessage(makeMsg(), deps);
     expect(lbSend).not.toHaveBeenCalled();
     expect((deps.leaderboardPoster as any).record).not.toHaveBeenCalled();
+  });
+
+  it('count gate: a burst of identical messages is SPOKEN each time but COUNTED once', async () => {
+    const lbSend = vi.fn().mockResolvedValue(undefined);
+    const say = vi.fn().mockResolvedValue(true);
+    const deps: BotDeps = {
+      ...makeDeps(db, say, { record: false, lbSend }),
+      countGate: new CountGate(),
+    };
+    await handleMessage(makeMsg(), deps); // 1st: counts
+    await handleMessage(makeMsg(), deps); // same content, <5s later: spoken, NOT counted
+    await handleMessage(makeMsg(), deps); // idem
+    expect(say).toHaveBeenCalledTimes(3); // every message is still read aloud
+    const me = getTopSpeakers(db, GUILD, new Date()).find((r) => r.userId === USER);
+    expect(me?.count).toBe(1); // only the first message inflated the leaderboard
   });
 });

@@ -106,7 +106,7 @@ describe('effectiveStreak — streak ALIVE on the reference day', () => {
   });
 });
 
-describe('getTopSpeakers — leaderboard ranked by streak DAYS (not by count)', () => {
+describe('getTopSpeakers — leaderboard ranked by message COUNT (streak as tiebreak)', () => {
   let db: Database.Database;
   beforeEach(() => {
     db = initDb(':memory:');
@@ -115,34 +115,42 @@ describe('getTopSpeakers — leaderboard ranked by streak DAYS (not by count)', 
     db.close();
   });
 
-  it('whoever has more alive streak DAYS ranks at the top (even with fewer messages)', () => {
-    // u1: talks a lot in a single day (high count, streak 1). u2: 3 consecutive days (streak 3).
-    bumpTalk(db, G, 'u1', d(2026, 7, 10));
-    bumpTalk(db, G, 'u1', d(2026, 7, 10));
-    bumpTalk(db, G, 'u1', d(2026, 7, 10));
-    bumpTalk(db, G, 'u2', d(2026, 7, 8));
-    bumpTalk(db, G, 'u2', d(2026, 7, 9));
-    bumpTalk(db, G, 'u2', d(2026, 7, 10));
+  it('whoever has MORE messages ranks first, even with a LOWER streak (count-first)', () => {
+    // The screenshot case: "bom dia" has 814 messages / streak 10 and must beat "diogo"
+    // with 318 messages / streak 11. Here: talker (count 5, streak 2) beats streaker
+    // (count 3, streak 3). Under the OLD streak-first order this was reversed.
+    bumpTalk(db, G, 'talker', d(2026, 7, 9)); // day 9 x4 -> count 4, streak 1
+    bumpTalk(db, G, 'talker', d(2026, 7, 9));
+    bumpTalk(db, G, 'talker', d(2026, 7, 9));
+    bumpTalk(db, G, 'talker', d(2026, 7, 9));
+    bumpTalk(db, G, 'talker', d(2026, 7, 10)); // day 10 -> count 5, streak 2
+    bumpTalk(db, G, 'streaker', d(2026, 7, 8)); // 3 consecutive days -> count 3, streak 3
+    bumpTalk(db, G, 'streaker', d(2026, 7, 9));
+    bumpTalk(db, G, 'streaker', d(2026, 7, 10));
     const top = getTopSpeakers(db, G, d(2026, 7, 10));
-    expect(top.map((r) => r.userId)).toEqual(['u2', 'u1']); // u2 (3 days) > u1 (1 day)
-    expect(top[0].streak).toBe(3);
+    expect(top.map((r) => r.userId)).toEqual(['talker', 'streaker']); // 5 msgs > 3 msgs
+    expect(top[0].count).toBe(5);
+    expect(top[1].streak).toBe(3); // streak is still reported, just not the sort key
   });
 
-  it('a DEAD streak (3+ days without speaking) shows as 0 and sinks', () => {
-    bumpTalk(db, G, 'morto', d(2026, 7, 1)); // streak 1, but long ago
-    bumpTalk(db, G, 'vivo', d(2026, 7, 10)); // streak 1, today
+  it('a DEAD streak (3+ days without speaking) still shows as 0 (decoration stays live)', () => {
+    bumpTalk(db, G, 'morto', d(2026, 7, 1)); // count 1, streak dead
+    bumpTalk(db, G, 'vivo', d(2026, 7, 10)); // count 1, streak 1
     const top = getTopSpeakers(db, G, d(2026, 7, 10));
-    expect(top[0].userId).toBe('vivo');
     const dead = top.find((r) => r.userId === 'morto');
-    expect(dead?.streak).toBe(0);
+    expect(dead?.streak).toBe(0); // live streak still computed for display
+    // Equal counts (1 vs 1) -> tiebreak by streak -> vivo (1) above morto (0).
+    expect(top.map((r) => r.userId)).toEqual(['vivo', 'morto']);
   });
 
-  it('streak tie -> broken by message count', () => {
-    bumpTalk(db, G, 'u1', d(2026, 7, 10)); // streak 1, count 1
-    bumpTalk(db, G, 'u2', d(2026, 7, 10)); // streak 1, count 2
+  it('count TIE -> broken by streak DAYS (more consecutive days wins)', () => {
+    bumpTalk(db, G, 'u1', d(2026, 7, 10)); // count 1, streak 1
+    bumpTalk(db, G, 'u2', d(2026, 7, 9)); // count 2 over 2 days, streak 2
     bumpTalk(db, G, 'u2', d(2026, 7, 10));
+    // Give u1 one more so counts tie at 2, and u2 keeps the higher streak.
+    bumpTalk(db, G, 'u1', d(2026, 7, 10)); // count 2, streak 1
     const top = getTopSpeakers(db, G, d(2026, 7, 10));
-    expect(top.map((r) => r.userId)).toEqual(['u2', 'u1']);
+    expect(top.map((r) => r.userId)).toEqual(['u2', 'u1']); // both count 2 -> u2 streak 2 wins
   });
 });
 

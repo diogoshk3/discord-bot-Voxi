@@ -111,11 +111,12 @@ export function bumpTalk(
 }
 
 /**
- * Top `limit` of this guild's STREAK leaderboard: ranked by DAYS of LIVE streak
- * (`effectiveStreak` at `now`) desc, tie-broken by message count desc. A DEAD streak
- * (3+ days without speaking) counts as 0 and sinks — the leaderboard shows the CURRENT
- * standing, not stale values. Fetches all rows of the guild and sorts in JS (the live streak
- * depends on `now`, can't be sorted in SQL). `now` injectable for tests.
+ * Top `limit` of this guild's leaderboard: ranked by MESSAGE COUNT (`spoken_count`) desc,
+ * tie-broken by DAYS of LIVE streak (`effectiveStreak` at `now`) desc. The count is the
+ * headline ("who talks the most"); the streak is kept as decoration (the 🔥) and the
+ * tiebreaker. The live streak is still computed per row so the UI can show it and a DEAD
+ * streak (3+ days silent) renders as 0. Fetches all rows of the guild and sorts in JS (the
+ * live streak depends on `now`, can't be sorted in SQL). `now` injectable for tests.
  */
 export function getTopSpeakers(
   db: Database.Database,
@@ -136,6 +137,6 @@ export function getTopSpeakers(
       streak: effectiveStreak(r.last_date, r.streak, now),
       bestStreak: r.best_streak,
     }))
-    .sort((a, b) => b.streak - a.streak || b.count - a.count)
+    .sort((a, b) => b.count - a.count || b.streak - a.streak)
     .slice(0, limit);
 }

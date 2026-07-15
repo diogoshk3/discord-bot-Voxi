@@ -8,6 +8,7 @@ import type { AloneWatcher } from '../voice/aloneWatcher';
 import type { GreetCooldown } from '../voice/greetCooldown';
 import type { LeaderboardPoster } from '../leaderboard/randomPost';
 import type { DuplicateTracker } from '../moderation/antispam';
+import type { CountGate } from '../moderation/countGate';
 import type { GameManager } from '../games/manager';
 import { invalidateGuild } from '../store/cache';
 import { forgetVoicePresence } from '../store/voicePresence';
@@ -50,6 +51,14 @@ export interface BotDeps {
    * repetition heuristic applies). See src/moderation/antispam.
    */
   dupTracker?: DuplicateTracker;
+  /**
+   * Anti-spam gate for the /topspeakers message COUNT (NOT for reading). Decides whether a
+   * read message counts toward the speaker stats — throttles bursts, drops repetitions and
+   * caps per minute so a flood cannot inflate the leaderboard. ALWAYS injected in production;
+   * optional so old tests that don't inject it count every read message (previous behavior).
+   * See src/moderation/countGate.
+   */
+  countGate?: CountGate;
   /**
    * Manager for the minigames (/game). One active game per guild. Optional (old tests
    * don't inject it; without it there are no games, just normal TTS). See src/games.

@@ -384,12 +384,20 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     deps.lastSpeaker?.set(message.guildId, message.author.id);
 
     // "Chatterboxes" (/topspeakers): counts this read message + updates the author's daily
-    // streak. Only here (the message was actually read). Best-effort — must never prevent speech.
+    // streak. Only here (the message was actually read) AND only if the anti-spam count gate
+    // lets it through — bursts/repetition must not inflate the message-ranked leaderboard. A
+    // gated-out message is still SPOKEN (this only skips the count + the streak 🔥 notice).
+    // Without the injected gate (old tests) everything counts, as before. Best-effort — must
+    // never prevent speech.
     let talk: TalkBump | null = null;
-    try {
-      talk = bumpTalk(deps.db, message.guildId, message.author.id, new Date());
-    } catch (err) {
-      log.warn('[messageHandler] failed to update speaker statistics (ignored)', err);
+    const countsForStats =
+      deps.countGate?.shouldCount(message.guildId, message.author.id, cleaned, Date.now()) ?? true;
+    if (countsForStats) {
+      try {
+        talk = bumpTalk(deps.db, message.guildId, message.author.id, new Date());
+      } catch (err) {
+        log.warn('[messageHandler] failed to update speaker statistics (ignored)', err);
+      }
     }
 
     // Startup silence: the bot only starts speaking `messageLeadMs` after the message

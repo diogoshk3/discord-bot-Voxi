@@ -17,7 +17,7 @@ export interface ServerStats {
   activeSpeakers: number;
   /** Highest streak of LIVE days in the server right now (0 if nobody). */
   topStreak: number;
-  /** Top N talkers (by live streak, tiebreak by count). */
+  /** Top N talkers (by message count, tiebreak by live streak). */
   topSpeakers: TalkRow[];
   /** Total minigame points (sum of points). */
   gamePoints: number;
@@ -51,7 +51,9 @@ export function buildServerStats(
   return {
     totalMessages: speakers.reduce((a, s) => a + s.count, 0),
     activeSpeakers: speakers.length,
-    topStreak: speakers.length ? speakers[0].streak : 0, // sorted by streak desc
+    // `speakers` is now sorted by COUNT, so speakers[0] is NOT the top-streak person.
+    // Compute the highest live streak across everyone explicitly.
+    topStreak: speakers.reduce((m, s) => Math.max(m, s.streak), 0),
     topSpeakers: speakers.slice(0, limit),
     gamePoints: players.reduce((a, p) => a + p.points, 0),
     gameWins: players.reduce((a, p) => a + p.wins, 0),

@@ -27,6 +27,7 @@ import { AloneWatcher } from './voice/aloneWatcher';
 import { GreetCooldown } from './voice/greetCooldown';
 import { LeaderboardPoster } from './leaderboard/randomPost';
 import { DuplicateTracker } from './moderation/antispam';
+import { CountGate } from './moderation/countGate';
 import type { BotDeps } from './bot/deps';
 import { removePlayer } from './bot/deps';
 import { GameManager } from './games/manager';
@@ -190,6 +191,7 @@ async function main(): Promise<void> {
     leaderboardPoster: new LeaderboardPoster(),
     // Duplicate tracker for the reading anti-spam (opt-in per guild).
     dupTracker: new DuplicateTracker(),
+    countGate: new CountGate(),
     // REAL clone availability (includes venv auto-detection), so the UI does not say
     // "engine not installed" when the sidecar was detected without CLONE_CMD in the env.
     cloneAvailable: cloneEngine.available,
