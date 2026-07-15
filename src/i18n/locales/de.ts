@@ -169,4 +169,491 @@ export default {
     '1) Tritt einem Sprachkanal bei\n2) Führe /join aus, damit ich zu dir komme\n3) Schreib im Textkanal (oder nutze /tts) und ich lese es laut vor\nVollständige Befehlsliste: /help',
   'welcome.footer': 'Vozen — tippen, hören.',
   'welcome.tagline': 'Natürliche neuronale Stimme — für immer kostenlos, keine Bezahlschranke.',
+  'stt.guildOnly': 'Die Transkription funktioniert nur innerhalb eines Servers.',
+  'stt.noManage':
+    'Du brauchst die Berechtigung **Server verwalten**, um die Transkription zu starten oder zu stoppen.',
+  'stt.notPremium':
+    '🎙️ Live-Transkription ist eine **Premium**-Funktion. Sieh dir `/premium info` an, um sie für diesen Server freizuschalten.',
+  'stt.unavailable':
+    'Die Transkription ist auf dieser Instanz nicht verfügbar (die Speech-to-Text-Engine ist nicht installiert).',
+  'stt.notInVoice':
+    'Ich bin in keinem Sprachkanal — tritt einem bei und führe zuerst `/join` aus, dann starte die Transkription.',
+  'stt.alreadyRunning':
+    'Die Transkription läuft auf diesem Server bereits. Nutze zuerst `/transcribe stop`.',
+  'stt.atCapacity':
+    'Gerade laufen zu viele Transkriptionen über alle Server hinweg. Bitte versuche es in Kürze erneut.',
+  'stt.noChannel':
+    'Ich kann in diesem Kanal keine Transkripte posten. Versuche den Befehl in einem normalen Textkanal auszuführen.',
+  'stt.started':
+    '✅ Transkription gestartet. Jeder, der in der Ankündigung auf **Zustimmen** drückt, wird in diesen Kanal transkribiert.',
+  'stt.startFailed':
+    'Die Transkription konnte nicht gestartet werden (das Posten der Ankündigung ist fehlgeschlagen). Ich habe alles rückgängig gemacht — es wird nichts aufgezeichnet. Bitte versuche es erneut.',
+  'stt.announceStart':
+    '🎙️ **Live-Transkription ist in diesem Kanal AN.** Nur wer zustimmt, wird transkribiert — drücke den Button unten, um zu erlauben, dass deine Sprache hier mitgeschrieben wird. Du kannst deine Zustimmung jederzeit mit `/transcribe revoke` zurückziehen.',
+  'stt.consentBtn': 'Der Transkription zustimmen',
+  'stt.consentThanks':
+    '✅ Danke — deine Sprache wird auf diesem Server jetzt transkribiert. Zieh die Zustimmung jederzeit mit `/transcribe revoke` zurück.',
+  'stt.stopped': '🛑 Transkription gestoppt.',
+  'stt.notRunning': 'Die Transkription läuft auf diesem Server nicht.',
+  'stt.announceStop': '🛑 **Live-Transkription ist jetzt AUS.** Ich höre nicht mehr zu.',
+  'stt.revoked':
+    '✅ Zustimmung zurückgezogen — du wirst auf diesem Server nicht mehr transkribiert. (Bereits gepostete Nachrichten bleiben; lösche sie in Discord, wenn du möchtest.)',
+  'stt.revokeNone':
+    'Du hattest der Transkription auf diesem Server nicht zugestimmt, daher gab es nichts zurückzuziehen.',
+  'privacy.eraseConfirm':
+    '⚠️ Dies löscht dauerhaft **alle** deine Vozen-Daten auf allen Servern: Stimmeinstellungen, gesprochener Spitzname, persönliche Abkürzungen und Aussprachen, gespeicherter Geburtstag, Spielpunkte, Sprechstatistiken, Opt-out und jeden Stimmklon (einschließlich Aufnahmen deiner Stimme, die andere gemacht haben). **Das kann nicht rückgängig gemacht werden.** Bist du sicher?',
+  'privacy.erasePremiumNote':
+    '_Hinweis: Dein bezahltes Premium/Plus und dessen Kaufhistorie bleiben erhalten — sie gehören dir und den gesetzlich vorgeschriebenen Finanzunterlagen. Um Premium zu beenden, lass es auslaufen oder kontaktiere den Support._',
+  'privacy.eraseYes': 'Alles löschen',
+  'privacy.eraseNo': 'Abbrechen',
+  'privacy.eraseCancelled': 'Abgebrochen — es wurde nichts gelöscht.',
+  'privacy.eraseDone': '✅ Fertig. Alle deine persönlichen Daten wurden dauerhaft gelöscht.',
+  'shutup.notInVoice':
+    'Ich bin noch in keinem Sprachkanal — tritt einem bei und führe zuerst /join aus.',
+  'shutup.nothing': 'Gerade wird nichts abgespielt.',
+  'shutup.done': '🤐 Okay, ich höre auf — habe alles in der Warteschlange geleert.',
+  'voice.detection.on':
+    '✅ Automatische Spracherkennung ist AN: Jede Nachricht wird in einer Stimme für ihre erkannte Sprache vorgelesen (der Sprecher kann wechseln). Schalte sie mit `/voice detection active:false` aus.',
+  'voice.detection.off':
+    '✅ Automatische Spracherkennung ist AUS: Deine eine feste Stimme liest alles vor, sodass du immer gleich klingst.',
+  'voice.nickname.set': '✅ Vozen nennt dich jetzt laut **{name}**.',
+  'voice.nickname.cleared':
+    '✅ Gesprochener Spitzname gelöscht — Vozen verwendet deinen Servernamen.',
+  'voice.nickname.invalid':
+    'Dieser Name hat nichts Lesbares, um es laut auszusprechen. Versuche es mit Buchstaben oder Zahlen.',
+  'voice.effect.set':
+    '✅ Stimmeffekt auf **{effect}** gesetzt — deine Nachrichten werden jetzt mit diesem Effekt abgespielt. Nutze `/voice effect none`, um ihn auszuschalten.',
+  'voice.effect.cleared': '✅ Stimmeffekt entfernt — wieder klare Stimme.',
+  'clone.locked':
+    '🔒 Stimmklonen ist eine Premium-Funktion (es kostet echte Rechenleistung). Siehe `/premium`.',
+  'clone.notInVoice':
+    'Du musst **mit mir** im Sprachkanal sein, um aufzunehmen. Nutze zuerst `/join`.',
+  'clone.alreadyRecording':
+    'Du nimmst bereits eine Probe auf — beende sie (oder drücke **⏹️ Stopp**), bevor du eine neue startest.',
+  'clone.recording':
+    '🎙️ **Nehme deine Stimme auf** — sprich weiter, bis es von selbst stoppt (~{target}s Sprache, Pausen zählen nicht), oder drücke **⏹️ Stopp**, wenn du fertig bist. Ich behalte nur DEIN Audio.',
+  'clone.recordingOther':
+    '🎙️ **Nehme {who} auf** — die Person sollte weitersprechen, bis es von selbst stoppt (~{target}s Sprache, Pausen zählen nicht), oder **⏹️ Stopp** drücken, um zu beenden.',
+  'clone.recordingProgress': '🔴 Nehme auf… **{got}s / {target}s** Sprache erfasst. Weiter so!',
+  'clone.consentRequest':
+    '🎙️ {invoker} möchte **deine Stimme** aufnehmen ({target}s Sprache), um einen Stimmklon zu erstellen, mit dem gesprochen werden kann. Erlaubst du es? *(läuft in 60s ab)*',
+  'clone.consentAllow': 'Erlauben',
+  'clone.consentDeny': 'Nein',
+  'clone.consentNotYou': 'Nur die aufgenommene Person kann darauf antworten.',
+  'clone.consentGranted': '✅ {who} hat zugestimmt — die Aufnahme beginnt.',
+  'clone.consentRefused':
+    '✖️ {who} hat abgelehnt. Aufnahme abgebrochen — es wurde kein Audio erfasst.',
+  'clone.consentTimeout': '⌛ {who} hat nicht rechtzeitig geantwortet. Aufnahme abgebrochen.',
+  'clone.consentWaiting': '⏳ Warte darauf, dass {who} im Kanal zustimmt…',
+  'clone.targetNotInVoice':
+    '{who} muss **mit mir** im Sprachkanal sein, um aufgenommen zu werden. Bitte die Person, zuerst `/join` auszuführen.',
+  'clone.pickFromList':
+    'Wähle eine Person aus der Vorschlagsliste (nur wer in der Call ist, kann aufgenommen werden). Lass es leer, um dich selbst aufzunehmen.',
+  'clone.stopBtn': 'Stopp',
+  'clone.stopNotYours': 'Nur wer aufnimmt, kann die Aufnahme stoppen.',
+  'clone.tooShort':
+    'Ich habe nur {seconds}s Sprache erfasst — ich brauche mindestens ~{min}s (Ziel waren {target}s), um gut zu klonen. Versuche es erneut mit `/voice clone record`.',
+  'clone.saved':
+    '✅ Stimmprobe gespeichert ({seconds}s Sprache). Aktiviere sie mit `/voice clone use active:true`. Nur DU kannst deinen Klon nutzen; lösche ihn jederzeit mit `/voice clone delete`.',
+  'clone.savedOther':
+    '✅ {seconds}s von {who}s Stimme als DEIN Klon gespeichert. Aktiviere ihn mit `/voice clone use active:true`; lösche ihn jederzeit mit `/voice clone delete`.',
+  'clone.failed':
+    'Die Aufnahme ist fehlgeschlagen — versuche es erneut. Wenn es weiter passiert, tritt dem Sprachkanal erneut bei.',
+  'clone.none':
+    'Du hast noch keinen Stimmklon. Nimm einen mit `/voice clone record` auf (Premium).',
+  'clone.deleted':
+    '🗑️ Stimmklon gelöscht — Probe und Zustimmungseintrag entfernt, keine Spur behalten.',
+  'clone.revoked':
+    '🛑 Zustimmung zurückgezogen — {count} Stimmklon(e) entfernt, die andere von deiner Stimme erstellt hatten.',
+  'clone.status': '🧬 Stimmklon: Probe aufgenommen am {date} · aktuell **{state}**.',
+  'clone.stateOn': 'AN',
+  'clone.stateOff': 'aus',
+  'clone.noSample': 'Du brauchst zuerst eine Probe — nimm eine mit `/voice clone record` auf.',
+  'clone.enabled':
+    '✅ Deine Nachrichten werden jetzt mit **deiner geklonten Stimme** vorgelesen. Schalte sie jederzeit mit `/voice clone use active:false` aus.',
+  'clone.enabledNoEngine':
+    '✅ Gespeichert — aber die Klon-Engine ist auf dieser Instanz noch nicht installiert, daher hörst du vorerst die normale Stimme.',
+  'clone.disabled': '✅ Geklonte Stimme aus — zurück zu deiner normalen Stimme.',
+  'voice.effect.locked':
+    '🔒 **{effect}** ist ein Premium-Effekt. Kostenlose Effekte: 🤖 Robot und 🔊 Echo. Schalte alle mit Vozen Premium frei — siehe `/premium`.',
+  'voice.engine.gcloudLocked':
+    '🔒 **💎 Google HD** ist eine Premium-Stimm-Engine. Schalte sie mit Vozen Plus (persönlich) oder Vozen Premium (Server) frei — siehe `/premium`. In der Zwischenzeit bleibt deine Stimme auf der kostenlosen lokalen Engine.',
+  'rizz.playing': '😏 Lass ein bisschen Rizz raus…\n> {line}',
+  'rizz.unknownLang': 'Diese Sprache kenne ich nicht. Wähle eine aus der Liste.',
+  'rizz.locked':
+    '🔒 **/rizz** ist ein Premium-Extra. Schalte es mit Vozen Plus (du) oder Premium (dieser Server) frei. Siehe `/premium`.',
+  'sound.playing': '🔊 Spiele **{name}**…',
+  'sound.unknown': 'Diesen Sound habe ich nicht. Führe `/sound` aus, um die Liste zu sehen.',
+  'sound.list':
+    '🔊 **Sounds:** {sounds}\nSpiele einen mit `/sound name:<sound>` ab (ich muss in deinem Sprachkanal sein).',
+  'sound.disabled':
+    '🔇 Das Soundboard ist auf diesem Server **aus**. Ein Admin kann es mit `/config soundboard` aktivieren.',
+  'fun.eightball': '🎱 **{question}**\n> {answer}',
+  'fun.fortune': '🥠 {text}',
+  'fun.fact': '💡 {text}',
+  'fun.wyr': '🤔 {text}',
+  'birthday.set':
+    '🎂 Geburtstag gespeichert: **{day}/{month}**. Ich wünsche dir alles Gute zum Geburtstag, wenn du an dem Tag einem Sprachkanal beitrittst!',
+  'birthday.invalid': 'Das ist kein echtes Datum. Überprüfe Tag und Monat.',
+  'birthday.cleared': '🎂 Geburtstag entfernt.',
+  'birthday.show': '🎂 Dein Geburtstag ist auf **{day}/{month}** gesetzt.',
+  'birthday.none': 'Du hast noch keinen Geburtstag festgelegt. Nutze `/birthday set`.',
+  'topspeakers.title':
+    '🗣️ **Top-Sprecher** — wen ich auf diesem Server am meisten vorgelesen habe:',
+  'topspeakers.empty':
+    'Ich habe noch niemandes Nachrichten vorgelesen. Richte einen Vorlese-Kanal mit `/setup` ein!',
+  'topspeakers.line': '{rank}. <@{user}> — **{count}** Nachrichten · 🔥 {streak}-Tage-Streak',
+  'serverstats.title': '📊 **Serverstatistiken**',
+  'serverstats.empty':
+    'Noch keine Statistiken — ich habe hier keine Nachrichten vorgelesen und keine Spiele durchgeführt. Richte es mit `/setup` ein!',
+  'serverstats.messages': '🗣️ **{total}** Nachrichten vorgelesen · **{speakers}** Personen',
+  'serverstats.topTalkers': '**Top-Plaudertaschen:**',
+  'serverstats.talkerLine': '{rank}. <@{user}> — {count} Nachr. · 🔥 {streak}T',
+  'serverstats.streak': '🔥 Längster aktiver Streak: **{days}** Tage',
+  'serverstats.games': '🎮 **{points}** Spielpunkte · **{wins}** Siege · **{players}** Spieler',
+  'serverstats.topPlayers': '**Top-Spieler:**',
+  'serverstats.playerLine': '{rank}. <@{user}> — {points} Pkt · {wins} Siege',
+  'serverstats.upsell':
+    '🔒 Das ist die kostenlose Vorschau. **Premium** schaltet Streaks, Spielstatistiken und die vollständige Top 5 frei — siehe `/premium`.',
+  'streak.day':
+    '🔥 <@{user}> hat einen **{n}-Tage**-Streak! Sprich weiter, um ihn am Leben zu halten.',
+  'leaderboard.autoTitle': '🏆 Top-Plaudertaschen auf diesem Server',
+  'premium.title': '💎 **Vozen-Premium-Status**',
+  'premium.lineServerActive': '🖥️ **Server:** Premium bis {date}',
+  'premium.lineServerFree': '🖥️ **Server:** Kostenloser Plan',
+  'premium.lineUserActive': '👤 **Du (Plus):** aktiv bis {date}',
+  'premium.lineUserFree': '👤 **Du (Plus):** nicht aktiv',
+  'premium.getHint':
+    'Alles, was du heute nutzt, bleibt kostenlos. Premium fügt alle 8 Stimmeffekte, Stimmklonen, 24/7 in der Call, 50 persönliche Aussprachen, /rizz und die Premium-Spiele hinzu. Support: https://ko-fi.com/',
+  'premium.linePass':
+    '🎟️ **Dein Premium-Pass:** {used}/{total} Lizenzen in Verwendung · läuft ab {date}',
+  'premium.passServers': '↳ In Verwendung auf: {servers}',
+  'premium.pitch':
+    'Du hast noch kein Premium. **Vozen Premium** (€3,99/Monat für 3 Server oder €7,99/Monat für 8) schaltet für den ganzen Server frei: alle 8 Stimmeffekte, Stimmklonen, 24/7 in der Call, 50 persönliche Aussprachen (statt 3), den Befehl /rizz und die Premium-Spiele (Wortkette, Wordle, Schach). **Vozen Plus** (€1,99/Monat) gibt dir diese Vorteile persönlich, auf jedem Server.',
+  'premium.buyHint':
+    '▶ **Premium holen:** {link}\nNach dem Kauf führe `/premium activate` auf dem gewünschten Server aus.',
+  'premium.confirmActivate':
+    '**1 deiner {total} Premium-Lizenzen** auf **diesem Server** verwenden? Du hast gerade **{used}** in Verwendung. Du kannst sie später mit `/premium deactivate` freigeben — die Uhr des Passes läuft so oder so weiter.',
+  'premium.confirmYes': '💎 Lizenz verwenden',
+  'premium.confirmNo': 'Abbrechen',
+  'premium.activateOk':
+    '✅ Premium ist jetzt auf **diesem Server** aktiv bis {date}. Lizenzen: **{used}/{total}** in Verwendung.',
+  'premium.activateCancelled': 'Abgebrochen — es wurde keine Lizenz verwendet.',
+  'premium.activateTimeout': 'Zeitüberschreitung — es wurde keine Lizenz verwendet.',
+  'premium.noPass':
+    'Du hast keinen aktiven Premium-Pass. Hol dir einen und er landet auf deinem Konto — führe dann hier `/premium activate` aus.\n▶ {link}',
+  'premium.alreadyActive': 'Dieser Server hat bereits eine deiner Premium-Lizenzen. Nichts zu tun.',
+  'premium.noSeats':
+    'Alle deine **{total}** Premium-Lizenzen sind in Verwendung ({servers}). Gib dort eine mit `/premium deactivate` frei und versuche es dann hier erneut.',
+  'premium.needManageGuild':
+    'Premium zu aktivieren betrifft den ganzen Server — nur Mitglieder mit **Server verwalten** können das. Frag einen Admin.',
+  'premium.deactivateOk':
+    '✅ Die Premium-Lizenz dieses Servers freigegeben. Verwende sie mit `/premium activate` auf einem anderen Server.',
+  'premium.deactivateNone': 'Dieser Server hat keine Premium-Lizenz von dir zum Freigeben.',
+  'premium.thisServer': 'dieser Server',
+  'grant.denied': '⛔ Dieser Befehl ist nur für den Bot-Besitzer.',
+  'grant.okPremium':
+    '✅ <@{user}> einen **Premium-Pass** ({seats} Lizenzen) für **{days}** Tage gewährt — läuft ab {date}. Aktivierung mit `/premium activate`.',
+  'grant.okPlus': '✅ <@{user}> **Vozen Plus** für **{days}** Tage gewährt — läuft ab {date}.',
+  'gencode.done':
+    '✅ **{count}** {plan}-Code(s) generiert, je **{days}** Tage. Teile sie privat:\n{list}',
+  'redeem.okPlus':
+    '🎁 Eingelöst! Du hast **Vozen Plus** für **{days}** Tage erhalten — läuft ab {date}.',
+  'redeem.okPremium':
+    '🎁 Eingelöst! Du hast einen **Premium-Pass** ({seats} Lizenzen) für **{days}** Tage erhalten — läuft ab {date}. Aktiviere ihn auf deinem Server mit `/premium activate`.',
+  'redeem.notFound': '❌ Diesen Code gibt es nicht. Überprüfe ihn und versuche es erneut.',
+  'redeem.used': '❌ Dieser Code wurde bereits eingelöst.',
+  'redeem.expired': '❌ Dieser Code ist abgelaufen.',
+  'config.blockLimit':
+    'Dieser Server hat bereits die maximale Anzahl von {max} blockierten Wörtern. Entferne eines, bevor du ein weiteres hinzufügst.',
+  'config.xsaidOn':
+    'Vozen kündigt jetzt vor jeder Nachricht an, **wer gesprochen hat** (z. B. „Alex sagte hallo“). Schalte es mit `/config xsaid active:false` aus.',
+  'config.xsaidOff':
+    'Vozen kündigt **nicht mehr** an, wer gesprochen hat — es liest nur die Nachricht.',
+  'config.autojoinOn':
+    '✅ Auto-Beitritt **an** — Vozen tritt deinem Sprachkanal bei, wenn du im TTS-Kanal schreibst.',
+  'config.autojoinOff': 'Auto-Beitritt **aus** — nutze `/join`, um Vozen in die Sprache zu holen.',
+  'config.stayOn':
+    '✅ 24/7 in der Call **an** — Vozen bleibt im Sprachkanal, auch wenn er sich leert, und kommt nach Neustarts zurück. 💎 Braucht Premium, um wirksam zu werden (kaufe oder `/redeem` einen Code, dann `/premium activate`).',
+  'config.stayOff':
+    '24/7 in der Call **aus** — Vozen verlässt den Sprachkanal, wenn er sich leert (Standard).',
+  'config.readBotsOn': '✅ Vozen liest jetzt auch Nachrichten von **anderen Bots und Webhooks**.',
+  'config.readBotsOff':
+    'Vozen **ignoriert** andere Bots und Webhooks (nur echte Personen werden vorgelesen).',
+  'config.textInVoiceOn': '✅ Vozen liest auch den **Textchat innerhalb seines Sprachkanals** vor.',
+  'config.textInVoiceOff':
+    'Vozen liest den Textchat des Sprachkanals **nicht** vor (nur den TTS-Kanal).',
+  'config.antispamOn':
+    '✅ Anti-Spam **an** — Vozen liest gespammte Nachrichten nicht vor (massenhafte Wortwiederholung oder dieselbe große Nachricht immer wieder gepostet).',
+  'config.antispamOff': 'Anti-Spam **aus** — Vozen liest jede Nachricht wie gewohnt vor.',
+  'config.streaksOn':
+    '✅ Streak-Hinweise **an** — Vozen zeigt eine 🔥 Tages-Streak-Nachricht, wenn jede Person zum ersten Mal am Tag spricht.',
+  'config.streaksOff':
+    'Streak-Hinweise **aus** — Vozen zählt Streaks weiterhin (siehe `/topspeakers`), bleibt aber still darüber.',
+  'config.soundboardOn': 'Soundboard **an** — jeder kann mit `/sound` Clips abspielen.',
+  'config.soundboardOff': 'Soundboard **aus** — `/sound` ist auf diesem Server deaktiviert.',
+  'config.greetOn': '✅ Ich begrüße Leute mit Namen, wenn sie dem Sprachkanal beitreten.',
+  'config.greetOff': '🔇 Ich begrüße Leute **nicht**, wenn sie dem Sprachkanal beitreten.',
+  'config.greetLangSet': '✅ Sprache der Beitrittsbegrüßung auf **{language}** gesetzt.',
+  'config.showXsaid': 'Sprecher ankündigen (xsaid): {value}',
+  'config.showAutojoin': 'Auto-Beitritt: {value}',
+  'config.showReadBots': 'Bots/Webhooks vorlesen: {value}',
+  'config.showTextInVoice': 'Text-in-Sprache: {value}',
+  'config.showAntispam': 'Anti-Spam: {value}',
+  'config.showSoundboard': 'Soundboard (/sound): {value}',
+  'config.showGreet': 'Bei Beitritt begrüßen: {value} ({language})',
+  'stats.synthLatency': 'Synthese-Latenz: p50 {p50}ms / p95 {p95}ms ({count} Messwerte)',
+  'speak.emptyMessage': 'Diese Nachricht hat keinen Text zum Vorlesen.',
+  'uptime.text': '🟢 Vozen ist seit **{uptime}** online.',
+  'botstats.title': '📊 **Vozen — Statistiken**',
+  'botstats.servers': 'Server: **{value}**',
+  'botstats.voiceSessions': 'Sprachsitzungen jetzt: **{value}**',
+  'botstats.messagesSpoken': 'Gesprochene Nachrichten: **{value}**',
+  'botstats.uptime': 'Betriebszeit: **{value}**',
+  'invite.button': 'Vozen hinzufügen',
+  'vote.button': 'Auf top.gg abstimmen',
+  'vote.upsell':
+    '🗳️ Kein Plus? Stimme für Vozen auf top.gg ab → **24 Std. Plus gratis** (1× im Monat): {url}',
+  'vote.cooldownStatus':
+    '🗳️ Du hast deine Abstimmungsbelohnung schon abgeholt — stimme erneut für weitere **24 Std. Plus** {date}.',
+  'help.support': '🛟 Brauchst du Hilfe oder willst ein Problem melden? {url}',
+  'help.source': '📄 Open Source (AGPL-3.0) — hol dir den exakten Quellcode, der hier läuft: {url}',
+  'game.start.needVoice':
+    'Das ist ein **Sprachspiel** — spring in einen Sprachkanal und führe zuerst /join aus, dann starte es.',
+  'game.start.alreadyActive':
+    'In <#{channel}> läuft bereits ein Spiel. Beende es (oder nutze `/game stop`), bevor du ein weiteres startest.',
+  'game.start.premiumLocked':
+    '🔒 **{game}** ist ein Premium-Spiel (es kostet echte Rechenleistung). Siehe `/premium`.',
+  'game.start.started': '🎮 Starte **{game}**! Achte auf den Kanal — viel Glück!',
+  'game.start.startedThread':
+    '🎮 **{game}** wurde in <#{channel}> gestartet — mach dort mit! Der Thread löscht sich selbst, wenn das Spiel endet.',
+  'game.thread.winner': '🏆 {winner} hat das Spiel gewonnen!',
+  'game.thread.ended': '🎮 Das Spiel ist beendet.',
+  'game.unknownGame': 'Dieses Spiel kenne ich nicht. Wähle eines aus der Liste.',
+  'game.stop.ok': '🛑 Das aktuelle Spiel gestoppt.',
+  'game.stop.none': 'Gerade läuft kein Spiel.',
+  'game.list.title': '🎮 **Spiele** — starte eines mit `/game play`:',
+  'game.list.line': '• **{name}** — {desc}',
+  'game.leaderboard.title': '🏆 **Bestenliste** — die besten Spieler auf diesem Server:',
+  'game.leaderboard.empty': 'Es wurde noch nichts gespielt. Sei der Erste — `/game play`!',
+  'game.leaderboard.line': '{rank} <@{user}> — **{points}** Pkt ({wins} Siege)',
+  'game.finish.title': '🏁 **Spiel vorbei!** Endstände:',
+  'game.finish.line': '{rank} **{user}** — {points}',
+  'game.finish.noScores': '🏁 Spiel vorbei — diesmal hat niemand gepunktet. Beim nächsten Mal!',
+  'game.finish.winnerVoice': '{user} gewinnt!',
+  'game.guessLanguage.name': 'Errate die Sprache',
+  'game.guessLanguage.desc':
+    'Ich lese einen Satz in einer zufälligen Sprache — wer sie zuerst nennt, gewinnt den Punkt.',
+  'game.guessLanguage.intro':
+    '🗣️ **Errate die Sprache** — ich lese {rounds} Sätze. Schreib, welche Sprache du hörst. Die schnellste richtige Antwort gewinnt jede Runde!',
+  'game.guessLanguage.round': '🎧 Runde {n}/{total} — hör zu…',
+  'game.guessLanguage.correct': '✅ **{user}** hat es — es war **{language}**!',
+  'game.guessLanguage.timeout': '⏱️ Zeit! Das war **{language}**.',
+  'game.guessLanguage.noLanguages':
+    'Ich habe nicht genug Stimmen installiert, um das zu spielen. Bitte einen Admin, mehr Stimmen hinzuzufügen.',
+  'game.math.name': 'Kopfrechnen',
+  'game.math.desc': 'Ich sage eine Rechnung laut — wer die Antwort zuerst tippt, gewinnt.',
+  'game.math.intro':
+    '🔢 **Kopfrechnen** — {rounds} Rechnungen. Hör zu und tippe die Antwort so schnell du kannst!',
+  'game.math.round': '🧮 Runde {n}/{total} — **{a} {op} {b} = ?**',
+  'game.math.correct': '✅ **{user}** hat es getroffen — die Antwort war **{answer}**!',
+  'game.math.timeout': '⏱️ Zeit! Die Antwort war **{answer}**.',
+  'game.math.plus': 'plus',
+  'game.math.minus': 'minus',
+  'game.math.times': 'mal',
+  'game.skipCount.name': 'Fehlende Zahl',
+  'game.skipCount.desc':
+    'Ich zähle laut, überspringe aber eine Zahl — wer sie zuerst erwischt, gewinnt.',
+  'game.skipCount.intro':
+    '🔢 **Fehlende Zahl** — ich zähle, aber ich überspringe eine. Tippe die fehlende Zahl! ({rounds} Runden)',
+  'game.skipCount.round': '👂 Runde {n}/{total} — welche Zahl habe ich übersprungen?',
+  'game.skipCount.correct': '✅ **{user}** hat es erwischt — ich habe **{answer}** übersprungen!',
+  'game.skipCount.timeout': '⏱️ Zeit! Ich habe **{answer}** übersprungen.',
+  'game.spelling.name': 'Buchstabierwettbewerb',
+  'game.spelling.desc': 'Ich sage ein Wort — wer es zuerst richtig buchstabiert, gewinnt.',
+  'game.spelling.intro':
+    '✍️ **Buchstabierwettbewerb** — ich sage {rounds} Wörter. Tippe jedes richtig geschrieben!',
+  'game.spelling.round': '🗣️ Runde {n}/{total} — schreib das Wort, das ich sage…',
+  'game.spelling.correct': '✅ **{user}** hat **{word}** richtig geschrieben!',
+  'game.spelling.timeout': '⏱️ Zeit! Das Wort war **{word}**.',
+  'game.spelling.empty': 'Ich habe noch keine Wortliste für die Stimmsprache dieses Servers.',
+  'game.spellOut.name': 'Buchstaben-Rätsel',
+  'game.spellOut.desc':
+    'Ich buchstabiere ein Wort Buchstabe für Buchstabe — wer das ganze Wort zuerst schreibt, gewinnt.',
+  'game.spellOut.intro':
+    '🔡 **Buchstaben-Rätsel** — ich buchstabiere {rounds} Wörter Buchstabe für Buchstabe. Tippe das vollständige Wort!',
+  'game.spellOut.round': '🔤 Runde {n}/{total} — hör auf die Buchstaben…',
+  'game.spellOut.correct': '✅ **{user}** hat es — **{word}**!',
+  'game.spellOut.timeout': '⏱️ Zeit! Es buchstabierte **{word}**.',
+  'game.fastSpeech.name': 'Schnellsprech',
+  'game.fastSpeech.desc':
+    'Ich lese einen Satz superschnell — wer zuerst tippt, was ich gesagt habe, gewinnt.',
+  'game.fastSpeech.intro':
+    '💨 **Schnellsprech** — {rounds} Sätze in irrsinnigem Tempo. Tippe, was du hörst!',
+  'game.fastSpeech.round': '⚡ Runde {n}/{total} — jetzt kommt es, schnell!',
+  'game.fastSpeech.correct': '✅ **{user}** hat es entschlüsselt: „{phrase}“',
+  'game.fastSpeech.timeout': '⏱️ Zeit! Es war: „{phrase}“',
+  'game.fastSpeech.empty': 'Ich habe noch keine Sätze für die Stimmsprache dieses Servers.',
+  'game.accentSwap.name': 'Komischer Akzent',
+  'game.accentSwap.desc':
+    'Ich sage ein Wort mit einem fremden Akzent — wer es zuerst schreibt, gewinnt.',
+  'game.accentSwap.intro':
+    '🎭 **Komischer Akzent** — {rounds} Wörter mit dem falschen Akzent gesprochen. Tippe das Wort!',
+  'game.accentSwap.round': '🌍 Runde {n}/{total} — welches Wort versuche ich zu sagen?',
+  'game.accentSwap.correct': '✅ **{user}** hat es — **{word}**!',
+  'game.accentSwap.timeout': '⏱️ Zeit! Das Wort war **{word}**.',
+  'game.reflexes.name': 'Reflexe',
+  'game.reflexes.desc':
+    'Ich zähle runter und rufe dann LOS — wer danach zuerst tippt, gewinnt. Nicht zu früh losspringen!',
+  'game.reflexes.intro':
+    '⚡ **Reflexe** — {rounds} Runden. Wenn ich **LOS** rufe, tippe irgendetwas so schnell du kannst. Tippst du vor LOS, ist es ein Fehlstart!',
+  'game.reflexes.ready': '🚦 Runde {n}/{total} — macht euch bereit…',
+  'game.reflexes.countdown': 'drei… zwei… eins…',
+  'game.reflexes.go': '🟢 **LOS!!!**',
+  'game.reflexes.goVoice': 'Los!',
+  'game.reflexes.tooSoon': '🔴 **{user}** war zu voreilig — zu früh!',
+  'game.reflexes.win': '⚡ **{user}** ist am schnellsten! Punkt!',
+  'game.reflexes.tooSlow': '😴 Niemand hat rechtzeitig reagiert. Weiter!',
+  'game.headsOrTails.name': 'Kopf oder Zahl',
+  'game.headsOrTails.desc':
+    'Sag die Münze voraus — tippe Kopf oder Zahl, bevor ich werfe. Wer am besten rät, gewinnt!',
+  'game.headsOrTails.intro':
+    '🪙 **Kopf oder Zahl** — {rounds} Runden. Tippe in jeder Runde `heads` (Kopf) oder `tails` (Zahl), bevor ich die Münze werfe. 1 Punkt pro richtigem Tipp!',
+  'game.headsOrTails.introVoice': 'Spielen wir Kopf oder Zahl!',
+  'game.headsOrTails.round': '🪙 Runde {n}/{total} — Kopf oder Zahl? Tippe `heads` oder `tails`!',
+  'game.headsOrTails.roundVoice': 'Kopf… oder Zahl?',
+  'game.headsOrTails.heads': 'Kopf',
+  'game.headsOrTails.tails': 'Zahl',
+  'game.headsOrTails.resultVoice': 'Es ist {side}!',
+  'game.headsOrTails.winners': 'Es ist **{side}**! Punkt für: {users}',
+  'game.headsOrTails.noWinners': 'Es ist **{side}**! Niemand hat es getippt — keine Punkte.',
+  'game.vozenSays.name': 'Vozen sagt',
+  'game.vozenSays.desc':
+    'Gehorche nur, wenn der Befehl mit „Vozen sagt“ beginnt. Fällst du auf eine Falle rein, bist du raus!',
+  'game.vozenSays.intro':
+    '🫡 **Vozen sagt** — {rounds} Befehle. Tu es NUR, wenn ich mit **„Vozen sagt“** beginne. Sonst rühr dich nicht!',
+  'game.vozenSays.prefix': 'Vozen sagt',
+  'game.vozenSays.verb': 'tippt',
+  'game.vozenSays.real': '🗣️ Runde {n}/{total} — „{command}“',
+  'game.vozenSays.trap': '🗣️ Runde {n}/{total} — „{command}“',
+  'game.vozenSays.obeyed': '✅ **{user}** hat zuerst gehorcht — Punkt!',
+  'game.vozenSays.caught': '🔴 **{user}** — ich habe nicht „Vozen sagt“ gesagt! Erwischt!',
+  'game.vozenSays.nobody': '😴 Niemand hat **{word}** rechtzeitig befolgt. Weiter!',
+  'game.vozenSays.trapCleared':
+    '😌 Es war eine Falle — gut erkannt, niemand ist auf **{word}** reingefallen.',
+  'game.roulette.name': 'Wahrheit oder Pflicht Roulette',
+  'game.roulette.desc':
+    'Ich drehe und lese eine Wahrheit-oder-Pflicht-Aufgabe laut vor. Führe es erneut aus für eine weitere.',
+  'game.roulette.header': '🎯 **Das Rad sagt…**',
+  'game.hangman.name': 'Galgenmännchen',
+  'game.hangman.desc': 'Errate das Wort Buchstabe für Buchstabe — 6 Fehler und es ist vorbei.',
+  'game.hangman.intro':
+    '🪢 **Galgenmännchen** — tippe einen Buchstaben nach dem anderen, um das Wort zu erraten. Du kannst auch das ganze Wort tippen!',
+  'game.hangman.hit': '🟢 **{user}** hat **{letter}** gefunden!',
+  'game.hangman.miss': '🔴 **{user}** — kein **{letter}**.',
+  'game.hangman.wrongLetters': 'Falsch: {letters}',
+  'game.hangman.win': '🎉 **{user}** hat es gelöst — **{word}**!',
+  'game.hangman.lose': '💀 Keine Versuche mehr! Das Wort war **{word}**.',
+  'game.hangman.idle': '🕹️ Spiel pausiert (niemand spielt). Das Wort war **{word}**.',
+  'game.wordle.name': 'Wordle',
+  'game.wordle.desc':
+    'Errate das 5-Buchstaben-Wort. 🟩 richtige Stelle, 🟨 falsche Stelle, ⬛ nicht im Wort. 💎 Premium.',
+  'game.wordle.intro':
+    '🟩 **Wordle** — tippe ein 5-Buchstaben-Wort. Ihr teilt euch {max} Versuche. 🟩 richtige Stelle · 🟨 falsche Stelle · ⬛ nicht im Wort.',
+  'game.wordle.guess': '🔤 **{user}** hat geraten — **{left}** Versuche übrig',
+  'game.wordle.inWord': '🟢 im Wort: {letters}',
+  'game.wordle.out': '🚫 raus: ~~{letters}~~',
+  'game.wordle.win': '🎉 **{user}** hat es in {n} geschafft — **{word}**!',
+  'game.wordle.lose': '💀 Keine Versuche mehr! Das Wort war **{word}**.',
+  'game.wordle.idle': '🕹️ Spiel pausiert (niemand spielt). Das Wort war **{word}**.',
+  'game.tictactoe.name': 'Tic-Tac-Toe',
+  'game.tictactoe.desc':
+    'Zwei Spieler — tippe eine Zahl von 1-9, um deine Markierung zu setzen. Drei in einer Reihe gewinnt.',
+  'game.tictactoe.intro':
+    '⭕ **Tic-Tac-Toe** — die ersten zwei Spieler, die ziehen, sind ❌ und ⭕ (❌ beginnt). Tippe eine Zahl von 1-9, um dein Feld zu spielen.',
+  'game.tictactoe.turn': 'Am Zug: **{mark}**',
+  'game.tictactoe.notYourTurn': '⏳ **{user}**, **{mark}** ist am Zug.',
+  'game.tictactoe.taken': '🚫 Feld {cell} ist belegt — wähle ein anderes.',
+  'game.tictactoe.win': '🎉 **{user}** ({mark}) gewinnt!',
+  'game.tictactoe.draw': '🤝 Unentschieden!',
+  'game.tictactoe.idle': '🕹️ Spiel beendet (niemand spielt).',
+  'game.chess.name': 'Schach',
+  'game.chess.desc':
+    'Zwei Spieler — echte Schachregeln (Schach, Rochade, Umwandlung…). Tippe einen Zug wie „e4“ oder „Nf3“. 💎 Premium.',
+  'game.chess.intro':
+    '♟️ **Schach** — die ersten zwei Spieler, die ziehen, bekommen Weiß und Schwarz (Weiß beginnt). Tippe einen Zug in algebraischer Notation („e4“, „Nf3“, „O-O“) oder als Koordinaten („e2e4“). Tippe „resign“, um aufzugeben.',
+  'game.chess.white': 'Weiß',
+  'game.chess.black': 'Schwarz',
+  'game.chess.seats': '⚪ Weiß: **{white}** · ⚫ Schwarz: **{black}**',
+  'game.chess.turn': '{move} — am Zug: **{color}**',
+  'game.chess.check': '♟️ Schach!',
+  'game.chess.notYourTurn': '⏳ **{user}**, **{color}** ist am Zug.',
+  'game.chess.illegalMove': '🚫 „{move}“ ist kein gültiger Zug — versuche es erneut.',
+  'game.chess.checkmate': '🏆 Schachmatt ({move})! **{user}** gewinnt!',
+  'game.chess.draw': '🤝 Unentschieden ({move})!',
+  'game.chess.resigned': '🏳️ **{user}** hat aufgegeben — **{winner}** gewinnt!',
+  'game.chess.idle': '🕹️ Spiel beendet (niemand spielt).',
+  'game.wordChain.name': 'Wortkette',
+  'game.wordChain.descr':
+    'Rundenbasierte Wortkette in einer Sprache: Sag ein Wort, das mit dem letzten Buchstaben des vorherigen beginnt. 2 Leben, keine Wiederholungen, die Uhr wird schneller. Wähle die Sprache mit der Option `language`. 💎 Premium.',
+  'game.wordChain.unavailable':
+    '⚠️ Wortkette ist gerade nicht in **{lang}** verfügbar (Wortliste fehlt).',
+  'game.wordChain.lobby':
+    '🔗 **Wortkette** in **{lang}**! Schreib innerhalb von **{seconds}s** irgendetwas in diesen Kanal, um mitzumachen.',
+  'game.wordChain.notEnough':
+    '😴 Nicht genug Spieler sind beigetreten (mindestens 2 nötig). Spiel abgebrochen.',
+  'game.wordChain.begin':
+    "🚀 Los geht's! Spieler: {players}. Jedes Wort muss mit dem letzten Buchstaben des vorherigen beginnen.",
+  'game.wordChain.turn':
+    '**{name}**, du bist dran! Ein **{lang}**-Wort, das mit **{letter}** beginnt — {hearts} · ⏱️ {seconds}s',
+  'game.wordChain.accepted': '✅ **{word}** — nächster Buchstabe: **{letter}**',
+  'game.wordChain.bad.letter': '↪️ Es muss mit **{letter}** beginnen.',
+  'game.wordChain.bad.short': '📏 Zu kurz — mindestens **{min}** Buchstaben.',
+  'game.wordChain.bad.repeated': '🔁 Dieses Wort wurde bereits verwendet.',
+  'game.wordChain.bad.word': '📖 Das steht nicht im Wörterbuch.',
+  'game.wordChain.bad.latin': '🔤 Nur Buchstaben von A–Z zählen.',
+  'game.wordChain.timeout': '⏰ **{name}** ist die Zeit ausgegangen! {hearts} übrig.',
+  'game.wordChain.eliminated': '💀 **{name}** ist raus!',
+  'game.wordChain.winner': '🏆 **{name}** gewinnt die Kette! ({chain} Wörter)',
+  'game.stats.none': 'Du hast noch keine Spiele gespielt. Probier `/game play`!',
+  'game.stats.body': '🎮 **Deine Statistiken** — **{points}** Punkte · **{wins}** Siege · {rank}',
+  'game.stats.rank': 'Platz **#{rank}** von {total}',
+  'game.stats.unranked': 'noch nicht platziert',
+  'game.pickPrompt': '🎮 Welches Spiel möchtest du spielen? Wähle eines:',
+  'game.pickPlaceholder': 'Wähle ein Spiel…',
+  'game.pickTimeout': '⏰ Kein Spiel gewählt — führe `/game play` erneut aus, wenn du bereit bist.',
+  'pron.listHeader': '🗣️ **Deine Aussprachen** ({count}/{limit}):',
+  'pron.listEmpty': 'Du hast noch keine — füge eine mit `/pronunciation add` hinzu.',
+  'pron.set': '✅ Gespeichert! Wenn **du** „{term}“ tippst, sage ich „{replacement}“.',
+  'pron.removed': '🗑️ „{term}“ entfernt.',
+  'pron.notFound':
+    'Du hast keine Aussprache für „{term}“. Sieh dir deine mit `/pronunciation list` an.',
+  'pron.empty': 'Das Wort und wie man es sagt dürfen nicht leer sein.',
+  'pron.limitHit':
+    '🔒 Du hast dein Limit von **{limit}** Aussprachen erreicht. Entferne eine mit `/pronunciation remove`.',
+  'pron.limitUpsell': '💎 Vozen Plus oder Premium erhöht es auf **50** → {url}',
+  'pron.modalTitle': 'Vozen eine Aussprache beibringen',
+  'pron.modalTerm': 'Das Wort (wie man es tippt)',
+  'pron.modalSay': 'Wie Vozen es sagen soll',
+  'spron.listHeader': '🗣️ **Server-Aussprachen** ({count}/{limit}) — gelten für alle:',
+  'spron.listEmpty': 'Noch keine — füge eine mit `/serverpronunciation add` hinzu.',
+  'spron.set': '✅ Für den ganzen Server gespeichert! „{term}“ → „{replacement}“.',
+  'spron.removed': '🗑️ „{term}“ vom Server entfernt.',
+  'spron.notFound': 'Der Server hat keine Aussprache für „{term}“.',
+  'spron.limitHit':
+    '🔒 Der Server hat sein Limit von **{limit}** Aussprachen erreicht. Entferne eine mit `/serverpronunciation remove`.',
+  'spron.modalTitle': 'Server-Aussprache',
+  'spron.modalSay': 'Wie Vozen es für alle sagt',
+  'rand.selectPrompt': '🎲 **Randomizer** — aus wie vielen Optionen soll ich wählen?',
+  'rand.selectPlaceholder': 'Anzahl der Optionen…',
+  'rand.selectOption': '{n} Optionen',
+  'rand.filling': '📝 Fülle das Formular aus, das gerade geöffnet wurde!',
+  'rand.modalTitle': 'Randomizer — {amount} Optionen',
+  'rand.modalOption': 'Option {n}',
+  'rand.needTwo': 'Gib mir mindestens 2 Optionen, durch Kommas getrennt (z. B. „Pizza, Sushi“).',
+  'rand.result': 'Aus {count} Optionen wähle ich… **{winner}**!',
+  'rand.speak': 'Ich wähle… {winner}!',
+  'rand.notInVoice':
+    '_(tritt mit mir einem Sprachkanal bei und ich sage es beim nächsten Mal laut)_',
+  'rand.timeout': '⏰ Nichts gewählt — führe `/randomizer` erneut aus, wenn du bereit bist.',
 };

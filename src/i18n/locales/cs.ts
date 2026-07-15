@@ -31,6 +31,10 @@ export default {
   'voice.optout':
     'Už tě nebudu předčítat automaticky. Spusť /voice optin, když to chceš zase zapnout.',
   'voice.optin': 'Budeš zase předčítán automaticky.',
+  'voice.detection.on':
+    '✅ Automatická detekce jazyka je ZAPNUTÁ: každá zpráva se čte hlasem podle rozpoznaného jazyka (mluvčí se může měnit). Vypni ji pomocí `/voice detection active:false`.',
+  'voice.detection.off':
+    '✅ Automatická detekce jazyka je VYPNUTÁ: všechno čte tvůj jeden pevný hlas, takže zníš pořád stejně.',
   'voice.notInVoice': 'Zatím nejsem v hlasovém kanálu — nejdřív spusť /join.',
   'voice.previewPlaying': 'Přehrávám ukázku…',
   'preview.sample': 'Ahoj, jsem Vozen. napiš to, poslechni si to.',

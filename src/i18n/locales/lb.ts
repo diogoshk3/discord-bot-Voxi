@@ -167,4 +167,490 @@ export default {
     '1) Géi an ee Sproochkanal\n2) Laf /join, sou datt ech mat dir bäitrieden\n3) Tipp am Textkanal (oder benotz /tts) an ech liesen et haart vir\nKomplett Kommandolëscht: /help',
   'welcome.footer': 'Vozen — tipp et, héier et.',
   'welcome.tagline': 'Natierlech neural Stëmm — fir ëmmer gratis, keng Bezuelbarriär.',
+  'stt.guildOnly': 'Transkriptioun funktionéiert nëmmen an engem Server.',
+  'stt.noManage':
+    "Du brauchs d'Berechtegung **Server verwalten**, fir d'Transkriptioun ze starten oder ze stoppen.",
+  'stt.notPremium':
+    '🎙️ Live-Transkriptioun ass eng **Premium**-Funktioun. Kuck `/premium info`, fir se fir dëse Server fräizeschalten.',
+  'stt.unavailable':
+    'Transkriptioun ass op dëser Instanz net verfügbar (de Sprooch-op-Text-Motor ass net installéiert).',
+  'stt.notInVoice':
+    "Ech sinn net an engem Sproochkanal — géi an een a laf fir d'éischt `/join`, start dann d'Transkriptioun.",
+  'stt.alreadyRunning':
+    "D'Transkriptioun leeft schonn op dësem Server. Benotz fir d'éischt `/transcribe stop`.",
+  'stt.atCapacity':
+    "Am Moment lafen ze vill Transkriptiounen iwwer all d'Serveren. Probéier w.e.g. gläich nach eng Kéier.",
+  'stt.noChannel':
+    'Ech kann keng Transkripter an dësem Kanal posten. Probéier de Kommando aus engem normalen Textkanal ze lafen.',
+  'stt.started':
+    '✅ Transkriptioun gestart. Jidderee, deen an der Matdeelung op **Zoustëmmung** dréckt, gëtt an dëse Kanal transkribéiert.',
+  'stt.startFailed':
+    "Konnt d'Transkriptioun net starten (d'Matdeelung konnt net gepost ginn). Ech hunn alles réckgängeg gemaach — et gëtt näischt opgeholl. Probéier w.e.g. nach eng Kéier.",
+  'stt.announceStart':
+    "🎙️ **Live-Transkriptioun ass AN an dësem Kanal.** Nëmme Leit, déi zoustëmmen, ginn transkribéiert — dréck op de Knäppchen hei ënnen, fir z'erlaben, datt deng Ried hei geschriwwe gëtt. Du kanns jidderzäit mat `/transcribe revoke` zréckzéien.",
+  'stt.consentBtn': 'Zoustëmmen, transkribéiert ze ginn',
+  'stt.consentThanks':
+    '✅ Merci — deng Ried gëtt elo op dësem Server transkribéiert. Zéi jidderzäit mat `/transcribe revoke` zréck.',
+  'stt.stopped': '🛑 Transkriptioun gestoppt.',
+  'stt.notRunning': "D'Transkriptioun leeft net op dësem Server.",
+  'stt.announceStop': '🛑 **Live-Transkriptioun ass elo AUS.** Ech hunn opgehal nozelauschteren.',
+  'stt.revoked':
+    '✅ Zoustëmmung zréckgezunn — du gëss net méi op dësem Server transkribéiert. (Messagen, déi scho gepost sinn, bleiwen; läsch se am Discord, wanns du wëlls.)',
+  'stt.revokeNone':
+    'Du hats der Transkriptioun op dësem Server net zougestëmmt, dofir gouf et näischt zréckzezéien.',
+  'privacy.eraseConfirm':
+    '⚠️ Dëst läscht permanent **all** deng Vozen-Donnéeën iwwer all Server: Stëmm-Astellungen, geschwaten Spëtznumm, perséinlech Ofkierzungen an Aussproochen, gespäichert Gebuertsdag, Spillpunkten, Schwätz-Statistiken, Opt-out, an all Stëmmklon (och Opnamen vun denger Stëmm, déi anerer gemaach hunn). **Dëst kann net réckgängeg gemaach ginn.** Bass du sécher?',
+  'privacy.erasePremiumNote':
+    '_Notiz: däi bezuelte Premium/Plus a seng Akafshistorie ginn behalen — si gehéieren dir an de gesetzlech verlaangte Finanzunterlagen. Fir de Premium ze stoppen, looss en oflafen oder kontaktéier de Support._',
+  'privacy.eraseYes': 'Alles läschen',
+  'privacy.eraseNo': 'Ofbriechen',
+  'privacy.eraseCancelled': 'Ofgebrach — et gouf näischt geläscht.',
+  'privacy.eraseDone': '✅ Fäerdeg. All deng perséinlech Donnéeë goufe permanent geläscht.',
+  'shutup.notInVoice':
+    "Ech sinn nach net an engem Sproochkanal — géi an een a laf fir d'éischt /join.",
+  'shutup.nothing': 'Am Moment leeft näischt.',
+  'shutup.done': '🤐 Okay, ech halen op — hunn alles an der Schlaang geläscht.',
+  'voice.detection.on':
+    '✅ Automatesch Sproocherkennung ass AN: all Message gëtt an enger Stëmm fir seng erkannt Sprooch virgelies (de Spriecher ka wiesselen). Maach se aus mat `/voice detection active:false`.',
+  'voice.detection.off':
+    "✅ Automatesch Sproocherkennung ass AUS: deng eng fest Stëmm liest alles, sou datt s du ëmmer d'selwecht kléngs.",
+  'voice.nickname.set': '✅ De Vozen wäert dech elo haart **{name}** nennen.',
+  'voice.nickname.cleared': '✅ Geschwaten Spëtznumm geläscht — de Vozen benotzt däin Servernumm.',
+  'voice.nickname.invalid':
+    'Dëse Numm huet näischt Liesbares fir haart ze soen. Probéier Buschtawen oder Zuelen.',
+  'voice.effect.set':
+    '✅ Stëmmeffekt op **{effect}** gesat — deng Messagen spillen elo mat dësem Effekt. Benotz `/voice effect none`, fir en auszemaachen.',
+  'voice.effect.cleared': '✅ Stëmmeffekt ewechgeholl — rëm eng propper Stëmm.',
+  'clone.locked':
+    '🔒 Stëmmklonen ass eng Premium-Funktioun (et kascht richteg Rechepower). Kuck `/premium`.',
+  'clone.notInVoice':
+    "Du muss am Sproochkanal **mat mir** sinn, fir opzehuelen. Benotz fir d'éischt `/join`.",
+  'clone.alreadyRecording':
+    'Du hëls scho eng Prouf op — maach se fäerdeg (oder dréck **⏹️ Stop**), ier s du eng aner ufänks.',
+  'clone.recording':
+    '🎙️ **Hëllt deng Stëmm op** — schwätz weider, bis et vun eleng ophält (~{target}s Ried, Pause zielen net), oder dréck **⏹️ Stop**, wann s du fäerdeg bass. Ech behalen nëmmen DÄIN Audio.',
+  'clone.recordingOther':
+    '🎙️ **Hëllt {who} op** — si sollten weiderschwätzen, bis et vun eleng ophält (~{target}s Ried, Pause zielen net), oder **⏹️ Stop** drécken, fir opzehalen.',
+  'clone.recordingProgress': '🔴 Hëlt op… **{got}s / {target}s** Ried opgeholl. Maach weider!',
+  'clone.consentRequest':
+    '🎙️ {invoker} wëll **deng Stëmm** ophuelen ({target}s Ried), fir e Stëmmklon ze bauen, mat deem si schwätze kënnen. Erlaabs du et? *(leeft an 60s of)*',
+  'clone.consentAllow': 'Erlaben',
+  'clone.consentDeny': 'Nee',
+  'clone.consentNotYou': "Nëmmen d'Persoun, déi opgeholl gëtt, kann dorop äntweren.",
+  'clone.consentGranted': "✅ {who} ass averstanen — d'Opnam fänkt un.",
+  'clone.consentRefused': '✖️ {who} huet ofgeleent. Opnam ofgebrach — et gouf keen Audio opgeholl.',
+  'clone.consentTimeout': '⌛ {who} huet net rechtzäiteg geäntwert. Opnam ofgebrach.',
+  'clone.consentWaiting': '⏳ Waarden drop, datt {who} am Kanal akzeptéiert…',
+  'clone.targetNotInVoice':
+    "{who} muss am Sproochkanal **mat mir** sinn, fir opgeholl ze ginn. Frot si, fir d'éischt `/join` ze lafen.",
+  'clone.pickFromList':
+    'Wiel eng Persoun aus der Virschléilëscht (nëmme Leit an der Call kënnen opgeholl ginn). Looss et eidel, fir dech selwer opzehuelen.',
+  'clone.stopBtn': 'Stop',
+  'clone.stopNotYours': "Nëmmen d'Persoun, déi ophëlt, kann et stoppen.",
+  'clone.tooShort':
+    'Ech hu nëmmen {seconds}s Ried opgeholl — ech brauch mindestens ~{min}s (den Zil war {target}s), fir gutt ze klonen. Probéier nach eng Kéier mat `/voice clone record`.',
+  'clone.saved':
+    '✅ Stëmmprouf gespäichert ({seconds}s Ried). Maach se un mat `/voice clone use active:true`. Nëmmen DU kanns däi Klon benotzen; läsch en jidderzäit mat `/voice clone delete`.',
+  'clone.savedOther':
+    '✅ {seconds}s vun {who} senger Stëmm als DÄI Klon gespäichert. Maach en un mat `/voice clone use active:true`; läsch en jidderzäit mat `/voice clone delete`.',
+  'clone.failed':
+    "D'Opnam ass feelgeschloen — probéier nach eng Kéier. Wann et ëmmer erëm passéiert, géi rëm an de Sproochkanal.",
+  'clone.none': 'Du hues nach kee Stëmmklon. Hëll ee mat `/voice clone record` op (Premium).',
+  'clone.deleted':
+    '🗑️ Stëmmklon geläscht — Prouf a Zoustëmmungsrekord ewechgeholl, kee Spuer behalen.',
+  'clone.revoked':
+    '🛑 Zoustëmmung zréckgezunn — {count} Stëmmklon(en), déi aner Leit vun denger Stëmm gemaach haten, ewechgeholl.',
+  'clone.status': '🧬 Stëmmklon: Prouf opgeholl {date} · am Moment **{state}**.',
+  'clone.stateOn': 'AN',
+  'clone.stateOff': 'aus',
+  'clone.noSample': "Du brauchs fir d'éischt eng Prouf — hëll eng mat `/voice clone record` op.",
+  'clone.enabled':
+    '✅ Deng Messagen ginn elo an **denger geklonter Stëmm** virgelies. Maach jidderzäit aus mat `/voice clone use active:false`.',
+  'clone.enabledNoEngine':
+    '✅ Gespäichert — awer de Klon-Motor ass op dëser Instanz nach net installéiert, dofir héiers du fir de Moment déi normal Stëmm.',
+  'clone.disabled': '✅ Geklont Stëmm aus — zréck bei deng normal Stëmm.',
+  'voice.effect.locked':
+    '🔒 **{effect}** ass e Premium-Effekt. Gratis Effekter: 🤖 Robot an 🔊 Echo. Schalt all fräi mam Vozen Premium — kuck `/premium`.',
+  'voice.engine.gcloudLocked':
+    '🔒 **💎 Google HD** ass e Premium-Stëmmmotor. Schalt e fräi mam Vozen Plus (perséinlech) oder Vozen Premium (Server) — kuck `/premium`. Bis dohin bleift deng Stëmm um gratis lokale Motor.',
+  'rizz.playing': '😏 Maachen e bësse Rizz…\n> {line}',
+  'rizz.unknownLang': 'Ech kennen dës Sprooch net. Wiel eng aus der Lëscht.',
+  'rizz.locked':
+    '🔒 **/rizz** ass e Premium-Extra. Schalt en fräi mam Vozen Plus (du) oder Premium (dëse Server). Kuck `/premium`.',
+  'sound.playing': '🔊 Spillt **{name}**…',
+  'sound.unknown': "Ech hunn dëse Sound net. Laf `/sound`, fir d'Lëscht ze gesinn.",
+  'sound.list':
+    '🔊 **Sounds:** {sounds}\nSpill een mat `/sound name:<sound>` (ech muss an dengem Sproochkanal sinn).',
+  'sound.disabled':
+    '🔇 De Soundboard ass **aus** op dësem Server. En Admin kann en aschalten mat `/config soundboard`.',
+  'fun.eightball': '🎱 **{question}**\n> {answer}',
+  'fun.fortune': '🥠 {text}',
+  'fun.fact': '💡 {text}',
+  'fun.wyr': '🤔 {text}',
+  'birthday.set':
+    '🎂 Gebuertsdag gespäichert: **{day}/{month}**. Ech wënschen dir e schéine Gebuertsdag, wann s du op deem Dag an ee Sproochkanal kënns!',
+  'birthday.invalid': 'Dat ass keen echt Datum. Kontrolléier den Dag an de Mount.',
+  'birthday.cleared': '🎂 Gebuertsdag ewechgeholl.',
+  'birthday.show': '🎂 Däi Gebuertsdag ass op **{day}/{month}** gesat.',
+  'birthday.none': 'Du hues nach kee Gebuertsdag agestallt. Benotz `/birthday set`.',
+  'topspeakers.title': '🗣️ **Top-Schwätzer** — wien ech am meeschten op dësem Server virliesen:',
+  'topspeakers.empty':
+    'Ech hunn nach kengem seng Messagen virgelies. Riicht e Virliesekanal an mat `/setup`!',
+  'topspeakers.line': '{rank}. <@{user}> — **{count}** Messagen · 🔥 {streak}-Deeg-Streak',
+  'serverstats.title': '📊 **Server-Statistiken**',
+  'serverstats.empty':
+    'Nach keng Statistiken — ech hunn hei nach keng Messagen virgelies a keng Spiller gespillt. Riicht et an mat `/setup`!',
+  'serverstats.messages': '🗣️ **{total}** Messagen virgelies · **{speakers}** Leit',
+  'serverstats.topTalkers': '**Top-Schwätzer:**',
+  'serverstats.talkerLine': '{rank}. <@{user}> — {count} Msg · 🔥 {streak}d',
+  'serverstats.streak': '🔥 Längsten aktive Streak: **{days}** Deeg',
+  'serverstats.games':
+    '🎮 **{points}** Spillpunkten · **{wins}** Victoiren · **{players}** Spiller',
+  'serverstats.topPlayers': '**Top-Spiller:**',
+  'serverstats.playerLine': '{rank}. <@{user}> — {points} Pkt · {wins} Victoiren',
+  'serverstats.upsell':
+    '🔒 Dat ass déi gratis Virschau. **Premium** schalt Streaks, Spillstatistiken an déi voll Top 5 fräi — kuck `/premium`.',
+  'streak.day':
+    '🔥 <@{user}> ass op enger **{n}-Deeg**-Streak! Schwätz weider, fir se um Liewen ze halen.',
+  'leaderboard.autoTitle': '🏆 Top-Schwätzer op dësem Server',
+  'premium.title': '💎 **Vozen-Premium-Status**',
+  'premium.lineServerActive': '🖥️ **Server:** Premium bis {date}',
+  'premium.lineServerFree': '🖥️ **Server:** Gratis-Plang',
+  'premium.lineUserActive': '👤 **Du (Plus):** aktiv bis {date}',
+  'premium.lineUserFree': '👤 **Du (Plus):** net aktiv',
+  'premium.getHint':
+    "Alles, wat s du haut benotz, bleift gratis. Premium füügt all 8 Stëmmeffekter, Stëmmklonen, 24/7 an der Call, 50 perséinlech Aussproochen, /rizz an d'Premium-Spiller bäi. Support: https://ko-fi.com/",
+  'premium.linePass':
+    '🎟️ **Däi Premium-Pass:** {used}/{total} Lizenzen a Benotzung · leeft {date} of',
+  'premium.passServers': '↳ A Benotzung op: {servers}',
+  'premium.pitch':
+    "Du hues nach kee Premium. **Vozen Premium** (€3.99/Mount fir 3 Serveren, oder €7.99/Mount fir 8) schalt fir de ganze Server fräi: all 8 Stëmmeffekter, Stëmmklonen, 24/7 an der Call, 50 perséinlech Aussproochen (vs 3), de /rizz-Kommando an d'Premium-Spiller (Word Chain, Wordle, Chess). **Vozen Plus** (€1.99/Mount) gëtt dir dës Extraen perséinlech, op all Server.",
+  'premium.buyHint':
+    '▶ **Premium kréien:** {link}\nNom Akaf, laf `/premium activate` op deem Server, deen s du wëlls.',
+  'premium.confirmActivate':
+    "**1 vun dengen {total} Premium-Lizenzen** op **dësem Server** benotzen? Du hues am Moment **{used}** a Benotzung. Du kanns se méi spéit mat `/premium deactivate` fräiginn — d'Auer leeft um Pass souwisou weider.",
+  'premium.confirmYes': '💎 Eng Lizenz benotzen',
+  'premium.confirmNo': 'Ofbriechen',
+  'premium.activateOk':
+    '✅ Premium ass elo op **dësem Server** aktiv bis {date}. Lizenzen: **{used}/{total}** a Benotzung.',
+  'premium.activateCancelled': 'Ofgebrach — et gouf keng Lizenz benotzt.',
+  'premium.activateTimeout': 'Zäit ofgelaf — et gouf keng Lizenz benotzt.',
+  'premium.noPass':
+    'Du hues kee aktive Premium-Pass. Kréi een an en landt op dengem Kont — laf dann hei `/premium activate`.\n▶ {link}',
+  'premium.alreadyActive':
+    'Dëse Server huet scho eng vun dengen Premium-Lizenzen. Näischt ze maachen.',
+  'premium.noSeats':
+    'All deng **{total}** Premium-Lizenzen sinn a Benotzung ({servers}). Gëff eng do mat `/premium deactivate` fräi, a probéier dann hei nach eng Kéier.',
+  'premium.needManageGuild':
+    'Premium ze aktivéieren betrëfft de ganze Server — nëmme Memberen mat **Server verwalten** kënnen dat maachen. Frot en Admin.',
+  'premium.deactivateOk':
+    "✅ D'Premium-Lizenz vun dësem Server fräigemaach. Benotz se op engem anere Server mat `/premium activate`.",
+  'premium.deactivateNone': 'Dëse Server huet keng Premium-Lizenz vun dir, déi fräizeginn wier.',
+  'premium.thisServer': 'dëse Server',
+  'grant.denied': '⛔ Dëse Kommando ass nëmme fir de Bot-Besëtzer.',
+  'grant.okPremium':
+    '✅ <@{user}> e **Premium-Pass** ({seats} Lizenzen) fir **{days}** Deeg zougedeelt — leeft {date} of. Si aktivéieren en mat `/premium activate`.',
+  'grant.okPlus': '✅ <@{user}> **Vozen Plus** fir **{days}** Deeg zougedeelt — leeft {date} of.',
+  'gencode.done':
+    '✅ **{count}** {plan}-Code(en) generéiert, jee **{days}** Deeg. Deel se privat:\n{list}',
+  'redeem.okPlus': '🎁 Aléist! Du hues **Vozen Plus** fir **{days}** Deeg kritt — leeft {date} of.',
+  'redeem.okPremium':
+    '🎁 Aléist! Du hues e **Premium-Pass** ({seats} Lizenzen) fir **{days}** Deeg kritt — leeft {date} of. Aktivéier en op dengem Server mat `/premium activate`.',
+  'redeem.notFound': '❌ Dëse Code existéiert net. Kontrolléier en nach eng Kéier a probéier erëm.',
+  'redeem.used': '❌ Dëse Code gouf schonn aléist.',
+  'redeem.expired': '❌ Dëse Code ass ofgelaf.',
+  'config.blockLimit':
+    "Dëse Server huet scho d'Maximum vu {max} gespaarte Wierder. Läsch een, ier s du en aneren bäifüügs.",
+  'config.xsaidOn':
+    'De Vozen wäert elo **wien geschwat huet** virun all Message ukënnegen (z.B. "Alex huet hallo gesot"). Maach aus mat `/config xsaid active:false`.',
+  'config.xsaidOff':
+    'De Vozen wäert **net méi** ukënnegen, wien geschwat huet — en liest nëmmen de Message.',
+  'config.autojoinOn':
+    '✅ Auto-Bäitrëtt **un** — de Vozen trëtt an däi Sproochkanal bäi, wann s du am TTS-Kanal schreifs.',
+  'config.autojoinOff':
+    'Auto-Bäitrëtt **aus** — benotz `/join`, fir de Vozen an de Sproochkanal ze bréngen.',
+  'config.stayOn':
+    '✅ 24/7 an der Call **un** — de Vozen bleift am Sproochkanal, och wann en eidel gëtt, a kënnt no Neistart zréck. 💎 Brauch Premium, fir Effekt ze hunn (kaf oder `/redeem` e Code, dann `/premium activate`).',
+  'config.stayOff':
+    '24/7 an der Call **aus** — de Vozen geet ewech, wann de Sproochkanal eidel gëtt (Standard).',
+  'config.readBotsOn': '✅ De Vozen liest elo och Messagen vun **anere Bots a Webhooks**.',
+  'config.readBotsOff':
+    'De Vozen **ignoréiert** aner Bots a Webhooks (nëmme richteg Leit ginn virgelies).',
+  'config.textInVoiceOn': '✅ De Vozen liest och de **Textchat an sengem Sproochkanal**.',
+  'config.textInVoiceOff':
+    'De Vozen liest de Textchat vum Sproochkanal **net** (nëmmen den TTS-Kanal).',
+  'config.antispamOn':
+    '✅ Anti-Spam **un** — de Vozen liest keng gespammt Messagen (Massewuertwiederhuelung oder dee selwechte grousse Message ëmmer erëm gepost).',
+  'config.antispamOff': 'Anti-Spam **aus** — de Vozen liest all Message wéi gewinnt.',
+  'config.streaksOn':
+    '✅ Streak-Meldungen **un** — de Vozen weist eng 🔥 Deeg-Streak-Message dat éischt Mol, wann all Persoun all Dag schwätzt.',
+  'config.streaksOff':
+    "Streak-Meldungen **aus** — de Vozen verfollegt d'Streaks weider (kuck `/topspeakers`), awer bleift roueg doriwwer.",
+  'config.soundboardOn': 'Soundboard **un** — jidderee kann Clipsen mat `/sound` spillen.',
+  'config.soundboardOff': 'Soundboard **aus** — `/sound` ass op dësem Server deaktivéiert.',
+  'config.greetOn': "✅ Ech begréissen d'Leit mam Numm, wann si an de Sproochkanal erakommen.",
+  'config.greetOff': "🔇 Ech begréissen d'Leit **net**, wann si an de Sproochkanal erakommen.",
+  'config.greetLangSet': "✅ Sprooch fir d'Begréissung beim Bäitrëtt op **{language}** gesat.",
+  'config.showXsaid': 'Spriecher ukënnegen (xsaid): {value}',
+  'config.showAutojoin': 'Auto-Bäitrëtt: {value}',
+  'config.showReadBots': 'Bots/Webhooks virliesen: {value}',
+  'config.showTextInVoice': 'Text-am-Sproochkanal: {value}',
+  'config.showAntispam': 'Anti-Spam: {value}',
+  'config.showSoundboard': 'Soundboard (/sound): {value}',
+  'config.showGreet': 'Begréissung beim Bäitrëtt: {value} ({language})',
+  'stats.synthLatency': 'Synthees-Latenz: p50 {p50}ms / p95 {p95}ms ({count} Proufen)',
+  'speak.emptyMessage': 'Dëse Message huet keen Text fir haart virzeliesen.',
+  'uptime.text': '🟢 De Vozen ass zënter **{uptime}** online.',
+  'botstats.title': '📊 **Vozen — Statistiken**',
+  'botstats.servers': 'Serveren: **{value}**',
+  'botstats.voiceSessions': 'Sproochsessiounen elo: **{value}**',
+  'botstats.messagesSpoken': 'Gesot Messagen: **{value}**',
+  'botstats.uptime': 'Lafzäit: **{value}**',
+  'invite.button': 'Vozen bäifügen',
+  'vote.button': 'Op top.gg stëmmen',
+  'vote.upsell':
+    '🗳️ Kee Plus? Stëmm fir de Vozen op top.gg → **24h Plus gratis** (eng Kéier de Mount): {url}',
+  'vote.cooldownStatus':
+    '🗳️ Du hues deng Stëmm-Belounung schonn ofgeholl — stëmm nach eng Kéier fir weider **24h Plus** {date}.',
+  'help.support': '🛟 Brauchs du Hëllef oder wëlls e Problem mellen? {url}',
+  'help.source': '📄 Open Source (AGPL-3.0) — kréi de genaue Quellcode, deen hei leeft: {url}',
+  'game.start.needVoice':
+    "Dëst ass e **Sproochspill** — géi an ee Sproochkanal a laf fir d'éischt /join, start et dann.",
+  'game.start.alreadyActive':
+    'Et leeft schonn e Spill an <#{channel}>. Maach et fäerdeg (oder benotz `/game stop`), ier s du en anert ufänks.',
+  'game.start.premiumLocked':
+    '🔒 **{game}** ass e Premium-Spill (et kascht richteg Rechepower). Kuck `/premium`.',
+  'game.start.started': '🎮 Start **{game}**! Kuck op de Kanal — vill Gléck!',
+  'game.start.startedThread':
+    "🎮 **{game}** huet an <#{channel}> ugefaangen — maacht do mat! De Thread läscht sech selwer, wann d'Spill eriwwer ass.",
+  'game.thread.winner': "🏆 {winner} huet d'Spill gewonnen!",
+  'game.thread.ended': "🎮 D'Spill ass eriwwer.",
+  'game.unknownGame': 'Ech kennen dëst Spill net. Wiel een aus der Lëscht.',
+  'game.stop.ok': '🛑 Dat aktuellt Spill gestoppt.',
+  'game.stop.none': 'Am Moment leeft kee Spill.',
+  'game.list.title': '🎮 **Spiller** — start een mat `/game play`:',
+  'game.list.line': '• **{name}** — {desc}',
+  'game.leaderboard.title': '🏆 **Leaderboard** — Top-Spiller op dësem Server:',
+  'game.leaderboard.empty': 'Et gouf nach kee Spill gespillt. Sief deen éischten — `/game play`!',
+  'game.leaderboard.line': '{rank} <@{user}> — **{points}** Pkt ({wins} Victoiren)',
+  'game.finish.title': '🏁 **Spill eriwwer!** Schlusspunkten:',
+  'game.finish.line': '{rank} **{user}** — {points}',
+  'game.finish.noScores': "🏁 Spill eriwwer — dës Kéier huet keen gepunkt. Bis d'nächst Kéier!",
+  'game.finish.winnerVoice': '{user} gewënnt!',
+  'game.guessLanguage.name': "Rot d'Sprooch",
+  'game.guessLanguage.desc':
+    'Ech liesen e Saz an enger zoufälleger Sprooch — deen éischten, deen se nennt, gewënnt de Punkt.',
+  'game.guessLanguage.intro':
+    "🗣️ **Rot d'Sprooch** — ech liesen {rounds} Sätz. Schreif, wéi eng Sprooch s du héiers. Déi séierst richteg Äntwert gewënnt all Ronn!",
+  'game.guessLanguage.round': '🎧 Ronn {n}/{total} — lauschter…',
+  'game.guessLanguage.correct': '✅ **{user}** huet et — et war **{language}**!',
+  'game.guessLanguage.timeout': '⏱️ Zäit! Dat war **{language}**.',
+  'game.guessLanguage.noLanguages':
+    'Ech hunn net genuch Stëmmen installéiert, fir dat ze spillen. Frot en Admin, fir méi Stëmmen bäizefügen.',
+  'game.math.name': 'Kapprechnen',
+  'game.math.desc':
+    "Ech soen eng Rechnung haart — deen éischten, deen d'Äntwert schreift, gewënnt.",
+  'game.math.intro':
+    "🔢 **Kapprechnen** — {rounds} Rechnungen. Lauschter a schreif d'Äntwert sou séier wéi méiglech!",
+  'game.math.round': '🧮 Ronn {n}/{total} — **{a} {op} {b} = ?**',
+  'game.math.correct': "✅ **{user}** huet et gepackt — d'Äntwert war **{answer}**!",
+  'game.math.timeout': "⏱️ Zäit! D'Äntwert war **{answer}**.",
+  'game.math.plus': 'plus',
+  'game.math.minus': 'minus',
+  'game.math.times': 'mol',
+  'game.skipCount.name': 'Feelend Zuel',
+  'game.skipCount.desc':
+    'Ech zielen haart, mä loossen eng Zuel aus — deen éischten, deen se fënnt, gewënnt.',
+  'game.skipCount.intro':
+    '🔢 **Feelend Zuel** — ech zielen, mä loossen eng aus. Schreif déi feelend Zuel! ({rounds} Ronnen)',
+  'game.skipCount.round': '👂 Ronn {n}/{total} — wéi eng Zuel hunn ech ausgelooss?',
+  'game.skipCount.correct': '✅ **{user}** huet et gepackt — ech hunn **{answer}** ausgelooss!',
+  'game.skipCount.timeout': '⏱️ Zäit! Ech hunn **{answer}** ausgelooss.',
+  'game.spelling.name': 'Buschtawéieren',
+  'game.spelling.desc': 'Ech soen e Wuert — deen éischten, deen et richteg buschtawéiert, gewënnt.',
+  'game.spelling.intro':
+    '✍️ **Buschtawéieren** — ech soen {rounds} Wierder. Schreif all eent richteg!',
+  'game.spelling.round': "🗣️ Ronn {n}/{total} — schreif d'Wuert, dat ech soen…",
+  'game.spelling.correct': '✅ **{user}** huet **{word}** richteg geschriwwen!',
+  'game.spelling.timeout': "⏱️ Zäit! D'Wuert war **{word}**.",
+  'game.spelling.empty': "Ech hunn nach keng Wuertlëscht fir d'Stëmm-Sprooch vun dësem Server.",
+  'game.spellOut.name': 'Buschtawe-Puzzel',
+  'game.spellOut.desc':
+    'Ech buschtawéieren e Wuert Buschtaf fir Buschtaf — deen éischten, deen dat ganzt Wuert schreift, gewënnt.',
+  'game.spellOut.intro':
+    '🔡 **Buschtawe-Puzzel** — ech buschtawéieren {rounds} Wierder Buschtaf fir Buschtaf. Schreif dat ganzt Wuert!',
+  'game.spellOut.round': "🔤 Ronn {n}/{total} — lauschter op d'Buschtawen…",
+  'game.spellOut.correct': '✅ **{user}** huet et — **{word}**!',
+  'game.spellOut.timeout': '⏱️ Zäit! Et buschtawéiert **{word}**.',
+  'game.fastSpeech.name': 'Séier Schwätzen',
+  'game.fastSpeech.desc':
+    'Ech liesen e Saz superséier — deen éischten, deen schreift, wat ech gesot hunn, gewënnt.',
+  'game.fastSpeech.intro':
+    '💨 **Séier Schwätzen** — {rounds} Sätz mat verréckter Vitess. Schreif, wat s du héiers!',
+  'game.fastSpeech.round': '⚡ Ronn {n}/{total} — do kënnt et, séier!',
+  'game.fastSpeech.correct': '✅ **{user}** huet et entschlësselt: “{phrase}”',
+  'game.fastSpeech.timeout': '⏱️ Zäit! Et war: “{phrase}”',
+  'game.fastSpeech.empty': "Ech hunn nach keng Sätz fir d'Stëmm-Sprooch vun dësem Server.",
+  'game.accentSwap.name': 'Komeschen Accent',
+  'game.accentSwap.desc':
+    'Ech soen e Wuert mat engem friemen Accent — deen éischten, deen et schreift, gewënnt.',
+  'game.accentSwap.intro':
+    "🎭 **Komeschen Accent** — {rounds} Wierder mam falschen Accent gesot. Schreif d'Wuert!",
+  'game.accentSwap.round': '🌍 Ronn {n}/{total} — wéi eent Wuert probéieren ech ze soen?',
+  'game.accentSwap.correct': '✅ **{user}** huet et — **{word}**!',
+  'game.accentSwap.timeout': "⏱️ Zäit! D'Wuert war **{word}**.",
+  'game.reflexes.name': 'Reflexer',
+  'game.reflexes.desc':
+    'Ech zielen erof, da ruffen ech LASS — deen éischten, deen duerno schreift, gewënnt. Fänk net ze fréi un!',
+  'game.reflexes.intro':
+    '⚡ **Reflexer** — {rounds} Ronnen. Wann ech **LASS** ruffen, schreif iergendeppes sou séier wéi méiglech. Schreifs du virum LASS, ass et e falsche Start!',
+  'game.reflexes.ready': '🚦 Ronn {n}/{total} — maach dech prett…',
+  'game.reflexes.countdown': 'dräi… zwee… eent…',
+  'game.reflexes.go': '🟢 **LASS!!!**',
+  'game.reflexes.goVoice': 'Lass!',
+  'game.reflexes.tooSoon': '🔴 **{user}** ass ze fréi lassgaangen — ze séier!',
+  'game.reflexes.win': '⚡ **{user}** ass deen séiersten! Punkt!',
+  'game.reflexes.tooSlow': '😴 Keen huet rechtzäiteg reagéiert. Nächst!',
+  'game.headsOrTails.name': 'Kapp oder Zuel',
+  'game.headsOrTails.desc':
+    'Rot de Mënzwerf — schreif Kapp oder Zuel, ier ech werfen. Wien am beschten rät, gewënnt!',
+  'game.headsOrTails.intro':
+    "🪙 **Kapp oder Zuel** — {rounds} Ronnen. All Ronn, schreif `kapp` oder `zuel`, ier ech d'Mënz werfen. 1 Punkt pro richtege Rot!",
+  'game.headsOrTails.introVoice': 'Loosst eis Kapp oder Zuel spillen!',
+  'game.headsOrTails.round': '🪙 Ronn {n}/{total} — Kapp oder Zuel? Schreif däi Rot!',
+  'game.headsOrTails.roundVoice': 'Kapp… oder Zuel?',
+  'game.headsOrTails.heads': 'kapp',
+  'game.headsOrTails.tails': 'zuel',
+  'game.headsOrTails.resultVoice': 'Et ass {side}!',
+  'game.headsOrTails.winners': 'Et ass **{side}**! Punkt fir: {users}',
+  'game.headsOrTails.noWinners': 'Et ass **{side}**! Keen huet et gerot — keng Punkten.',
+  'game.vozenSays.name': 'Vozen seet',
+  'game.vozenSays.desc':
+    "Gehorch nëmmen, wann den Uerder mat 'Vozen seet' ufänkt. Fäls du an eng Fal, bass du gefaangen!",
+  'game.vozenSays.intro':
+    "🫡 **Vozen seet** — {rounds} Uerderen. Maach et NËMMEN, wann ech mat **'Vozen seet'** ufänken. Soss, réier dech net!",
+  'game.vozenSays.prefix': 'Vozen seet',
+  'game.vozenSays.verb': 'schreift',
+  'game.vozenSays.real': '🗣️ Ronn {n}/{total} — “{command}”',
+  'game.vozenSays.trap': '🗣️ Ronn {n}/{total} — “{command}”',
+  'game.vozenSays.obeyed': '✅ **{user}** huet als éischt gehorcht — Punkt!',
+  'game.vozenSays.caught': '🔴 **{user}** — ech hunn net Vozen seet gesot! Gefaangen!',
+  'game.vozenSays.nobody': '😴 Keen huet **{word}** rechtzäiteg gehorcht. Nächst!',
+  'game.vozenSays.trapCleared':
+    '😌 Et war eng Fal — gutt gesinn, keen ass op **{word}** eragefall.',
+  'game.roulette.name': 'Wourecht-oder-Erausfuerderung-Roulette',
+  'game.roulette.desc':
+    'Ech dréinen an liesen eng Wourecht-oder-Erausfuerderung haart vir. Laf et nach eng Kéier fir eng aner.',
+  'game.roulette.header': "🎯 **D'Rad seet…**",
+  'game.hangman.name': 'Galgemännchen',
+  'game.hangman.desc': "Rot d'Wuert Buschtaf fir Buschtaf — 6 Feeler an et ass eriwwer.",
+  'game.hangman.intro':
+    "🪢 **Galgemännchen** — schreif ee Buschtaf no deem aneren, fir d'Wuert ze roden. Du kanns och dat ganzt Wuert schreiwen!",
+  'game.hangman.hit': '🟢 **{user}** huet **{letter}** fonnt!',
+  'game.hangman.miss': '🔴 **{user}** — kee **{letter}**.',
+  'game.hangman.wrongLetters': 'Falsch: {letters}',
+  'game.hangman.win': '🎉 **{user}** huet et geléist — **{word}**!',
+  'game.hangman.lose': "💀 Keng Versich méi! D'Wuert war **{word}**.",
+  'game.hangman.idle': "🕹️ Spill pauséiert (keen spillt). D'Wuert war **{word}**.",
+  'game.wordle.name': 'Wordle',
+  'game.wordle.desc':
+    "Rot d'Wuert mat 5 Buschtawen. 🟩 richtege Plaz, 🟨 falsch Plaz, ⬛ net am Wuert. 💎 Premium.",
+  'game.wordle.intro':
+    '🟩 **Wordle** — schreif e Wuert mat 5 Buschtawen. Dir deelt {max} Versich. 🟩 richtege Plaz · 🟨 falsch Plaz · ⬛ net am Wuert.',
+  'game.wordle.guess': '🔤 **{user}** huet gerot — **{left}** Versich iwwreg',
+  'game.wordle.inWord': '🟢 am Wuert: {letters}',
+  'game.wordle.out': '🚫 raus: ~~{letters}~~',
+  'game.wordle.win': '🎉 **{user}** huet et an {n} — **{word}**!',
+  'game.wordle.lose': "💀 Keng Versich méi! D'Wuert war **{word}**.",
+  'game.wordle.idle': "🕹️ Spill pauséiert (keen spillt). D'Wuert war **{word}**.",
+  'game.tictactoe.name': 'Tik-Tak-To',
+  'game.tictactoe.desc':
+    'Zwee Spiller — schreif eng Zuel 1-9, fir däin Zeeche ze setzen. Dräi an enger Rei gewënnt.',
+  'game.tictactoe.intro':
+    '⭕ **Tik-Tak-To** — déi éischt zwee Spiller, déi zéien, sinn ❌ an ⭕ (❌ fänkt un). Schreif eng Zuel 1-9, fir deng Zell ze spillen.',
+  'game.tictactoe.turn': 'Um Zuch: **{mark}**',
+  'game.tictactoe.notYourTurn': '⏳ **{user}**, **{mark}** ass drun.',
+  'game.tictactoe.taken': '🚫 Zell {cell} ass besat — wiel eng aner.',
+  'game.tictactoe.win': '🎉 **{user}** ({mark}) gewënnt!',
+  'game.tictactoe.draw': '🤝 Onentschidden!',
+  'game.tictactoe.idle': '🕹️ Spill eriwwer (keen spillt).',
+  'game.chess.name': 'Schach',
+  'game.chess.desc':
+    'Zwee Spiller — richteg Schachregelen (Schach, Rochade, Ëmwandlung…). Schreif e Zuch wéi "e4" oder "Nf3". 💎 Premium.',
+  'game.chess.intro':
+    '♟️ **Schach** — déi éischt zwee Spiller, déi zéien, kréien Wäiss a Schwaarz (Wäiss fänkt un). Schreif e Zuch an algebrescher Notatioun ("e4", "Nf3", "O-O") oder mat Koordinaten ("e2e4"). Schreif "resign", fir opzeginn.',
+  'game.chess.white': 'Wäiss',
+  'game.chess.black': 'Schwaarz',
+  'game.chess.seats': '⚪ Wäiss: **{white}** · ⚫ Schwaarz: **{black}**',
+  'game.chess.turn': '{move} — drun: **{color}**',
+  'game.chess.check': '♟️ Schach!',
+  'game.chess.notYourTurn': '⏳ **{user}**, **{color}** ass drun.',
+  'game.chess.illegalMove': '🚫 "{move}" ass kee legale Zuch — probéier nach eng Kéier.',
+  'game.chess.checkmate': '🏆 Schach-Matt ({move})! **{user}** gewënnt!',
+  'game.chess.draw': '🤝 Onentschidden ({move})!',
+  'game.chess.resigned': '🏳️ **{user}** huet opginn — **{winner}** gewënnt!',
+  'game.chess.idle': '🕹️ Spill eriwwer (keen spillt).',
+  'game.wordChain.name': 'Wuertketten',
+  'game.wordChain.descr':
+    "Wuertketten no Turnen an enger Sprooch: sot e Wuert, dat mam leschte Buschtaf vum viregten ufänkt. 2 Liewen, keng Widderhuelungen, an d'Auer gëtt méi séier. Wiel d'Sprooch mat der `language`-Optioun. 💎 Premium.",
+  'game.wordChain.unavailable':
+    '⚠️ Wuertketten ass am Moment net op **{lang}** verfügbar (Wuertlëscht feelt).',
+  'game.wordChain.lobby':
+    '🔗 **Wuertketten** op **{lang}**! Schreif iergendeppes an dësem Kanal bannent **{seconds}s**, fir matzemaachen.',
+  'game.wordChain.notEnough':
+    "😴 Net genuch Spiller sinn dobäi (op d'mannst 2 néideg). Spill ofgebrach.",
+  'game.wordChain.begin':
+    '🚀 Start! Spiller: {players}. All Wuert muss mam leschte Buschtaf vum viregten ufänken.',
+  'game.wordChain.turn':
+    '**{name}**, du bass drun! E **{lang}**-Wuert, dat mat **{letter}** ufänkt — {hearts} · ⏱️ {seconds}s',
+  'game.wordChain.accepted': '✅ **{word}** — nächste Buschtaf: **{letter}**',
+  'game.wordChain.bad.letter': '↪️ Et muss mat **{letter}** ufänken.',
+  'game.wordChain.bad.short': "📏 Ze kuerz — op d'mannst **{min}** Buschtawen.",
+  'game.wordChain.bad.repeated': '🔁 Dëst Wuert gouf schonn benotzt.',
+  'game.wordChain.bad.word': '📖 Dat steet net am Wierderbuch.',
+  'game.wordChain.bad.latin': '🔤 Nëmme Buschtawen A–Z zielen.',
+  'game.wordChain.timeout': '⏰ **{name}** ass ouni Zäit! {hearts} iwwreg.',
+  'game.wordChain.eliminated': '💀 **{name}** ass raus!',
+  'game.wordChain.winner': "🏆 **{name}** gewënnt d'Ketten! ({chain} Wierder)",
+  'game.stats.none': 'Du hues nach kee Spill gespillt. Probéier `/game play`!',
+  'game.stats.body':
+    '🎮 **Deng Statistiken** — **{points}** Punkten · **{wins}** Victoiren · {rank}',
+  'game.stats.rank': 'Plaz **#{rank}** vun {total}',
+  'game.stats.unranked': 'nach ouni Plaz',
+  'game.pickPrompt': '🎮 Wéi eent Spill wëlls du spillen? Wiel een:',
+  'game.pickPlaceholder': 'Wiel e Spill…',
+  'game.pickTimeout':
+    '⏰ Kee Spill gewielt — laf `/game play` nach eng Kéier, wann s du prett bass.',
+  'pron.listHeader': '🗣️ **Deng Aussproochen** ({count}/{limit}):',
+  'pron.listEmpty': 'Du hues nach keng — füg eng bäi mat `/pronunciation add`.',
+  'pron.set': '✅ Gespäichert! Wann **du** “{term}” schreifs, soen ech “{replacement}”.',
+  'pron.removed': '🗑️ “{term}” ewechgeholl.',
+  'pron.notFound': 'Du hues keng Aussprooch fir “{term}”. Kuck deng mat `/pronunciation list`.',
+  'pron.empty': "D'Wuert an d'Art, wéi et gesot gëtt, däerfen net eidel sinn.",
+  'pron.limitHit':
+    '🔒 Du hues deng Limitt vu **{limit}** Aussproochen erreecht. Läsch eng mat `/pronunciation remove`.',
+  'pron.limitUpsell': '💎 De Vozen Plus oder Premium hieft se op **50** → {url}',
+  'pron.modalTitle': 'Léier de Vozen eng Aussprooch',
+  'pron.modalTerm': "D'Wuert (wéi d'Leit et schreiwen)",
+  'pron.modalSay': 'Wéi de Vozen et soll soen',
+  'spron.listHeader': '🗣️ **Server-Aussproochen** ({count}/{limit}) — gëllen fir jidderee:',
+  'spron.listEmpty': 'Nach keng — füg eng bäi mat `/serverpronunciation add`.',
+  'spron.set': '✅ Fir de ganze Server gespäichert! “{term}” → “{replacement}”.',
+  'spron.removed': '🗑️ “{term}” vum Server ewechgeholl.',
+  'spron.notFound': 'De Server huet keng Aussprooch fir “{term}”.',
+  'spron.limitHit':
+    '🔒 De Server huet seng Limitt vu **{limit}** Aussproochen erreecht. Läsch eng mat `/serverpronunciation remove`.',
+  'spron.modalTitle': 'Server-Aussprooch',
+  'spron.modalSay': 'Wéi de Vozen et fir jidderee seet',
+  'rand.selectPrompt': '🎲 **Randomizer** — tëscht wéi vill Optiounen soll ech wielen?',
+  'rand.selectPlaceholder': 'Unzuel un Optiounen…',
+  'rand.selectOption': '{n} Optiounen',
+  'rand.filling': '📝 Fëll de Formulaire aus, dee just opgaangen ass!',
+  'rand.modalTitle': 'Randomizer — {amount} Optiounen',
+  'rand.modalOption': 'Optioun {n}',
+  'rand.needTwo': 'Gëff mir op d\'mannst 2 Optiounen, mat Komma getrennt (z.B. "pizza, sushi").',
+  'rand.result': 'Vun {count} Optiounen, wielen ech… **{winner}**!',
+  'rand.speak': 'Ech wielen… {winner}!',
+  'rand.notInVoice': '_(géi mat mir an ee Sproochkanal an ech soen et déi nächst Kéier haart)_',
+  'rand.timeout': '⏰ Näischt gewielt — laf `/randomizer` nach eng Kéier, wann s du prett bass.',
 };
