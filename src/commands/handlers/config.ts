@@ -10,7 +10,7 @@ import type { BotDeps } from '../../bot/deps';
 import { metrics } from '../../metrics';
 import { brandEmbed } from '../../ui/theme';
 import { getGuildConfig, setGuildConfig, resetGuildConfig } from '../../store/guildConfig';
-import { addBlockword, removeBlockword, getBlocklist } from '../../store/blocklist';
+import { addBlockword, removeBlockword, getBlocklist, MAX_BLOCKWORDS } from '../../store/blocklist';
 import { makeLocalizedNamer } from '../../language/voiceMap';
 import { GREET_LANGUAGE_CHOICES, GREET_LOCALES } from '../../voice/greeting';
 import { t, SUPPORTED_LOCALES, LOCALE_DISPLAY_NAMES, type SupportedLocale } from '../../i18n/index';
@@ -33,7 +33,10 @@ export async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps
       return;
     }
     if (sub === 'add') {
-      addBlockword(deps.db, i.guildId!, word);
+      if (addBlockword(deps.db, i.guildId!, word) === 'limit') {
+        await reply(i, t('config.blockLimit', locale, { max: MAX_BLOCKWORDS }));
+        return;
+      }
       await reply(i, t('config.blocked', locale, { word }));
     } else {
       removeBlockword(deps.db, i.guildId!, word);

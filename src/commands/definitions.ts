@@ -522,7 +522,7 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
             .setName('add')
             .setDescription('Add a word')
             .addStringOption((o) =>
-              o.setName('word').setDescription('Word to block').setRequired(true),
+              o.setName('word').setDescription('Word to block').setRequired(true).setMaxLength(60),
             ),
         )
         .addSubcommand((s) =>

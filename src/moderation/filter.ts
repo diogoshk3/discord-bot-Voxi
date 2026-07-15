@@ -2,23 +2,43 @@ function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-export function isBlocked(text: string, blocklist: string[]): boolean {
-  const haystack = text.toLowerCase();
+// Cache de RegExp compiladas por CONTEUDO da blocklist. Sem isto, isBlocked/redactBlocked
+// recompilavam N RegExp unicode a CADA mensagem lida (o array da blocklist chega como copia
+// nova a cada chamada, por isso a IDENTIDADE nao serve para memoizar — usamos o conteudo
+// juntado). Reutilizar as RegExp e seguro: os padroes de isBlocked sao NAO-globais (`.test`
+// e stateless) e `String.replace` com uma RegExp global reseta o `lastIndex` a cada chamada.
+// Cap simples com limpeza total ao atingir o teto (poucas guilds com blocklist ativa).
+const CACHE_CAP = 256;
+const blockedTestCache = new Map<string, RegExp[]>();
+const redactCache = new Map<string, RegExp[]>();
 
-  for (const raw of blocklist) {
-    const word = raw.trim().toLowerCase();
-    if (word === '') {
-      continue;
-    }
-    // match por palavra completa: limites em fronteiras nao-alfanumericas.
-    // \b nao chega para acentos/unicode, por isso usamos lookarounds manuais.
-    const pattern = new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRegExp(word)}([^\\p{L}\\p{N}]|$)`, 'u');
-    if (pattern.test(haystack)) {
-      return true;
-    }
+function compiled(
+  cache: Map<string, RegExp[]>,
+  words: string[],
+  build: (w: string) => RegExp,
+): RegExp[] {
+  const key = words.join('\n');
+  let regs = cache.get(key);
+  if (!regs) {
+    regs = words.map(build);
+    if (cache.size >= CACHE_CAP) cache.clear();
+    cache.set(key, regs);
   }
+  return regs;
+}
 
-  return false;
+export function isBlocked(text: string, blocklist: string[]): boolean {
+  const words = blocklist.map((w) => w.trim().toLowerCase()).filter((w) => w !== '');
+  if (words.length === 0) return false;
+  const haystack = text.toLowerCase();
+  // match por palavra completa: limites em fronteiras nao-alfanumericas.
+  // \b nao chega para acentos/unicode, por isso usamos lookarounds manuais.
+  const regs = compiled(
+    blockedTestCache,
+    words,
+    (w) => new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRegExp(w)}([^\\p{L}\\p{N}]|$)`, 'u'),
+  );
+  return regs.some((re) => re.test(haystack));
 }
 
 /**
@@ -31,15 +51,17 @@ export function isBlocked(text: string, blocklist: string[]): boolean {
  * inalterado (não normaliza espaços à toa). PURA.
  */
 export function redactBlocked(text: string, blocklist: string[]): string {
+  const words = blocklist.map((w) => w.trim()).filter((w) => w !== '');
+  if (words.length === 0) return text;
+  const regs = compiled(
+    redactCache,
+    words,
+    (w) => new RegExp(`(?<![\\p{L}\\p{N}])${escapeRegExp(w)}(?![\\p{L}\\p{N}])`, 'giu'),
+  );
   let out = text;
   let changed = false;
-  for (const raw of blocklist) {
-    const word = raw.trim();
-    if (word === '') {
-      continue;
-    }
-    const pattern = new RegExp(`(?<![\\p{L}\\p{N}])${escapeRegExp(word)}(?![\\p{L}\\p{N}])`, 'giu');
-    const next = out.replace(pattern, ' ');
+  for (const re of regs) {
+    const next = out.replace(re, ' ');
     if (next !== out) {
       out = next;
       changed = true;

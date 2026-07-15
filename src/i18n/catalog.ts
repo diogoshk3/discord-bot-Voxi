@@ -752,6 +752,10 @@ export const catalog: Record<string, Entry> = {
     en: "Blocked: {word}. I'll skip this word when reading, but still read the rest of the message.",
     pt: 'Bloqueado: {word}. Vou saltar esta palavra ao ler, mas leio o resto da mensagem na mesma.',
   },
+  'config.blockLimit': {
+    en: 'This server already has the maximum of {max} blocked words. Remove one before adding another.',
+    pt: 'Este servidor ja tem o maximo de {max} palavras bloqueadas. Remove uma antes de adicionar outra.',
+  },
   'config.unblocked': {
     en: 'Unblocked: {word}.',
     pt: 'Desbloqueado: {word}.',

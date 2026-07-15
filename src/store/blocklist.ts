@@ -6,6 +6,10 @@ interface WordRow {
   word: string;
 }
 
+/** Teto de palavras bloqueadas por guild — limita crescimento e o custo de leitura por
+ *  mensagem (cada palavra e um scan; ver moderation/filter). Admin-gated, mas nao ilimitado. */
+export const MAX_BLOCKWORDS = 500;
+
 export function getBlocklist(db: Database.Database, guildId: string): string[] {
   const words = cached(db, 'blocklist', guildId, () => {
     const rows = db
@@ -16,12 +20,17 @@ export function getBlocklist(db: Database.Database, guildId: string): string[] {
   return [...words]; // cópia: o chamador não deve mutar o array cacheado
 }
 
-export function addBlockword(db: Database.Database, guildId: string, word: string): void {
+export function addBlockword(db: Database.Database, guildId: string, word: string): 'ok' | 'limit' {
+  const { c } = db
+    .prepare('SELECT COUNT(*) AS c FROM blocklist WHERE guild_id = ?')
+    .get(guildId) as { c: number };
+  if (c >= MAX_BLOCKWORDS) return 'limit';
   db.prepare(
     `INSERT INTO blocklist (guild_id, word) VALUES (?, ?)
      ON CONFLICT(guild_id, word) DO NOTHING`,
   ).run(guildId, word);
   invalidate(db, 'blocklist', guildId);
+  return 'ok';
 }
 
 export function removeBlockword(db: Database.Database, guildId: string, word: string): void {
