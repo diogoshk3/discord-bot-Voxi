@@ -36,7 +36,11 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - run: npm ci
+      # Install scripts BLOQUEADOS (mesma postura de supply-chain do ci.yml/deploy-bot.yml,
+      # plano 031) — este job tem pages:write + id-token:write, por isso não pode correr o
+      # postinstall de 363 deps. O build:site só usa html-minifier-terser/terser/clean-css
+      # (JS puro), logo não é preciso reconstruir nenhum binário nativo aqui.
+      - run: npm ci --ignore-scripts
       - name: Build minified site (site/ -> site-dist/)
         run: npm run build:site
       - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
