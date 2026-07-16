@@ -12,6 +12,7 @@ import { handleInteraction } from '../src/commands/index';
 import type { BotDeps } from '../src/bot/deps';
 import { initDb } from '../src/store/db';
 import { getUserVoice } from '../src/store/userVoice';
+import { engineLabel } from '../src/tts/engineLabels';
 import { grantUserPremium, grantGuildPremium } from '../src/store/premium';
 import type Database from 'better-sqlite3';
 
@@ -90,11 +91,15 @@ describe('/voice set — beginner-friendly copy', () => {
     expect(out).toContain('/tts');
   });
 
-  it('no engine -> default Google', async () => {
+  it('no engine -> stores the legacy `google` value and calls it the DEFAULT, not "Google"', async () => {
     const i = makeVoiceInteraction({ sub: 'set', model: 'en_US-amy-medium' });
     await handleInteraction(i as any, makeDeps(db));
     expect(getUserVoice(db, GUILD, USER)?.engine).toBe('google');
-    expect(i.replies[0]).toContain('Google');
+    // The stored id stays 'google' for DB compatibility, but it means "the operator's
+    // configured default" (local Piper unless changed) — so the reply must not claim
+    // Google TTS. Same label the /voice config panel shows: one source of truth.
+    expect(i.replies[0]).toContain(engineLabel('google', 'en'));
+    expect(i.replies[0]).not.toContain('engine: **Google**');
   });
 
   it('engine:piper -> saves piper and confirms', async () => {

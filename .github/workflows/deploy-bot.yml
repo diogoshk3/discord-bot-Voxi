@@ -62,8 +62,12 @@ jobs:
             # produção, onde correm como o utilizador do serviço vozen no VPS.
             npm ci --ignore-scripts
             npm rebuild better-sqlite3 @discordjs/opus esbuild ffmpeg-static
-            npm run build
-            npx vitest run
+            # The SAME gate as ci.yml (CLAUDE.md's canonical one): build + typecheck +
+            # lint + format:check + vitest. Running only build+vitest here let a push
+            # that CI rejects (lint, formatting, or a test-file type error) still reach
+            # `systemctl restart` — both workflows trigger independently on push, so the
+            # deploy must carry its own full gate rather than assume CI passed.
+            npm run check
             sudo -n systemctl restart vozen.service
             sleep 20
             systemctl is-active vozen.service

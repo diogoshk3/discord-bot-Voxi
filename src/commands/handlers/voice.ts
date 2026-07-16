@@ -31,6 +31,7 @@ import { setNickname, clearNickname } from '../../store/nickname';
 import { isGuildPremium, isUserPremium } from '../../store/premium';
 import { setVoiceEffect } from '../../store/voiceEffect';
 import { isVoiceEffect, isPremiumEffect, effectLabel, type VoiceEffect } from '../../tts/effects';
+import { engineLabel } from '../../tts/engineLabels';
 import { sanitizeSpeakerName } from '../../language/speakerName';
 import { formatVoiceList, makeLocalizedNamer } from '../../language/voiceMap';
 import type { SynthRequest } from '../../tts/engine';
@@ -234,7 +235,9 @@ async function handleVoiceClone(
         { tone: 'warning', rows: [consentRow] },
       ),
     );
-    const granted = await new Promise<boolean>((resolve) => {
+    // Three outcomes, not two: 'denied' (they pressed no) and 'timeout' (they never
+    // answered) get different copy — see the branch below.
+    const outcome = await new Promise<'granted' | 'denied' | 'timeout'>((resolve) => {
       const col = consentMsg.createMessageComponentCollector({
         componentType: ComponentType.Button,
         time: 60_000,
@@ -257,20 +260,22 @@ async function handleVoiceClone(
             { tone: ok ? 'success' : 'warning' },
           ),
         );
-        resolve(ok);
+        resolve(ok ? 'granted' : 'denied');
         col.stop('answered');
       });
       col.on('end', (_c, reason) => {
-        if (reason !== 'answered') resolve(false);
+        if (reason !== 'answered') resolve('timeout');
       });
     });
-    if (!granted) {
+    if (outcome !== 'granted') {
       activeCloneRecordings.delete(targetId);
-      await i
-        .editReply(editCard(t('clone.consentRefused', locale, { who }), { tone: 'warning' }))
-        .catch(() => {});
+      // Not answering is NOT the same as saying no: collapsing both into "declined" told
+      // the target they had actively refused when they simply never saw the prompt.
+      // `clone.consentTimeout` exists and is translated in every locale for exactly this.
+      const key = outcome === 'timeout' ? 'clone.consentTimeout' : 'clone.consentRefused';
+      await i.editReply(editCard(t(key, locale, { who }), { tone: 'warning' })).catch(() => {});
       await consentMsg
-        .edit(messageEditCard(t('clone.consentRefused', gLocale, { who }), { tone: 'warning' }))
+        .edit(messageEditCard(t(key, gLocale, { who }), { tone: 'warning' }))
         .catch(() => {});
       return;
     }
@@ -450,14 +455,7 @@ async function handleVoiceConfig(
 
   const langNamer = makeLocalizedNamer(i.locale, models, { voice: false });
   const fullNamer = makeLocalizedNamer(i.locale, models);
-  const engineName = (e: UserEngine): string =>
-    e === 'piper'
-      ? 'Piper'
-      : e === 'kokoro'
-        ? 'Kokoro'
-        : e === 'gcloud'
-          ? 'Google HD'
-          : t('voice.config.engDefault', locale);
+  const engineName = (e: UserEngine): string => engineLabel(e, locale);
 
   const locales = localesOf(models);
   const clip = (s: string): string => (s.length > 100 ? s.slice(0, 99) + '…' : s);
@@ -511,15 +509,13 @@ async function handleVoiceConfig(
         new StringSelectMenuBuilder()
           .setCustomId(`vcfg:engine:${i.id}`)
           .setPlaceholder(t('voice.config.pickEngine', locale))
+          // Same labels as every other surface (engineLabel); 💎 marks the Premium one.
           .addOptions(
-            {
-              label: t('voice.config.engDefault', locale),
-              value: 'google',
-              default: state.engine === 'google',
-            },
-            { label: 'Piper', value: 'piper', default: state.engine === 'piper' },
-            { label: 'Kokoro', value: 'kokoro', default: state.engine === 'kokoro' },
-            { label: '💎 Google HD', value: 'gcloud', default: state.engine === 'gcloud' },
+            (['google', 'piper', 'kokoro', 'gcloud'] as const).map((e) => ({
+              label: e === 'gcloud' ? `💎 ${engineLabel(e, locale)}` : engineLabel(e, locale),
+              value: e,
+              default: state.engine === e,
+            })),
           ),
       ),
     );
@@ -631,7 +627,12 @@ async function handleVoiceConfig(
       await ci.update(updateCard(next.content, { rows: next.rows }));
     }
   };
-  collector.on('collect', (ci) => void onCollect(ci));
+  // `.catch` is load-bearing: a double-click (already-acknowledged, 40060) or a panel
+  // left open past the ack window (10062) rejects the update/reply, and a bare `void`
+  // would surface that as an unhandledRejection in the global error reporter. The panel
+  // is disposable — dropping a failed ack is the right outcome. Same convention as the
+  // rest of this file.
+  collector.on('collect', (ci) => void onCollect(ci).catch(() => {}));
   collector.on('end', () => {
     if (done) return;
     void i
@@ -701,14 +702,7 @@ export async function handleVoice(i: ChatInputCommandInteraction, deps: BotDeps)
         name: makeLocalizedNamer(i.locale, deps.availableModels)(model),
         model,
         speed: clamped,
-        engine:
-          engine === 'piper'
-            ? 'Piper'
-            : engine === 'kokoro'
-              ? 'Kokoro'
-              : engine === 'gcloud'
-                ? 'Google HD'
-                : 'Google',
+        engine: engineLabel(engine, locale),
       }),
     );
   } else if (sub === 'list') {

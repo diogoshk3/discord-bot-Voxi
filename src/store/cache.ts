@@ -20,8 +20,8 @@ interface Entry {
 type TableCache = Map<string, Entry>;
 const caches = new WeakMap<Database.Database, Map<string, TableCache>>();
 
-/** Max number of entries per table; on exceeding, clears everything (read-through refills). */
-const MAX_ENTRIES_PER_TABLE = 10_000;
+/** Max number of entries PER TABLE; on exceeding, the oldest entries are evicted. */
+export const MAX_ENTRIES_PER_TABLE = 10_000;
 
 /**
  * Tables with a per-GUILD key (key === guildId or `guildId:` prefix). Only these are
@@ -73,8 +73,19 @@ export function cached<T>(
     return hit.value as T;
   }
   const value = load();
-  // Crude memory bound (never serves wrong data: the worst case is a refill).
-  if (!map.has(key) && map.size >= MAX_ENTRIES_PER_TABLE) map.clear();
+  // Memory bound (never serves wrong data: the worst case is a refill). Evicts the
+  // OLDEST entries, never the whole table: wiping it dropped every hot key at once, so
+  // the next burst re-hit SQLite across ~5 tables synchronously — a latency cliff that
+  // landed exactly when the bot was busiest. Map preserves insertion order, so the first
+  // key is the oldest (same evict pattern as GreetCooldown/CountGate/DuplicateTracker).
+  // `while` (not `if`) so a lowered cap converges instead of staying over budget forever.
+  if (!map.has(key)) {
+    while (map.size >= MAX_ENTRIES_PER_TABLE) {
+      const oldest = map.keys().next().value as string | undefined;
+      if (oldest === undefined) break;
+      map.delete(oldest);
+    }
+  }
   map.set(key, { value, at: Date.now() });
   return value;
 }
