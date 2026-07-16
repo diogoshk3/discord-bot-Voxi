@@ -591,6 +591,75 @@ describe('kofi — webhook idempotency (Ko-fi retries do not duplicate the grant
     expect(getPremiumPass(db, DID)).not.toBeNull();
   });
 
+  // Production incident 2026-07-12 00:41: an annual Shop Order arrived, was not in
+  // KOFI_SHOP_MAP (unset), and was dropped with only an INFO line. Nobody noticed for four
+  // days. Ko-fi does not send the product name, so the direct_link_code is the ONLY thing
+  // identifying what was paid for — it has to reach the operator, at error level.
+  it('Shop Order absent from the map -> logs at ERROR with the direct_link_code', async () => {
+    const errors: string[] = [];
+    server = startKofiWebhook({
+      db,
+      token: 'tok',
+      port: 0,
+      now: () => 1_000_000,
+      logInfo: () => {},
+      logError: (m) => errors.push(m),
+      // shopMap deliberately empty: reproduces the .env with no KOFI_SHOP_MAP.
+    });
+    await new Promise<void>((resolve) => server!.once('listening', () => resolve()));
+
+    const status = await startAndPost(
+      JSON.stringify({
+        verification_token: 'tok',
+        type: 'Shop Order',
+        message: null,
+        is_subscription_payment: false,
+        tier_name: null,
+        // A real digital Shop Order: variation_name is empty, only the code identifies it.
+        shop_items: [{ direct_link_code: 'a1b2c3' }],
+        email: EMAIL,
+        kofi_transaction_id: 'tx-unmapped-1',
+      }),
+    );
+
+    // Still 200: Ko-fi must not retry — we cannot map it, and a retry would not help.
+    expect(status).toBe(200);
+    // But the operator has to be able to SEE it, and the message must carry the fix.
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toContain('a1b2c3');
+    expect(errors[0]).toContain('tx-unmapped-1');
+    expect(errors[0]).toContain('KOFI_SHOP_MAP');
+  });
+
+  // A plain donation is NOT a dropped purchase — it is legitimately not a product. It must
+  // stay at info level, or the error channel fills with noise and real drops get buried.
+  it('donation without a product -> stays quiet (info, not error)', async () => {
+    const errors: string[] = [];
+    server = startKofiWebhook({
+      db,
+      token: 'tok',
+      port: 0,
+      now: () => 1_000_000,
+      logInfo: () => {},
+      logError: (m) => errors.push(m),
+    });
+    await new Promise<void>((resolve) => server!.once('listening', () => resolve()));
+
+    const status = await startAndPost(
+      JSON.stringify({
+        verification_token: 'tok',
+        type: 'Donation',
+        message: 'keep it up!',
+        is_subscription_payment: false,
+        tier_name: null,
+        email: EMAIL,
+        kofi_transaction_id: 'tx-donation-1',
+      }),
+    );
+    expect(status).toBe(200);
+    expect(errors).toHaveLength(0);
+  });
+
   it('POST error branches: wrong token 401 (no grant), garbage 400, body >64KB 413', async () => {
     server = startKofiWebhook({
       db,

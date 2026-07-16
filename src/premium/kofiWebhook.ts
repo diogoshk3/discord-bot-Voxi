@@ -675,7 +675,24 @@ export function startKofiWebhook(deps: KofiWebhookDeps): Server | null {
         }
         const grant = mapKofiToGrant(event, now(), deps.shopMap);
         if (!grant) {
-          logInfo(`[kofi] evento ignorado (produto não reconhecido, type=${event.type}).`);
+          // A Shop Order we cannot map is a PAID purchase we are about to drop on the floor.
+          // Ko-fi never sends the product name for a digital item, so `direct_link_code` is the
+          // only thing that says what was bought — and it is exactly what KOFI_SHOP_MAP needs.
+          // Log it at ERROR with the code so the operator both notices and has the fix in hand
+          // (2026-07-12: an annual order died here as one INFO line, unseen for four days).
+          // We still answer 200: a retry would map no better, and a 5xx only makes Ko-fi
+          // redeliver the same unmappable payload.
+          if (event.type === 'Shop Order') {
+            const codes = event.shopItemCodes.join(', ') || '(none sent)';
+            logError(
+              `[kofi] Shop Order not in KOFI_SHOP_MAP — purchase DROPPED, nothing granted. ` +
+                `Add to KOFI_SHOP_MAP: ${codes} (tx=${event.transactionId ?? '?'})`,
+              null,
+            );
+          } else {
+            // Not a product at all (a plain donation): legitimately nothing to grant.
+            logInfo(`[kofi] event ignored (unrecognised product, type=${event.type}).`);
+          }
           res.writeHead(200).end('ok');
           return;
         }
