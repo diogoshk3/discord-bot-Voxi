@@ -138,9 +138,37 @@ exactly under load (every other map in the repo evicts oldest-first).
 
 ---
 
-## P2 — Performance & robustness (vetted; do after P1)
+## P2 — Performance & robustness — DONE 2026-07-16 (P2.1 and P2.2 REJECTED with data)
 
-### P2.1 Opus fast-path: stop paying ffmpeg on every playback [CONFIRMED evidence]
+> **Measured before acting — and the numbers killed the headline item.**
+> Production `/stats`, 2026-07-16 (uptime 1539s, 15 guilds): **cache hits 1, misses 24
+> (4% hit rate)**, 25 messages spoken, synth p50 **207ms** / p95 378ms, 0 synth errors,
+> 0 voice drops.
+>
+> **P2.1 (Opus fast-path) — REJECTED.** The finding assumed a warm cache ("on a warm
+> cache this transcode is the dominant per-message CPU cost"). The audio cache is on
+> DISK and survives restarts, so 4% is a warm-cache number: TTS phrases are almost
+> always unique, so the cache barely fires. The win is `hit_rate × ~40ms` plus the Opus
+> encode saved on every play ≈ **3-4ms against ~250ms/message (~1.4%)** — not worth MED
+> risk on the player, which is the product's core path. Revisit ONLY if the hit rate
+> ever climbs (re-check `/stats`).
+>
+> **Bigger takeaway: there is no performance problem at this scale.** 25 messages in 26
+> minutes across 15 guilds, zero synth errors, zero voice drops — the box is idle. If
+> speed ever matters, the lever is the 207ms synthesis, not the ~3ms playback.
+>
+> **P2.2 (TTL cache for premium lookups) — REJECTED.** Indexed single-row reads + one
+> small JOIN ≈ 20µs against a 207ms synthesis (~0.01%). The audit's own playbook
+> dismissed the sibling `db.prepare` finding on exactly those grounds. Caching the
+> boolean would also let an EXPIRED Plus keep spending paid Google HD quota for the TTL.
+>
+> **P2.3/P2.4/P2.5 — DONE** (commit `1669816`): coverage gate made honest (93.73% ->
+> 85.97% by excluding ~22k statements of pure locale/content data; threshold unchanged
+> and still green), cards/embeds policy documented (embeds deliberately kept for rich
+> lists; `EmbedLinks` still required), hygiene bundle (returnTo `//` guard + main-v27 ->
+> v28 cache-bust, pages.yml Node 22, kofi JSDoc seat count).
+
+### P2.1 Opus fast-path: stop paying ffmpeg on every playback [REJECTED — see box above]
 `src/voice/player.ts:248-251` — `StreamType.Arbitrary` spawns ffmpeg to transcode the
 cached WAV on EVERY play, including cache hits. Dominant per-message CPU on 2 vCPU.
 - Design constraints (from the auditor, validated): `inlineVolume` (emphasis gain ≠ 1)
