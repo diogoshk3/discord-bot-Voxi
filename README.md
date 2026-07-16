@@ -36,7 +36,7 @@ voice channel, type in the text channel, and you're done.
   `/voice config`, and it reads all of their messages in it.
 - **30+ languages, detected automatically** — write in Portuguese, it answers in a
   Portuguese voice; switch to English mid-conversation and so does the voice.
-- **Says who's talking** — "Diogo said hello", with nicknames you can set yourself.
+- **Says who's talking** — "Alex said hello", with nicknames you can set yourself.
 - **Reads Discord, not markup** — emoji, links, code blocks, spoilers and mentions
   come out as something a human would say.
 - **Stays in the call** — automatic reconnection; auto-leave when the channel empties.
