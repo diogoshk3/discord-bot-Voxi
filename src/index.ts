@@ -32,6 +32,7 @@ import type { BotDeps } from './bot/deps';
 import { removePlayer } from './bot/deps';
 import { GameManager } from './games/manager';
 import { systemClock } from './games/types';
+import { channelCard } from './ui/messages';
 import { isGuildPremium } from './store/premium';
 import { claimVoteReward, VOTE_REWARD_HOURS } from './store/voteReward';
 import { createVoiceSession, becomeSpeakerIfStage } from './voice/session';
@@ -50,6 +51,7 @@ import { checkFfmpeg } from './health/ffmpeg';
 import { startLoopLagMonitor } from './health/loopLag';
 import { startEntitlementSync } from './premium/entitlementSync';
 import { startKofiWebhook } from './premium/kofiWebhook';
+import { parseShopMap } from './premium/kofi';
 import { createStatusApi } from './premium/statusApi';
 import { createDashboardApi } from './premium/dashboardApi';
 import { startVoteWebhookServer } from './vote';
@@ -248,7 +250,11 @@ async function main(): Promise<void> {
     sendToChannel: async (channelId, content) => {
       const ch = client.channels.cache.get(channelId);
       if (ch && 'send' in ch && typeof (ch as { send?: unknown }).send === 'function') {
-        await (ch as { send: (c: unknown) => Promise<unknown> }).send(content);
+        await (ch as { send: (c: unknown) => Promise<unknown> }).send(
+          typeof content === 'string'
+            ? channelCard(content, { allowedMentions: { parse: [] } })
+            : content,
+        );
       }
     },
     // Deletes a game's disposable thread at the end (via games/thread — best-effort).
@@ -340,6 +346,9 @@ async function main(): Promise<void> {
       db,
       token: config.kofiWebhookToken,
       port: config.kofiWebhookPort,
+      // Shop items (e.g. the annual passes): Ko-fi sends no product name, only the
+      // direct_link_code — KOFI_SHOP_MAP is what turns that code into a grant. Parsed once.
+      shopMap: parseShopMap(config.kofiShopMap),
       now: () => Date.now(),
       logInfo: (m) => log.info(m),
       logError: (m, err) => log.error(m, err),

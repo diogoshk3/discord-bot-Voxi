@@ -28,6 +28,14 @@ export interface KofiEvent {
   tierName: string | null;
   /** Concatenated shop item names/codes, to match keywords (annual, plus…). */
   shopItemsText: string;
+  /**
+   * `direct_link_code` of each shop item (the code in the product's link,
+   * ko-fi.com/s/<code>). Ko-fi does NOT send the product NAME in a Shop Order —
+   * `variation_name` only exists for PHYSICAL products, so a digital item sends it empty.
+   * The code is therefore the only stable identifier of what was bought; KOFI_SHOP_MAP
+   * turns it into a product (see parseShopMap).
+   */
+  shopItemCodes: string[];
   /** Buyer's email (from Ko-fi). Key to re-find the Discord ID on renewals. */
   email: string | null;
   amount: string | null;
@@ -63,6 +71,9 @@ export function parseKofiPayload(raw: string): KofiEvent | null {
       .map((s) => `${String(s.variation_name ?? '')} ${String(s.direct_link_code ?? '')}`)
       .join(' ')
       .trim();
+    const shopItemCodes = shopItems
+      .map((s) => String(s.direct_link_code ?? '').trim())
+      .filter((c) => c !== '');
     return {
       verificationToken: String(o.verification_token ?? ''),
       type: String(o.type ?? ''),
@@ -70,6 +81,7 @@ export function parseKofiPayload(raw: string): KofiEvent | null {
       isSubscriptionPayment: o.is_subscription_payment === true,
       tierName: o.tier_name == null ? null : String(o.tier_name),
       shopItemsText,
+      shopItemCodes,
       // from_name (buyer's name) is NOT captured — PII minimization; Ko-fi
       // keeps it on their side and the tx id is enough to reconcile.
       email: o.email == null ? null : String(o.email),
@@ -123,8 +135,74 @@ export function extractDiscordId(message: string | null): string | null {
  * donation) — those are ignored. CRITICAL ORDER: "plus" is tested BEFORE "premium", so
  * a Premium Max product can NEVER contain the word "plus" in its name.
  */
-export function mapKofiToGrant(event: KofiEvent, now: number): KofiGrant | null {
+/** A product sold as a Ko-fi Shop item, resolved from its `direct_link_code`. */
+export interface ShopProduct {
+  plan: KofiPlan;
+  days: number;
+  seats: number;
+}
+
+/** Upper bounds for the env-configured map — cheap defense against a typo. */
+const MAX_SHOP_DAYS = 3650;
+const MAX_SHOP_SEATS = 100;
+
+/**
+ * Parses KOFI_SHOP_MAP: `code:plan:days[:seats]` entries separated by commas, e.g.
+ * `abc123:plus:365, def456:premium:365:8`. Maps a Shop item's `direct_link_code` (the
+ * code in ko-fi.com/s/<code>) to the product it sells.
+ *
+ * WHY this exists: a Ko-fi Shop Order does NOT carry the product name — `variation_name`
+ * only applies to PHYSICAL products, so a digital item (our annual passes) sends it empty
+ * and the keyword matching used for membership tiers can never recognize it. Without this
+ * map an annual purchase is silently ignored (200 OK, no grant).
+ *
+ * Malformed entries are SKIPPED, never thrown: a typo in the env must not take the whole
+ * webhook down (a dropped entry loses one product; an exception loses every sale). PURE.
+ */
+export function parseShopMap(raw: string | undefined): Map<string, ShopProduct> {
+  const out = new Map<string, ShopProduct>();
+  if (!raw) return out;
+  for (const entry of raw.split(',')) {
+    const parts = entry.trim().split(':');
+    if (parts.length < 3 || parts.length > 4) continue;
+    const [code, planRaw, daysRaw, seatsRaw] = parts.map((p) => p.trim());
+    if (!code) continue;
+    if (planRaw !== 'plus' && planRaw !== 'premium') continue;
+    const days = Number.parseInt(daysRaw, 10);
+    if (!Number.isFinite(days) || days < 1 || days > MAX_SHOP_DAYS) continue;
+    let seats = PREMIUM_PASS_SEATS;
+    if (seatsRaw !== undefined) {
+      const n = Number.parseInt(seatsRaw, 10);
+      if (!Number.isFinite(n) || n < 1 || n > MAX_SHOP_SEATS) continue;
+      seats = n;
+    }
+    out.set(code, { plan: planRaw, days, seats });
+  }
+  return out;
+}
+
+export function mapKofiToGrant(
+  event: KofiEvent,
+  now: number,
+  shopMap?: Map<string, ShopProduct>,
+): KofiGrant | null {
   void now; // reserved (dates are computed in the store when applying)
+  // Shop items FIRST: an exact configured code beats guessing from a name — and it is the
+  // ONLY way to recognize one, since Ko-fi does not send the product name (see parseShopMap).
+  if (shopMap?.size) {
+    for (const code of event.shopItemCodes) {
+      const product = shopMap.get(code);
+      if (product) {
+        return {
+          plan: product.plan,
+          days: product.days,
+          seats: product.seats,
+          discordId: extractDiscordId(event.message),
+          label: `shop:${code}`,
+        };
+      }
+    }
+  }
   const label = `${event.tierName ?? ''} ${event.shopItemsText}`.trim();
   const lower = label.toLowerCase();
   let plan: KofiPlan | null = null;

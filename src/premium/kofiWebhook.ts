@@ -20,6 +20,7 @@ import {
   parseKofiPayload,
   verifyKofiToken,
   mapKofiToGrant,
+  type ShopProduct,
   hashKofiEmail,
   type KofiEvent,
   type KofiGrant,
@@ -44,6 +45,13 @@ export interface KofiWebhookDeps {
   dashboardApi?: DashboardApi;
   /** Defensive limit of the API rate-limit map. Default 2048. */
   apiRateMaxEntries?: number;
+  /**
+   * Ko-fi Shop item `direct_link_code` -> product (built by parseShopMap from KOFI_SHOP_MAP).
+   * REQUIRED to recognize Shop purchases (e.g. the annual passes): a Shop Order does not carry
+   * the product name. Absent/empty => shop orders fall back to keyword matching, which for a
+   * digital item means they are ignored.
+   */
+  shopMap?: Map<string, ShopProduct>;
   // top.gg webhook (vote reward) mounted on the SAME public server (POST /webhook/topgg)
   // — avoids a dedicated port + new Caddy route. Absent/empty => the route is NOT served
   // (without a secret anyone would forge votes). See ./vote (handleVoteWebhook, constant-time auth).
@@ -665,7 +673,7 @@ export function startKofiWebhook(deps: KofiWebhookDeps): Server | null {
           res.writeHead(401).end('bad token');
           return;
         }
-        const grant = mapKofiToGrant(event, now());
+        const grant = mapKofiToGrant(event, now(), deps.shopMap);
         if (!grant) {
           logInfo(`[kofi] evento ignorado (produto não reconhecido, type=${event.type}).`);
           res.writeHead(200).end('ok');

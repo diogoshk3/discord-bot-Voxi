@@ -8,6 +8,7 @@ import {
   verifyKofiToken,
   extractDiscordId,
   mapKofiToGrant,
+  parseShopMap,
   hashKofiEmail,
   PREMIUM_PASS_SEATS,
   PREMIUM_MAX_SEATS,
@@ -69,6 +70,82 @@ describe('kofi — token and Discord ID', () => {
     expect(extractDiscordId('sem id')).toBeNull();
     expect(extractDiscordId(null)).toBeNull();
     expect(extractDiscordId('123')).toBeNull();
+  });
+});
+
+// Ko-fi Shop Orders do NOT carry the product name: the payload only has
+// `direct_link_code` and `variation_name`, and variations exist ONLY for PHYSICAL
+// products — a digital item (our annual passes) sends an EMPTY variation_name. So the
+// keyword matching used for membership tiers can never recognize a shop purchase; an
+// explicit code->product map is the only reliable route.
+describe('kofi — shop map (annual passes bought as Shop items)', () => {
+  const now = 1_000_000;
+  /** A REAL digital Shop Order: no variation_name, only the direct_link_code. */
+  const shopOrder = (code: string): string =>
+    kofiJson({
+      type: 'Shop Order',
+      tier_name: null,
+      is_subscription_payment: false,
+      shop_items: [{ direct_link_code: code, variation_name: '' }],
+    });
+
+  it('parses the payload codes so an exact match is possible', () => {
+    expect(parseKofiPayload(shopOrder('abc123'))?.shopItemCodes).toEqual(['abc123']);
+  });
+
+  it('WITHOUT a map, a digital annual Shop Order is silently ignored (the real-world gap)', () => {
+    expect(mapKofiToGrant(parseKofiPayload(shopOrder('abc123'))!, now)).toBeNull();
+  });
+
+  it('WITH the map, the SAME order grants 365 days of Plus (and keeps the Discord ID)', () => {
+    const map = parseShopMap('abc123:plus:365');
+    const g = mapKofiToGrant(parseKofiPayload(shopOrder('abc123'))!, now, map)!;
+    expect(g.plan).toBe('plus');
+    expect(g.days).toBe(365);
+    expect(g.discordId).toBe(DID);
+  });
+
+  it('a premium code carries its licence count', () => {
+    const map = parseShopMap('def456:premium:365:8');
+    const g = mapKofiToGrant(parseKofiPayload(shopOrder('def456'))!, now, map)!;
+    expect(g.plan).toBe('premium');
+    expect(g.seats).toBe(8);
+    expect(g.days).toBe(365);
+  });
+
+  it('an UNKNOWN code stays null — never a wrong grant from a guess', () => {
+    const map = parseShopMap('abc123:plus:365');
+    expect(mapKofiToGrant(parseKofiPayload(shopOrder('nope999'))!, now, map)).toBeNull();
+  });
+
+  it('the map does NOT break membership tiers (regression)', () => {
+    const map = parseShopMap('abc123:plus:365');
+    const g = mapKofiToGrant(parseKofiPayload(kofiJson({}))!, now, map)!;
+    expect(g.plan).toBe('premium'); // still read from tier_name
+    expect(g.days).toBe(30);
+  });
+
+  describe('parseShopMap', () => {
+    it('reads several entries, tolerates spaces, defaults the seats', () => {
+      const m = parseShopMap(' abc:plus:365 , def:premium:365 ');
+      expect(m.get('abc')).toEqual({ plan: 'plus', days: 365, seats: PREMIUM_PASS_SEATS });
+      expect(m.get('def')?.seats).toBe(PREMIUM_PASS_SEATS);
+    });
+    it('empty/undefined -> empty map (feature simply off)', () => {
+      expect(parseShopMap(undefined).size).toBe(0);
+      expect(parseShopMap('').size).toBe(0);
+    });
+    it('skips malformed entries instead of crashing the webhook', () => {
+      const m = parseShopMap('good:plus:365, garbage, bad:wrongplan:30, nodays:plus');
+      expect(m.size).toBe(1);
+      expect(m.has('good')).toBe(true);
+    });
+    it('rejects absurd days/seats (cheap defense against a typo in the env)', () => {
+      expect(parseShopMap('x:plus:0').size).toBe(0);
+      expect(parseShopMap('x:plus:99999').size).toBe(0);
+      expect(parseShopMap('x:premium:365:0').size).toBe(0);
+      expect(parseShopMap('x:premium:365:9999').size).toBe(0);
+    });
   });
 });
 

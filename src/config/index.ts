@@ -116,6 +116,12 @@ export interface AppConfig {
   // ABSENT => the webhook server does NOT start (inert). Port of the local HTTP endpoint.
   kofiWebhookToken?: string;
   kofiWebhookPort: number;
+  /**
+   * Ko-fi Shop items -> product, as `code:plan:days[:seats]` entries separated by commas
+   * (env KOFI_SHOP_MAP). Needed because a Shop Order does not carry the product NAME —
+   * only its `direct_link_code`. Absent/empty => no shop products (annual passes off).
+   */
+  kofiShopMap?: string;
   // Site Premium Panel (login with Discord -> GET /api/me/premium on the SAME HTTP server).
   // OPT-IN: PREMIUM_API_ENABLED=true mounts the API. PREMIUM_API_ORIGIN is the site origin
   // allowed in CORS (only it can call the API from the browser). Without enable => inert.
@@ -391,6 +397,7 @@ export function loadConfig(): AppConfig {
     // Ko-fi webhook: no token => does not start. Local endpoint port.
     kofiWebhookToken: strEnv('KOFI_WEBHOOK_TOKEN', '') || undefined,
     kofiWebhookPort: numEnvPositive('KOFI_WEBHOOK_PORT', 3001, { integer: true }),
+    kofiShopMap: strEnv('KOFI_SHOP_MAP', ''),
     // Premium Panel: explicit opt-in (default off). Origin = site domain (vozen.org).
     // Production must set PREMIUM_API_ORIGIN in .env; the default follows the current domain.
     premiumApiEnabled: boolEnvDefaultOff('PREMIUM_API_ENABLED'),
