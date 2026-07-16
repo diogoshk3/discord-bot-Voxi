@@ -2,7 +2,7 @@
 
 Runbook curto para alojar o Vozen sempre-ligado, com `docker compose`, em qualquer
 das três opções abaixo. Os passos de Docker/Piper/modelos/`.env` são os mesmos do
-**[README §5 — Deploy em VPS (Docker)](README.md#5-deploy-em-vps-docker)**; este
+**[README §5 — Deploy em VPS (Docker)](docs/SELF-HOST.md#5-deploy-on-a-vps-docker)**; este
 documento foca o que **difere por opção** (sobretudo a **arquitetura** do Piper) e
 o que é **comum** (env vars + como verificar).
 
@@ -178,6 +178,6 @@ comporta-se como o arranque normal. O `npm start` continua single-process e igno
 
 ---
 
-Ver também: **[README §5](README.md#5-deploy-em-vps-docker)** (passos Docker em
+Ver também: **[README §5](docs/SELF-HOST.md#5-deploy-on-a-vps-docker)** (passos Docker em
 detalhe + resolução de problemas) e **[docs/GO-PUBLIC.md](docs/GO-PUBLIC.md)**
 (tornar o bot público + sempre-ligado).

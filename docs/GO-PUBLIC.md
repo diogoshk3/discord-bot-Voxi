@@ -96,7 +96,7 @@ Opções económicas:
   podem correr o bot a custo zero, se conseguires provisionar uma.
 
 O caminho de deploy já está documentado no **README → [§5 Deploy em VPS
-(Docker)](../README.md#5-deploy-em-vps-docker)**. O essencial:
+(Docker)](SELF-HOST.md#5-deploy-on-a-vps-docker)**. O essencial:
 
 ```
 docker compose up -d

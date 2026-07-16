@@ -29,7 +29,7 @@ resume o essencial e **liga** para o detalhe; não repete os guias completos.
 
 ## 4. Adicionar a um servidor de teste
 
-- [ ] Convida o Vozen ao teu servidor de testes (1.ª vez: usa o **link OAuth2** do [README §3.2](README.md#32-convidar-o-bot); já dentro de um servidor podes reutilizar o comando `/invite`) e corre **`/setup`** lá para ligar a auto-leitura; **verifica:** o bot entra no canal de voz e lê uma mensagem. _~2 min._
+- [ ] Convida o Vozen ao teu servidor de testes (1.ª vez: usa o **link OAuth2** do [guia de self-host §3.2](docs/SELF-HOST.md#32-invite-the-bot); já dentro de um servidor podes reutilizar o comando `/invite`) e corre **`/setup`** lá para ligar a auto-leitura; **verifica:** o bot entra no canal de voz e lê uma mensagem. _~2 min._
 
 ## 5. (Opcional) Listar e pedir reviews
 
