@@ -261,3 +261,25 @@ invariante de re-ensurdecer). 032 são 5 itens independentes; o item C (sweep bi
   rotação de logs. Não fazer agora (single-process aguenta a escala atual). **Pré-escala** (~2500
   guilds, quando o Discord força sharding): passar o `shard.js` pelo supervisor OU portar o lock/
   backoff/rotação para o launcher sharded. Efeito L.
+
+---
+
+## 4.ª auditoria — 2026-07-16 (review completo) — PLANO ÚNICO para o Opus executar
+
+Nova passagem `/improve` @ commit `407503c` + refactor Components V2 por commitar
+(verificado verde: `npm run check` exit 0 na árvore suja). 4 auditores paralelos
+(correção · segurança · performance · dívida/testes/docs) → findings vetados à mão
+contra o código citado. **Segurança: LIMPA (zero HIGH/MED).**
+
+**Plano consolidado: [`033-full-review-fixes-and-upgrades.md`](033-full-review-fixes-and-upgrades.md)** — Status: **TODO**
+
+| Secção | Conteúdo | Prio |
+| --- | --- | --- |
+| P0 | Aterrar refactor V2 · reescrever trailer + force push (aprovado) · deploy · Ko-fi Send Test/anual [Diogo] | P0 |
+| P1 (B1-B8) | clone↔transcribe exclusão mútua · consentTimeout · botão Stop público · catch do painel · ENGINE_LABELS · deploy gate=check · pragma synchronous=NORMAL · evict oldest-first no cache | P1 |
+| P2 | Opus fast-path (ffmpeg por playback) · TTL premium/gcloud · thresholds de cobertura honestos · política cards/embeds · bundle de higiene · topSpeakers SQL | P2 |
+| P3 | splits voice.ts/kofiWebhook.ts · isPremiumContext · ARCHITECTURE sync · regra English-only | P3 |
+| F | localização de slash-commands (catalog→Discord) · dashboard 3b (canal+voz) · i18n painel×33 + dash.* do site · STT apagar transcrições no revoke | dir. |
+
+Não-planeados registados no próprio plano (SEC-01/02/04 by-design/LOW, PERF-06 por
+verificar, PERF-07/TEST-03 dobrados na vaga de refactor).
