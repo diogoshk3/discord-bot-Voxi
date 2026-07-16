@@ -6,12 +6,23 @@ import {
   ButtonBuilder,
   ButtonStyle,
   ComponentType,
+  StringSelectMenuBuilder,
+  type MessageComponentInteraction,
 } from 'discord.js';
 import { getVoiceConnection } from '@discordjs/voice';
 import type { BotDeps } from '../../bot/deps';
 import { getPlayer, getLimiter } from '../../bot/deps';
 import { brandEmbed } from '../../ui/theme';
-import { getUserVoice, setUserVoice, resetUserVoice } from '../../store/userVoice';
+import { getUserVoice, setUserVoice, resetUserVoice, type UserEngine } from '../../store/userVoice';
+import {
+  seedPanelState,
+  localesOf,
+  voicesForLocale,
+  needsVoiceRow,
+  paginateLocales,
+  validateSave,
+  SPEED_PRESETS,
+} from '../voiceConfigPanel';
 import { getGuildConfig } from '../../store/guildConfig';
 import { setOptOut, setOptIn } from '../../store/optout';
 import { setDetection } from '../../store/langDetect';
@@ -378,6 +389,223 @@ async function handleVoiceClone(
   }
 }
 
+/**
+ * /voice config — interactive panel (dropdowns + Save) so the whole voice setup is done
+ * with clicks and NOTHING is saved until the user presses Save. This removes the
+ * accidental-Enter-mid-configuration problem of a slash command with options. All the
+ * testable decisions (state seeding, language pagination, per-locale voices, presets,
+ * Save validation) live in the pure `voiceConfigPanel` module; this handler is only the
+ * discord.js glue and is verified live in Discord.
+ */
+async function handleVoiceConfig(
+  i: ChatInputCommandInteraction,
+  deps: BotDeps,
+  locale: string,
+): Promise<void> {
+  const models = deps.availableModels;
+  if (!models.length) {
+    await reply(i, t('voice.listEmpty', locale));
+    return;
+  }
+  const localeOf = (m: string): string => {
+    const d = m.indexOf('-');
+    return d === -1 ? m : m.slice(0, d);
+  };
+  const cfg = getGuildConfig(deps.db, i.guildId!);
+  const defaultModel =
+    cfg.defaultVoice || deps.config.defaultVoice || models[0] || 'en_US-amy-medium';
+  const state = seedPanelState(getUserVoice(deps.db, i.guildId!, i.user.id), {
+    model: models.includes(defaultModel) ? defaultModel : models[0]!,
+    speed: deps.config.defaultSpeed,
+  });
+  // Guard: a saved model that is no longer installed would leave the language select
+  // with no matching default — fall back to the first available voice.
+  if (!models.includes(state.model)) state.model = models[0]!;
+
+  const langNamer = makeLocalizedNamer(i.locale, models, { voice: false });
+  const fullNamer = makeLocalizedNamer(i.locale, models);
+  const engineName = (e: UserEngine): string =>
+    e === 'piper'
+      ? 'Piper'
+      : e === 'kokoro'
+        ? 'Kokoro'
+        : e === 'gcloud'
+          ? 'Google HD'
+          : t('voice.config.engDefault', locale);
+
+  const locales = localesOf(models);
+  const clip = (s: string): string => (s.length > 100 ? s.slice(0, 99) + '…' : s);
+
+  function render(): {
+    content: string;
+    components: ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder>[];
+  } {
+    const curLocale = localeOf(state.model);
+    const page = paginateLocales(locales, state.langPage);
+    // Row 1 — language (24 langs + "More" sentinel when there are more pages).
+    const langOptions = page.slice.map((loc) => ({
+      label: clip(langNamer(voicesForLocale(models, loc)[0] ?? loc)),
+      value: loc,
+      default: loc === curLocale,
+    }));
+    if (page.hasMore)
+      langOptions.push({
+        label: t('voice.config.more', locale),
+        value: '__more__',
+        default: false,
+      });
+    const rows: ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder>[] = [
+      new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+        new StringSelectMenuBuilder()
+          .setCustomId(`vcfg:lang:${i.id}`)
+          .setPlaceholder(t('voice.config.pickLanguage', locale))
+          .addOptions(langOptions),
+      ),
+    ];
+    // Row 2 — voice, ONLY when this language has more than one installed voice.
+    if (needsVoiceRow(models, curLocale)) {
+      rows.push(
+        new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+          new StringSelectMenuBuilder()
+            .setCustomId(`vcfg:voice:${i.id}`)
+            .setPlaceholder(t('voice.config.pickVoice', locale))
+            .addOptions(
+              voicesForLocale(models, curLocale).map((m) => ({
+                label: clip(fullNamer(m)),
+                value: m,
+                default: m === state.model,
+              })),
+            ),
+        ),
+      );
+    }
+    // Row 3 — engine.
+    rows.push(
+      new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+        new StringSelectMenuBuilder()
+          .setCustomId(`vcfg:engine:${i.id}`)
+          .setPlaceholder(t('voice.config.pickEngine', locale))
+          .addOptions(
+            {
+              label: t('voice.config.engDefault', locale),
+              value: 'google',
+              default: state.engine === 'google',
+            },
+            { label: 'Piper', value: 'piper', default: state.engine === 'piper' },
+            { label: 'Kokoro', value: 'kokoro', default: state.engine === 'kokoro' },
+            { label: '💎 Google HD', value: 'gcloud', default: state.engine === 'gcloud' },
+          ),
+      ),
+    );
+    // Row 4 — speed presets.
+    rows.push(
+      new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+        new StringSelectMenuBuilder()
+          .setCustomId(`vcfg:speed:${i.id}`)
+          .setPlaceholder(t('voice.config.pickSpeed', locale))
+          .addOptions(
+            SPEED_PRESETS.map((s) => ({
+              label: `${s}×`,
+              value: String(s),
+              default: s === state.speed,
+            })),
+          ),
+      ),
+    );
+    // Row 5 — Save / Cancel.
+    rows.push(
+      new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`vcfg:save:${i.id}`)
+          .setLabel(t('voice.config.save', locale))
+          .setStyle(ButtonStyle.Success)
+          .setEmoji('💾'),
+        new ButtonBuilder()
+          .setCustomId(`vcfg:cancel:${i.id}`)
+          .setLabel(t('voice.config.cancel', locale))
+          .setStyle(ButtonStyle.Secondary)
+          .setEmoji('✖️'),
+      ),
+    );
+    const summary = t('voice.config.summary', locale, {
+      voice: fullNamer(state.model),
+      engine: engineName(state.engine),
+      speed: state.speed,
+    });
+    return { content: `${t('voice.config.title', locale)}\n${summary}`, components: rows };
+  }
+
+  await i.reply({ ...render(), flags: MessageFlags.Ephemeral });
+  const msg = await i.fetchReply();
+  let done = false;
+  const collector = msg.createMessageComponentCollector({ time: 120_000 });
+  const onCollect = async (ci: MessageComponentInteraction): Promise<void> => {
+    // The panel is ephemeral (only the invoker sees it), but guard anyway.
+    if (ci.user.id !== i.user.id) {
+      await ci.reply({ content: t('clone.stopNotYours', locale), flags: MessageFlags.Ephemeral });
+      return;
+    }
+    if (ci.isButton() && ci.customId === `vcfg:cancel:${i.id}`) {
+      done = true;
+      await ci.update({ content: t('voice.config.cancelled', locale), components: [] });
+      collector.stop('cancelled');
+      return;
+    }
+    if (ci.isButton() && ci.customId === `vcfg:save:${i.id}`) {
+      const now = Date.now();
+      const premium =
+        isUserPremium(deps.db, i.user.id, now) || isGuildPremium(deps.db, i.guildId!, now);
+      const check = validateSave(state, { premium });
+      if (!check.ok) {
+        // Keep the panel open; tell them via a follow-up so they can pick another engine.
+        await ci.reply({
+          content: t('voice.engine.gcloudLocked', locale),
+          flags: MessageFlags.Ephemeral,
+        });
+        return;
+      }
+      setUserVoice(deps.db, i.guildId!, i.user.id, state.model, state.speed, state.engine);
+      done = true;
+      await ci.update({
+        content: t('voice.set', locale, {
+          name: fullNamer(state.model),
+          model: state.model,
+          speed: state.speed,
+          engine: engineName(state.engine),
+        }),
+        components: [],
+      });
+      collector.stop('saved');
+      return;
+    }
+    if (ci.isStringSelectMenu()) {
+      const value = ci.values[0]!;
+      if (ci.customId === `vcfg:lang:${i.id}`) {
+        if (value === '__more__') {
+          state.langPage = paginateLocales(locales, state.langPage).nextPage;
+        } else {
+          const first = voicesForLocale(models, value)[0];
+          if (first) state.model = first; // switch to the language's first voice
+        }
+      } else if (ci.customId === `vcfg:voice:${i.id}`) {
+        state.model = value;
+      } else if (ci.customId === `vcfg:engine:${i.id}`) {
+        state.engine = value as UserEngine;
+      } else if (ci.customId === `vcfg:speed:${i.id}`) {
+        state.speed = Number(value);
+      }
+      await ci.update(render());
+    }
+  };
+  collector.on('collect', (ci) => void onCollect(ci));
+  collector.on('end', () => {
+    if (done) return;
+    void i
+      .editReply({ content: t('voice.config.expired', locale), components: [] })
+      .catch(() => {});
+  });
+}
+
 export async function handleVoice(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
   const locale = localeForUser(deps, i);
   // The /voice clone group dispatches to its own handler (getSubcommand() would return the
@@ -387,6 +615,10 @@ export async function handleVoice(i: ChatInputCommandInteraction, deps: BotDeps)
     return;
   }
   const sub = i.options.getSubcommand();
+  if (sub === 'config') {
+    await handleVoiceConfig(i, deps, locale);
+    return;
+  }
   if (sub === 'set') {
     const model = i.options.getString('model', true);
     if (!deps.availableModels.includes(model)) {

@@ -246,6 +246,12 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
             ),
         ),
     )
+    // /voice config — opens an interactive panel (dropdowns + Save button) so the
+    // whole voice setup is done with clicks and NOTHING submits until Save. Avoids the
+    // accidental Enter mid-configuration that a slash command with options allows.
+    .addSubcommand((s) =>
+      s.setName('config').setDescription('Open a panel to set up your voice (no accidental Enter)'),
+    )
     .addSubcommand((s) => s.setName('list').setDescription('List the available models'))
     .addSubcommand((s) => s.setName('reset').setDescription('Reset your voice to the default'))
     .addSubcommand((s) =>

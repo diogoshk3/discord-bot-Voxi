@@ -242,6 +242,55 @@ export const catalog: Record<string, Entry> = {
     en: '✅ Your voice is back to the default. Pick another anytime with `/voice list` and `/voice set`.',
     pt: '✅ A tua voz voltou ao valor por defeito. Escolhe outra quando quiseres com `/voice list` e `/voice set`.',
   },
+  // ── /voice config panel (dropdowns + Save; nothing submits until Save) ──
+  'voice.config.title': {
+    en: '🎙️ **Voice setup** — pick your options below, then press **Save**. Nothing changes until you do.',
+    pt: '🎙️ **Configuração de voz** — escolhe as opções abaixo e carrega em **Guardar**. Nada muda até o fazeres.',
+  },
+  'voice.config.summary': {
+    en: 'Current selection: **{voice}** · engine **{engine}** · {speed}×',
+    pt: 'Seleção atual: **{voice}** · motor **{engine}** · {speed}×',
+  },
+  'voice.config.pickLanguage': {
+    en: 'Language…',
+    pt: 'Língua…',
+  },
+  'voice.config.pickVoice': {
+    en: 'Voice…',
+    pt: 'Voz…',
+  },
+  'voice.config.pickEngine': {
+    en: 'Engine…',
+    pt: 'Motor…',
+  },
+  'voice.config.pickSpeed': {
+    en: 'Speed…',
+    pt: 'Velocidade…',
+  },
+  'voice.config.more': {
+    en: '▼ More languages',
+    pt: '▼ Mais línguas',
+  },
+  'voice.config.engDefault': {
+    en: 'Default (local)',
+    pt: 'Padrão (local)',
+  },
+  'voice.config.save': {
+    en: 'Save',
+    pt: 'Guardar',
+  },
+  'voice.config.cancel': {
+    en: 'Cancel',
+    pt: 'Cancelar',
+  },
+  'voice.config.cancelled': {
+    en: 'Setup cancelled — nothing changed.',
+    pt: 'Configuração cancelada — nada foi alterado.',
+  },
+  'voice.config.expired': {
+    en: 'Panel expired — run `/voice config` again to continue.',
+    pt: 'Painel expirado — corre `/voice config` outra vez para continuar.',
+  },
   'voice.detection.on': {
     en: '✅ Automatic language detection is ON: each message is read in a voice for its detected language (the speaker may change). Turn it off with `/voice detection active:false`.',
     pt: '✅ Deteção automática de língua LIGADA: cada mensagem é lida numa voz da língua detetada (o locutor pode mudar). Desliga com `/voice detection active:false`.',
