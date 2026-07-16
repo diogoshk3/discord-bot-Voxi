@@ -129,8 +129,9 @@ export function extractDiscordId(message: string | null): string | null {
 
 /**
  * Decides the grant from the event, by KEYWORDS in the tier/item name (robust to
- * exact names): "plus" => Plus (user); "premium" => Premium pass (guild), with "max"
- * => 10 licenses (Premium Max) and otherwise the default 3. "annual"/"anual"/"year"/"ano" => 365
+ * exact names): "plus" => Plus (user); "premium" => Premium pass (guild), with the seat
+ * count read from "(N servers)" and a legacy "max" fallback of PREMIUM_MAX_SEATS (8 since
+ * 2026-07-11, see the constant), otherwise the default 3. "annual"/"anual"/"year"/"ano" => 365
  * days, otherwise 30 (monthly). Returns null if it is not a recognizable product (e.g. a one-off
  * donation) — those are ignored. CRITICAL ORDER: "plus" is tested BEFORE "premium", so
  * a Premium Max product can NEVER contain the word "plus" in its name.

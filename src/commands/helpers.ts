@@ -73,9 +73,13 @@ export const INVITE_PERMISSIONS: string = new PermissionsBitField([
   PermissionFlagsBits.ViewChannel,
   PermissionFlagsBits.SendMessages,
   PermissionFlagsBits.ReadMessageHistory,
-  // EmbedLinks: the bot replies with almost everything in EMBEDS (help, stats, games, setup).
-  // Without this permission Discord does NOT render the bot's embeds in channels where
-  // @everyone doesn't have it. Reactions/attachments do NOT apply: the code uses neither
+  // EmbedLinks: STILL REQUIRED after the Components V2 migration. The presentation policy
+  // is split by shape, not by accident:
+  //   - conversational replies (confirmations, errors, panels) -> ui/messages.ts CARDS;
+  //   - rich multi-line LISTS (/stats, /help, /game list|leaderboard|stats, /voice list,
+  //     /setup, clone status) stay EMBEDS — they are long, scannable and field-like.
+  // Without this permission Discord does NOT render those embeds in channels where
+  // @everyone lacks it. Reactions/attachments do NOT apply: the code uses neither
   // .react() nor sends files (audited).
   PermissionFlagsBits.EmbedLinks,
   // Game threads (/game): Vozen creates a disposable thread per match, writes in

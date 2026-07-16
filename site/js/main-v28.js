@@ -370,7 +370,12 @@
         rt = sessionStorage.getItem("vozen.returnTo");
         sessionStorage.removeItem("vozen.returnTo");
       } catch {}
-      if (rt && /^\/[A-Za-z0-9/_-]*$/.test(rt)) {
+      // `^\/[^/]` (not just `^\/`): a leading "//" is protocol-relative, so "//evil"
+      // would navigate OFF-SITE. Not reachable today (only our own code writes this key,
+      // always "/dashboard") and the charset already rejects dots, so no real host could
+      // be named — but this is the check that stops it becoming an open redirect the day
+      // returnTo ever comes from somewhere less trusted.
+      if (rt && /^\/[A-Za-z0-9_-][A-Za-z0-9/_-]*$/.test(rt)) {
         location.replace(rt);
         return;
       }

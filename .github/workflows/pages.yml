@@ -34,7 +34,10 @@ jobs:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: 20
+          # Matches package.json engines (>=22.12) and ci.yml. The site build only uses
+          # pure-JS minifiers, so 20 worked — but running below the declared floor is how
+          # a Node-22+ incompatibility in the build tooling stays hidden until it bites.
+          node-version: 22
           cache: npm
       # Install scripts BLOQUEADOS (mesma postura de supply-chain do ci.yml/deploy-bot.yml,
       # plano 031) — este job tem pages:write + id-token:write, por isso não pode correr o
