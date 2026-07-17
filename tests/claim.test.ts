@@ -117,6 +117,23 @@ describe('claimPendingGrant — claim a pending purchase (code only, plan 021)',
     expect(claimPendingGrant(db, DID, `https://ko-fi.com/summary/${UUID}`, now + 10).ok).toBe(true);
   });
 
+  // A THIRD shape, found on a real guest receipt — the one a buyer reaches from the "Go to your
+  // order" button in Ko-fi's email. Code in the middle of the PATH this time, with a query string
+  // after it. We never designed for this shape; taking the whole link is what makes it work, and
+  // that is exactly the point — enumerating Ko-fi's URL formats was always going to lose. Pinned
+  // as a regression guard: this one arrives from the only recovery path a guest has.
+  it('accepts the guest receipt URL reached from the Ko-fi email button', () => {
+    recordPendingGrant(db, pend({ transactionId: UUID }), now);
+    const out = claimPendingGrant(
+      db,
+      DID,
+      `https://ko-fi.com/transactions/${UUID}/thank-you?img=ogbuymeacoffee`,
+      now + 10,
+    );
+    expect(out.ok).toBe(true);
+    expect(isUserPremium(db, DID, now + 20)).toBe(true);
+  });
+
   it('still accepts a clean code, and still rejects a wrong one', () => {
     recordPendingGrant(db, pend({ transactionId: UUID }), now);
     expect(claimPendingGrant(db, DID, `  ${UUID}  `, now + 10).ok).toBe(true);

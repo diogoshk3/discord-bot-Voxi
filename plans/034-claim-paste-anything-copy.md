@@ -45,37 +45,64 @@ passou a aceitar o URL inteiro. Objetivo: em todo o funil, a instrução passa a
 
 ## Fases
 
-### Fase 1 — Teste primeiro (RED)
+### Fase 1 — Teste primeiro (RED) ✅
 
-- [ ] Reescrever o teste de copy em `tests/operationalHardening.test.ts`: em vez de
+- [x] Reescrever o teste de copy em `tests/operationalHardening.test.ts`: em vez de
       exigir `/summary/` e `txid=` em todas as línguas, exigir que **nenhuma** língua
       contém `txid=` (a instrução de cirurgia desapareceu) e que as 4 chaves existem
       e são não-vazias nas 10 línguas.
-- [ ] **Done:** `npx vitest run tests/operationalHardening.test.ts` FALHA contra a
+- [x] **Done:** `npx vitest run tests/operationalHardening.test.ts` FALHA contra a
       copy atual (prova que o teste morde).
+- Nota de execução: o primeiro RED foi ENOENT (v27 ainda não existia), o que não prova
+  nada. Semeou-se o v27 como cópia byte-a-byte do v26 para obter um RED de conteúdo
+  real (`en claim.hint still says txid=`).
 
 ### Fase 2 — Copy nova ×10 (GREEN)
 
-- [ ] Reescrever as 4 chaves nas 10 línguas: "cola o link do recibo do Ko-fi — ou só
+- [x] Reescrever as 4 chaves nas 10 línguas: "cola o link do recibo do Ko-fi — ou só
       o código, se preferires" (hint); placeholder "Cola aqui o link do recibo";
       mensagens de erro coerentes.
-- [ ] Cache-bust v26 → v27 + atualizar refs (3 HTML + teste).
-- [ ] **Done:** teste da fase 1 verde; paridade de chaves igual nas 10 línguas;
+- [x] Cache-bust v26 → v27 + atualizar refs (3 HTML + teste).
+- [x] **Done:** teste da fase 1 verde; paridade de chaves igual nas 10 línguas;
       `npm run check` verde.
 
-### Fase 3 — Verificação e deploy
+### Fase 3 — Verificação e deploy ✅
 
-- [ ] Preview no browser: strings novas renderizam no cartão de ativação; caixa de
+- [x] Preview no browser: strings novas renderizam no cartão de ativação; caixa de
       consentimento intacta.
-- [ ] `npm run build:site` + push + live check (v27 → 200, v26 → 404, copy nova no
+- [x] `npm run build:site` + push + live check (v27 → 200, v26 → 404, copy nova no
       ficheiro servido).
-- [ ] **Done:** `curl` ao vozen.org confirma a copy nova; deploys verdes.
+- [x] **Done:** `curl` ao vozen.org confirma a copy nova; deploys verdes. Commit
+      `c3e6a75`; 0 ocorrências de `txid=` em produção.
 
-### Fase 4 — Ko-fi [needs Diogo]
+### Fase 4 — Ko-fi [needs Diogo] ✅
 
-- [ ] Entregar blocos prontos: 3 descrições anuais + 3 mensagens pós-compra + 3 tiers
+- [x] Entregar blocos prontos: 3 descrições anuais + 3 mensagens pós-compra + 3 tiers
       mensais, todos a dizer "paste your receipt link".
-- [ ] **Done:** Diogo confirma que colou; site e Ko-fi dizem a mesma coisa.
+- [x] **Done:** Diogo confirma que colou (2026-07-17); site e Ko-fi dizem a mesma
+      coisa. Preço do Plus reposto de €0,01 (teste) para €18,99.
+
+## Descobertas durante a execução
+
+**Existe uma TERCEIRA forma de URL de recibo**, que o plano não previa:
+`ko-fi.com/transactions/<uuid>/thank-you?img=...` — a que o comprador alcança pelo
+botão "Go to your order" do email do Ko-fi, com o código no meio do *path*. Já
+funcionava sem alterações: é precisamente o que a decisão "aceitar o link inteiro"
+compra, contra a alternativa de enumerar formatos (que teria falhado três vezes em
+três). Fixada como guarda de regressão em `tests/claim.test.ts`, porque chega pelo
+único caminho de recuperação que um comprador guest tem.
+
+**A nota de vendedor antiga estava ativamente errada em produção**: mandava procurar o
+código "depois de `ko-fi.com/summary/`" numa página cujo endereço é
+`/transactions/.../thank-you`. Não era só copy velha — era a nossa própria instrução a
+criar o comprador encravado. Isto é o argumento contra duplicar a matriz de planos no
+Ko-fi: a nova copy aponta para `vozen.org/#premium` em vez de repetir o conteúdo.
+
+**O email de guest do Ko-fi diz "This link expires in 72 hours."** O nosso pending vive
+90 dias (`PENDING_RETENTION_MS`), logo a janela real de um guest pode ser 3 dias, não
+90. Por confirmar: se o `href` do botão contiver o UUID, o email continua a servir
+depois de o link morrer (nós não perguntamos nada ao Ko-fi no claim — só olhamos para
+a nossa tabela). Fica em aberto e reforça o auto-match como próximo passo.
 
 ## Riscos
 
