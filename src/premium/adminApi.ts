@@ -50,6 +50,8 @@ export interface AdminGuildBrief {
   /** Full CDN URL of the server icon, or null. */
   icon: string | null;
   memberCount: number;
+  /** When the bot joined this server (ms epoch), or null if the gateway didn't report it. */
+  joinedTimestamp: number | null;
 }
 
 /** A server row for the admin console: identity + aggregate usage already stored (talk_stats). */
@@ -160,6 +162,7 @@ export function createAdminApi(deps: AdminApiDeps): AdminApi {
           name: g.name,
           icon: g.icon,
           memberCount: g.memberCount,
+          joinedTimestamp: g.joinedTimestamp,
           messages: s.totalMessages,
           speakers: s.activeSpeakers,
           topSpeakers: s.topSpeakers.map((t) => ({ userId: t.userId, count: t.count })),

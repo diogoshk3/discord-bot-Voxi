@@ -170,12 +170,13 @@ describe('adminApi — listGuilds (servers tab)', () => {
 
     const api = make(db, {
       resolveGuilds: () => [
-        { id: 'B', name: 'Beta', icon: null, memberCount: 5 },
+        { id: 'B', name: 'Beta', icon: null, memberCount: 5, joinedTimestamp: 1600000000000 },
         {
           id: 'A',
           name: 'Alpha',
           icon: 'https://cdn.discordapp.com/icons/A/x.png',
           memberCount: 10,
+          joinedTimestamp: 1700000000000,
         },
       ],
     });
@@ -190,6 +191,7 @@ describe('adminApi — listGuilds (servers tab)', () => {
       memberCount: 10,
       messages: 3,
       speakers: 2,
+      joinedTimestamp: 1700000000000,
     });
     // Stats come from talk_stats: u1 (2) is the top speaker of A.
     expect(rows[0].topSpeakers[0]).toEqual({ userId: 'u1', count: 2 });
@@ -198,7 +200,9 @@ describe('adminApi — listGuilds (servers tab)', () => {
 
   it('shows a guild the bot is in even with zero messages read yet', () => {
     const api = make(db, {
-      resolveGuilds: () => [{ id: 'C', name: 'Gamma', icon: null, memberCount: 3 }],
+      resolveGuilds: () => [
+        { id: 'C', name: 'Gamma', icon: null, memberCount: 3, joinedTimestamp: 1650000000000 },
+      ],
     });
     const rows = api.listGuilds();
     expect(rows).toEqual([
@@ -210,6 +214,7 @@ describe('adminApi — listGuilds (servers tab)', () => {
         messages: 0,
         speakers: 0,
         topSpeakers: [],
+        joinedTimestamp: 1650000000000,
       },
     ]);
   });

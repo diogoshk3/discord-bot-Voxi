@@ -37,7 +37,9 @@ function makeAdmin(db: Database.Database, enabled = true) {
     adminSessionSecret: enabled ? SECRET : undefined,
     ownerId: OWNER,
     logInfo: () => {},
-    resolveGuilds: () => [{ id: 'G1', name: 'Test Server', icon: null, memberCount: 4 }],
+    resolveGuilds: () => [
+      { id: 'G1', name: 'Test Server', icon: null, memberCount: 4, joinedTimestamp: 1680000000000 },
+    ],
   });
 }
 

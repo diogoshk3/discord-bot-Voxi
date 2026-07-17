@@ -363,6 +363,7 @@ async function main(): Promise<void> {
               name: g.name,
               icon: g.iconURL({ size: 64 }) ?? null,
               memberCount: g.memberCount,
+              joinedTimestamp: g.joinedTimestamp ?? null,
             })),
         })
       : undefined;
