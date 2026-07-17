@@ -8,8 +8,8 @@ const source = (path: string): string =>
 
 // The site's assets are cache-busted by FILENAME (never a query string), so every rename churns
 // these tests too. One constant each: the rename is then a one-line edit here, not a hunt.
-const SITE_JS = 'site/js/main-v34.js';
-const SITE_I18N = 'site/js/i18n-v31.js';
+const SITE_JS = 'site/js/main-v35.js';
+const SITE_I18N = 'site/js/i18n-v32.js';
 const SITE_CSS = 'site/css/main-v34.css';
 
 /** Body of a top-level function in the site bundle, comments stripped. Comments are dropped
@@ -84,11 +84,12 @@ describe('operational security configuration', () => {
     expect(script).not.toContain('aria-label="Copiar Discord ID"');
   });
 
-  // The 14-day withdrawal right on a distance contract survives unless the buyer expressly
-  // asks for immediate delivery AND acknowledges losing it (2011/83/EU art. 16(m)). Ko-fi's
-  // checkout cannot collect that, but delivery does not happen there — it happens when the
-  // pass is activated here. Drop the checkbox and the acknowledgement silently disappears
-  // while the refund policy still claims it was given, which is worse than never having it.
+  // Delivery of a distance contract happens when the pass is activated HERE, not at Ko-fi's
+  // checkout — so the affirmative acceptance has to be collected here, before POST /api/link.
+  // The 14-day withdrawal acknowledgement (2011/83/EU art. 16(m)) no longer sits on the line;
+  // it lives inside the /terms the box accepts (asserted by the terms-carry-the-waiver test).
+  // Drop the checkbox and the acceptance disappears entirely — failing open would activate the
+  // pass with no consent at all, which is worse than never having it.
   it('gates pass activation behind an express consent checkbox', () => {
     const script = source(SITE_JS);
     expect(script).toContain('id="ppClaimConsent"');
@@ -99,15 +100,18 @@ describe('operational security configuration', () => {
     expect(script).toContain('claim.consentRequired');
   });
 
-  // A terms link sits BESIDE the 14-day acknowledgement, never in place of it: art. 16(m) needs the
-  // express "I lose my withdrawal right" wording (guarded by the "14" check below), and a generic
-  // "I agree to the terms" would not satisfy it. The link must be a real <a href="/terms"> in the
-  // consent label, not the one-time .js-support wiring, so it renders after the OAuth-time inject.
-  it('links to the terms from the consent line without replacing the acknowledgement', () => {
+  // The consent line is a clean "I accept the terms and conditions": the 14-day acknowledgement
+  // moved OUT of the line and INTO the accepted /terms (see the terms-carry-the-waiver test), so
+  // ticking the box accepts terms that contain the art. 16(m) waiver. The linked noun phrase is a
+  // real <a href="/terms"> injected in place of the {terms} token — not the one-time .js-support
+  // wiring, which runs once at load, before the card is injected after OAuth.
+  it('renders the consent line as an acceptance of the terms, with a real terms link', () => {
     const card = fnSource(source(SITE_JS), 'function claimCard()');
-    expect(card).toContain('claim.consent'); // acknowledgement kept
-    expect(card).toContain('claim.consentTerms'); // link label
+    expect(card).toContain('claim.consent');
+    expect(card).toContain('claim.consentTerms');
     expect(card).toMatch(/<a href="\/terms"/);
+    // The <a> is injected in place of the {terms} placeholder inside the trusted consent copy.
+    expect(card).toContain('.replace("{terms}"');
   });
 
   // The claim field takes the whole receipt URL now (extractReceiptCode, src/premium/claim.ts),
@@ -241,11 +245,24 @@ describe('operational security configuration', () => {
     expect(langs.length).toBeGreaterThan(0);
     for (const lang of langs) {
       // Untranslated consent text is not a cosmetic gap: someone who cannot read what they
-      // are waiving has not knowingly waived it.
+      // are accepting has not knowingly accepted it.
       expect(all[lang]['claim.consent'], `${lang} claim.consent`).toBeTruthy();
       expect(all[lang]['claim.consentRequired'], `${lang} claim.consentRequired`).toBeTruthy();
       expect(all[lang]['claim.consentTerms'], `${lang} claim.consentTerms`).toBeTruthy();
-      expect(all[lang]['claim.consent'], `${lang} mentions the 14 days`).toContain('14');
+      // Every consent string must keep the {terms} placeholder — that is where the clickable
+      // terms link is injected. A translation that drops it would render a linkless sentence.
+      expect(all[lang]['claim.consent'], `${lang} keeps the {terms} slot`).toContain('{terms}');
     }
+  });
+
+  // The 14-day withdrawal acknowledgement (art. 16(m)) no longer prints on the consent line — it
+  // lives in the /terms the buyer accepts by ticking the box. If it vanished from the terms too,
+  // the refund policy would claim a waiver that was never given, which is worse than never having
+  // it. So the concrete waiver clause must survive in terms.html.
+  it('keeps the 14-day withdrawal waiver in the terms the consent line accepts', () => {
+    const terms = source('site/terms.html');
+    expect(terms).toMatch(/14-day right of withdrawal/i);
+    expect(terms).toContain('art. 16(m)');
+    expect(terms).toMatch(/activate a pass/i);
   });
 });

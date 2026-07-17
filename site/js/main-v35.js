@@ -497,18 +497,18 @@
       `<input type="text" id="ppClaimCode" class="ppanel__claiminput" placeholder="${esc(t("claim.placeholder"))}" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="120">` +
       `<button type="submit" class="ppanel__claimbtn" id="ppClaimBtn">${t("claim.btn")}</button>` +
       `</form>` +
-      // Consentimento EXPRESSO antes da entrega (dir. 2011/83/UE art. 16(m)): o direito de
-      // retratacao de 14 dias so se perde se a pessoa pedir a entrega imediata E reconhecer que
-      // por isso o perde. O checkout do Ko-fi nao tem onde recolher isto — mas a entrega nao
-      // acontece la: acontece AQUI, no momento em que o passe e ativado. Por isso e aqui que a
-      // caixa tem de estar, antes do POST /api/link. Sem ela, o direito mantem-se intacto mesmo
-      // depois de usarem o passe. O quando fica registado em kofi_pending.claimed_at.
-      // O reconhecimento dos 14 dias (art. 16(m)) e OBRIGATORIO e fica intacto — o link dos termos
-      // vem A SEGUIR, nao no lugar dele. Um "concordo com os termos" generico nao cumpriria a lei:
-      // exige-se o reconhecimento EXPRESSO de que a ativacao faz perder o direito de retratacao.
-      // O <a> e conteudo interativo, por isso clicar nele abre os termos sem marcar a checkbox
+      // Consentimento afirmativo antes da entrega. A checkbox e OBRIGATORIA: ninguem ativa o passe
+      // sem aceitar os termos (guardado abaixo por !consent.checked). A entrega acontece AQUI, no
+      // momento da ativacao, nao no checkout do Ko-fi — por isso e aqui que a caixa tem de estar,
+      // antes do POST /api/link. O quando fica registado em kofi_pending.claimed_at.
+      // A renuncia dos 14 dias (dir. 2011/83/UE art. 16(m)) vive DENTRO dos /terms que a pessoa
+      // aceita aqui: ativar o passe = pedir a entrega imediata e reconhecer que por isso se perde
+      // o direito de retratacao (clausula concreta nos termos). A linha fica limpa; a renuncia esta
+      // nos termos aceites, nao na cara do comprador.
+      // {terms} no texto de claim.consent marca onde entra o link — substituido por um <a> para
+      // /terms. O <a> e conteudo interativo: clicar nele abre os termos sem marcar a checkbox
       // (comportamento do <label> no HTML) — confirmado no browser.
-      `<label class="ppanel__claimconsent"><input type="checkbox" id="ppClaimConsent"> <span>${t("claim.consent")} <a href="/terms" target="_blank" rel="noopener">${t("claim.consentTerms")}</a></span></label>` +
+      `<label class="ppanel__claimconsent"><input type="checkbox" id="ppClaimConsent"> <span>${t("claim.consent").replace("{terms}", `<a href="/terms" target="_blank" rel="noopener">${t("claim.consentTerms")}</a>`)}</span></label>` +
       `<p class="ppanel__claimmsg" id="ppClaimMsg" role="status" aria-live="polite" hidden></p>` +
       // Sits AFTER the status message on purpose: "no purchase found" is the moment someone
       // realises they no longer have the receipt, and the way out should be the next thing they
