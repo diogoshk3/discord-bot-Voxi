@@ -1138,6 +1138,10 @@ body > *:not(.grain):not(.orbs):not(.nav) { position: relative; z-index: 2; }
 }
 .ppanel__claimbtn:hover { filter: brightness(1.08); }
 .ppanel__claimbtn:disabled { opacity: 0.6; cursor: default; }
+/* Consentimento de entrega imediata. Legivel, nao letra pequena: so vale se a pessoa
+   perceber o que aceita — esconde-lo destruiria a propria coisa que existe para dar. */
+.ppanel__claimconsent { display: flex; gap: 8px; align-items: flex-start; margin: 12px 0 0; color: var(--text-2); font-size: 12.8px; line-height: 1.5; cursor: pointer; }
+.ppanel__claimconsent input { margin-top: 2px; flex: none; accent-color: var(--aqua); }
 .ppanel__claimmsg { margin: 10px 0 0; font-size: 12.8px; line-height: 1.45; }
 .ppanel__claimmsg.is-ok { color: var(--aqua); }
 .ppanel__claimmsg.is-err { color: rgba(255, 110, 169, 0.9); }

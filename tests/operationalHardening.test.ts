@@ -40,7 +40,7 @@ describe('operational security configuration', () => {
   });
 
   it('keeps every font URL in the site stylesheet resolvable', () => {
-    const css = source('site/css/main-v31.css');
+    const css = source('site/css/main-v32.css');
     const urls = [...css.matchAll(/url\("\.\.\/assets\/fonts\/([^"?]+)"\)/g)].map(
       (match) => match[1],
     );
@@ -51,8 +51,41 @@ describe('operational security configuration', () => {
   });
 
   it('keeps developer-facing accessibility labels in English', () => {
-    const script = source('site/js/main-v29.js');
+    const script = source('site/js/main-v30.js');
     expect(script).toContain('aria-label="Copy Discord ID"');
     expect(script).not.toContain('aria-label="Copiar Discord ID"');
+  });
+
+  // The 14-day withdrawal right on a distance contract survives unless the buyer expressly
+  // asks for immediate delivery AND acknowledges losing it (2011/83/EU art. 16(m)). Ko-fi's
+  // checkout cannot collect that, but delivery does not happen there — it happens when the
+  // pass is activated here. Drop the checkbox and the acknowledgement silently disappears
+  // while the refund policy still claims it was given, which is worse than never having it.
+  it('gates pass activation behind an express consent checkbox', () => {
+    const script = source('site/js/main-v30.js');
+    expect(script).toContain('id="ppClaimConsent"');
+    expect(script).toContain('claim.consent');
+    // The guard must refuse when unticked — failing open would activate the pass with no
+    // acknowledgement at all.
+    expect(script).toMatch(/if \(!consent \|\| !consent\.checked\)/);
+    expect(script).toContain('claim.consentRequired');
+  });
+
+  it('translates the consent copy into every advertised site language', () => {
+    const bundle = source('site/js/i18n-v24.js');
+    const sandbox: { window: { VOZEN_I18N?: Record<string, Record<string, string>> } } = {
+      window: {},
+    };
+    new Function('window', bundle)(sandbox.window);
+    const all = sandbox.window.VOZEN_I18N ?? {};
+    const langs = Object.keys(all);
+    expect(langs.length).toBeGreaterThan(0);
+    for (const lang of langs) {
+      // Untranslated consent text is not a cosmetic gap: someone who cannot read what they
+      // are waiving has not knowingly waived it.
+      expect(all[lang]['claim.consent'], `${lang} claim.consent`).toBeTruthy();
+      expect(all[lang]['claim.consentRequired'], `${lang} claim.consentRequired`).toBeTruthy();
+      expect(all[lang]['claim.consent'], `${lang} mentions the 14 days`).toContain('14');
+    }
   });
 });

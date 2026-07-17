@@ -490,6 +490,13 @@
       `<input type="text" id="ppClaimCode" class="ppanel__claiminput" placeholder="${esc(t("claim.placeholder"))}" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="120">` +
       `<button type="submit" class="ppanel__claimbtn" id="ppClaimBtn">${t("claim.btn")}</button>` +
       `</form>` +
+      // Consentimento EXPRESSO antes da entrega (dir. 2011/83/UE art. 16(m)): o direito de
+      // retratacao de 14 dias so se perde se a pessoa pedir a entrega imediata E reconhecer que
+      // por isso o perde. O checkout do Ko-fi nao tem onde recolher isto — mas a entrega nao
+      // acontece la: acontece AQUI, no momento em que o passe e ativado. Por isso e aqui que a
+      // caixa tem de estar, antes do POST /api/link. Sem ela, o direito mantem-se intacto mesmo
+      // depois de usarem o passe. O quando fica registado em kofi_pending.claimed_at.
+      `<label class="ppanel__claimconsent"><input type="checkbox" id="ppClaimConsent"> <span>${t("claim.consent")}</span></label>` +
       `<p class="ppanel__claimmsg" id="ppClaimMsg" role="status" aria-live="polite" hidden></p>` +
       `</div>`
     );
@@ -550,6 +557,7 @@
     const input = el && el.querySelector("#ppClaimCode");
     const btn = el && el.querySelector("#ppClaimBtn");
     const msg = el && el.querySelector("#ppClaimMsg");
+    const consent = el && el.querySelector("#ppClaimConsent");
     if (!input || !btn) return;
     const code = (input.value || "").trim();
     const setMsg = (text, kind) => {
@@ -560,6 +568,13 @@
     };
     if (!code) {
       setMsg(t("claim.notfound"), "err");
+      return;
+    }
+    // Sem consentimento nao se entrega. Se falhassemos ABERTO aqui, activavamos o passe sem a
+    // pessoa ter reconhecido nada — e o direito de retratacao ficava de pe, que e exactamente o
+    // que isto existe para evitar.
+    if (!consent || !consent.checked) {
+      setMsg(t("claim.consentRequired"), "err");
       return;
     }
     const tok = storedToken();
