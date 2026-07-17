@@ -50,6 +50,23 @@ When you log in on **vozen.org** with Discord (the account page and the server d
 
 This login data is used **transiently** to answer the request and is **not stored** in the database — it is held in memory for at most ~60 seconds (a short cache) and then discarded. The access token stays in **your browser** (`sessionStorage`), is sent only to Vozen's own API over HTTPS, and is never written to disk on our side. The dashboard only changes the same per-server settings you could change with `/config` in Discord.
 
+### 1.2 Operator admin console
+
+The instance **operator** (and only the operator — access is gated by the owner's
+Discord identity plus a server-only signed session) has a private admin console to
+run the service. It shows: active Premium/Plus entitlements and pending purchases
+(to grant or revoke them), and, per server, the server's name, icon, member count,
+and **aggregate `talk_stats`** — the total number of messages the bot has read, the
+number of active speakers, and the top five speakers as `(Discord ID, count)`.
+
+This introduces **no new data collection and no new recipient**: the figures are
+**counts, never message content**, computed from `talk_stats` already described in
+the table above; the same top-speaker list is already public in each server via
+`/topspeakers`; and the operator already controls the database directly (see §3).
+The console is only an owner-facing view over data that is already disclosed,
+already deletable via `/privacy erase`, and already auto-deleted 30 days after the
+bot leaves a server (§3).
+
 ---
 
 ## 2. Message content
