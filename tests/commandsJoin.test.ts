@@ -33,6 +33,8 @@ vi.mock('@discordjs/voice', async () => {
 
 import { handleInteraction } from '../src/commands/index';
 import type { BotDeps } from '../src/bot/deps';
+import { initDb } from '../src/store/db';
+import { setGuildConfig } from '../src/store/guildConfig';
 
 interface FakeInteraction {
   commandName: string;
@@ -71,10 +73,13 @@ function makeJoinInteraction(opts: { channel: unknown; locale?: string }): FakeI
 
 function makeDeps(): BotDeps {
   // Apenas os campos que handleJoin toca; o resto fica como stub minimo.
+  // Real in-memory DB: handleJoin now reads getGuildConfig(deps.db) to decide
+  // whether auto-read is configured (which changes the /join success message).
   return {
     client: { user: { id: 'bot-1' } },
     players: new Map(),
     config: { queueCap: 10 },
+    db: initDb(':memory:'),
   } as unknown as BotDeps;
 }
 
@@ -150,6 +155,50 @@ describe('handleJoin — permissoes Connect/Speak', () => {
     // Limpeza: destruir o player criado para nao deixar timers pendurados.
     const player = deps.players.get('g1');
     player?.destroy();
+  });
+
+  it('quando o auto-read JA esta configurado, aponta para o canal e NAO menciona /tts', async () => {
+    // Production feedback: on a server that already ran /setup, the bot reads on its
+    // own, so telling the user to "say /tts hello" is wrong. The /join success must be
+    // state-aware: configured -> "type in the channel and I read it out loud", no /tts.
+    const channel = {
+      id: 'c1',
+      name: 'Geral',
+      permissionsFor: () => ({
+        has: (flag: bigint) =>
+          flag === PermissionFlagsBits.Connect || flag === PermissionFlagsBits.Speak,
+      }),
+    };
+    const i = makeJoinInteraction({ channel, locale: 'pt-BR' });
+    const deps = makeDeps();
+    // Auto-read ON + a configured read channel -> the "configured" branch.
+    setGuildConfig(deps.db, 'g1', { ttsChannelId: 'read-1', autoread: true });
+    const fakeConn = { subscribe: () => {}, on: () => {}, destroy: () => {} };
+    joinVoiceChannel.mockReturnValue(fakeConn);
+
+    await handleInteraction(i as any, deps);
+
+    const joinedText = i.replies.join(' ');
+    // Still confirms the voice channel it joined.
+    expect(joinedText).toContain('Geral');
+    // Points at the configured read channel (clickable mention) and describes auto-reading.
+    expect(joinedText).toContain('<#read-1>');
+    expect(joinedText).toMatch(/voz alta/i);
+    // The whole point: it must NOT push /tts when the bot already reads on its own.
+    expect(joinedText).not.toContain('/tts');
+
+    // Still a green success card (no regression to a loose reply).
+    const payload = i.rawReplies[0] as {
+      flags?: unknown;
+      components?: Array<{ toJSON?: () => { type?: number; accent_color?: number } }>;
+    };
+    expect(Number(payload.flags) & MessageFlags.IsComponentsV2).toBeTruthy();
+    expect(payload.components?.[0]?.toJSON?.()).toMatchObject({
+      type: ComponentType.Container,
+      accent_color: COLORS.success,
+    });
+
+    deps.players.get('g1')?.destroy();
   });
 
   it('responde "Tens de estar num canal" quando o membro nao esta em voz', async () => {

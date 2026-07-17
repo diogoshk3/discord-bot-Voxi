@@ -8,6 +8,8 @@ export default {
   'join.missingPerms': '{channel} で**接続**と**発言**の権限が必要です。',
   'join.joined':
     '✅ {channel} に参加しました！次のステップ：`/tts こんにちは` と入力すると読み上げます。チャンネルを自動で読み上げてほしいですか？ /setup を実行してください。',
+  'join.joinedAutoread':
+    '✅ {channel} に参加しました！ 準備完了。自動読み上げチャンネルに入力すると読み上げます。',
   'leave.left': 'ボイスチャンネルから退出しました。またね！',
   'skip.notInVoice':
     'まだボイスチャンネルにいません。参加して先に /join を実行してから、もう一度お試しください。',

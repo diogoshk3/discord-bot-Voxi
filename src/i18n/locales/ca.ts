@@ -45,6 +45,8 @@ export default {
   'join.missingPerms': 'Necessito els permisos de **Connectar** i **Parlar** a {channel}.',
   'join.joined':
     '✅ Ja soc a {channel}! Pas següent: digues `/tts hola` i ho llegiré en veu alta. Vols que llegeixi un canal automàticament? Executa /setup.',
+  'join.joinedAutoread':
+    '✅ Ja soc a {channel}! Tot a punt. Escriu al canal de lectura automàtica i ho llegiré en veu alta.',
   'leave.left': 'He sortit del canal de veu. Fins la propera!',
   'skip.notInVoice':
     'Encara no soc en cap canal de veu. Entra en un i executa /join primer, i torna-ho a provar.',

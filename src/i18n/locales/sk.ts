@@ -5,6 +5,8 @@ export default {
   'join.missingPerms': 'V kanáli {channel} potrebujem oprávnenia **Pripojiť sa** a **Hovoriť**.',
   'join.joined':
     '✅ Som v kanáli {channel}! Ďalší krok: napíš `/tts hello` a prečítam to nahlas. Chceš, aby som automaticky čítal kanál? Spusti /setup.',
+  'join.joinedAutoread':
+    '✅ Som v kanáli {channel}! Všetko je pripravené. Píš do kanála na automatické čítanie a prečítam to nahlas.',
   'leave.left': 'Odišiel som z hlasového kanála. Dovidenia nabudúce!',
   'skip.notInVoice':
     'Ešte nie som v hlasovom kanáli — pripoj sa do jedného a najprv spusti /join, potom skús znova.',

@@ -43,6 +43,8 @@ export default {
   'join.missingPerms': 'Man kanālā {channel} nepieciešamas **Connect** un **Speak** atļaujas.',
   'join.joined':
     '✅ Esmu kanālā {channel}! Nākamais solis: saki `/tts sveiki` un es to nolasīšu skaļi. Vēlies, lai automātiski nolasu kanālu? Palaid /setup.',
+  'join.joinedAutoread':
+    '✅ Esmu kanālā {channel}! Viss gatavs. Raksti automātiskās lasīšanas kanālā, un es to nolasīšu skaļi.',
   'leave.left': 'Pametu balss kanālu. Uz redzēšanos!',
   'skip.notInVoice':
     'Es vēl neesmu balss kanālā — pievienojies kādam un vispirms palaid /join, tad mēģini vēlreiz.',

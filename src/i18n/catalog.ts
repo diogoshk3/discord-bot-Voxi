@@ -148,13 +148,21 @@ export const catalog: Record<string, Entry> = {
     en: 'I need the **Connect** and **Speak** permissions in {channel}.',
     pt: 'Preciso das permissoes **Ligar** e **Falar** em {channel}.',
   },
-  // Sucesso do /join: confirma a entrada e da o PROXIMO PASSO ao iniciante. NOTA: um
-  // /join simples NAO liga a auto-leitura (so o /setup a liga), por isso o passo
-  // "sempre funciona" e /tts (dizer algo JA); /setup fica como pointer para depois
-  // poder escrever no canal. Nao promete "escreve e sou lido" sem /setup (seria falso).
+  // Sucesso do /join: confirma a entrada e da o PROXIMO PASSO ao iniciante. A mensagem
+  // e STATE-AWARE (a escolha da chave e feita no handler, ver core.ts):
+  //  - `join.joined` (NAO configurado): um /join simples NAO liga a auto-leitura (so o
+  //    /setup a liga), por isso o passo "sempre funciona" e /tts (dizer algo JA); /setup
+  //    fica como pointer. Nao promete "escreve e sou lido" sem /setup (seria falso).
+  //  - `join.joinedAutoread` (JA configurado): o bot le sozinho, entao aponta para o
+  //    canal de leitura e NAO menciona /tts (pedir /tts a quem ja tem setup confundia —
+  //    foi o report de producao que motivou isto).
   'join.joined': {
     en: "✅ I'm in {channel}! Next step: say `/tts hello` and I'll read it out loud. Want me to auto-read a channel? Run /setup.",
     pt: '✅ Entrei em {channel}! Próximo passo: diz `/tts olá` e eu leio em voz alta. Queres que leia um canal automaticamente? Corre /setup.',
+  },
+  'join.joinedAutoread': {
+    en: "✅ I'm in {channel}! Just type in {readChannel} and I'll read it out loud.",
+    pt: '✅ Entrei em {channel}! É só escreveres em {readChannel} e eu leio em voz alta.',
   },
   'leave.left': {
     en: 'Left the voice channel. See you next time!',

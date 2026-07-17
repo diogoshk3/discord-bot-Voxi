@@ -5,6 +5,7 @@ export default {
   'join.missingPerms': '我在 {channel} 需要 **连接** 和 **说话** 权限。',
   'join.joined':
     '✅ 我已加入 {channel}！下一步：发送 `/tts 你好`，我就会念出来。想让我自动朗读某个频道吗？运行 /setup。',
+  'join.joinedAutoread': '✅ 我已加入 {channel}！ 一切就绪。在自动朗读频道里打字，我就会念出来。',
   'leave.left': '已离开语音频道。下次见！',
   'skip.notInVoice': '我还没在语音频道里——先加入一个并运行 /join，然后再试一次。',
   'skip.skipped': '已跳过。',

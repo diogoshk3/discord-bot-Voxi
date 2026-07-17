@@ -44,6 +44,8 @@ export default {
   'join.missingPerms': '{channel} kanalında **Bağlan** ve **Konuş** izinlerine ihtiyacım var.',
   'join.joined':
     '✅ {channel} kanalındayım! Sıradaki adım: `/tts merhaba` yaz, sesli okuyayım. Bir kanalı otomatik okumamı ister misin? /setup komutunu çalıştır.',
+  'join.joinedAutoread':
+    '✅ {channel} kanalındayım! Her şey hazır. Otomatik okuma kanalına yaz, sesli okuyayım.',
   'leave.left': 'Ses kanalından ayrıldım. Görüşmek üzere!',
   'skip.notInVoice':
     'Henüz bir ses kanalında değilim — bir kanala katıl ve önce /join komutunu çalıştır, sonra tekrar dene.',

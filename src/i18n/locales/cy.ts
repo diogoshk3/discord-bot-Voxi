@@ -5,6 +5,8 @@ export default {
   'join.missingPerms': 'Mae angen y caniatadau **Connect** a **Speak** arna i yn {channel}.',
   'join.joined':
     "✅ Dw i yn {channel}! Y cam nesaf: dwed `/tts helo` a bydda i'n ei ddarllen yn uchel. Eisiau i mi ddarllen sianel yn awtomatig? Rheda /setup.",
+  'join.joinedAutoread':
+    "✅ Dw i yn {channel}! Mae popeth yn barod. Teipia yn y sianel darllen awtomatig a bydda i'n ei ddarllen yn uchel.",
   'leave.left': 'Wedi gadael y sianel lais. Wela i di y tro nesaf!',
   'skip.notInVoice':
     'Dydw i ddim mewn sianel lais eto — ymuna ag un a rheda /join yn gyntaf, yna rho gynnig arall arni.',

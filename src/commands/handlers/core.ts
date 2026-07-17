@@ -78,16 +78,29 @@ export async function handleJoin(i: ChatInputCommandInteraction, deps: BotDeps):
     case 'missing-perms':
       await reply(i, t('join.missingPerms', locale, { channel: outcome.channelName }));
       return;
-    case 'joined':
+    case 'joined': {
       // Discord exposes the invoking user's selected client language in `i.locale`.
       // Public responses cannot render a different language per viewer, so the command
       // invoker's locale is the only user-specific locale available for this message.
-      await i.reply(
-        replyCard(t('join.joined', locale, { channel: outcome.channelName }), {
-          tone: 'success',
-        }),
-      );
+      //
+      // The "next step" is STATE-AWARE. A plain /join does NOT enable auto-reading —
+      // only /setup does. So:
+      //  - auto-read already configured -> the bot reads on its own; tell the user to
+      //    just type in that channel (NO /tts — pushing it here confused users whose
+      //    server was already set up, which is the production report that drove this).
+      //  - not configured -> keep the generic message (/tts to speak now, /setup to
+      //    turn on auto-reading), which is the honest next step there.
+      const cfg = getGuildConfig(deps.db, i.guildId!);
+      const joinedText =
+        cfg.autoread && cfg.ttsChannelId
+          ? t('join.joinedAutoread', locale, {
+              channel: outcome.channelName,
+              readChannel: `<#${cfg.ttsChannelId}>`,
+            })
+          : t('join.joined', locale, { channel: outcome.channelName });
+      await i.reply(replyCard(joinedText, { tone: 'success' }));
       return;
+    }
   }
 }
 

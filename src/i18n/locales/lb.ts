@@ -5,6 +5,8 @@ export default {
   'join.missingPerms': "Ech brauch d'Berechtegungen **Verbannen** an **Schwätzen** am {channel}.",
   'join.joined':
     '✅ Ech sinn am {channel}! Nächste Schrëtt: schreif `/tts hallo` an ech liesen et haart vir. Wëlls du datt ech ee Kanal automatesch virliesen? Laf /setup.',
+  'join.joinedAutoread':
+    '✅ Ech sinn am {channel}! Alles ass prett. Tipp am automatesche Virliesekanal an ech liesen et haart vir.',
   'leave.left': "Sproochkanal verlooss. Bis d'nächst Kéier!",
   'skip.notInVoice':
     "Ech sinn nach net an engem Sproochkanal — géi an een a laf fir d'éischt /join, probéier dann nach eng Kéier.",

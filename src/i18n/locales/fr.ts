@@ -47,6 +47,8 @@ export default {
   'join.missingPerms': "J'ai besoin des permissions **Se connecter** et **Parler** dans {channel}.",
   'join.joined':
     '✅ Je suis dans {channel} ! Étape suivante : dites `/tts bonjour` et je le lirai à voix haute. Vous voulez que je lise automatiquement un salon ? Lancez /setup.',
+  'join.joinedAutoread':
+    '✅ Je suis dans {channel} ! Tout est prêt. Écrivez dans le salon de lecture automatique et je le lirai à voix haute.',
   'leave.left': "J'ai quitté le salon vocal. À bientôt !",
   'skip.notInVoice':
     "Je ne suis pas encore dans un salon vocal — rejoignez-en un et lancez d'abord /join, puis réessayez.",

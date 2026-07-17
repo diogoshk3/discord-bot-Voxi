@@ -6,6 +6,8 @@ export default {
     'A(z) {channel} csatornában **Csatlakozás** és **Beszéd** jogosultságra van szükségem.',
   'join.joined':
     '✅ Bent vagyok itt: {channel}! Következő lépés: írd be, hogy `/tts hello`, és felolvasom hangosan. Szeretnéd, hogy automatikusan felolvassak egy csatornát? Futtasd a /setup parancsot.',
+  'join.joinedAutoread':
+    '✅ Bent vagyok itt: {channel}! Minden készen áll. Írj az automatikus felolvasás csatornájába, és hangosan felolvasom.',
   'leave.left': 'Elhagytam a hangcsatornát. Legközelebb találkozunk!',
   'skip.notInVoice':
     'Még nem vagyok hangcsatornában — csatlakozz egyhez, futtasd a /join parancsot, majd próbáld újra.',

@@ -44,6 +44,8 @@ export default {
   'join.missingPerms': 'Ik heb de rechten **Verbinden** en **Spreken** nodig in {channel}.',
   'join.joined':
     '✅ Ik zit in {channel}! Volgende stap: zeg `/tts hallo` en ik lees het hardop voor. Wil je dat ik een kanaal automatisch voorlees? Gebruik /setup.',
+  'join.joinedAutoread':
+    '✅ Ik zit in {channel}! Alles is klaar. Typ in het kanaal voor automatisch voorlezen en ik lees het hardop voor.',
   'leave.left': 'Het spraakkanaal verlaten. Tot de volgende keer!',
   'skip.notInVoice':
     'Ik zit nog niet in een spraakkanaal — sluit je bij een kanaal aan en gebruik eerst /join, en probeer het dan opnieuw.',

@@ -44,6 +44,8 @@ export default {
   'join.missingPerms': 'Am nevoie de permisiunile **Conectare** și **Vorbire** în {channel}.',
   'join.joined':
     '✅ Sunt în {channel}! Pasul următor: scrie `/tts salut` și îl citesc cu voce tare. Vrei să citesc automat un canal? Rulează /setup.',
+  'join.joinedAutoread':
+    '✅ Sunt în {channel}! Totul e pregătit. Scrie în canalul de citire automată și îl citesc cu voce tare.',
   'leave.left': 'Am ieșit din canalul de voce. Pe data viitoare!',
   'skip.notInVoice':
     'Încă nu sunt într-un canal de voce — intră într-unul și rulează /join mai întâi, apoi încearcă din nou.',

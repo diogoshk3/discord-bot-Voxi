@@ -44,6 +44,8 @@ export default {
   'join.missingPerms': 'Jeg skal bruge tilladelserne **Opret forbindelse** og **Tal** i {channel}.',
   'join.joined':
     '✅ Jeg er inde i {channel}! Næste trin: skriv `/tts hej`, så læser jeg det højt. Vil du have mig til at læse en kanal automatisk? Kør /setup.',
+  'join.joinedAutoread':
+    '✅ Jeg er inde i {channel}! Alt er klar. Skriv i den automatiske oplæsningskanal, så læser jeg det højt.',
   'leave.left': 'Forlod talekanalen. Vi ses næste gang!',
   'skip.notInVoice':
     'Jeg er ikke i en talekanal endnu — gå ind i en og kør /join først, og prøv så igen.',

@@ -43,6 +43,8 @@ export default {
   'join.missingPerms': 'V {channel} potrebujem dovoljenji **Poveži se** in **Govori**.',
   'join.joined':
     '✅ Zdaj sem v {channel}! Naslednji korak: napiši `/tts hello` in prebral bom na glas. Želiš, da samodejno berem kanal? Zaženi /setup.',
+  'join.joinedAutoread':
+    '✅ Zdaj sem v {channel}! Vse je pripravljeno. Piši v kanalu za samodejno branje in prebral bom na glas.',
   'leave.left': 'Zapustil sem glasovni kanal. Se vidimo naslednjič!',
   'skip.notInVoice':
     'Še nisem v glasovnem kanalu — pridruži se enemu in najprej zaženi /join, nato poskusi znova.',

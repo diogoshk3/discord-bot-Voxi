@@ -44,6 +44,8 @@ export default {
   'join.missingPerms': 'Mi servono i permessi **Connetti** e **Parla** in {channel}.',
   'join.joined':
     '✅ Sono in {channel}! Prossimo passo: scrivi `/tts ciao` e lo leggerò ad alta voce. Vuoi che legga automaticamente un canale? Esegui /setup.',
+  'join.joinedAutoread':
+    '✅ Sono in {channel}! È tutto pronto. Scrivi nel canale di lettura automatica e lo leggerò ad alta voce.',
   'leave.left': 'Ho lasciato il canale vocale. Alla prossima!',
   'skip.notInVoice':
     'Non sono ancora in un canale vocale — entrane in uno ed esegui prima /join, poi riprova.',

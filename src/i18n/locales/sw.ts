@@ -43,6 +43,8 @@ export default {
   'join.missingPerms': 'Ninahitaji ruhusa za **Connect** na **Speak** katika {channel}.',
   'join.joined':
     '✅ Nipo katika {channel}! Hatua inayofuata: sema `/tts hello` nami nitaisoma kwa sauti. Unataka nisome kituo kiotomatiki? Endesha /setup.',
+  'join.joinedAutoread':
+    '✅ Nipo katika {channel}! Kila kitu tayari. Andika katika kituo cha kusoma kiotomatiki nami nitaisoma kwa sauti.',
   'leave.left': 'Nimeondoka kwenye kituo cha sauti. Tutaonana wakati ujao!',
   'skip.notInVoice':
     'Bado sipo kwenye kituo cha sauti — ingia kwenye kimoja na uendeshe /join kwanza, kisha jaribu tena.',
