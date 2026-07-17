@@ -71,30 +71,38 @@ describe('operational security configuration', () => {
     expect(script).toContain('claim.consentRequired');
   });
 
-  // The receipt has no field called "transaction code"; the code exists only inside the
-  // receipt's own URL — and Ko-fi uses TWO shapes for it:
-  //   Shop item (annual):  ko-fi.com/summary/<code>
-  //   Membership (monthly): ko-fi.com/home/coffeeshop?txid=<code>&mode=g
-  // A first cut of this copy named only /summary/, written off a single annual purchase.
-  // That stranded every monthly buyer. Both shapes have to be named, in every language.
-  it('names both Ko-fi receipt URL shapes in every language', () => {
-    const bundle = source('site/js/i18n-v26.js');
+  // The claim field takes the whole receipt URL now (extractReceiptCode, src/premium/claim.ts),
+  // so the copy must stop teaching people to perform surgery on an address bar — "the code
+  // after txid=" was never a reasonable thing to ask, and on the monthly receipt it actively
+  // misled: the code sits mid-URL, so selecting to the end drags &mode=g along.
+  //
+  // Asserted as an absence, deliberately. Checking that ten languages each "say to paste the
+  // link" is not something a string match can honestly do — but the surgical instruction is
+  // one literal token, and its absence is checkable in every language.
+  it('no longer asks buyers to extract the code from the URL', () => {
+    const bundle = source('site/js/i18n-v27.js');
     const sandbox: { window: { VOZEN_I18N?: Record<string, Record<string, string>> } } = {
       window: {},
     };
     new Function('window', bundle)(sandbox.window);
     const all = sandbox.window.VOZEN_I18N ?? {};
-    expect(Object.keys(all).length).toBeGreaterThan(0);
-    for (const lang of Object.keys(all)) {
-      for (const key of ['claim.hint', 'claim.useReceiptCode', 'claim.notfound']) {
-        expect(all[lang][key], `${lang} ${key} names /summary/`).toContain('/summary/');
-        expect(all[lang][key], `${lang} ${key} names txid=`).toContain('txid=');
+    const langs = Object.keys(all);
+    expect(langs.length).toBeGreaterThan(0);
+    for (const lang of langs) {
+      for (const key of [
+        'claim.hint',
+        'claim.placeholder',
+        'claim.useReceiptCode',
+        'claim.notfound',
+      ]) {
+        expect(all[lang][key], `${lang} ${key} exists`).toBeTruthy();
+        expect(all[lang][key], `${lang} ${key} still says txid=`).not.toContain('txid=');
       }
     }
   });
 
   it('translates the consent copy into every advertised site language', () => {
-    const bundle = source('site/js/i18n-v26.js');
+    const bundle = source('site/js/i18n-v27.js');
     const sandbox: { window: { VOZEN_I18N?: Record<string, Record<string, string>> } } = {
       window: {},
     };
