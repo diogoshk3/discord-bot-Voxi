@@ -100,8 +100,12 @@ por código. O que o modal PODE fazer, e este plano faz:
 - [x] Wiring no modal: sucesso → "Recebido! Ativamos manualmente em breve — vais
       ver o passe nesta página."; falha → fallback da F2.
 - [x] Deploy do bot (auto via `deploy-bot.yml`).
-- [ ] **Done [needs Diogo]:** submeter um Ref no site e ver a notificação chegar ao
-      Discord. É o único passo que nenhum teste substitui.
+- [x] **Done:** submeter um Ref no site e ver a notificação chegar ao Discord —
+      provado 2026-07-17. `CLAIM_HELP_WEBHOOK_URL` definido no VPS (webhook num
+      canal privado com roles Developer/Staff). Um `S-TEST36F30K` no modal deu a
+      mensagem verde no site E o `🆘 Activation help requested` (Discord ID + Ref +
+      instruções de `/premium grant`) no canal. É o único passo que nenhum teste
+      substituía.
 
 **Decisão do canal, tomada a ler o código:** `CLAIM_HELP_WEBHOOK_URL` próprio, **com
 fallback para `ERROR_WEBHOOK_URL`**. Reusar o `errorReporter` inteiro seria errado —
@@ -161,10 +165,10 @@ hostil (`@everyone \`hack\` S-XYZ99`) chega ao Discord como texto inerte
 F1+F2: o modal no ar — guia o caminho que ativa e transforma o Ref numa mensagem de
 suporte pronta. F3 torna isso num clique. F4 fecha o funil do lado do Ko-fi.
 
-**Estado (2026-07-17):** F1–F3 feitas e deployadas (`a5c3a79`). O endpoint responde em
-produção (`POST /api/claim-help` → 401 sem token, OPTIONS → 204). Falta a prova humana
-(F3 done-criterion) e a F4.
+**Estado (2026-07-17):** F1–F3 feitas, deployadas e **provadas em produção** — um Ref
+de teste no modal gera a mensagem verde no site e a notificação no canal privado do
+Discord. Só falta a F4 (textos do Ko-fi), que é ação do Diogo.
 
-**Próxima ação concreta:** submeter um Ref real no modal em vozen.org/account e
-confirmar que a notificação chega ao Discord (canal do `ERROR_WEBHOOK_URL`, por
-fallback).
+**Próxima ação concreta:** colar no Ko-fi o bloco de Terms corrigido — ainda diz
+"paste the transaction code" onde já devia dizer "paste the receipt link" + mencionar
+o botão de ajuda.
