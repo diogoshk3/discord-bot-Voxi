@@ -38,6 +38,54 @@ describe('claimPendingGrant — claim a pending purchase (code only, plan 021)',
     ...over,
   });
 
+  // ── What a buyer ACTUALLY pastes ───────────────────────────────────────────────────────────
+  // The code has no field of its own on a Ko-fi receipt: it lives inside the receipt's URL, and
+  // Ko-fi uses two shapes for it —
+  //   Shop item (annual):   ko-fi.com/summary/<code>              (code is last)
+  //   Membership (monthly): .../coffeeshop?txid=<code>&mode=g     (code is in the MIDDLE)
+  // On the monthly one, "select from after txid= to the end" hands you the code with "&mode=g"
+  // welded on. Demanding a surgically clean paste, from a page that never labels the thing,
+  // fails the buyer for our convenience. Take whatever they paste and find the code in it.
+  const UUID = '281c5c8e-dfa2-439f-bdbb-d3e8ef118ac2';
+
+  it('accepts the whole monthly receipt URL, &mode=g and all', () => {
+    recordPendingGrant(db, pend({ transactionId: UUID }), now);
+    const out = claimPendingGrant(
+      db,
+      DID,
+      `https://ko-fi.com/home/coffeeshop?txid=${UUID}&mode=g`,
+      now + 10,
+    );
+    expect(out.ok).toBe(true);
+    expect(isUserPremium(db, DID, now + 20)).toBe(true);
+  });
+
+  it('accepts the code with the trailing query param stuck to it', () => {
+    recordPendingGrant(db, pend({ transactionId: UUID }), now);
+    expect(claimPendingGrant(db, DID, `${UUID}&mode=g`, now + 10).ok).toBe(true);
+  });
+
+  it('accepts the whole annual receipt URL', () => {
+    recordPendingGrant(db, pend({ transactionId: UUID }), now);
+    expect(claimPendingGrant(db, DID, `https://ko-fi.com/summary/${UUID}`, now + 10).ok).toBe(true);
+  });
+
+  it('still accepts a clean code, and still rejects a wrong one', () => {
+    recordPendingGrant(db, pend({ transactionId: UUID }), now);
+    expect(claimPendingGrant(db, DID, `  ${UUID}  `, now + 10).ok).toBe(true);
+    // A different UUID must not open someone else's purchase just because it is UUID-shaped.
+    recordPendingGrant(db, pend({ transactionId: 'tx-other' }), now);
+    expect(claimPendingGrant(db, DID, '11111111-2222-3333-4444-555555555555', now + 30)).toEqual({
+      ok: false,
+      reason: 'not_found',
+    });
+  });
+
+  it('falls back to the raw input when there is no UUID in it (non-UUID tx ids keep working)', () => {
+    recordPendingGrant(db, pend({ transactionId: 'tx-legacy-1' }), now);
+    expect(claimPendingGrant(db, DID, 'tx-legacy-1', now + 10).ok).toBe(true);
+  });
+
   // ── EMAIL (plan 021: no longer proof of ownership — rejected, without touching the DB) ─────────
   it('email-like input -> use_receipt_code (applies nothing, pending stays unclaimed)', () => {
     recordPendingGrant(db, pend(), now);

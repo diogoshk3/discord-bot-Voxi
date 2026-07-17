@@ -53,30 +53,46 @@ function applyPending(
  * purchases of the SAME email (orphan renewals), marks them claimed and memorizes email->Discord ID
  * (future renewals resolve automatically). The operation is transactional and single-use.
  */
+/**
+ * Ko-fi hides the transaction code inside the receipt's own URL, in two different shapes:
+ *   Shop item (annual):   ko-fi.com/summary/<code>            — code is last
+ *   Membership (monthly): .../coffeeshop?txid=<code>&mode=g   — code is in the MIDDLE
+ * On the monthly one, selecting from after `txid=` to the end of the address hands the buyer
+ * the code with `&mode=g` welded on; pasting that used to return "no purchase found" on a
+ * purchase they had genuinely paid for. So: pull the code out of whatever they paste — the
+ * bare code, the code plus trailing junk, or the whole URL.
+ *
+ * If the input holds no UUID we return it untouched, so a Ko-fi transaction id that is not
+ * UUID-shaped keeps working exactly as before. This only ever widens what we accept; the code
+ * still has to MATCH a pending row to claim anything, so it grants no new access.
+ */
+const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+
+export function extractReceiptCode(input: string): string {
+  const trimmed = input.trim();
+  return UUID_RE.exec(trimmed)?.[0] ?? trimmed;
+}
+
 export function claimPendingGrant(
   db: Database.Database,
   discordId: string,
   input: string,
   now: number,
 ): ClaimOutcome {
-  const trimmed = input.trim();
-  if (!trimmed) return { ok: false, reason: 'not_found' };
+  const raw = input.trim();
+  if (!raw) return { ok: false, reason: 'not_found' };
+  // The email check runs on the RAW input, before extraction: an address is rejected for what
+  // it is, not for failing to contain a code.
+  if (raw.includes('@')) return { ok: false, reason: 'use_receipt_code' };
+  const trimmed = extractReceiptCode(raw);
   const tx = db.transaction((): ClaimOutcome => {
-    let targets: PendingGrant[];
-    let emailHashForRemember: string | null;
-
-    if (trimmed.includes('@')) {
-      // Via EMAIL: plan 021 — no longer accepted as proof of ownership (not a secret). Returns
-      // use_receipt_code WITHOUT touching the DB: the response does not vary depending on whether the
-      // email belongs to a pending purchase or not, so there is no oracle to exploit here.
-      return { ok: false, reason: 'use_receipt_code' };
-    } else {
-      // Via CODE (tx id): find the pending grant and, through it, all purchases of the same email.
-      const match = findUnclaimedPendingByTx(db, trimmed);
-      if (!match) return { ok: false, reason: 'not_found' };
-      targets = match.emailHash ? listUnclaimedPendingByEmailHash(db, match.emailHash) : [match];
-      emailHashForRemember = match.emailHash;
-    }
+    // Via CODE (tx id): find the pending grant and, through it, all purchases of the same email.
+    const match = findUnclaimedPendingByTx(db, trimmed);
+    if (!match) return { ok: false, reason: 'not_found' };
+    const targets: PendingGrant[] = match.emailHash
+      ? listUnclaimedPendingByEmailHash(db, match.emailHash)
+      : [match];
+    const emailHashForRemember: string | null = match.emailHash;
 
     const items: ClaimedItem[] = [];
     for (const p of targets) {
