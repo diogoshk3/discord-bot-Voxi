@@ -10,7 +10,7 @@ const source = (path: string): string =>
 // these tests too. One constant each: the rename is then a one-line edit here, not a hunt.
 const SITE_JS = 'site/js/main-v35.js';
 const SITE_I18N = 'site/js/i18n-v32.js';
-const SITE_CSS = 'site/css/main-v34.css';
+const SITE_CSS = 'site/css/main-v35.css';
 
 /** Body of a top-level function in the site bundle, comments stripped. Comments are dropped
  *  because these assertions are about the markup a function RENDERS — a comment explaining why
@@ -253,6 +253,14 @@ describe('operational security configuration', () => {
       // terms link is injected. A translation that drops it would render a linkless sentence.
       expect(all[lang]['claim.consent'], `${lang} keeps the {terms} slot`).toContain('{terms}');
     }
+  });
+
+  // The terms link inside the consent line must look clickable — a distinct colour, not the dim
+  // body colour it would inherit from .ppanel__claimconsent. Without it the only affordance is the
+  // cursor, which nobody sees; the buyer never realises the terms are a link.
+  it('styles the consent terms link as clickable', () => {
+    const css = source(SITE_CSS);
+    expect(css).toMatch(/\.ppanel__claimconsent a\s*\{[^}]*var\(--aqua\)/);
   });
 
   // The 14-day withdrawal acknowledgement (art. 16(m)) no longer prints on the consent line — it
