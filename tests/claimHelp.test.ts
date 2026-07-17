@@ -83,6 +83,17 @@ describe('buildClaimHelpMessage', () => {
     expect(msg).toContain('/premium grant');
   });
 
+  // The email is typed by whoever opened the modal — NOT proof they own the order (plan 021: the
+  // email is not a secret). The message must not read as a rote "grant to this Discord ID", or a
+  // staff member could grant a victim's real purchase to an attacker who merely knew their email.
+  // The wording must flag it unverified and demand the owner confirm ownership first.
+  it('warns that the email is unverified and must not be granted on blindly', () => {
+    const msg = buildClaimHelpMessage(DID, EMAIL).toLowerCase();
+    expect(msg).toMatch(/not (a )?proof|unverified|not verified/);
+    // The grant must be gated on confirming the requester is the buyer, not on the order existing.
+    expect(msg).toMatch(/confirm|make sure|verify/);
+  });
+
   it('strips injected backticks so a crafted email cannot break out of the code span', () => {
     // The email is shown inside a `code span`. If the buyer could smuggle in a backtick they could
     // close our span and write live markdown/mentions after it. sanitizeEmail removes them, so the

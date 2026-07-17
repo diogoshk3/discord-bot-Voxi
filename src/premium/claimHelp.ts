@@ -66,16 +66,27 @@ export function shouldSendClaimHelp(
   return true;
 }
 
-/** The message the owner reads. Written to still be actionable months later, when the context of
- *  why this is manual is long gone. */
+/**
+ * The message the owner reads. Written to still be actionable months later, when the context of
+ * why this is manual is long gone.
+ *
+ * CRITICAL — the email is NOT proof of ownership (plan 021: the email is not a secret). Whoever
+ * opened the modal typed it; they need not be the buyer. If this message read as a rote
+ * "grant to this Discord ID", a staff member could hand a victim's real purchase to an attacker
+ * who merely knew the victim's Ko-fi email — the exact vector plan 021 closed on the automatic
+ * path, reopened by a human. So the wording flags the email as unverified and makes the grant
+ * conditional on the owner confirming the requester actually is the buyer.
+ */
 export function buildClaimHelpMessage(discordId: string, email: string): string {
   return [
     '🆘 **Activation help requested**',
     `Discord ID: \`${discordId}\``,
-    `Ko-fi email: \`${email}\``,
+    `Ko-fi email (typed by the requester — NOT verified): \`${email}\``,
     '',
-    'Search this email in your Ko-fi transactions, confirm the paid order, then activate it with',
-    '`/premium grant` for that Discord ID.',
+    '⚠️ The email is not proof of purchase — anyone can type an address they know bought Vozen.',
+    'Find the paid order by this email in your Ko-fi transactions, then confirm THIS requester is',
+    'the buyer (e.g. have them reply from the Ko-fi receipt email, or state the exact amount + date)',
+    'before you `/premium grant` for the Discord ID above.',
   ].join('\n');
 }
 

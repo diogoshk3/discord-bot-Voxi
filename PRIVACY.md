@@ -144,6 +144,7 @@ To generate the audio, the **cleaned text to be synthesized** is handed to a TTS
 - **Discord.** Vozen connects to Discord's API/gateway to work (receiving messages, joining voice channels, responding). Use of Discord is governed by [Discord's Privacy Policy](https://discord.com/privacy).
 - **Bot lists (opt-in, e.g. top.gg).** If `TOPGG_TOKEN` is set, **only the server count** is published periodically — no personal data, no message content.
 - **Error webhook (opt-in).** If `ERROR_WEBHOOK_URL` is set, technical error reports (stack traces) are sent to a private **operator** channel for monitoring. They are not designed to include message content.
+- **Activation-help webhook (opt-in).** If you use the "get help" option on the account page (when you cannot activate a purchase yourself), the **email address you enter** and your Discord ID are sent to a private **operator** channel so the operator can find your Ko-fi order and activate your pass by hand. This is the one case where an email you type is transmitted (not stored in the database); it is used only to locate your order for that support request. Requires `CLAIM_HELP_WEBHOOK_URL` (or `ERROR_WEBHOOK_URL`) to be set — otherwise nothing is sent.
 
 **No data sale. No third-party analytics. No trackers.** Vozen does not sell, rent, or share data with third parties for marketing purposes, and does not integrate external analytics services.
 
