@@ -11,6 +11,7 @@ import { startKofiWebhook } from '../src/premium/kofiWebhook';
 import { createAdminApi, type AdminApi } from '../src/premium/adminApi';
 import { signAdminSession } from '../src/premium/adminAuth';
 import { isUserPremium } from '../src/store/premium';
+import { bumpTalk } from '../src/store/talkStats';
 
 const OWNER = '1523489275155583056';
 const SECRET = 'router-sess-secret-abcdefghijklmnop'; // >= 32 chars (fail-closed gate)
@@ -197,11 +198,46 @@ describe('admin console — HTTP router', () => {
         throw new Error('SQLITE_IOERR: disk I/O error');
       },
       listGuilds: () => [],
+      listTopTalkers: async () => [],
       grant: () => ({ ok: true, expiresAt: 0 }),
       revoke: () => ({ ok: true }),
     };
     const base = await start(true, boom);
     const res = await get(`${base}/api/admin/passes`, { authorization: 'Bearer any' });
+    expect(res.status).toBe(500);
+  });
+
+  it('GET /api/admin/toptalkers returns the global top talkers with a session, 403 without', async () => {
+    const base = await start();
+    // No session -> refused.
+    expect((await get(`${base}/api/admin/toptalkers`)).status).toBe(403);
+    // Seed one read message so there is a talker to rank.
+    bumpTalk(db, 'G1', '424242424242424242', new Date());
+    const session = signAdminSession(OWNER, SECRET, NOW);
+    const r = await get(`${base}/api/admin/toptalkers`, { authorization: `Bearer ${session}` });
+    expect(r.status).toBe(200);
+    const d = (await r.json()) as { talkers: Array<{ id: string; total: number }> };
+    expect(d.talkers.some((t) => t.id === '424242424242424242' && t.total === 1)).toBe(true);
+  });
+
+  it('an ASYNC store error inside /toptalkers returns 500, not a process crash', async () => {
+    // listTopTalkers is async (identity resolution hits the REST). A rejected promise must become
+    // a clean 500 — never escape to process.on('uncaughtException') -> exit(1), which the sibling
+    // sync try/catch would NOT catch. This pins the .then/.catch guard on the async route.
+    const boomAsync: AdminApi = {
+      enabled: true,
+      login: async () => ({ ok: false }),
+      authorize: (t) => (t ? OWNER : null),
+      listPasses: () => ({ plus: [], passes: [], pending: [] }) as never,
+      listGuilds: () => [],
+      listTopTalkers: async () => {
+        throw new Error('SQLITE_IOERR: disk I/O error');
+      },
+      grant: () => ({ ok: true, expiresAt: 0 }),
+      revoke: () => ({ ok: true }),
+    };
+    const base = await start(true, boomAsync);
+    const res = await get(`${base}/api/admin/toptalkers`, { authorization: 'Bearer any' });
     expect(res.status).toBe(500);
   });
 

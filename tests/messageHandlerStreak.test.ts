@@ -6,6 +6,7 @@ import type { BotDeps } from '../src/bot/deps';
 import { initDb } from '../src/store/db';
 import { setGuildConfig } from '../src/store/guildConfig';
 import { bumpTalk } from '../src/store/talkStats';
+import { getGuildStreak } from '../src/store/guildTalkStreak';
 
 const GUILD = 'g-streak';
 const CHAN = 'chan-1';
@@ -106,6 +107,27 @@ describe('handleMessage — streak notice 🔥 (F1)', () => {
     const send = vi.fn().mockResolvedValue(undefined);
     const say = vi.fn().mockResolvedValue(false); // not enqueued
     await handleMessage(makeMsg(send), makeDeps(db, say));
+    expect(send).not.toHaveBeenCalled();
+  });
+});
+
+describe('handleMessage — server streak wiring (silent, panel-only)', () => {
+  let db: Database.Database;
+  beforeEach(() => {
+    db = initDb(':memory:');
+    setGuildConfig(db, GUILD, { autoread: true, ttsChannelId: CHAN, defaultVoice: '' });
+  });
+  afterEach(() => {
+    db.close();
+  });
+
+  it('an auto-read message records the SERVER streak (>= 1) and posts NOTHING public', async () => {
+    const send = vi.fn().mockResolvedValue(undefined);
+    const say = vi.fn().mockResolvedValue(true);
+    await handleMessage(makeMsg(send), makeDeps(db, say));
+    // Recorded silently for the private panel...
+    expect(getGuildStreak(db, GUILD, new Date()).streak).toBeGreaterThanOrEqual(1);
+    // ...and the bot announced nothing in the channel (first message ever -> no user 🔥 either).
     expect(send).not.toHaveBeenCalled();
   });
 });

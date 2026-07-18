@@ -52,7 +52,7 @@ import { startKofiWebhook } from './premium/kofiWebhook';
 import { parseShopMap } from './premium/kofi';
 import { createStatusApi } from './premium/statusApi';
 import { createDashboardApi } from './premium/dashboardApi';
-import { createAdminApi } from './premium/adminApi';
+import { createAdminApi, type AdminUserBrief } from './premium/adminApi';
 import { startVoteWebhookServer } from './vote';
 
 function discoverModels(modelsDir: string): string[] {
@@ -315,6 +315,10 @@ async function main(): Promise<void> {
     // token. Only built when the panel API exists (same OAuth infrastructure). createAdminApi
     // computes enabled=false when the ADMIN_* env vars are absent, so the routes stay inert (404)
     // until configured — this is what keeps the public repo safe.
+    // Short TTL cache (id -> identity) for the admin top-talkers card: avoids a REST fetch per
+    // user on every panel refresh. Bounded by the small set of distinct top talkers.
+    const userBriefCache = new Map<string, { brief: AdminUserBrief; at: number }>();
+    const USER_BRIEF_TTL_MS = 10 * 60 * 1000;
     const adminApi = statusApi
       ? createAdminApi({
           db,
@@ -334,6 +338,32 @@ async function main(): Promise<void> {
               memberCount: g.memberCount,
               joinedTimestamp: g.joinedTimestamp ?? null,
             })),
+          // Identity (name + avatar) for the top-talkers card. Best-effort PER user: client cache
+          // first (free), then a REST fetch with its own catch, so one un-fetchable id (left every
+          // shared server / rate-limited) never nulls the whole list.
+          resolveUsers: async (ids) => {
+            const nowMs = Date.now();
+            const out: AdminUserBrief[] = [];
+            for (const id of ids) {
+              const hit = userBriefCache.get(id);
+              if (hit && nowMs - hit.at < USER_BRIEF_TTL_MS) {
+                out.push(hit.brief);
+                continue;
+              }
+              const user =
+                client.users.cache.get(id) ?? (await client.users.fetch(id).catch(() => null));
+              const brief: AdminUserBrief = user
+                ? {
+                    id,
+                    username: user.username ?? null,
+                    avatar: user.displayAvatarURL({ size: 64, extension: 'webp' }),
+                  }
+                : { id, username: null, avatar: null };
+              userBriefCache.set(id, { brief, at: nowMs });
+              out.push(brief);
+            }
+            return out;
+          },
         })
       : undefined;
     startKofiWebhook({

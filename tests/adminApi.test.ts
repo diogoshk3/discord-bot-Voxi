@@ -3,6 +3,7 @@ import type Database from 'better-sqlite3';
 import { initDb } from '../src/store/db';
 import { isUserPremium } from '../src/store/premium';
 import { bumpTalk } from '../src/store/talkStats';
+import { bumpGuildTalk } from '../src/store/guildTalkStreak';
 import { signAdminSession } from '../src/premium/adminAuth';
 import { createAdminApi, type AdminApi } from '../src/premium/adminApi';
 
@@ -255,7 +256,93 @@ describe('adminApi — listGuilds (servers tab)', () => {
         speakers: 0,
         topSpeakers: [],
         joinedTimestamp: 1650000000000,
+        streak: 0,
+        bestStreak: 0,
       },
     ]);
+  });
+
+  it('includes the LIVE server streak per guild', () => {
+    const now = new Date(NOW);
+    const yesterday = new Date(NOW - 24 * 3600 * 1000);
+    // Guild D: someone spoke yesterday and today -> server streak 2.
+    bumpGuildTalk(db, 'D', yesterday);
+    bumpGuildTalk(db, 'D', now);
+    const api = make(db, {
+      now: () => NOW,
+      resolveGuilds: () => [
+        { id: 'D', name: 'Delta', icon: null, memberCount: 8, joinedTimestamp: 1650000000000 },
+      ],
+    });
+    const row = api.listGuilds()[0];
+    expect(row.streak).toBe(2);
+    expect(row.bestStreak).toBe(2);
+  });
+});
+
+describe('adminApi — listTopTalkers (global top 10, avatar+name)', () => {
+  let db: Database.Database;
+  beforeEach(() => (db = initDb(':memory:')));
+  afterEach(() => db.close());
+
+  it('aggregates message count ACROSS servers, busiest first, capped at 10', async () => {
+    const now = new Date(NOW);
+    // u1: 2 in A + 1 in B = 3 (top). u2: 1 in A. u3: 2 in B.
+    bumpTalk(db, 'A', 'u1', now);
+    bumpTalk(db, 'A', 'u1', now);
+    bumpTalk(db, 'B', 'u1', now);
+    bumpTalk(db, 'A', 'u2', now);
+    bumpTalk(db, 'B', 'u3', now);
+    bumpTalk(db, 'B', 'u3', now);
+    // 12 more distinct speakers, 1 message each, to prove the LIMIT 10.
+    for (let i = 0; i < 12; i += 1) bumpTalk(db, 'A', `x${i}`, now);
+
+    const rows = await make(db).listTopTalkers();
+    expect(rows).toHaveLength(10);
+    expect(rows[0]).toEqual({ id: 'u1', total: 3, username: null, avatar: null });
+    // u3 (2) ranks above u2 (1) and the 1-message crowd.
+    expect(rows.map((r) => r.id).slice(0, 3)).toEqual(['u1', 'u3', 'u2']);
+  });
+
+  it('WITHOUT resolveUsers -> rows with null username/avatar (UI falls back to the id), NOT empty', async () => {
+    bumpTalk(db, 'A', 'u1', new Date(NOW));
+    const rows = await make(db).listTopTalkers();
+    expect(rows).toEqual([{ id: 'u1', total: 1, username: null, avatar: null }]);
+  });
+
+  it('WITH resolveUsers -> merges name+avatar; an unresolved user stays id-only', async () => {
+    bumpTalk(db, 'A', 'u1', new Date(NOW));
+    bumpTalk(db, 'A', 'u2', new Date(NOW));
+    bumpTalk(db, 'A', 'u2', new Date(NOW)); // u2 ranks first (2 msgs)
+    const api = make(db, {
+      // u2 resolves; u1 is unknown (left every server / rate-limited) -> omitted from the briefs.
+      resolveUsers: async (ids: string[]) =>
+        ids
+          .filter((id) => id === 'u2')
+          .map((id) => ({
+            id,
+            username: 'Duo',
+            avatar: 'https://cdn.discordapp.com/avatars/u2/a.webp',
+          })),
+    });
+    const rows = await api.listTopTalkers();
+    expect(rows[0]).toEqual({
+      id: 'u2',
+      total: 2,
+      username: 'Duo',
+      avatar: 'https://cdn.discordapp.com/avatars/u2/a.webp',
+    });
+    expect(rows[1]).toEqual({ id: 'u1', total: 1, username: null, avatar: null });
+  });
+
+  it('a THROWING resolveUsers degrades to ids-only instead of failing the whole list', async () => {
+    bumpTalk(db, 'A', 'u1', new Date(NOW));
+    const api = make(db, {
+      resolveUsers: async () => {
+        throw new Error('discord REST down');
+      },
+    });
+    const rows = await api.listTopTalkers();
+    expect(rows).toEqual([{ id: 'u1', total: 1, username: null, avatar: null }]);
   });
 });

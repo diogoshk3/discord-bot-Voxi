@@ -53,6 +53,22 @@ export function effectiveStreak(lastDate: string, storedStreak: number, now: Dat
   return lastDate === today || lastDate === y1 || lastDate === y2 ? storedStreak : 0;
 }
 
+/**
+ * NEXT streak value after activity happens on day `now`, given the last active day and the
+ * stored streak. The shared Duolingo state machine used by BOTH the per-user streak (`bumpTalk`)
+ * and the per-server streak (`bumpGuildTalk`): already active today -> unchanged; active
+ * yesterday OR the day before (1 missed day, freeze) -> +1; 2+ consecutive missed days (or an
+ * empty/future date) -> restarts at 1. PURE. Symmetric freeze window with `effectiveStreak`.
+ */
+export function nextStreak(lastDate: string, storedStreak: number, now: Date): number {
+  const today = dateKey(now);
+  const y1 = dayKeyMinus(now, 1);
+  const y2 = dayKeyMinus(now, 2);
+  if (lastDate === today) return storedStreak; // already counted today
+  if (lastDate === y1 || lastDate === y2) return storedStreak + 1; // consecutive OR 1-day freeze
+  return 1; // 2+ consecutive missed days (or empty/future) -> loses
+}
+
 /** Result of `bumpTalk`: whether this was the FIRST message of the day (for the streak 🔥
  * notice) and the CURRENT streak of consecutive days. */
 export interface TalkBump {
@@ -74,8 +90,6 @@ export function bumpTalk(
   now: Date,
 ): TalkBump {
   const today = dateKey(now);
-  const y1 = dayKeyMinus(now, 1); // yesterday
-  const y2 = dayKeyMinus(now, 2); // day before yesterday (== 1 missed day -> freeze)
   const row = db
     .prepare(
       'SELECT spoken_count, streak, best_streak, last_date FROM talk_stats WHERE guild_id = ? AND user_id = ?',
@@ -92,14 +106,9 @@ export function bumpTalk(
 
   // firstOfDay = had not yet spoken TODAY (the last message is from another day).
   const firstOfDay = row.last_date !== today;
-  // Duolingo rules: missing 1 day does NOT break the streak (freeze — the missed day doesn't
-  // count, but today adds +1); missing 2 CONSECUTIVE days (gap >= 3) loses everything -> restarts at 1.
-  let streak: number;
-  if (row.last_date === today)
-    streak = row.streak; // already counted today
-  else if (row.last_date === y1 || row.last_date === y2)
-    streak = row.streak + 1; // consecutive day OR 1 missed day (freeze) -> continues
-  else streak = 1; // 2+ consecutive missed days (or future dates) -> loses
+  // Duolingo rules (shared with the server streak): missing 1 day does NOT break it (freeze),
+  // missing 2 CONSECUTIVE days loses everything. See `nextStreak`.
+  const streak = nextStreak(row.last_date, row.streak, now);
   const best = Math.max(row.best_streak, streak);
 
   db.prepare(

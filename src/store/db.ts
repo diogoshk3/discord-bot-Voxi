@@ -120,6 +120,16 @@ export function initDb(path: string): Database.Database {
         PRIMARY KEY (guild_id, user_id)
       );
 
+      -- Per-SERVER talk streak (admin console only): consecutive days on which at least one
+      -- person spoke. Same Duolingo rules as talk_stats' per-user streak. No message content,
+      -- no per-user data — one row per guild. last_date is the local YYYY-MM-DD of the latest day.
+      CREATE TABLE IF NOT EXISTS guild_talk_streak (
+        guild_id    TEXT PRIMARY KEY,
+        streak      INTEGER NOT NULL DEFAULT 0,
+        best_streak INTEGER NOT NULL DEFAULT 0,
+        last_date   TEXT NOT NULL DEFAULT ''
+      );
+
       -- Per-guild Vozen Premium. expires_at uses Unix milliseconds; a missing or expired
       -- row is Free. source records redeem, kofi, discord, or manual provenance.
       CREATE TABLE IF NOT EXISTS premium_guild (

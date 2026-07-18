@@ -54,14 +54,22 @@ This login data is used **transiently** to answer the request and is **not store
 The instance **operator** (and only the operator — access is gated by the owner's
 Discord identity plus a server-only signed session) has a private admin console to
 run the service. It shows: active Premium/Plus entitlements and pending purchases
-(to grant or revoke them), and, per server, the server's name, icon, member count,
-and **aggregate `talk_stats`** — the total number of messages the bot has read, the
-number of active speakers, and the top five speakers as `(Discord ID, count)`.
+(to grant or revoke them); per server, the server's name, icon, member count,
+**aggregate `talk_stats`** — the total number of messages the bot has read, the
+number of active speakers, the top five speakers as `(Discord ID, count)`, and a
+**server activity streak** (how many consecutive days at least one person spoke — a
+server-level counter, not per-person); and a **global "top talkers" list** — the ten
+people with the most messages read across all servers, shown with their Discord
+username and avatar (fetched live from Discord's public profile for display, not
+stored).
 
 This introduces **no new data collection and no new recipient**: the figures are
 **counts, never message content**, computed from `talk_stats` already described in
-the table above; the same top-speaker list is already public in each server via
-`/topspeakers`; and the operator already controls the database directly (see §3).
+the table above; the server streak is a consecutive-day counter derived from the same
+activity, holding no per-person data; the username and avatar in the top-talkers list
+are the person's **public** Discord profile, fetched live for display and never
+stored; the same top-speaker data is already public in each server via `/topspeakers`;
+and the operator already controls the database directly (see §3).
 The console is only an owner-facing view over data that is already disclosed,
 already deletable via `/privacy erase`, and already auto-deleted 30 days after the
 bot leaves a server (§3).

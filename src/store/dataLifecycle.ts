@@ -25,6 +25,7 @@ export const GUILD_PURGE_TABLES = [
   'game_score',
   'user_birthday',
   'talk_stats',
+  'guild_talk_streak', // per-server talk streak (aggregate, no per-user data) — dies with the server
   'user_effect',
   'voice_presence',
   'stt_consent',

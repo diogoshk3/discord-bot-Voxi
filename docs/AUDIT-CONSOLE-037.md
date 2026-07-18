@@ -79,3 +79,35 @@ third-party disclosure** — it is an owner-only view over counts (not content) 
 are already disclosed, already public in-server via `/topspeakers`, already deletable
 via `/privacy erase`, and already auto-purged 30 days after the bot leaves. The only
 gap was a documentation one, closed by the PRIVACY.md §1.2 note.
+
+## Addendum — plan 038 (server streak + global top talkers), 2026-07-18
+
+Two owner-only additions to the Servers tab; verdict unchanged (**compliant**).
+
+| Surface | Data | Source | New collection? |
+|---|---|---|---|
+| **Server streak** (per guild) | consecutive-day counter: how many days in a row ≥1 person spoke | new table `guild_talk_streak` (`guild_id`, `streak`, `best_streak`, `last_date`) | **No personal data** — a server-level aggregate derived from the same activity as `talk_stats`. Same Duolingo rules as the per-user streak (shared `nextStreak`). No `user_id`, no content. |
+| **Global top 10** | the 10 users with the most messages read **across all servers**, with username + avatar | `SUM(spoken_count)` over `talk_stats` (already stored); username/avatar fetched **live** from Discord | **No new stored data** — the counts already exist; identity is public profile data resolved on demand for display and **never persisted**. |
+
+- **GDPR / Discord ToS:** unchanged posture. Counts, never content; owner-only
+  (same `authorize()` gate); the global list is the same "chatterboxes" data already
+  public via `/topspeakers`, only summed across the operator's own servers. Username
+  and avatar are the person's **public** Discord profile, shown to the operator only,
+  fetched live and not stored (a 10-min in-memory cache, no DB write).
+- **Retention / erasure:** `guild_talk_streak` is registered in `GUILD_PURGE_TABLES`
+  (`dataLifecycle.ts`) — it dies with the server, and the rot-guard test enforces the
+  classification. It has no `user_id`, so `/privacy erase` (personal data) does not
+  apply; the underlying `talk_stats` a user's totals are computed from is still erased.
+- **Site CSP note (conscious):** the top-talkers avatars load from
+  `cdn.discordapp.com`, which is **already** in the page's `img-src` (the server
+  icons use it) — no CSP change was needed. This is an owner-only page and the owner
+  reaches it through a Discord-authenticated session, so no third-party visitor IP is
+  exposed that Discord does not already see. Verified in-browser: zero CSP console
+  errors with the avatars rendering.
+- **Async route safety:** `GET /api/admin/toptalkers` resolves identities over the
+  Discord REST and is therefore async; it carries its own `.then/.catch` (not the
+  sibling synchronous `try`) so a rejected promise becomes a clean 500 instead of
+  crashing the bot (BUG-01 hazard). Pinned by `adminRouter.test.ts`.
+
+No new findings. No message content is exposed; the streak holds no personal data;
+identities are public and live-only.

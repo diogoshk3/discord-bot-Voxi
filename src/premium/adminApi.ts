@@ -23,6 +23,7 @@ import {
 } from '../store/adminPasses';
 import { listAllUnclaimedPending, type PendingGrant } from '../store/kofiPending';
 import { buildServerStats } from '../store/serverStats';
+import { getGuildStreak } from '../store/guildTalkStreak';
 import { signAdminSession, verifyAdminSession } from './adminAuth';
 import type { DiscordAuthorization } from './statusApi';
 
@@ -45,6 +46,11 @@ export interface AdminApiDeps {
   /** Live snapshot of the bot's guilds (from client.guilds.cache). Absent => the servers tab is
    *  empty. Only id/name/icon/memberCount leave — the stats come from data already in the db. */
   resolveGuilds?: () => AdminGuildBrief[];
+  /** Resolve Discord identities (display name + avatar URL) for the global top-talkers card.
+   *  Batched; the implementation is best-effort per user (an unfetchable id yields null fields).
+   *  Absent => the card renders ids only. Only id/name/avatar leave, for users already surfaced
+   *  by the public /topspeakers-style aggregate. */
+  resolveUsers?: (ids: string[]) => Promise<AdminUserBrief[]>;
 }
 
 /** What the bot's guild cache gives us for a server (no message content, just identity + size). */
@@ -66,6 +72,23 @@ export interface AdminGuildRow extends AdminGuildBrief {
   speakers: number;
   /** Top talkers (userId + count) — the same data as the public /topspeakers, per server. */
   topSpeakers: { userId: string; count: number }[];
+  /** Consecutive-day server talk streak, LIVE as of now (0 if dead). Admin console only. */
+  streak: number;
+  /** All-time best server streak. */
+  bestStreak: number;
+}
+
+/** A Discord identity for the top-talkers card: id plus optional display name and avatar URL. */
+export interface AdminUserBrief {
+  id: string;
+  username: string | null;
+  /** Full CDN avatar URL, or null. */
+  avatar: string | null;
+}
+
+/** One row of the global top-talkers card: an identity + total messages read across ALL servers. */
+export interface AdminTopTalker extends AdminUserBrief {
+  total: number;
 }
 
 export type AdminGrantInput =
@@ -105,6 +128,9 @@ export interface AdminApi {
   listPasses(): AdminPassesResult;
   /** The bot's servers with their aggregate usage, busiest first. Empty without resolveGuilds. */
   listGuilds(): AdminGuildRow[];
+  /** The 10 users with the most messages read across ALL servers (global, not per-guild),
+   *  busiest first, with resolved identity where available. */
+  listTopTalkers(): Promise<AdminTopTalker[]>;
   grant(input: AdminGrantInput): AdminGrantOk | AdminGrantErr;
   revoke(input: AdminRevokeInput): { ok: boolean };
 }
@@ -115,6 +141,8 @@ const MAX_DAYS = 3650;
 const MAX_SEATS = 100;
 /** Top talkers shown per server in the console. */
 const TOP_SPEAKERS = 5;
+/** Users shown in the global top-talkers card. */
+const TOP_TALKERS = 10;
 
 const validId = (id: unknown): id is string => typeof id === 'string' && SNOWFLAKE.test(id);
 const validDays = (d: unknown): d is number =>
@@ -178,6 +206,7 @@ export function createAdminApi(deps: AdminApiDeps): AdminApi {
         // Stats come ONLY from talk_stats (already stored, already public via /topspeakers) — no
         // new collection. buildServerStats is pure over the db.
         const s = buildServerStats(deps.db, g.id, now, TOP_SPEAKERS);
+        const gs = getGuildStreak(deps.db, g.id, now);
         return {
           id: g.id,
           name: g.name,
@@ -187,9 +216,42 @@ export function createAdminApi(deps: AdminApiDeps): AdminApi {
           messages: s.totalMessages,
           speakers: s.activeSpeakers,
           topSpeakers: s.topSpeakers.map((t) => ({ userId: t.userId, count: t.count })),
+          streak: gs.streak,
+          bestStreak: gs.bestStreak,
         };
       })
       .sort((a, b) => b.messages - a.messages);
+  }
+
+  async function listTopTalkers(): Promise<AdminTopTalker[]> {
+    // Global aggregate over talk_stats (counts already stored, already public per-server via
+    // /topspeakers). No message content, no new collection — just SUM across servers.
+    const rows = deps.db
+      .prepare(
+        `SELECT user_id, SUM(spoken_count) AS total FROM talk_stats
+         GROUP BY user_id ORDER BY total DESC, user_id ASC LIMIT ?`,
+      )
+      .all(TOP_TALKERS) as { user_id: string; total: number }[];
+    const base: AdminTopTalker[] = rows.map((r) => ({
+      id: r.user_id,
+      total: r.total,
+      username: null,
+      avatar: null,
+    }));
+    if (!deps.resolveUsers || base.length === 0) return base;
+    // Identity resolution is best-effort: a whole-batch failure (REST down) degrades to ids-only
+    // rather than failing the card; a single unresolved user simply keeps its null fields below.
+    let briefs: AdminUserBrief[];
+    try {
+      briefs = await deps.resolveUsers(base.map((b) => b.id));
+    } catch {
+      return base;
+    }
+    const byId = new Map(briefs.map((b) => [b.id, b]));
+    return base.map((b) => {
+      const info = byId.get(b.id);
+      return info ? { ...b, username: info.username ?? null, avatar: info.avatar ?? null } : b;
+    });
   }
 
   function grant(input: AdminGrantInput): AdminGrantOk | AdminGrantErr {
@@ -219,5 +281,5 @@ export function createAdminApi(deps: AdminApiDeps): AdminApi {
     return { ok };
   }
 
-  return { enabled, login, authorize, listPasses, listGuilds, grant, revoke };
+  return { enabled, login, authorize, listPasses, listGuilds, listTopTalkers, grant, revoke };
 }

@@ -15,6 +15,7 @@ import { isRepetitionSpam } from '../moderation/antispam';
 import { metrics } from '../metrics';
 import { getVoiceEffect } from '../store/voiceEffect';
 import { bumpTalk, getTopSpeakers, type TalkBump } from '../store/talkStats';
+import { bumpGuildTalk } from '../store/guildTalkStreak';
 import { renderLeaderboard } from '../leaderboard/randomPost';
 import { getUserPronunciations, getServerPronunciations } from '../store/pronunciation';
 import { getUserVoice } from '../store/userVoice';
@@ -393,6 +394,14 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
         talk = bumpTalk(deps.db, message.guildId, message.author.id, new Date());
       } catch (err) {
         log.warn('[messageHandler] failed to update speaker statistics (ignored)', err);
+      }
+      // Per-server streak (admin console only, never announced publicly). AFTER bumpTalk so the
+      // first-ever server bump seeds from this author's already-fresh row. Independent best-effort:
+      // a failure here must never touch speech or the per-user streak notice above.
+      try {
+        bumpGuildTalk(deps.db, message.guildId, new Date());
+      } catch (err) {
+        log.warn('[messageHandler] failed to update the server streak (ignored)', err);
       }
     }
 

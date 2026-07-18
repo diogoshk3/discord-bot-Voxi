@@ -848,6 +848,25 @@ function handleAdminRequest(
     return;
   }
 
+  // ── Top talkers (global, admin-only): ASYNC — identity resolution hits the Discord REST, so
+  // listTopTalkers returns a Promise. The synchronous try/catch below CANNOT catch a rejected
+  // promise; an escape would reach process.on('uncaughtException') -> exit(1), dropping every live
+  // voice session (BUG-01). So this route carries its own .then/.catch, exactly like login above.
+  if (path === '/api/admin/toptalkers' && req.method === 'GET') {
+    ctx.adminApi
+      .listTopTalkers()
+      .then((talkers) => json(200, { talkers }))
+      .catch((err) => {
+        ctx.logError('[admin] toptalkers failed', err);
+        try {
+          json(500, { error: 'internal' });
+        } catch {
+          /* response already sent */
+        }
+      });
+    return;
+  }
+
   // A better-sqlite3 error (disk full, I/O) thrown by any synchronous store call below must become
   // a clean 500 — never escape this request listener to process.on('uncaughtException'), which
   // exits the whole bot and drops every live voice session (the sibling Ko-fi/dashboard routes all
