@@ -10,7 +10,7 @@ const source = (path: string): string =>
 // these tests too. One constant each: the rename is then a one-line edit here, not a hunt.
 const SITE_JS = 'site/js/main-v36.js';
 const SITE_I18N = 'site/js/i18n-v33.js';
-const SITE_CSS = 'site/css/main-v36.css';
+const SITE_CSS = 'site/css/main-v37.css';
 
 /** Body of a top-level function in the site bundle, comments stripped. Comments are dropped
  *  because these assertions are about the markup a function RENDERS — a comment explaining why

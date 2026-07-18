@@ -473,7 +473,10 @@ body > *:not(.grain):not(.orbs):not(.nav):not(.ppmodal) { position: relative; z-
 .btn--sm { padding: 9px 18px; font-size: 15px; }
 .btn--lg { padding: 19px 44px; font-size: 19px; }
 .btn--primary {
-  color: #fff; background: var(--grad-brand); background-size: 160% 160%;
+  /* Full blue->teal gradient: no background-size crop. A 160% size at position 0% 0%
+     showed only the top-left (blue) ~62% of the gradient, so the button read as flat
+     blue and never reached the teal end — nothing animated the position to justify it. */
+  color: #fff; background: var(--grad-brand);
   box-shadow: 0 10px 34px -8px rgba(102, 114, 255, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 /* moving sheen */
