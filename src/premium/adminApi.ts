@@ -24,17 +24,21 @@ import {
 import { listAllUnclaimedPending, type PendingGrant } from '../store/kofiPending';
 import { buildServerStats } from '../store/serverStats';
 import { signAdminSession, verifyAdminSession } from './adminAuth';
-import type { DiscordIdentity } from './statusApi';
+import type { DiscordAuthorization } from './statusApi';
 
 export interface AdminApiDeps {
   db: Database.Database;
   now: () => number;
-  /** Reuse statusApi.resolveIdentity — validates a Discord token against /users/@me. */
-  resolveIdentity: (token: string) => Promise<DiscordIdentity | null>;
+  /** Reuse statusApi.resolveAuthorization — validates a Discord token against /oauth2/@me,
+   *  returning BOTH the user id and the OAuth application (client) id that minted it. */
+  resolveAuthorization: (token: string) => Promise<DiscordAuthorization | null>;
   /** HMAC key for the signed session. Absent => inert. */
   adminSessionSecret?: string;
   /** Only this Discord identity may log in (reuses OWNER_ID). Absent => inert. */
   ownerId?: string;
+  /** The console's own OAuth application (client) id. A login token must have been minted by
+   *  THIS app; an identify token from any other application is refused. Absent => inert. */
+  adminClientId?: string;
   logInfo: (m: string) => void;
   /** Session lifetime; default 8h. */
   sessionTtlSec?: number;
@@ -119,23 +123,32 @@ const validSeats = (s: unknown): s is number =>
   typeof s === 'number' && Number.isInteger(s) && s >= 1 && s <= MAX_SEATS;
 
 export function createAdminApi(deps: AdminApiDeps): AdminApi {
-  const enabled = Boolean(deps.adminSessionSecret && deps.ownerId);
-  // SEC-02: a short secret arms the whole money surface with a weaker HMAC. Warn loudly (plan 024's
-  // fail-safe-config precedent) but do NOT disable a working console — that would surprise an
-  // operator running a short-but-working secret. `openssl rand -hex 32` gives 64 hex chars.
-  if (enabled && deps.adminSessionSecret && deps.adminSessionSecret.length < 32) {
+  // SEC: the HMAC session secret must be strong. A short key on the money surface is forgeable,
+  // so it FAILS CLOSED (was warn-and-continue): a weak secret disables the console rather than
+  // arming it with weak signatures. `openssl rand -hex 32` gives 64 hex chars.
+  const secretStrong =
+    typeof deps.adminSessionSecret === 'string' && deps.adminSessionSecret.length >= 32;
+  const enabled = Boolean(secretStrong && deps.ownerId && deps.adminClientId);
+  if (deps.adminSessionSecret && !secretStrong) {
     deps.logInfo(
-      '[admin] WARNING: ADMIN_SESSION_SECRET is shorter than 32 chars — generate a strong one with `openssl rand -hex 32`. The console stays enabled but the session signatures are weaker.',
+      '[admin] ADMIN_SESSION_SECRET is shorter than 32 chars — the admin console is DISABLED (fail-closed). Generate a strong one: `openssl rand -hex 32`.',
     );
   }
-  const ttl = deps.sessionTtlSec ?? 8 * 3600;
+  const ttl = deps.sessionTtlSec ?? 2 * 3600; // short window; a leaked token expires fast (SEC S6)
 
   async function login(discordToken: string | null): Promise<AdminLoginOk | AdminFail> {
     // Destructure + guard so TS narrows the optionals to strings without non-null assertions.
-    const { adminSessionSecret, ownerId } = deps;
-    if (!adminSessionSecret || !ownerId || !discordToken) return { ok: false };
-    const identity = await deps.resolveIdentity(discordToken);
-    if (!identity || identity.id !== ownerId) return { ok: false };
+    const { adminSessionSecret, ownerId, adminClientId } = deps;
+    if (!adminSessionSecret || !ownerId || !adminClientId || !discordToken) return { ok: false };
+    const auth = await deps.resolveAuthorization(discordToken);
+    // Bind the token to BOTH the owner's account AND the console's own OAuth app. An identify
+    // token that resolves to the owner but was minted by ANY OTHER application (a different app
+    // the owner ever authorized, or one captured elsewhere) is refused — this closes the
+    // access-token substitution path. `identify` is the lowest-friction scope, so the owner-id
+    // check alone was not a real second gate.
+    if (!auth || auth.userId !== ownerId || auth.applicationId !== adminClientId) {
+      return { ok: false };
+    }
     const now = deps.now();
     const token = signAdminSession(ownerId, adminSessionSecret, now, ttl);
     return { ok: true, token, expiresAt: (Math.floor(now / 1000) + ttl) * 1000 };

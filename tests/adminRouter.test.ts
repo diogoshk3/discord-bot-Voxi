@@ -13,13 +13,14 @@ import { signAdminSession } from '../src/premium/adminAuth';
 import { isUserPremium } from '../src/store/premium';
 
 const OWNER = '1523489275155583056';
-const SECRET = 'router-sess-secret';
+const SECRET = 'router-sess-secret-abcdefghijklmnop'; // >= 32 chars (fail-closed gate)
 const PANEL_ORIGIN = 'https://rexy40407.github.io';
 const NOW = 1_000_000;
 
-const resolveIdentity = vi.fn(async (token: string) => {
-  if (token === 'owner-token') return { id: OWNER, username: 'owner', avatar: null };
-  if (token === 'other-token') return { id: '222333444555666777', username: 'x', avatar: null };
+const CLIENT = '1526211106081734666'; // the console's OAuth app id (audience)
+const resolveAuthorization = vi.fn(async (token: string) => {
+  if (token === 'owner-token') return { userId: OWNER, applicationId: CLIENT };
+  if (token === 'other-token') return { userId: '222333444555666777', applicationId: CLIENT };
   return null;
 });
 
@@ -33,9 +34,10 @@ function makeAdmin(db: Database.Database, enabled = true) {
   return createAdminApi({
     db,
     now: () => NOW,
-    resolveIdentity,
+    resolveAuthorization,
     adminSessionSecret: enabled ? SECRET : undefined,
     ownerId: OWNER,
+    adminClientId: CLIENT,
     logInfo: () => {},
     resolveGuilds: () => [
       { id: 'G1', name: 'Test Server', icon: null, memberCount: 4, joinedTimestamp: 1680000000000 },

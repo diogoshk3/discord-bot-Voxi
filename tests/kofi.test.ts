@@ -411,7 +411,11 @@ describe('kofiWebhook — API Premium HTTP', () => {
   async function startApi(
     getStatus: () => Promise<{ code: number; body: unknown }>,
   ): Promise<string> {
-    const statusApi = { getStatus: vi.fn(getStatus), resolveIdentity: vi.fn() };
+    const statusApi = {
+      getStatus: vi.fn(getStatus),
+      resolveIdentity: vi.fn(),
+      resolveAuthorization: vi.fn(),
+    };
     server = startKofiWebhook({
       db,
       token: undefined,
@@ -459,6 +463,7 @@ describe('kofiWebhook — API Premium HTTP', () => {
     const statusApi = {
       getStatus: vi.fn(async () => ({ code: 401, body: { error: 'invalid_token' } })),
       resolveIdentity: vi.fn(),
+      resolveAuthorization: vi.fn(),
     };
     server = startKofiWebhook({
       db,
@@ -495,6 +500,7 @@ describe('kofiWebhook — API Premium HTTP', () => {
     const statusApi = {
       getStatus: vi.fn(async () => ({ code: 401, body: { error: 'invalid_token' } })),
       resolveIdentity: vi.fn(),
+      resolveAuthorization: vi.fn(),
     };
     server = startKofiWebhook({
       db,

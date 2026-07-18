@@ -18,6 +18,14 @@ export interface DiscordIdentity {
   avatar: string | null;
 }
 
+/** Token audience from /oauth2/@me: WHICH user AND WHICH OAuth application minted the token.
+ *  The admin console binds on BOTH, so an identify token for the owner minted by any other
+ *  application is refused (access-token substitution defence). */
+export interface DiscordAuthorization {
+  userId: string;
+  applicationId: string;
+}
+
 export interface StatusApiDeps {
   db: Database.Database;
   now: () => number;
@@ -40,9 +48,13 @@ export interface StatusResponse {
 export interface StatusApi {
   getStatus(token: string | null): Promise<StatusResponse>;
   resolveIdentity(token: string): Promise<DiscordIdentity | null>;
+  resolveAuthorization(token: string): Promise<DiscordAuthorization | null>;
 }
 
 const DISCORD_ME = 'https://discord.com/api/v10/users/@me';
+// /oauth2/@me additionally reveals the token's `application.id` (the client that minted it) —
+// what /users/@me cannot. The admin login uses it to bind the token's audience.
+const DISCORD_OAUTH_ME = 'https://discord.com/api/v10/oauth2/@me';
 
 // Ceiling on the Discord validation: without this a slow/hung discord.com would hold the
 // panel's HTTP request open (and, under spam, pile up). On abort we fall into the catch => 401.
@@ -144,5 +156,33 @@ export function createStatusApi(deps: StatusApiDeps): StatusApi {
     };
   }
 
-  return { getStatus, resolveIdentity };
+  /** Validates the token against /oauth2/@me and returns WHICH user + WHICH OAuth application it
+   *  belongs to. Unlike /users/@me this exposes the token's `application.id`, letting the admin
+   *  console refuse a token minted for the owner by any OTHER application. Not cached: admin
+   *  logins are rare and a stale audience must never be reused. Fails closed (null) on any error. */
+  async function resolveAuthorization(token: string): Promise<DiscordAuthorization | null> {
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), DISCORD_FETCH_TIMEOUT_MS);
+    try {
+      const res = await deps.fetchImpl(DISCORD_OAUTH_ME, {
+        headers: { Authorization: `Bearer ${token}` },
+        signal: ac.signal,
+      });
+      if (!res.ok) return null;
+      const o = (await res.json()) as { application?: { id?: unknown }; user?: { id?: unknown } };
+      const userId = o.user?.id;
+      const applicationId = o.application?.id;
+      if (typeof userId === 'string' && typeof applicationId === 'string') {
+        return { userId, applicationId };
+      }
+      return null;
+    } catch (err) {
+      deps.logError?.('[premium-api] failed to validate the OAuth authorization', err);
+      return null;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  return { getStatus, resolveIdentity, resolveAuthorization };
 }

@@ -130,6 +130,10 @@ export interface AppConfig {
   // Premium panel).
   adminSessionSecret?: string;
   adminPanelOrigin?: string;
+  // The OAuth application (client) id the admin console logs in with. A login token must have
+  // been minted by THIS app (audience binding), not merely resolve to OWNER_ID. Defaults to the
+  // Vozen-helper console's app id; override with ADMIN_CLIENT_ID.
+  adminClientId?: string;
 }
 
 function requireEnv(name: string): string {
@@ -404,5 +408,6 @@ export function loadConfig(): AppConfig {
     // The owner check reuses OWNER_ID. ADMIN_PANEL_ORIGIN defaults to the Vozen-helper Pages origin.
     adminSessionSecret: strEnv('ADMIN_SESSION_SECRET', '') || undefined,
     adminPanelOrigin: strEnv('ADMIN_PANEL_ORIGIN', 'https://rexy40407.github.io') || undefined,
+    adminClientId: strEnv('ADMIN_CLIENT_ID', '1526211106081734666') || undefined,
   };
 }

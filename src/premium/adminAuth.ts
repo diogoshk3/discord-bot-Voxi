@@ -8,8 +8,10 @@
 
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
-/** Default session lifetime — mirrors the Vozen-helper panel (8h). */
-const DEFAULT_TTL_SEC = 8 * 3600;
+/** Default session lifetime. Kept short (2h) so a session token leaked out-of-band has a small
+ *  usable window — the console re-authenticates with one Discord OAuth click. (The stateless HMAC
+ *  can't be individually revoked, so the TTL IS the bound; see SEC audit S6.) */
+const DEFAULT_TTL_SEC = 2 * 3600;
 
 /**
  * Signs an admin session token `<userId>.<expEpochSec>.<sigBase64url>` (HMAC-SHA256 over

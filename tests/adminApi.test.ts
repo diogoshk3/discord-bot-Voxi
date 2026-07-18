@@ -11,14 +11,19 @@ import { createAdminApi, type AdminApi } from '../src/premium/adminApi';
 // Discord token where a session is required, and inert-by-default when unconfigured.
 
 const OWNER = '1523489275155583056';
-const SECRET = 'sess-secret';
+const SECRET = 'sess-secret-abcdefghijklmnopqrstuvwxyz'; // >= 32 chars (fail-closed gate)
+const CLIENT = '1526211106081734666'; // the console's OAuth app id (audience)
 
 const NOW = 1_700_000_000_000;
 
-/** Fake Discord validation: 'owner-token' is the owner, 'other-token' is someone else. */
-const resolveIdentity = async (token: string) => {
-  if (token === 'owner-token') return { id: OWNER, username: 'owner', avatar: null };
-  if (token === 'other-token') return { id: '999999999999999999', username: 'other', avatar: null };
+/** Fake /oauth2/@me validation — returns WHICH user + WHICH app minted the token:
+ *  'owner-token'     → owner, minted by the console's own app (the only accepted combo);
+ *  'other-token'     → a different user, console app (wrong user);
+ *  'wrong-app-token' → the owner, but minted by SOME OTHER app (audience-substitution attempt). */
+const resolveAuthorization = async (token: string) => {
+  if (token === 'owner-token') return { userId: OWNER, applicationId: CLIENT };
+  if (token === 'other-token') return { userId: '999999999999999999', applicationId: CLIENT };
+  if (token === 'wrong-app-token') return { userId: OWNER, applicationId: '999000999000999000' };
   return null;
 };
 
@@ -29,9 +34,10 @@ function make(
   return createAdminApi({
     db,
     now: () => NOW,
-    resolveIdentity,
+    resolveAuthorization,
     adminSessionSecret: SECRET,
     ownerId: OWNER,
+    adminClientId: CLIENT,
     logInfo: () => {},
     ...over,
   });
@@ -42,10 +48,11 @@ describe('adminApi — enabled / inert', () => {
   beforeEach(() => (db = initDb(':memory:')));
   afterEach(() => db.close());
 
-  it('is enabled only when the session secret and ownerId are present', () => {
+  it('is enabled only when the session secret, ownerId and adminClientId are present', () => {
     expect(make(db).enabled).toBe(true);
     expect(make(db, { adminSessionSecret: undefined }).enabled).toBe(false);
     expect(make(db, { ownerId: undefined }).enabled).toBe(false);
+    expect(make(db, { adminClientId: undefined }).enabled).toBe(false);
   });
 
   it('when disabled, login and authorize always refuse', async () => {
@@ -54,17 +61,20 @@ describe('adminApi — enabled / inert', () => {
     expect(api.authorize('anything')).toBeNull();
   });
 
-  it('warns (but still enables) when ADMIN_SESSION_SECRET is weak — SEC-02', () => {
-    // A short secret arms the whole money surface with a weaker HMAC. Follow plan 024's
-    // fail-safe-config precedent: warn loudly at startup, do NOT silently disable a working
-    // console (that would surprise an operator running a short-but-working secret).
+  it('DISABLES the console (fail-closed) + warns when ADMIN_SESSION_SECRET is weak', () => {
+    // A short HMAC secret is forgeable — worse on the money surface than a dark console. So a
+    // <32-char secret fails closed (enabled=false) and logs why, instead of arming weak sigs.
     const weakLogs: string[] = [];
     const weak = make(db, { adminSessionSecret: 'short', logInfo: (m) => weakLogs.push(m) });
-    expect(weak.enabled).toBe(true);
+    expect(weak.enabled).toBe(false);
     expect(weakLogs.some((l) => l.includes('ADMIN_SESSION_SECRET'))).toBe(true);
-    // A 32+ char secret is silent.
+    // A 32+ char secret is enabled and silent.
     const strongLogs: string[] = [];
-    make(db, { adminSessionSecret: 'x'.repeat(32), logInfo: (m) => strongLogs.push(m) });
+    const strong = make(db, {
+      adminSessionSecret: 'x'.repeat(32),
+      logInfo: (m) => strongLogs.push(m),
+    });
+    expect(strong.enabled).toBe(true);
     expect(strongLogs.some((l) => l.includes('ADMIN_SESSION_SECRET'))).toBe(false);
   });
 });
@@ -86,6 +96,12 @@ describe('adminApi — login', () => {
 
   it('rejects a Discord identity that is NOT the owner', async () => {
     expect(await make(db).login('other-token')).toEqual({ ok: false });
+  });
+
+  it('rejects an owner token minted by a DIFFERENT OAuth app (audience binding)', async () => {
+    // Core of the access-token-substitution fix: even a valid identify token for the OWNER is
+    // refused unless it was minted by the console's own OAuth application (adminClientId).
+    expect(await make(db).login('wrong-app-token')).toEqual({ ok: false });
   });
 
   it('rejects when the Discord token is missing or invalid', async () => {
