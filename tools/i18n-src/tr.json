@@ -1,13 +1,13 @@
 {
   "ui": {
     "claim.title": "Bir satın alımı etkinleştir",
-    "claim.hint": "Ko-fi'de Plus veya Premium mi aldın? Ko-fi makbuz e-postandaki işlem kodunu yapıştır, bu Discord hesabında etkinleştirelim.",
-    "claim.placeholder": "Ko-fi makbuzundaki işlem kodu",
+    "claim.hint": "Ko-fi'de Plus veya Premium mu aldın? Makbuzunu aç ve web adresini buraya yapıştır — bağlantının tamamını. (İstersen sadece kod da olur.)",
+    "claim.placeholder": "Ko-fi makbuz bağlantını yapıştır",
     "claim.btn": "Etkinleştir",
     "claim.working": "Etkinleştiriliyor…",
     "claim.ok": "Tamam! Satın alımın artık bu hesapta etkin.",
-    "claim.notfound": "Bu koda ait bir satın alma bulunamadı. Ko-fi makbuzundan kontrol edip tekrar dene.",
-    "claim.useReceiptCode": "Lütfen e-posta adresin yerine Ko-fi makbuz e-postandaki işlem kodunu yapıştır.",
+    "claim.notfound": "Buna ait bir satın alma bulunamadı. Ko-fi makbuzunu aç ve web adresini yapıştır — bağlantının tamamını.",
+    "claim.useReceiptCode": "Bu bir e-posta adresi. Bunun yerine Ko-fi makbuzunun web adresini yapıştır — bağlantının tamamı yeterli.",
     "claim.ratelimited": "Çok fazla deneme. Lütfen birkaç dakika bekleyip tekrar dene.",
     "claim.error": "Bir şeyler ters gitti. Lütfen birazdan tekrar dene.",
     "nav.features": "Özellikler",
@@ -161,7 +161,23 @@
     "price.idNote": "⚠️ Ko-fi’den satın aldıktan sonra planını vozen.org/account adresinde etkinleştir — Discord ile giriş yap.",
     "price.idNoteLink": "ID’mi kopyala →",
     "price.m.19": "50 sunucu telaffuzu",
-    "price.m.20": "Günlük konuşma serileri"
+    "price.m.20": "Günlük konuşma serileri",
+    "claim.lost": "Makbuzu mu kaybettin? Ko-fi ödeme yaptığında sana e-posta ile gönderdi — o e-postayı bul ve siparişini oradan aç.",
+    "claim.lostHelp": "Bulamıyor musun? Yardım al →",
+    "claim.help.title": "Paketini birlikte etkinleştirelim",
+    "claim.help.step1": "O Ko-fi e-postasında “Go to your order” düğmesine bas. Açılan sayfanın adresini kopyala ve yukarıdaki kutuya yapıştır — paketin hemen etkinleşir.",
+    "claim.help.step2": "Olmadı mı? Ko-fi’de kullandığın e-postayı söyle (makbuzunda var), paketini elle biz etkinleştirelim.",
+    "claim.help.emailPlaceholder": "Ko-fi’de kullandığın e-posta",
+    "claim.help.send": "Etkinleştirmelerini iste",
+    "claim.help.refPasted": "Bu, makbuzundaki Ref — bir paketi etkinleştirmez ve biz onu arayamayız. Bunun yerine Ko-fi’de kullandığın e-postayı söyle.",
+    "claim.help.notEmail": "Bu bir e-posta gibi görünmüyor. Ko-fi’de kullandığını kopyala — makbuzunda var.",
+    "claim.help.sent": "Aldık! Paketini kısa süre içinde elle etkinleştireceğiz — bu sayfada görünecek.",
+    "claim.help.sendError": "Gönderemedik. Aşağıdaki mesajı kopyalayıp destek sunucusundan bize yolla.",
+    "claim.help.stillStuck": "Hâlâ olmuyor mu? Destek sunucusundan bize yaz →",
+    "claim.help.close": "Kapat",
+    "claim.consent": "{terms} kabul ediyorum.",
+    "claim.consentTerms": "Şartları ve koşulları",
+    "claim.consentRequired": "Şimdi etkinleştirmek için yukarıdaki kutuyu işaretleyin."
   },
   "commands": {
     "general": [

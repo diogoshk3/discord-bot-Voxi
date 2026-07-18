@@ -96,7 +96,7 @@ there is nothing easier than inviting the hosted bot:
 
 ## License
 
-Copyright (C) 2026 Rexy40407.
+Copyright (C) 2026 Rexy.
 
 Vozen is free software: you can redistribute it and/or modify it under the terms of the **GNU Affero
 General Public License, version 3** (AGPL-3.0), as published by the Free Software

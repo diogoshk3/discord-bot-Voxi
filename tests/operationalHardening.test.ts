@@ -9,7 +9,7 @@ const source = (path: string): string =>
 // The site's assets are cache-busted by FILENAME (never a query string), so every rename churns
 // these tests too. One constant each: the rename is then a one-line edit here, not a hunt.
 const SITE_JS = 'site/js/main-v36.js';
-const SITE_I18N = 'site/js/i18n-v32.js';
+const SITE_I18N = 'site/js/i18n-v33.js';
 const SITE_CSS = 'site/css/main-v36.css';
 
 /** Body of a top-level function in the site bundle, comments stripped. Comments are dropped

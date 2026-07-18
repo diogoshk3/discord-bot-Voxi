@@ -1,13 +1,13 @@
 {
   "ui": {
     "claim.title": "激活购买",
-    "claim.hint": "在 Ko-fi 上购买了 Plus 或 Premium？粘贴 Ko-fi 收据邮件中的交易代码，我们就会在此 Discord 账户上激活。",
-    "claim.placeholder": "Ko-fi 收据中的交易代码",
+    "claim.hint": "在 Ko-fi 购买了 Plus 或 Premium？打开你的收据，把网址粘贴到这里——整个链接都可以。（如果你愿意，只粘贴代码也行。）",
+    "claim.placeholder": "粘贴你的 Ko-fi 收据链接",
     "claim.btn": "激活",
     "claim.working": "正在激活…",
     "claim.ok": "完成！你的购买现已在此账户上生效。",
-    "claim.notfound": "找不到该代码对应的购买。请在 Ko-fi 收据上核对后重试。",
-    "claim.useReceiptCode": "请粘贴 Ko-fi 收据邮件中的交易代码，而不是你的邮箱地址。",
+    "claim.notfound": "找不到对应的购买记录。请打开 Ko-fi 收据并粘贴其网址——整个链接。",
+    "claim.useReceiptCode": "那是一个电子邮件地址。请改为粘贴 Ko-fi 收据的网址——整个链接即可。",
     "claim.ratelimited": "尝试次数过多。请几分钟后再试。",
     "claim.error": "出了点问题。请稍后再试。",
     "nav.features": "功能",
@@ -161,7 +161,23 @@
     "price.idNote": "⚠️ 在 Ko-fi 购买后，前往 vozen.org/account 激活你的方案——用 Discord 登录即可。",
     "price.idNoteLink": "复制我的 ID →",
     "price.m.19": "50 个服务器发音",
-    "price.m.20": "每日聊天连击"
+    "price.m.20": "每日聊天连击",
+    "claim.lost": "收据找不到了？付款时 Ko-fi 已经把它发到你的邮箱——找到那封邮件，从里面打开你的订单。",
+    "claim.lostHelp": "找不到？获取帮助 →",
+    "claim.help.title": "我们来帮你开通",
+    "claim.help.step1": "在那封 Ko-fi 邮件里点“Go to your order”。把打开页面的网址复制下来，粘贴到上面的框里——这样就能立刻开通。",
+    "claim.help.step2": "还是不行？把你在 Ko-fi 用的邮箱告诉我们（就在你的收据上），我们手动帮你开通。",
+    "claim.help.emailPlaceholder": "你在 Ko-fi 用的邮箱",
+    "claim.help.send": "请我们帮忙开通",
+    "claim.help.refPasted": "这是收据上的 Ref——它没办法开通，我们也查不到。请改成告诉我们你在 Ko-fi 用的邮箱。",
+    "claim.help.notEmail": "这看起来不像邮箱。复制你在 Ko-fi 用的那个——就在收据上。",
+    "claim.help.sent": "收到！我们很快会手动帮你开通——开通后会显示在这个页面上。",
+    "claim.help.sendError": "发送失败。请复制下面这段消息，到支持服务器发给我们。",
+    "claim.help.stillStuck": "还是不行？到支持服务器找我们 →",
+    "claim.help.close": "关闭",
+    "claim.consent": "我接受{terms}。",
+    "claim.consentTerms": "条款和条件",
+    "claim.consentRequired": "请勾选上方的方框以立即激活。"
   },
   "commands": {
     "general": [

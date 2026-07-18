@@ -1,13 +1,13 @@
 {
   "ui": {
     "claim.title": "Activate a purchase",
-    "claim.hint": "Bought Plus or Premium on Ko-fi? Paste the transaction code from your Ko-fi receipt email and we'll activate it on this Discord account.",
-    "claim.placeholder": "Transaction code from your Ko-fi receipt",
+    "claim.hint": "Bought Plus or Premium on Ko-fi? Open your receipt and paste its web address here — the whole link. (The code alone works too, if you'd rather.)",
+    "claim.placeholder": "Paste your Ko-fi receipt link",
     "claim.btn": "Activate",
     "claim.working": "Activating…",
     "claim.ok": "Done! Your purchase is now active on this account.",
-    "claim.notfound": "No purchase found for that code. Double-check it on your Ko-fi receipt and try again.",
-    "claim.useReceiptCode": "Please paste the transaction code from your Ko-fi receipt email instead of your email address.",
+    "claim.notfound": "No purchase found for that. Open your Ko-fi receipt and paste its web address — the whole link.",
+    "claim.useReceiptCode": "That's an email address. Paste the web address of your Ko-fi receipt instead — the whole link is fine.",
     "claim.ratelimited": "Too many attempts. Please wait a few minutes and try again.",
     "claim.error": "Something went wrong. Please try again in a moment.",
     "nav.features": "Features",
@@ -161,7 +161,23 @@
     "price.idNote": "⚠️ After buying on Ko-fi, activate your plan at vozen.org/account — just log in with Discord.",
     "price.idNoteLink": "Copy your ID →",
     "price.m.19": "50 server pronunciations",
-    "price.m.20": "Daily talk streaks"
+    "price.m.20": "Daily talk streaks",
+    "claim.lost": "Lost the receipt? Ko-fi emailed it to you when you paid — find that email and open your order from there.",
+    "claim.lostHelp": "Can't find it? Get help →",
+    "claim.help.title": "Get your pass activated",
+    "claim.help.step1": "In that Ko-fi email, press “Go to your order”. Copy the address of the page that opens and paste it in the box above — that activates your pass right away.",
+    "claim.help.step2": "No luck? Tell us the email you used on Ko-fi (it's on your receipt) and we'll activate your pass by hand.",
+    "claim.help.emailPlaceholder": "Email you used on Ko-fi",
+    "claim.help.send": "Ask us to activate it",
+    "claim.help.refPasted": "That's the Ref from your receipt — it can't activate a pass, and we can't look it up. Tell us the email you used on Ko-fi instead.",
+    "claim.help.notEmail": "That doesn't look like an email. Copy the one you used on Ko-fi — it's on your receipt.",
+    "claim.help.sent": "Got it! We'll activate your pass by hand shortly — it will show up on this page.",
+    "claim.help.sendError": "Couldn't send that. Copy the message below and send it to us on the support server.",
+    "claim.help.stillStuck": "Still stuck? Talk to us on the support server →",
+    "claim.help.close": "Close",
+    "claim.consent": "I accept the {terms}.",
+    "claim.consentTerms": "terms and conditions",
+    "claim.consentRequired": "Please tick the box above to activate now."
   },
   "commands": {
     "general": [

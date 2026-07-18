@@ -1,13 +1,13 @@
 {
   "ui": {
     "claim.title": "구매 활성화",
-    "claim.hint": "Ko-fi에서 Plus 또는 Premium을 구매하셨나요? Ko-fi 영수증 이메일의 거래 코드를 붙여넣으면 이 Discord 계정에서 활성화해 드립니다.",
-    "claim.placeholder": "Ko-fi 영수증의 거래 코드",
+    "claim.hint": "Ko-fi에서 Plus나 Premium을 구매하셨나요? 영수증을 열고 웹 주소를 여기에 붙여넣으세요 — 링크 전체로 괜찮습니다. (원하시면 코드만 붙여넣어도 됩니다.)",
+    "claim.placeholder": "Ko-fi 영수증 링크를 붙여넣으세요",
     "claim.btn": "활성화",
     "claim.working": "활성화 중…",
     "claim.ok": "완료! 구매가 이제 이 계정에서 활성화되었습니다.",
-    "claim.notfound": "해당 코드로 구매를 찾을 수 없습니다. Ko-fi 영수증에서 확인 후 다시 시도하세요.",
-    "claim.useReceiptCode": "이메일 주소 대신 Ko-fi 영수증 이메일의 거래 코드를 붙여넣어 주세요.",
+    "claim.notfound": "해당 구매 내역을 찾을 수 없습니다. Ko-fi 영수증을 열고 웹 주소를 붙여넣으세요 — 링크 전체로요.",
+    "claim.useReceiptCode": "그건 이메일 주소입니다. 대신 Ko-fi 영수증의 웹 주소를 붙여넣으세요 — 링크 전체로 괜찮습니다.",
     "claim.ratelimited": "시도가 너무 많습니다. 몇 분 후 다시 시도하세요.",
     "claim.error": "문제가 발생했습니다. 잠시 후 다시 시도하세요.",
     "nav.features": "기능",
@@ -161,7 +161,23 @@
     "price.idNote": "⚠️ Ko-fi에서 구매한 후 vozen.org/account에서 플랜을 활성화하세요 — Discord로 로그인만 하면 됩니다.",
     "price.idNoteLink": "내 ID 복사 →",
     "price.m.19": "서버 발음 50개",
-    "price.m.20": "매일 대화 스트릭"
+    "price.m.20": "매일 대화 스트릭",
+    "claim.lost": "영수증을 잃어버리셨나요? 결제하실 때 Ko-fi가 이메일로 보내드렸습니다 — 그 메일을 찾아 거기서 주문을 여세요.",
+    "claim.lostHelp": "못 찾으시겠나요? 도움 받기 →",
+    "claim.help.title": "패스를 활성화해 드릴게요",
+    "claim.help.step1": "그 Ko-fi 메일에서 “Go to your order”를 누르세요. 열린 페이지의 주소를 복사해 위 칸에 붙여넣으면 바로 활성화됩니다.",
+    "claim.help.step2": "안 되셨나요? Ko-fi에서 사용한 이메일을 알려 주세요(영수증에 있습니다). 저희가 직접 활성화해 드립니다.",
+    "claim.help.emailPlaceholder": "Ko-fi에서 사용한 이메일",
+    "claim.help.send": "활성화 요청하기",
+    "claim.help.refPasted": "그건 영수증의 Ref예요 — 패스를 활성화하지 못하고, 저희도 조회할 수 없습니다. 대신 Ko-fi에서 사용한 이메일을 알려 주세요.",
+    "claim.help.notEmail": "이메일 형식이 아닌 것 같아요. Ko-fi에서 사용한 이메일을 복사해 주세요 — 영수증에 있습니다.",
+    "claim.help.sent": "접수됐습니다! 곧 직접 활성화해 드릴게요 — 이 페이지에 표시됩니다.",
+    "claim.help.sendError": "보내지 못했습니다. 아래 메시지를 복사해 지원 서버로 보내 주세요.",
+    "claim.help.stillStuck": "그래도 안 되면 지원 서버로 문의해 주세요 →",
+    "claim.help.close": "닫기",
+    "claim.consent": "{terms}에 동의합니다.",
+    "claim.consentTerms": "이용약관",
+    "claim.consentRequired": "지금 활성화하려면 위 확인란을 선택하세요."
   },
   "commands": {
     "general": [

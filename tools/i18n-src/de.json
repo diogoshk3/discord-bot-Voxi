@@ -1,13 +1,13 @@
 {
   "ui": {
     "claim.title": "Kauf aktivieren",
-    "claim.hint": "Plus oder Premium auf Ko-fi gekauft? Füge den Transaktionscode aus deiner Ko-fi-Quittungs-E-Mail ein, und wir aktivieren es für dieses Discord-Konto.",
-    "claim.placeholder": "Transaktionscode aus deiner Ko-fi-Quittung",
+    "claim.hint": "Plus oder Premium auf Ko-fi gekauft? Öffne deine Quittung und füge hier ihre Web-Adresse ein — den ganzen Link. (Der Code allein geht auch, wenn dir das lieber ist.)",
+    "claim.placeholder": "Füge den Link deiner Ko-fi-Quittung ein",
     "claim.btn": "Aktivieren",
     "claim.working": "Wird aktiviert…",
     "claim.ok": "Fertig! Dein Kauf ist jetzt für dieses Konto aktiv.",
-    "claim.notfound": "Kein Kauf für diesen Code gefunden. Prüfe ihn auf deiner Ko-fi-Quittung und versuche es erneut.",
-    "claim.useReceiptCode": "Bitte füge stattdessen den Transaktionscode aus deiner Ko-fi-Quittungs-E-Mail ein, nicht deine E-Mail-Adresse.",
+    "claim.notfound": "Kein Kauf dazu gefunden. Öffne deine Ko-fi-Quittung und füge ihre Web-Adresse ein — den ganzen Link.",
+    "claim.useReceiptCode": "Das ist eine E-Mail-Adresse. Füge stattdessen die Web-Adresse deiner Ko-fi-Quittung ein — der ganze Link reicht.",
     "claim.ratelimited": "Zu viele Versuche. Bitte warte ein paar Minuten und versuche es erneut.",
     "claim.error": "Etwas ist schiefgelaufen. Bitte versuche es gleich noch einmal.",
     "nav.features": "Funktionen",
@@ -161,7 +161,23 @@
     "price.idNote": "⚠️ Nach dem Kauf auf Ko-fi aktivierst du deinen Plan auf vozen.org/account — einfach mit Discord anmelden.",
     "price.idNoteLink": "Meine ID kopieren →",
     "price.m.19": "50 Server-Aussprachen",
-    "price.m.20": "Tägliche Gesprächs-Streaks"
+    "price.m.20": "Tägliche Gesprächs-Streaks",
+    "claim.lost": "Quittung weg? Ko-fi hat sie dir beim Bezahlen per E-Mail geschickt — such diese E-Mail und öffne deine Bestellung von dort.",
+    "claim.lostHelp": "Nicht zu finden? Hilfe holen →",
+    "claim.help.title": "Lass uns deinen Pass aktivieren",
+    "claim.help.step1": "Klick in dieser Ko-fi-E-Mail auf „Go to your order“. Kopiere die Adresse der Seite, die sich öffnet, und füge sie oben ein — damit ist dein Pass sofort aktiv.",
+    "claim.help.step2": "Klappt nicht? Sag uns die E-Mail, die du bei Ko-fi benutzt hast (sie steht auf deiner Quittung), und wir aktivieren deinen Pass von Hand.",
+    "claim.help.emailPlaceholder": "E-Mail, die du bei Ko-fi benutzt hast",
+    "claim.help.send": "Um Aktivierung bitten",
+    "claim.help.refPasted": "Das ist die Ref von deiner Quittung — sie aktiviert keinen Pass, und wir können sie nicht suchen. Sag uns lieber die E-Mail, die du bei Ko-fi benutzt hast.",
+    "claim.help.notEmail": "Das sieht nicht nach einer E-Mail aus. Kopier die, die du bei Ko-fi benutzt hast — sie steht auf deiner Quittung.",
+    "claim.help.sent": "Angekommen! Wir aktivieren deinen Pass in Kürze von Hand — er erscheint dann auf dieser Seite.",
+    "claim.help.sendError": "Senden hat nicht geklappt. Kopier die Nachricht unten und schick sie uns auf dem Support-Server.",
+    "claim.help.stillStuck": "Klappt immer noch nicht? Frag uns auf dem Support-Server →",
+    "claim.help.close": "Schließen",
+    "claim.consent": "Ich akzeptiere die {terms}.",
+    "claim.consentTerms": "Nutzungsbedingungen",
+    "claim.consentRequired": "Bitte kreuze das Kästchen oben an, um jetzt zu aktivieren."
   },
   "commands": {
     "general": [

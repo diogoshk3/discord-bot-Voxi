@@ -1,13 +1,13 @@
 {
   "ui": {
     "claim.title": "Ativar uma compra",
-    "claim.hint": "Compraste Plus ou Premium no Ko-fi? Cola o código da transação do email de recibo do Ko-fi e ativamos nesta conta Discord.",
-    "claim.placeholder": "Código da transação do recibo Ko-fi",
+    "claim.hint": "Compraste Plus ou Premium no Ko-fi? Abre o teu recibo e cola aqui o endereço da página — o link todo. (Se preferires, o código sozinho também serve.)",
+    "claim.placeholder": "Cola aqui o link do recibo do Ko-fi",
     "claim.btn": "Ativar",
     "claim.working": "A ativar…",
     "claim.ok": "Feito! A tua compra está agora ativa nesta conta.",
-    "claim.notfound": "Não encontrámos nenhuma compra com esse código. Confirma-o no recibo do Ko-fi e tenta de novo.",
-    "claim.useReceiptCode": "Cola antes o código da transação do email de recibo do Ko-fi, em vez do teu email.",
+    "claim.notfound": "Não encontrei nenhuma compra com isso. Abre o recibo do Ko-fi e cola o endereço da página — o link todo.",
+    "claim.useReceiptCode": "Isso é um email. Cola antes o endereço da página do recibo do Ko-fi — o link todo serve.",
     "claim.ratelimited": "Demasiadas tentativas. Espera uns minutos e tenta de novo.",
     "claim.error": "Algo correu mal. Tenta de novo daqui a pouco.",
     "nav.features": "Funcionalidades",
@@ -161,7 +161,23 @@
     "price.idNote": "⚠️ Depois de comprares no Ko-fi, ativa o teu plano em vozen.org/account — basta entrar com o Discord.",
     "price.idNoteLink": "Copiar o meu ID →",
     "price.m.19": "50 pronúncias do servidor",
-    "price.m.20": "Streaks diários de conversa"
+    "price.m.20": "Streaks diários de conversa",
+    "claim.lost": "Perdeste o recibo? O Ko-fi enviou-to por email quando pagaste — procura esse email e abre a tua compra a partir dele.",
+    "claim.lostHelp": "Não encontras? Pede ajuda →",
+    "claim.help.title": "Vamos ativar o teu passe",
+    "claim.help.step1": "Nesse email do Ko-fi, carrega em “Go to your order”. Copia o endereço da página que abrir e cola-o na caixa acima — isso ativa o teu passe logo.",
+    "claim.help.step2": "Não deu? Diz-nos o email que usaste no Ko-fi (está no teu recibo) e nós ativamos o teu passe à mão.",
+    "claim.help.emailPlaceholder": "Email que usaste no Ko-fi",
+    "claim.help.send": "Pedir para ativarem",
+    "claim.help.refPasted": "Isso é o Ref do teu recibo — não ativa um passe, e nós não o conseguimos procurar. Diz-nos antes o email que usaste no Ko-fi.",
+    "claim.help.notEmail": "Isto não parece um email. Copia o que usaste no Ko-fi — está no teu recibo.",
+    "claim.help.sent": "Recebido! Vamos ativar o teu passe à mão dentro de pouco tempo — vais vê-lo aparecer nesta página.",
+    "claim.help.sendError": "Não conseguimos enviar. Copia a mensagem abaixo e manda-nos no servidor de suporte.",
+    "claim.help.stillStuck": "Continuas sem conseguir? Fala connosco no servidor de suporte →",
+    "claim.help.close": "Fechar",
+    "claim.consent": "Aceito os {terms}.",
+    "claim.consentTerms": "termos e condições",
+    "claim.consentRequired": "Assinala a caixa acima para ativar já."
   },
   "commands": {
     "general": [
