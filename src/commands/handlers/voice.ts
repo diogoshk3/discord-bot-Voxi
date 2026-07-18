@@ -7,6 +7,7 @@ import {
   ButtonStyle,
   ComponentType,
   StringSelectMenuBuilder,
+  type Message,
   type MessageComponentInteraction,
 } from 'discord.js';
 import { getVoiceConnection } from '@discordjs/voice';
@@ -311,29 +312,39 @@ async function handleVoiceClone(
   // real ReturnType (which is a UNION of all possible componentTypes and does not narrow
   // well to the specific Button used here) — same pattern as `ChildLike` in piperPool.ts.
   let collectorHandle: { stop(reason?: string): void } | undefined;
+  // B3: the "Stop" control lives on a PUBLIC channel card so the TARGET (the person being recorded)
+  // can end it too — a stop button on the invoker's ephemeral reply is invisible to them. Declared
+  // out here so the finally can always delete it. The re-deafen invariant below stays unchanged.
+  let stopMsg: Message | undefined;
   try {
-    // "Stop now" button: besides the auto-stop (SPEECH target or wall-clock cap), both the
-    // invoker and the target can end whenever they want.
+    // "Stop now" button: besides the auto-stop (SPEECH target or wall-clock cap), both the invoker
+    // AND the target can end it whenever they want — so the button lives on a PUBLIC channel card the
+    // target can actually see (a stop button on the invoker's ephemeral reply is invisible to the
+    // person being recorded).
     const stopBtn = new ButtonBuilder()
       .setCustomId(`clonestop:${targetId}`)
       .setLabel(t('clone.stopBtn', locale))
       .setStyle(ButtonStyle.Danger)
       .setEmoji('⏹️');
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(stopBtn);
+    const recordingText = isSelf
+      ? t('clone.recording', locale, { target: seconds })
+      : t('clone.recordingOther', locale, { who, target: seconds });
     // Uncover the ears ONLY for this window (selfDeaf false), recording only the target.
     connection.rejoin({ channelId, selfDeaf: false, selfMute: false });
-    const msg = await i.editReply(
-      editCard(
-        isSelf
-          ? t('clone.recording', locale, { target: seconds })
-          : t('clone.recordingOther', locale, { who, target: seconds }),
-        { tone: 'warning', rows: [row] },
-      ),
-    );
+    // Invoker's private live view (edited with progress below) — no button, it is on the public card.
+    await i.editReply(editCard(recordingText, { tone: 'warning' }));
+    // Public card WITH the Stop button, visible to the target. No postable channel -> throw, which is
+    // caught below (clone.failed) and always re-deafens in the finally.
+    const postChannel = i.channel;
+    if (!postChannel || !postChannel.isTextBased() || postChannel.isDMBased()) {
+      throw new Error('clone: no text channel to host the public stop control');
+    }
+    stopMsg = await postChannel.send(channelCard(recordingText, { tone: 'warning', rows: [row] }));
 
     // Manual stop signal: the button collector sets it; the recorder polls it.
     let stopped = false;
-    const collector = msg.createMessageComponentCollector({
+    const collector = stopMsg.createMessageComponentCollector({
       componentType: ComponentType.Button,
       time: maxWallMs + 5_000,
     });
@@ -371,7 +382,7 @@ async function handleVoiceClone(
                 got: Math.round(ms / 1000),
                 target: seconds,
               }),
-              { tone: 'warning', rows: [row] },
+              { tone: 'warning' },
             ),
           )
           .catch(() => {});
@@ -433,6 +444,8 @@ async function handleVoiceClone(
     await i.editReply(editCard(t('clone.failed', locale), { tone: 'danger' })).catch(() => {});
   } finally {
     collectorHandle?.stop('finally');
+    // Remove the public stop card once the recording is over (best-effort).
+    void stopMsg?.delete().catch(() => {});
     // ALWAYS deafen again (privacy by default), no matter what happens.
     try {
       connection.rejoin({ channelId, selfDeaf: true, selfMute: false });
