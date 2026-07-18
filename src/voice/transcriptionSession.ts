@@ -13,6 +13,7 @@
 
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import { randomUUID } from 'node:crypto';
 import { rmSync, readdirSync, statSync, unlinkSync } from 'node:fs';
 import type { Readable, Duplex } from 'node:stream';
 import { EndBehaviorType, type VoiceConnection } from '@discordjs/voice';
@@ -53,7 +54,9 @@ export class TranscriptionSession {
   // Per-instance random component: without this, two concurrent sessions (different
   // guilds) generated the SAME temporary file name (only pid+seq varied, and each
   // instance's seq restarts at 0) and could clobber each other writing the WAV.
-  private readonly id = Math.random().toString(36).slice(2, 8);
+  // randomUUID (not Math.random) so the ephemeral WAV name is unguessable — a local co-tenant
+  // can't pre-create or read it during its brief life (SEC audit S8, defence-in-depth).
+  private readonly id = randomUUID();
 
   constructor(private readonly deps: TranscriptionSessionDeps) {}
 

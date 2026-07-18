@@ -37,17 +37,26 @@
   const IS_ACCOUNT = document.body.classList.contains("page-account");
 
   /* ── external links ──────────────────────────────────── */
+  // target=_blank links get rel=noopener noreferrer (reverse-tabnabbing defence). The static
+  // HTML links already carry it; these JS-assigned ones must set it too (SEC audit S7).
   $$(".js-invite").forEach((a) => {
     a.href = INVITE_URL;
-    if (INVITE_URL !== "#") a.target = "_blank";
+    if (INVITE_URL !== "#") {
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+    }
   });
   $$(".js-support").forEach((a) => {
     a.href = SUPPORT_URL;
     a.target = "_blank";
+    a.rel = "noopener noreferrer";
   });
   $$(".js-vote").forEach((a) => {
     a.href = TOPGG_URL;
-    if (TOPGG_URL !== "#") a.target = "_blank";
+    if (TOPGG_URL !== "#") {
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+    }
   });
 
   /* ── i18n ────────────────────────────────────────────── */

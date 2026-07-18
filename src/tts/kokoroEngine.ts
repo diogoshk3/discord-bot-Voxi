@@ -13,6 +13,7 @@ import { spawn, type ChildProcess } from 'node:child_process';
 import { join } from 'node:path';
 import { existsSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
+import { randomUUID } from 'node:crypto';
 import { AudioCache, cacheKey } from './cache';
 import { lowerAllCapsRuns } from './deCaps';
 import type { SynthRequest, TTSEngine } from './engine';
@@ -141,7 +142,10 @@ export class KokoroEngine implements TTSEngine {
 
   private enqueue(text: string, lang: string, voice: string, speed: number): Promise<string> {
     return new Promise<string>((resolve, reject) => {
-      const outPath = join(tmpdir(), `vozen-kokoro-${process.pid}-${this.tmpSeq++}.wav`);
+      const outPath = join(
+        tmpdir(),
+        `vozen-kokoro-${process.pid}-${this.tmpSeq++}-${randomUUID()}.wav`,
+      );
       const line = JSON.stringify({ text, out: outPath, lang, voice, speed }) + '\n';
       this.queue.push({ line, outPath, resolve, reject });
       this.pump();
