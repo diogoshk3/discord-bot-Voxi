@@ -993,7 +993,18 @@ body > *:not(.grain):not(.orbs):not(.nav):not(.ppmodal) { position: relative; z-
 /* Botão de login na navbar (substitui o CTA "Add to Discord"): logo + texto alinhados. */
 .nav__login { display: inline-flex; align-items: center; gap: 8px; }
 .nav__login svg { display: block; }
-.nav__login--account { padding-left: 10px; }
+/* Logged-in account chip: a neutral surface, NOT the loud CTA gradient — the
+   brand gradient (blue -> teal) otherwise shows its blue start around the round
+   avatar, reading as a stray colored edge. The moving sheen is dropped too. */
+.nav__login--account {
+  padding-left: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--line-2);
+  color: var(--text-0);
+  box-shadow: none;
+}
+.nav__login--account::after { content: none; }
+.nav__login--account:hover { background: rgba(255, 255, 255, 0.1); transform: none; box-shadow: none; }
 .nav__login-av {
   width: 24px; height: 24px; border-radius: 50%; object-fit: cover; flex: none;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.34);

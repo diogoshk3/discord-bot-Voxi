@@ -96,7 +96,7 @@ there is nothing easier than inviting the hosted bot:
 
 ## License
 
-Copyright (C) 2026 Diogo Cabral.
+Copyright (C) 2026 Rexy40407.
 
 Vozen is free software: you can redistribute it and/or modify it under the terms of the **GNU Affero
 General Public License, version 3** (AGPL-3.0), as published by the Free Software
@@ -106,4 +106,6 @@ AGPL-3.0 adds one key condition to the GPL: **anyone who runs a modified version
 Vozen accessible over a network must make that version's source code available to its
 users**. This keeps Vozen open even when run as a service.
 
-Vozen is provided WITH NO WARRANTY; see section 15 of the license.
+The source code is provided WITH NO WARRANTY (AGPL §15). This does not affect the
+mandatory consumer rights that apply to the paid Premium service — see the
+[Terms of Service](TERMS.md).

@@ -884,6 +884,20 @@
       ?.scrollIntoView({ behavior: reduce ? "auto" : "smooth" });
   }
 
+  // Keep the URL clean of the #fragment that in-page navigation leaves behind.
+  // A native <a href="#features"> click scrolls correctly through the browser
+  // (respecting the page's scroll container and scroll-behavior) but leaves
+  // "/#features" in the address bar; once the browser has applied the fragment
+  // (hashchange) we strip it with replaceState, keeping the scroll position.
+  // The OAuth return fragment (#access_token=…) is left for readTokenFromHash.
+  window.addEventListener("hashchange", () => {
+    const id = location.hash.slice(1);
+    if (!id || id.indexOf("=") !== -1) return;
+    if (document.getElementById(id)) {
+      history.replaceState(null, "", location.pathname + location.search);
+    }
+  });
+
   const navLoginBtn = document.getElementById("navLogin");
   if (navLoginBtn) {
     navLoginBtn.addEventListener("click", () => {

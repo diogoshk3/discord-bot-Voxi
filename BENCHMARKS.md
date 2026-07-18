@@ -75,11 +75,11 @@ mais rápidas. Áudio byte-idêntico. Ver carga/soak em `BENCHMARKS-load.md`.
   T2.1: o overhead dominante (~372 ms de spawn) já foi eliminado; o streaming só
   ajudaria o tempo-até-1.ª-palavra de textos MUITO longos (>~90 palavras, já ~1.5 s),
   ao custo de reescrever o caminho crítico do player (consumir PCM ao vivo + tee para a
-  cache + fallback) — alto risco para ganho marginal, e precisa do ouvido do Diogo. **
+  cache + fallback) — alto risco para ganho marginal, e precisa do ouvido do mantenedor. **
   Decisão: DIFERIDO.** O knob fica documentado; revisita-se se a latência de mensagens
   longas se tornar queixa real. (`PIPER_STREAMING` reservado, não implementado.)
 - **T3.3 — Léxico de saudações:** sem misses reais reportados; a memória de língua
   (T3.2) já cobre o grosso dos fragmentos curtos. **Ongoing:** acrescentar tokens à
-  medida que o Diogo reportar palavras que saiam na língua errada.
+  medida que o mantenedor reportar palavras que saiam na língua errada.
 
 _Gerar de novo: `npx tsx tools/bench.ts` (latência) e `npx tsx tools/loadbench.ts` (carga/soak)._
