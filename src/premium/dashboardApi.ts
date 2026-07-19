@@ -257,6 +257,7 @@ export function createDashboardApi(deps: DashboardApiDeps): DashboardApi {
 
   async function authorize(token: string, guildId: string): Promise<boolean> {
     const guilds = await fetchManageable(token);
+    // Recheck live bot presence even when the user's manageable-guild list came from the TTL cache.
     return (
       guilds !== null && deps.botHasGuild(guildId) && guilds.some((guild) => guild.id === guildId)
     );
