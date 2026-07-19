@@ -48,6 +48,8 @@ describe('operational security configuration', () => {
     expect(page).toContain('js/main-v38.js');
     expect(css).toContain('body.page-account');
     expect(css).toMatch(/@media\s*\(max-width:\s*760px\)/);
+    expect(css).toMatch(/@media\s*\(min-width:\s*1280px\)\s*and\s*\(min-height:\s*800px\)/);
+    expect(css).toContain('clamp(430px, 33.333%, 520px)');
   });
 
   it('keeps the account journey focused and the session exit visible', () => {
