@@ -26,7 +26,7 @@
     "build:i18n": "node tools/build-i18n.mjs",
     "check:i18n": "node tools/build-i18n.mjs --check",
     "check:site-copy": "node tools/check-site-copy.mjs",
-    "check:site": "vitest run tests/operationalHardening.test.ts tests/siteTrust.test.ts tests/siteI18n.test.ts && npm run check:i18n && npm run check:site-copy && npm run build:site"
+    "check:site": "vitest run tests/operationalHardening.test.ts tests/siteTrust.test.ts tests/siteI18n.test.ts tests/dashboardCoreSettings.test.ts && npm run check:i18n && npm run check:site-copy && npm run build:site"
   },
   "dependencies": {
     "@discordjs/opus": "^0.10.0",

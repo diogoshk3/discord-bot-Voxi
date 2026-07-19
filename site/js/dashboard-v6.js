@@ -61,26 +61,35 @@
     maxChars: { type: "num", min: 1, max: 2000 },
     ratePerMin: { type: "num", min: 1, max: 120 },
     locale: { type: "select" },
+    ttsChannelId: { type: "channel" },
+    defaultVoice: { type: "voice" },
   };
 
-  /* Línguas do servidor. Espelho de SUPPORTED_LOCALES (src/i18n/index.ts) com nomes
-     legíveis. Se divergir, o backend valida na mesma (sanitizePatch descarta locales
-     desconhecidos), por isso drift degrada para "opção em falta", nunca para erro. */
-  var LOCALES = [
-    ["en", "English"], ["pt", "Português"], ["es", "Español"], ["fr", "Français"],
-    ["de", "Deutsch"], ["nl", "Nederlands"], ["pl", "Polski"], ["tr", "Türkçe"],
-    ["cs", "Čeština"], ["sv", "Svenska"], ["fi", "Suomi"], ["da", "Dansk"],
-    ["ro", "Română"], ["hu", "Magyar"], ["cy", "Cymraeg"], ["is", "Íslenska"],
-    ["lb", "Lëtzebuergesch"], ["lv", "Latviešu"], ["sk", "Slovenčina"],
-    ["sl", "Slovenščina"], ["sw", "Kiswahili"], ["vi", "Tiếng Việt"],
-    ["ca", "Català"], ["it", "Italiano"], ["el", "Ελληνικά"], ["ru", "Русский"],
-    ["uk", "Українська"], ["kk", "Қазақ"], ["sr", "Српски"], ["ar", "العربية"],
-    ["fa", "فارسی"], ["ka", "ქართული"], ["ne", "नेपाली"], ["zh", "中文"], ["ja", "日本語"],
-  ];
+  function sectionsFor(meta) {
+    var sections = SECTIONS.map(function (section) {
+      return { id: section.id, fields: section.fields.slice() };
+    });
+    if (
+      meta &&
+      meta.capabilities &&
+      meta.options &&
+      meta.capabilities.ttsChannelId &&
+      meta.capabilities.defaultVoice &&
+      Array.isArray(meta.options.channels) &&
+      Array.isArray(meta.options.voices)
+    ) {
+      var voice = sections.filter(function (section) {
+        return section.id === "voice";
+      })[0];
+      var fields = voice.fields;
+      fields.unshift("ttsChannelId", "defaultVoice");
+    }
+    return sections;
+  }
 
-  function eachField(fn) {
-    for (var s = 0; s < SECTIONS.length; s++) {
-      var f = SECTIONS[s].fields;
+  function eachField(sections, fn) {
+    for (var s = 0; s < sections.length; s++) {
+      var f = sections[s].fields;
       for (var i = 0; i < f.length; i++) fn(f[i], FIELD[f[i]]);
     }
   }
@@ -363,22 +372,60 @@
       '">'
     );
   }
-  function selHtml(key, val) {
+  function optionsFor(key, val, meta) {
+    if (meta && meta.options) {
+      if (key === "ttsChannelId" && Array.isArray(meta.options.channels)) {
+        return meta.options.channels;
+      }
+      if (key === "defaultVoice" && Array.isArray(meta.options.voices)) {
+        return meta.options.voices;
+      }
+      if (key === "locale" && Array.isArray(meta.options.locales)) {
+        return meta.options.locales;
+      }
+    }
+    // Compatibility with the old API: keep the current locale visible without inventing a
+    // client-side catalogue. Channel and voice remain hidden by sectionsFor().
+    return key === "locale" ? [{ id: String(val || "en"), label: String(val || "en") }] : [];
+  }
+  function selectOptionsHtml(key, val, meta) {
     var opts = "";
-    for (var i = 0; i < LOCALES.length; i++) {
-      var code = LOCALES[i][0];
+    if (key === "ttsChannelId") {
+      opts += '<option value=""' + (val === null ? " selected" : "") + ">" + esc(t("dashboard.channelNone")) + "</option>";
+    } else if (key === "defaultVoice") {
+      opts += '<option value=""' + (val === "" ? " selected" : "") + ">" + esc(t("dashboard.voiceGlobal")) + "</option>";
+    }
+    var options = optionsFor(key, val, meta);
+    for (var i = 0; i < options.length; i++) {
+      var option = options[i];
+      var label = option.label;
+      if (option.unavailable) {
+        var unavailableKey =
+          key === "ttsChannelId" ? "dashboard.unavailableChannel" : "dashboard.unavailableVoice";
+        label = t(unavailableKey).replace("{name}", option.label);
+      }
       opts +=
         '<option value="' +
-        esc(code) +
+        esc(option.id) +
         '"' +
-        (code === val ? " selected" : "") +
+        (option.id === val ? " selected" : "") +
+        (option.unavailable ? " disabled" : "") +
         ">" +
-        esc(LOCALES[i][1]) +
+        esc(label) +
         "</option>";
     }
-    return '<select class="dash-sel" data-k="' + key + '">' + opts + "</select>";
+    return opts;
   }
-  function rowHtml(key, cfg) {
+  function selHtml(key, val, meta) {
+    return (
+      '<select class="dash-sel" data-k="' +
+      key +
+      '">' +
+      selectOptionsHtml(key, val, meta) +
+      "</select>"
+    );
+  }
+  function rowHtml(key, cfg, meta) {
     var f = FIELD[key];
     var control;
     var desc = t("dashboard.d_" + key);
@@ -386,7 +433,7 @@
     else if (f.type === "num") {
       control = numHtml(key, f, cfg[key]);
       desc += " (" + f.min + "–" + f.max + ")";
-    } else control = selHtml(key, cfg[key]);
+    } else control = selHtml(key, fieldValue(key, cfg), meta);
     return (
       '<label class="dash-row"><span class="dash-row__txt"><span class="dash-row__l">' +
       esc(t("dashboard.f_" + key)) +
@@ -433,7 +480,7 @@
         return res.json();
       })
       .then(function (data) {
-        if (data && data.config) renderForm(guild, data.config, guilds);
+        if (data && data.config) renderForm(guild, data.config, guilds, data, false);
       })
       .catch(function () {
         renderMessage("dashboard.error", "");
@@ -445,6 +492,8 @@
     var f = FIELD[key];
     if (f.type === "toggle") return !!src[key];
     if (f.type === "num") return Number(src[key]);
+    if (f.type === "channel") return src[key] === null ? null : String(src[key]);
+    if (f.type === "voice") return String(src[key] || "");
     return String(src[key] || "en");
   }
   // Lê o valor atual do controlo no DOM.
@@ -454,20 +503,22 @@
     var f = FIELD[key];
     if (f.type === "toggle") return el.checked;
     if (f.type === "num") return Number(el.value);
+    if (f.type === "channel") return el.value === "" ? null : el.value;
     return el.value;
   }
 
-  function renderForm(guild, cfg, guilds) {
+  function renderForm(guild, cfg, guilds, meta, saved) {
+    var sections = sectionsFor(meta);
     // Baseline para dirty-tracking: o botão só fica ativo quando algo muda.
     var baseline = {};
-    eachField(function (key) {
+    eachField(sections, function (key) {
       baseline[key] = fieldValue(key, cfg);
     });
 
-    var sections = SECTIONS.map(function (sec) {
+    var sectionsHtml = sections.map(function (sec) {
       var rows = sec.fields
         .map(function (k) {
-          return rowHtml(k, cfg);
+          return rowHtml(k, cfg, meta);
         })
         .join("");
       return (
@@ -486,7 +537,7 @@
       esc(t("dashboard.save")) +
       '</button><span class="dash-status" id="dashStatus" aria-live="polite"></span></div>';
 
-    view('<div class="dash-form">' + headHtml(guild) + sections + savebar + "</div>");
+    view('<div class="dash-form">' + headHtml(guild) + sectionsHtml + savebar + "</div>");
     wireIconFallback(root.querySelector(".dash-head__ic"), guild.name, "dash-head__ph");
 
     var formEl = root.querySelector(".dash-form");
@@ -495,7 +546,7 @@
 
     function countChanges() {
       var n = 0;
-      eachField(function (key) {
+      eachField(sections, function (key) {
         if (domValue(key) !== baseline[key]) n++;
       });
       return n;
@@ -521,12 +572,21 @@
     });
     // Listeners no próprio form (substituído a cada render -> morrem com ele; sem leaks).
     formEl.addEventListener("input", refresh);
-    formEl.addEventListener("change", refresh);
+    function syncChannelAutoread(event) {
+      var target = event.target;
+      if (!target || target.getAttribute("data-k") !== "ttsChannelId") return;
+      var autoread = root.querySelector('[data-k="autoread"]');
+      if (autoread) autoread.checked = target.value !== "";
+    }
+    formEl.addEventListener("change", function (event) {
+      syncChannelAutoread(event);
+      refresh();
+    });
 
     saveBtn.addEventListener("click", function () {
       if (saveBtn.disabled) return;
       var patch = {};
-      eachField(function (key) {
+      eachField(sections, function (key) {
         var v = domValue(key);
         if (v === baseline[key]) return;
         if (FIELD[key].type === "num" && !isFinite(v)) return; // campo vazio -> não envia
@@ -555,12 +615,11 @@
             refresh();
             return;
           }
-          // Guardado: a baseline passa a ser o estado atual (voltar a mexer reativa).
-          eachField(function (key) {
-            baseline[key] = domValue(key);
-          });
-          refresh();
-          setStatus(t("dashboard.saved"), "ok");
+          return res.json();
+        })
+        .then(function (data) {
+          // Rebuild the controls and dirty baseline from the authoritative server response.
+          if (data && data.config) renderForm(guild, data.config, guilds, data, true);
         })
         .catch(function () {
           setStatus(t("dashboard.saveFail"), "err");
@@ -569,6 +628,7 @@
     });
 
     refresh(); // estado inicial: sem alterações -> desativado
+    if (saved) setStatus(t("dashboard.saved"), "ok");
 
     // Re-localizador in-place: reescreve só os text-nodes traduzíveis (títulos de secção,
     // nomes/descrições dos campos, botão voltar) e deixa o refresh() recalcular o rótulo do
@@ -576,11 +636,11 @@
     // o estado "por guardar". Registado como re-localizador enquanto o form está visível.
     onLang = function relocalizeForm() {
       var secEls = root.querySelectorAll(".dash-sec");
-      SECTIONS.forEach(function (sec, i) {
+      sections.forEach(function (sec, i) {
         var tEl = secEls[i] && secEls[i].querySelector(".dash-sec__t");
         if (tEl) tEl.textContent = t("dashboard.sec_" + sec.id);
       });
-      eachField(function (key) {
+      eachField(sections, function (key) {
         var ctrl = root.querySelector('[data-k="' + key + '"]');
         var row = ctrl && ctrl.closest ? ctrl.closest(".dash-row") : null;
         if (!row) return;
@@ -591,6 +651,15 @@
           var desc = t("dashboard.d_" + key);
           if (FIELD[key].type === "num") desc += " (" + FIELD[key].min + "–" + FIELD[key].max + ")";
           dEl.textContent = desc;
+        }
+        if (
+          FIELD[key].type === "select" ||
+          FIELD[key].type === "channel" ||
+          FIELD[key].type === "voice"
+        ) {
+          var currentValue = domValue(key);
+          ctrl.innerHTML = selectOptionsHtml(key, currentValue, meta);
+          ctrl.value = currentValue === null ? "" : String(currentValue);
         }
       });
       var back = document.getElementById("dashBack");

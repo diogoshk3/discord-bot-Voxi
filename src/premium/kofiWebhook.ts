@@ -783,9 +783,9 @@ function handleDashboardRequest(
 
     if (req.method === 'GET') {
       ctx.dashboardApi
-        .getConfig(bearer, guildId)
-        .then((cfg) =>
-          cfg === null ? json(403, { error: 'forbidden' }) : json(200, { config: cfg }),
+        .getGuild(bearer, guildId)
+        .then((payload) =>
+          payload === null ? json(403, { error: 'forbidden' }) : json(200, payload),
         )
         .catch((err) => {
           ctx.logError('[dashboard] failed to read configuration', err);
@@ -822,9 +822,17 @@ function handleDashboardRequest(
         }
         ctx.dashboardApi
           .saveConfig(bearer, guildId, patch)
-          .then((cfg) =>
-            cfg === null ? json(403, { error: 'forbidden' }) : json(200, { config: cfg }),
-          )
+          .then((result) => {
+            if (result === null) {
+              json(403, { error: 'forbidden' });
+              return;
+            }
+            if ('error' in result) {
+              json(400, result);
+              return;
+            }
+            json(200, result);
+          })
           .catch((err) => {
             ctx.logError('[dashboard] failed to save configuration', err);
             try {

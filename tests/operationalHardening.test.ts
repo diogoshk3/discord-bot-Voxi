@@ -9,7 +9,7 @@ const source = (path: string): string =>
 // The site's assets are cache-busted by FILENAME (never a query string), so every rename churns
 // these tests too. One constant each: the rename is then a one-line edit here, not a hunt.
 const SITE_JS = 'site/js/main-v39.js';
-const SITE_I18N = 'site/js/i18n-v35.js';
+const SITE_I18N = 'site/js/i18n-v36.js';
 const SITE_CSS = 'site/css/main-v39.css';
 const ACCOUNT_CSS = 'site/css/account-v3.css';
 
@@ -44,7 +44,7 @@ describe('operational security configuration', () => {
     const pages = source('.github/workflows/pages.yml');
 
     expect(pkg.scripts?.['check:site']).toBe(
-      'vitest run tests/operationalHardening.test.ts tests/siteTrust.test.ts tests/siteI18n.test.ts && npm run check:i18n && npm run check:site-copy && npm run build:site',
+      'vitest run tests/operationalHardening.test.ts tests/siteTrust.test.ts tests/siteI18n.test.ts tests/dashboardCoreSettings.test.ts && npm run check:i18n && npm run check:site-copy && npm run build:site',
     );
     expect(ci).toMatch(/\n {2}site:\s*\n/);
     expect(ci).toMatch(/\n\s+- run: npm run check:site\s*\n/);
@@ -96,7 +96,7 @@ describe('operational security configuration', () => {
     expect(css).toContain('.btn--discord-cta:focus-visible');
     expect(css).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)[\s\S]*\.btn--discord-cta/);
 
-    const dashboardScript = source('site/js/dashboard-v5.js');
+    const dashboardScript = source('site/js/dashboard-v6.js');
     expect(dashboardScript).toContain('var BTN = "btn btn--primary";');
     expect(dashboardScript).not.toContain('var BTN = "btn btn--primary btn--discord-cta";');
   });

@@ -51,7 +51,7 @@ import { startEntitlementSync } from './premium/entitlementSync';
 import { startKofiWebhook } from './premium/kofiWebhook';
 import { parseShopMap } from './premium/kofi';
 import { createStatusApi } from './premium/statusApi';
-import { createDashboardApi } from './premium/dashboardApi';
+import { createDashboardApi, listAuthorizedTextChannels } from './premium/dashboardApi';
 import { createAdminApi, type AdminUserBrief } from './premium/adminApi';
 import { startVoteWebhookServer } from './vote';
 
@@ -308,6 +308,11 @@ async function main(): Promise<void> {
           now: () => Date.now(),
           fetchImpl: (u, i) => fetch(u, i),
           botHasGuild: (id) => client.guilds.cache.has(id),
+          resolveChannels: (id) => {
+            const guild = client.guilds.cache.get(id);
+            return guild ? listAuthorizedTextChannels(guild) : [];
+          },
+          availableModels,
           logError: (m, err) => log.error(m, err),
         })
       : undefined;

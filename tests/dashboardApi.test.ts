@@ -1,20 +1,23 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type Database from 'better-sqlite3';
+import { ChannelType, Collection, type Guild } from 'discord.js';
 import { initDb } from '../src/store/db';
-import { getGuildConfig } from '../src/store/guildConfig';
-import { createDashboardApi, sanitizePatch, DASHBOARD_FIELDS } from '../src/premium/dashboardApi';
-
-// Config web dashboard: AUTHORIZATION core + whitelisted writes. See
-// docs/COMPLIANCE-VAGA5.md · Dashboard. Identity/guilds come from Discord (injectable
-// fetch); authz requires MANAGE_GUILD (or ADMIN) + bot present in the guild.
+import { getGuildConfig, setGuildConfig } from '../src/store/guildConfig';
+import {
+  createDashboardApi,
+  DASHBOARD_FIELDS,
+  listAuthorizedTextChannels,
+  sanitizePatch,
+} from '../src/premium/dashboardApi';
 
 const TOKEN = 'tok-abc';
 const GUILD = '999999999999999999';
-const MANAGE_GUILD = '0x20'; // 1<<5
+const CHANNEL = '777777777777777777';
+const VOICE = 'en_US-amy-medium';
+const MANAGE_GUILD = '0x20';
 const NONE = '0';
-const ADMIN = '0x8'; // 1<<3
+const ADMIN = '0x8';
 
-// fake fetch of /users/@me/guilds — returns the given guilds (or 401 if token != expected).
 function fakeGuildsFetch(expected: string, guilds: unknown[]): typeof fetch {
   return (async (_url: string, init?: { headers?: Record<string, string> }) => {
     const auth = init?.headers?.Authorization ?? '';
@@ -29,103 +32,219 @@ function makeApi(
   db: Database.Database,
   guilds: unknown[],
   botGuilds: string[] = [GUILD],
-  expected = TOKEN,
+  channels = [{ id: CHANNEL, label: 'general' }],
 ) {
   return createDashboardApi({
     db,
     now: () => 1_000,
-    fetchImpl: fakeGuildsFetch(expected, guilds),
+    fetchImpl: fakeGuildsFetch(TOKEN, guilds),
     botHasGuild: (id) => botGuilds.includes(id),
+    resolveChannels: () => channels,
+    availableModels: [VOICE],
   });
 }
 
-describe('sanitizePatch — whitelist + limits', () => {
-  it('only lets known fields through (ignores ttsChannelId etc.)', () => {
-    const out = sanitizePatch({ xsaid: false, ttsChannelId: 'hack', enabled: false, foo: 1 });
-    expect(out).toEqual({ xsaid: false });
-    expect('ttsChannelId' in out).toBe(false);
-    expect('enabled' in out).toBe(false);
+describe('sanitizePatch - whitelist, validation and channel behaviour', () => {
+  const options = { channelIds: new Set([CHANNEL]), voiceIds: new Set([VOICE]) };
+
+  it('discards unknown fields and clamps numeric limits', () => {
+    const result = sanitizePatch(
+      { soundboard: 1, maxChars: 99999, ratePerMin: -3, enabled: false, foo: 1 },
+      options,
+      { ttsChannelId: null, autoread: false },
+    );
+    expect(result).toEqual({
+      ok: true,
+      patch: { soundboard: true, maxChars: 2000, ratePerMin: 1 },
+    });
   });
 
-  it('coerces booleans and clamps numbers', () => {
-    const out = sanitizePatch({ soundboard: 1, maxChars: 99999, ratePerMin: -3 });
-    expect(out.soundboard).toBe(true);
-    expect(out.maxChars).toBe(2000); // clamp to the maximum
-    expect(out.ratePerMin).toBe(1); // clamp to the minimum
+  it('accepts a valid channel/model and enables Auto-read when channel is selected', () => {
+    expect(
+      sanitizePatch({ ttsChannelId: CHANNEL, defaultVoice: VOICE }, options, {
+        ttsChannelId: null,
+        autoread: false,
+      }),
+    ).toEqual({
+      ok: true,
+      patch: { ttsChannelId: CHANNEL, defaultVoice: VOICE, autoread: true },
+    });
   });
 
-  it('invalid locale is discarded; valid one passes', () => {
-    expect(sanitizePatch({ locale: 'xx-nope' })).toEqual({});
-    expect(sanitizePatch({ locale: 'pt' })).toEqual({ locale: 'pt' });
+  it('respects an explicit Auto-read choice after selecting a channel', () => {
+    expect(
+      sanitizePatch({ ttsChannelId: CHANNEL, autoread: false }, options, {
+        ttsChannelId: null,
+        autoread: false,
+      }),
+    ).toEqual({ ok: true, patch: { ttsChannelId: CHANNEL, autoread: false } });
   });
 
-  it('all DASHBOARD_FIELDS are real guild_config fields', () => {
-    // guard: each dashboard field must exist in GuildConfig (default != undefined)
-    expect(DASHBOARD_FIELDS.length).toBeGreaterThan(0);
+  it('clearing the channel disables Auto-read and the invariant also applies to standalone edits', () => {
+    expect(
+      sanitizePatch({ ttsChannelId: null, autoread: true }, options, {
+        ttsChannelId: CHANNEL,
+        autoread: true,
+      }),
+    ).toEqual({ ok: true, patch: { ttsChannelId: null, autoread: false } });
+    expect(
+      sanitizePatch({ autoread: true }, options, { ttsChannelId: null, autoread: false }),
+    ).toEqual({ ok: true, patch: { autoread: false } });
+  });
+
+  it('rejects tampered channel and voice values with the field name', () => {
+    expect(
+      sanitizePatch({ ttsChannelId: 'tampered' }, options, {
+        ttsChannelId: null,
+        autoread: false,
+      }),
+    ).toEqual({ ok: false, error: 'invalid_setting', field: 'ttsChannelId' });
+    expect(
+      sanitizePatch({ defaultVoice: 'tampered' }, options, {
+        ttsChannelId: null,
+        autoread: false,
+      }),
+    ).toEqual({ ok: false, error: 'invalid_setting', field: 'defaultVoice' });
+  });
+
+  it('allows the global voice default and a supported locale', () => {
+    expect(
+      sanitizePatch({ defaultVoice: '', locale: 'pt' }, options, {
+        ttsChannelId: null,
+        autoread: false,
+      }),
+    ).toEqual({ ok: true, patch: { defaultVoice: '', locale: 'pt' } });
+  });
+
+  it('all dashboard fields are declared', () => {
+    expect(DASHBOARD_FIELDS).toContain('ttsChannelId');
+    expect(DASHBOARD_FIELDS).toContain('defaultVoice');
   });
 });
 
-describe('createDashboardApi — authorization', () => {
+describe('listAuthorizedTextChannels', () => {
+  it('keeps only GuildText channels where the bot has all required permissions', () => {
+    const member = {};
+    const cache = new Collection<string, unknown>();
+    cache.set('later', {
+      id: 'later',
+      name: 'later',
+      type: ChannelType.GuildText,
+      rawPosition: 2,
+      permissionsFor: (target: unknown) => ({ has: () => target === member }),
+    });
+    cache.set('denied', {
+      id: 'denied',
+      name: 'denied',
+      type: ChannelType.GuildText,
+      rawPosition: 0,
+      permissionsFor: () => ({ has: () => false }),
+    });
+    cache.set('voice', {
+      id: 'voice',
+      name: 'voice',
+      type: ChannelType.GuildVoice,
+      rawPosition: 0,
+      permissionsFor: () => ({ has: () => true }),
+    });
+    cache.set('first', {
+      id: 'first',
+      name: 'first',
+      type: ChannelType.GuildText,
+      rawPosition: 1,
+      permissionsFor: () => ({ has: () => true }),
+    });
+    const guild = { members: { me: member }, channels: { cache } } as unknown as Guild;
+
+    expect(listAuthorizedTextChannels(guild)).toEqual([
+      { id: 'first', label: '#first' },
+      { id: 'later', label: '#later' },
+    ]);
+  });
+});
+
+describe('createDashboardApi - authorization and authoritative options', () => {
   let db: Database.Database;
   beforeEach(() => {
     db = initDb(':memory:');
   });
-  afterEach(() => {
-    db.close();
-  });
+  afterEach(() => db.close());
 
-  it('listGuilds: only servers with MANAGE_GUILD/ADMIN AND with the bot present', async () => {
+  it('lists only manageable servers that contain the bot', async () => {
     const api = makeApi(
       db,
       [
-        { id: GUILD, name: 'Meu', icon: null, permissions: MANAGE_GUILD }, // ok
-        { id: '111', name: 'Admin sem bot', icon: null, permissions: ADMIN }, // bot absent
-        { id: '222', name: 'Sem perm', icon: null, permissions: NONE }, // no perm
+        { id: GUILD, name: 'Mine', icon: null, permissions: MANAGE_GUILD },
+        { id: '111', name: 'Admin without bot', icon: null, permissions: ADMIN },
+        { id: '222', name: 'No permission', icon: null, permissions: NONE },
       ],
-      [GUILD], // bot is only in GUILD
+      [GUILD],
     );
-    const list = await api.listGuilds(TOKEN);
-    expect(list?.map((g) => g.id)).toEqual([GUILD]);
+    expect((await api.listGuilds(TOKEN))?.map((g) => g.id)).toEqual([GUILD]);
+    expect(await api.listGuilds('wrong-token')).toBeNull();
   });
 
-  it('listGuilds: invalid token -> null', async () => {
-    const api = makeApi(db, [], [GUILD]);
-    expect(await api.listGuilds('token-errado')).toBeNull();
+  it('does not expose config or options to an unauthorized account', async () => {
+    const api = makeApi(db, [{ id: GUILD, name: 'Mine', icon: null, permissions: NONE }]);
+    expect(await api.getGuild(TOKEN, GUILD)).toBeNull();
   });
 
-  it('getConfig: non-manageable guild -> null (does not leak config)', async () => {
-    const api = makeApi(db, [{ id: '222', name: 'X', icon: null, permissions: NONE }], [GUILD]);
-    expect(await api.getConfig(TOKEN, GUILD)).toBeNull();
+  it('does not expose config or options for an invalid token or after the bot leaves', async () => {
+    const guilds = [{ id: GUILD, name: 'Mine', icon: null, permissions: MANAGE_GUILD }];
+    expect(await makeApi(db, guilds).getGuild('wrong-token', GUILD)).toBeNull();
+    expect(await makeApi(db, guilds, []).getGuild(TOKEN, GUILD)).toBeNull();
   });
 
-  it('getConfig: manageable guild -> returns only the dashboard fields', async () => {
-    const api = makeApi(db, [{ id: GUILD, name: 'Meu', icon: null, permissions: MANAGE_GUILD }]);
-    const cfg = await api.getConfig(TOKEN, GUILD);
-    expect(cfg).not.toBeNull();
-    expect(cfg!.xsaid).toBe(true); // default
-    expect('ttsChannelId' in cfg!).toBe(false); // does NOT expose fields outside the whitelist
+  it('returns config, capabilities and backend-generated channel, voice and locale options', async () => {
+    const api = makeApi(db, [{ id: GUILD, name: 'Mine', icon: null, permissions: MANAGE_GUILD }]);
+    const payload = await api.getGuild(TOKEN, GUILD);
+    expect(payload?.config.ttsChannelId).toBeNull();
+    expect(payload?.config.defaultVoice).toBe('');
+    expect(payload?.capabilities).toEqual({ ttsChannelId: true, defaultVoice: true });
+    expect(payload?.options.channels).toEqual([{ id: CHANNEL, label: 'general' }]);
+    expect(payload?.options.voices[0]).toMatchObject({ id: VOICE });
+    expect(payload?.options.locales).toContainEqual({ id: 'pt', label: expect.any(String) });
   });
 
-  it('saveConfig: applies the patch (via setter) and ignores fields outside the whitelist', async () => {
-    const api = makeApi(db, [{ id: GUILD, name: 'Meu', icon: null, permissions: MANAGE_GUILD }]);
-    const out = await api.saveConfig(TOKEN, GUILD, {
+  it('saves valid settings and rejects tampered values without touching storage', async () => {
+    const api = makeApi(db, [{ id: GUILD, name: 'Mine', icon: null, permissions: MANAGE_GUILD }]);
+    const saved = await api.saveConfig(TOKEN, GUILD, {
       xsaid: false,
-      soundboard: false,
-      ttsChannelId: 'INJECT', // should be ignored
+      ttsChannelId: CHANNEL,
+      defaultVoice: VOICE,
     });
-    expect(out).not.toBeNull();
-    expect(out!.xsaid).toBe(false);
-    // actually persisted + the field outside the whitelist was NOT touched:
-    const stored = getGuildConfig(db, GUILD);
-    expect(stored.xsaid).toBe(false);
-    expect(stored.soundboard).toBe(false);
-    expect(stored.ttsChannelId).toBeNull(); // intact (default) — the injection didn't pass
+    expect(saved && 'config' in saved ? saved.config.ttsChannelId : null).toBe(CHANNEL);
+    expect(getGuildConfig(db, GUILD).autoread).toBe(true);
+
+    const rejected = await api.saveConfig(TOKEN, GUILD, { defaultVoice: 'tampered' });
+    expect(rejected).toEqual({ error: 'invalid_setting', field: 'defaultVoice' });
+    expect(getGuildConfig(db, GUILD).defaultVoice).toBe(VOICE);
   });
 
-  it('saveConfig: non-manageable guild -> null (writes nothing)', async () => {
-    const api = makeApi(db, [{ id: '222', name: 'X', icon: null, permissions: NONE }], [GUILD]);
-    const out = await api.saveConfig(TOKEN, GUILD, { xsaid: false });
-    expect(out).toBeNull();
-    expect(getGuildConfig(db, GUILD).xsaid).toBe(true); // untouched
+  it('shows removed channels and models as disabled options without mutating storage on GET', async () => {
+    setGuildConfig(db, GUILD, {
+      ttsChannelId: 'removed-channel',
+      defaultVoice: 'removed-model',
+      autoread: true,
+    });
+    const api = makeApi(
+      db,
+      [{ id: GUILD, name: 'Mine', icon: null, permissions: MANAGE_GUILD }],
+      [GUILD],
+      [],
+    );
+    const before = getGuildConfig(db, GUILD);
+    const payload = await api.getGuild(TOKEN, GUILD);
+    expect(payload?.options.channels[0]).toEqual({
+      id: 'removed-channel',
+      label: 'removed-channel',
+      unavailable: true,
+    });
+    expect(payload?.options.voices[0]).toEqual({
+      id: 'removed-model',
+      label: 'removed-model',
+      unavailable: true,
+    });
+    expect(getGuildConfig(db, GUILD)).toEqual(before);
   });
 });

@@ -59,6 +59,14 @@ describe('site localization contract', () => {
       'dashboard.d_autoread',
       'dashboard.f_locale',
       'dashboard.d_locale',
+      'dashboard.f_ttsChannelId',
+      'dashboard.d_ttsChannelId',
+      'dashboard.f_defaultVoice',
+      'dashboard.d_defaultVoice',
+      'dashboard.channelNone',
+      'dashboard.voiceGlobal',
+      'dashboard.unavailableChannel',
+      'dashboard.unavailableVoice',
     ];
 
     for (const lang of LANGS) {
@@ -71,15 +79,16 @@ describe('site localization contract', () => {
     const pages = ['site/index.html', 'site/account.html', 'site/dashboard.html'];
     for (const pagePath of pages) {
       const page = source(pagePath);
-      expect(page, pagePath).toContain('js/i18n-v35.js');
+      expect(page, pagePath).toContain('js/i18n-v36.js');
       expect(page, pagePath).toContain('js/main-v39.js');
-      expect(page, pagePath).not.toContain('js/i18n-v34.js');
+      expect(page, pagePath).not.toContain('js/i18n-v35.js');
       expect(page, pagePath).not.toContain('js/main-v38.js');
     }
-    expect(source('site/dashboard.html')).toContain('js/dashboard-v5.js');
-    expect(existsSync(resolve(process.cwd(), 'site/js/i18n-v34.js'))).toBe(false);
+    expect(source('site/dashboard.html')).toContain('js/dashboard-v6.js');
+    expect(source('site/dashboard.html')).not.toContain('js/dashboard-v5.js');
+    expect(existsSync(resolve(process.cwd(), 'site/js/i18n-v35.js'))).toBe(false);
     expect(existsSync(resolve(process.cwd(), 'site/js/main-v38.js'))).toBe(false);
-    expect(existsSync(resolve(process.cwd(), 'site/js/dashboard-v4.js'))).toBe(false);
+    expect(existsSync(resolve(process.cwd(), 'site/js/dashboard-v5.js'))).toBe(false);
   });
 
   it('translates text, accessible attributes and the document title before announcing changes', () => {
@@ -111,7 +120,7 @@ describe('site localization contract', () => {
   });
 
   it('removes the dashboard dictionary duplicate and preserves dirty fields on language change', () => {
-    const script = source('site/js/dashboard-v5.js');
+    const script = source('site/js/dashboard-v6.js');
     expect(script).not.toContain('var STR =');
     expect(script).not.toContain('new MutationObserver');
     expect(script).toContain('window.VOZEN_I18N');
@@ -130,7 +139,7 @@ describe('site localization contract', () => {
     const generator = source('tools/build-i18n.mjs');
     const pkg = JSON.parse(source('package.json')) as { scripts: Record<string, string> };
     expect(generator).toContain("process.argv.includes('--check')");
-    expect(generator).toContain('site/js/i18n-v35.js is out of date');
+    expect(generator).toContain('site/js/i18n-v36.js is out of date');
     expect(pkg.scripts['build:i18n']).toBe('node tools/build-i18n.mjs');
     expect(pkg.scripts['check:i18n']).toBe('node tools/build-i18n.mjs --check');
     expect(pkg.scripts['check:site']).toContain('tests/siteI18n.test.ts');

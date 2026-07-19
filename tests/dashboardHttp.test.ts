@@ -1,8 +1,4 @@
-// tests/dashboardHttp.test.ts — web dashboard HTTP routes (/api/dashboard/*).
-//
-// Restricted CORS, Bearer required, authz (MANAGE_GUILD + bot present) in dashboardApi.
-// Runs the real server (startKofiWebhook) with a real dashboardApi + fake Discord fetch.
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { Server } from 'node:http';
 import type Database from 'better-sqlite3';
 import { initDb } from '../src/store/db';
@@ -13,6 +9,8 @@ import { getGuildConfig } from '../src/store/guildConfig';
 const TOKEN = 'good-token';
 const GUILD = '123123123123123123';
 const OTHER = '456456456456456456';
+const CHANNEL = '789789789789789789';
+const VOICE = 'en_US-amy-medium';
 
 function fakeFetch(): typeof fetch {
   return (async (_url: string, init?: { headers?: Record<string, string> }) => {
@@ -23,14 +21,14 @@ function fakeFetch(): typeof fetch {
       ok: true,
       status: 200,
       json: async () => [
-        { id: GUILD, name: 'Meu', icon: null, permissions: '0x20' }, // MANAGE_GUILD + bot
-        { id: OTHER, name: 'Outro', icon: null, permissions: '0' }, // no perm
+        { id: GUILD, name: 'Mine', icon: null, permissions: '0x20' },
+        { id: OTHER, name: 'Other', icon: null, permissions: '0' },
       ],
     } as unknown as Response;
   }) as unknown as typeof fetch;
 }
 
-describe('/api/dashboard/* — HTTP routes', () => {
+describe('/api/dashboard/* - HTTP routes', () => {
   let db: Database.Database;
   let server: Server | null = null;
 
@@ -38,10 +36,8 @@ describe('/api/dashboard/* — HTTP routes', () => {
     db = initDb(':memory:');
   });
   afterEach(async () => {
-    if (server) {
-      await new Promise<void>((r) => server!.close(() => r()));
-      server = null;
-    }
+    if (server) await new Promise<void>((resolve) => server!.close(() => resolve()));
+    server = null;
     db.close();
   });
 
@@ -50,7 +46,9 @@ describe('/api/dashboard/* — HTTP routes', () => {
       db,
       now: () => 1_000,
       fetchImpl: fakeFetch(),
-      botHasGuild: (id) => id === GUILD, // the bot is only in GUILD
+      botHasGuild: (id) => id === GUILD,
+      resolveChannels: () => [{ id: CHANNEL, label: '#general' }],
+      availableModels: [VOICE],
     });
     server = startKofiWebhook({
       db,
@@ -62,80 +60,101 @@ describe('/api/dashboard/* — HTTP routes', () => {
       dashboardApi,
       apiOrigin: 'https://vozen.org',
     });
-    if (!server) throw new Error('sem servidor');
-    await new Promise<void>((r) => server!.once('listening', () => r()));
-    const addr = server.address();
-    if (!addr || typeof addr === 'string') throw new Error('sem porta');
-    return `http://127.0.0.1:${addr.port}`;
+    if (!server) throw new Error('server did not start');
+    await new Promise<void>((resolve) => server!.once('listening', () => resolve()));
+    const address = server.address();
+    if (!address || typeof address === 'string') throw new Error('missing port');
+    return `http://127.0.0.1:${address.port}`;
   }
 
   const auth = { authorization: `Bearer ${TOKEN}` };
 
-  it('GET /guilds without token -> 401', async () => {
+  it('requires a valid token and only lists manageable guilds', async () => {
     const base = await start();
     expect((await fetch(`${base}/api/dashboard/guilds`)).status).toBe(401);
-  });
-
-  it('GET /guilds invalid token -> 401', async () => {
-    const base = await start();
-    const res = await fetch(`${base}/api/dashboard/guilds`, {
-      headers: { authorization: 'Bearer mau' },
-    });
-    expect(res.status).toBe(401);
-  });
-
-  it('GET /guilds -> 200 only with the manageable servers (MANAGE_GUILD + bot)', async () => {
-    const base = await start();
+    expect(
+      (
+        await fetch(`${base}/api/dashboard/guilds`, {
+          headers: { authorization: 'Bearer wrong' },
+        })
+      ).status,
+    ).toBe(401);
     const res = await fetch(`${base}/api/dashboard/guilds`, { headers: auth });
     expect(res.status).toBe(200);
     const body = (await res.json()) as { guilds: { id: string }[] };
-    expect(body.guilds.map((g) => g.id)).toEqual([GUILD]);
+    expect(body.guilds.map((guild) => guild.id)).toEqual([GUILD]);
     expect(res.headers.get('access-control-allow-origin')).toBe('https://vozen.org');
   });
 
-  it('GET /guild/<manageable> -> 200 with the config; non-manageable guild -> 403', async () => {
+  it('GET returns config, capabilities and authoritative options only when authorized', async () => {
     const base = await start();
     const ok = await fetch(`${base}/api/dashboard/guild/${GUILD}`, { headers: auth });
     expect(ok.status).toBe(200);
-    const forbidden = await fetch(`${base}/api/dashboard/guild/${OTHER}`, { headers: auth });
-    expect(forbidden.status).toBe(403);
+    const body = (await ok.json()) as Record<string, unknown>;
+    expect(body).toHaveProperty('config');
+    expect(body).toHaveProperty('capabilities');
+    expect(body).toHaveProperty('options');
+    expect((await fetch(`${base}/api/dashboard/guild/${OTHER}`, { headers: auth })).status).toBe(
+      403,
+    );
   });
 
-  it('GET /guild/<non-numeric> -> 400', async () => {
+  it('rejects malformed guild ids', async () => {
     const base = await start();
     expect((await fetch(`${base}/api/dashboard/guild/abc`, { headers: auth })).status).toBe(400);
   });
 
-  it('POST /guild/<manageable> applies the patch and persists', async () => {
+  it('POST persists valid channel and voice and returns authoritative state', async () => {
     const base = await start();
     const res = await fetch(`${base}/api/dashboard/guild/${GUILD}`, {
       method: 'POST',
       headers: { ...auth, 'content-type': 'application/json' },
-      body: JSON.stringify({ xsaid: false, ttsChannelId: 'INJECT' }),
+      body: JSON.stringify({ xsaid: false, ttsChannelId: CHANNEL, defaultVoice: VOICE }),
     });
     expect(res.status).toBe(200);
-    const cfg = getGuildConfig(db, GUILD);
-    expect(cfg.xsaid).toBe(false); // applied
-    expect(cfg.ttsChannelId).toBeNull(); // injection outside the whitelist ignored
-  });
-
-  it('POST /guild/<non-manageable> -> 403 (does not write)', async () => {
-    const base = await start();
-    const res = await fetch(`${base}/api/dashboard/guild/${OTHER}`, {
-      method: 'POST',
-      headers: { ...auth, 'content-type': 'application/json' },
-      body: JSON.stringify({ xsaid: false }),
+    const body = (await res.json()) as { config: { ttsChannelId: string; autoread: boolean } };
+    expect(body.config).toMatchObject({ ttsChannelId: CHANNEL, autoread: true });
+    expect(getGuildConfig(db, GUILD)).toMatchObject({
+      xsaid: false,
+      ttsChannelId: CHANNEL,
+      defaultVoice: VOICE,
+      autoread: true,
     });
-    expect(res.status).toBe(403);
   });
 
-  it('POST with invalid JSON -> 400', async () => {
+  it.each([
+    ['ttsChannelId', 'tampered'],
+    ['defaultVoice', 'tampered'],
+  ])('POST rejects tampered %s with HTTP 400', async (field, value) => {
     const base = await start();
     const res = await fetch(`${base}/api/dashboard/guild/${GUILD}`, {
       method: 'POST',
       headers: { ...auth, 'content-type': 'application/json' },
-      body: '{ nao json',
+      body: JSON.stringify({ [field]: value }),
     });
     expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ error: 'invalid_setting', field });
+  });
+
+  it('does not write a non-manageable guild and rejects invalid JSON', async () => {
+    const base = await start();
+    expect(
+      (
+        await fetch(`${base}/api/dashboard/guild/${OTHER}`, {
+          method: 'POST',
+          headers: { ...auth, 'content-type': 'application/json' },
+          body: JSON.stringify({ xsaid: false }),
+        })
+      ).status,
+    ).toBe(403);
+    expect(
+      (
+        await fetch(`${base}/api/dashboard/guild/${GUILD}`, {
+          method: 'POST',
+          headers: { ...auth, 'content-type': 'application/json' },
+          body: '{ not json',
+        })
+      ).status,
+    ).toBe(400);
   });
 });
