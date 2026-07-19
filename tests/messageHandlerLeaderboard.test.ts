@@ -53,6 +53,14 @@ function makeMsg(): any {
   };
 }
 
+function measuredUsage(db: Database.Database): number {
+  return (
+    db
+      .prepare('SELECT COALESCE(SUM(spoken_count), 0) AS n FROM talk_usage WHERE user_id = ?')
+      .get(USER) as { n: number }
+  ).n;
+}
+
 describe('handleMessage — automatic leaderboard (F2)', () => {
   let db: Database.Database;
   beforeEach(() => {
@@ -70,6 +78,7 @@ describe('handleMessage — automatic leaderboard (F2)', () => {
     const say = vi.fn().mockResolvedValue(true);
     await handleMessage(makeMsg(), makeDeps(db, say, { record: true, lbSend }));
     expect(say).toHaveBeenCalledTimes(1);
+    expect(measuredUsage(db)).toBe(1);
     expect(lbSend).toHaveBeenCalledTimes(1);
     const payload = lbSend.mock.calls[0][0];
     expect(messageText(payload)).toContain('Top talkers');
@@ -91,6 +100,8 @@ describe('handleMessage — automatic leaderboard (F2)', () => {
     await handleMessage(makeMsg(), deps);
     expect(lbSend).not.toHaveBeenCalled();
     expect((deps.leaderboardPoster as any).record).not.toHaveBeenCalled();
+    expect(getTopSpeakers(db, GUILD, new Date()).some((r) => r.userId === USER)).toBe(false);
+    expect(measuredUsage(db)).toBe(0);
   });
 
   it('count gate: a burst of identical messages is SPOKEN each time but COUNTED once', async () => {
@@ -106,5 +117,6 @@ describe('handleMessage — automatic leaderboard (F2)', () => {
     expect(say).toHaveBeenCalledTimes(3); // every message is still read aloud
     const me = getTopSpeakers(db, GUILD, new Date()).find((r) => r.userId === USER);
     expect(me?.count).toBe(1); // only the first message inflated the leaderboard
+    expect(measuredUsage(db)).toBe(1);
   });
 });

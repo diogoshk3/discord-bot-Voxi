@@ -72,7 +72,7 @@ async function handleVoiceConfig(
 
   const langNamer = makeLocalizedNamer(i.locale, models, { voice: false });
   const fullNamer = makeLocalizedNamer(i.locale, models);
-  const engineName = (e: UserEngine): string => engineLabel(e, locale);
+  const engineName = (e: UserEngine): string => engineLabel(e, locale, deps.config.ttsEngine);
 
   const locales = localesOf(models);
   const clip = (s: string): string => (s.length > 100 ? s.slice(0, 99) + '…' : s);
@@ -129,7 +129,10 @@ async function handleVoiceConfig(
           // Same labels as every other surface (engineLabel); 💎 marks the Premium one.
           .addOptions(
             (['google', 'piper', 'kokoro', 'gcloud'] as const).map((e) => ({
-              label: e === 'gcloud' ? `💎 ${engineLabel(e, locale)}` : engineLabel(e, locale),
+              label:
+                e === 'gcloud'
+                  ? `💎 ${engineLabel(e, locale, deps.config.ttsEngine)}`
+                  : engineLabel(e, locale, deps.config.ttsEngine),
               value: e,
               default: state.engine === e,
             })),
@@ -309,7 +312,7 @@ export async function handleVoice(i: ChatInputCommandInteraction, deps: BotDeps)
         name: makeLocalizedNamer(i.locale, deps.availableModels)(model),
         model,
         speed: clamped,
-        engine: engineLabel(engine, locale),
+        engine: engineLabel(engine, locale, deps.config.ttsEngine),
       }),
     );
   } else if (sub === 'list') {

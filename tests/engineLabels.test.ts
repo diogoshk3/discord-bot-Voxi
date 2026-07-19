@@ -19,6 +19,13 @@ describe('engineLabel — one source of truth for the engine names shown to user
     expect(engineLabel('google', 'en')).not.toBe('Google');
   });
 
+  it('names the concrete runtime default when the operator configuration is known', () => {
+    expect(engineLabel('google', 'pt', 'piper')).toBe('Piper');
+    expect(engineLabel('google', 'pt', 'gtts')).toBe('Google (gTTS)');
+    expect(engineLabel('google', 'pt', 'router')).toBe('Google (gTTS)');
+    expect(engineLabel('google', 'pt', 'neural')).toBe('Neural');
+  });
+
   it('is stable across locales for the brand names', () => {
     for (const locale of ['en', 'pt', 'fr', 'ja']) {
       expect(engineLabel('piper', locale)).toBe('Piper');

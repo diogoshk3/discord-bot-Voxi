@@ -377,26 +377,29 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     // Voice effect (premium): applied to the WAV by the EffectEngine (external engine).
     outReq.effect = getVoiceEffect(deps.db, message.guildId, message.author.id);
 
-    // Everything passed: this message WILL be read. Records the author as the last speaker
-    // (only now — a blocked/ignored message does not count for the xsaid suppression).
-    deps.lastSpeaker?.set(message.guildId, message.author.id);
+    // Everything passed validation; queue acceptance below decides whether it counts as usage.
 
-    // "Chatterboxes" (/topspeakers): counts this read message + updates the author's daily
-    // streak. Only here (the message was actually read) AND only if the anti-spam count gate
-    // lets it through — bursts/repetition must not inflate the message-ranked leaderboard. A
-    // gated-out message is still SPOKEN (this only skips the count + the streak 🔥 notice).
-    // Without the injected gate (old tests) everything counts, as before. Best-effort — must
-    // never prevent speech.
+    // Startup silence: the bot only starts speaking `messageLeadMs` after the message
+    // (silence PREPENDED to the WAV). Configurable (MESSAGE_LEAD_MS); 0 = no wait.
+    if (deps.config.messageLeadMs > 0) outReq.leadSilenceMs = deps.config.messageLeadMs;
+
+    const queued = await player.say(outReq);
+
+    // Everything below is usage/accounting for a request that ACTUALLY entered the queue. A full
+    // queue must not change the leaderboard, last-speaker suppression, streaks, or voice stats.
     let talk: TalkBump | null = null;
-    const countsForStats =
-      deps.countGate?.shouldCount(message.guildId, message.author.id, cleaned, Date.now()) ?? true;
-    if (countsForStats) {
-      try {
-        talk = bumpTalk(deps.db, message.guildId, message.author.id, new Date());
+    if (queued) {
+      deps.lastSpeaker?.set(message.guildId, message.author.id);
+      // Evaluate the anti-inflation gate only after queue acceptance: a rejected request must not
+      // consume the user's one countable slot and suppress their next real message.
+      const countsForStats =
+        deps.countGate?.shouldCount(message.guildId, message.author.id, cleaned, Date.now()) ??
+        true;
+      if (countsForStats) {
         try {
-          // Same unit as talk_stats: one accepted/read message. The request already contains the
-          // resolved base voice and the engine after the Premium gate, so this records what this
-          // message actually routed through rather than merely the user's saved preference.
+          talk = bumpTalk(deps.db, message.guildId, message.author.id, new Date());
+          // Effective base voice + engine after voice selection and Premium gating. Operational
+          // synthesis fallbacks are deliberately not claimed as selected usage.
           bumpTalkUsage(
             deps.db,
             message.guildId,
@@ -405,26 +408,16 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
             outReq.engine ?? 'google',
           );
         } catch (err) {
-          log.warn('[messageHandler] failed to update language/engine statistics (ignored)', err);
+          log.warn('[messageHandler] failed to update speaker/voice statistics (ignored)', err);
         }
-      } catch (err) {
-        log.warn('[messageHandler] failed to update speaker statistics (ignored)', err);
-      }
-      // Per-server streak (admin console only, never announced publicly). AFTER bumpTalk so the
-      // first-ever server bump seeds from this author's already-fresh row. Independent best-effort:
-      // a failure here must never touch speech or the per-user streak notice above.
-      try {
-        bumpGuildTalk(deps.db, message.guildId, new Date());
-      } catch (err) {
-        log.warn('[messageHandler] failed to update the server streak (ignored)', err);
+        // Per-server streak is independent best-effort and follows the fresh user bump.
+        try {
+          bumpGuildTalk(deps.db, message.guildId, new Date());
+        } catch (err) {
+          log.warn('[messageHandler] failed to update the server streak (ignored)', err);
+        }
       }
     }
-
-    // Startup silence: the bot only starts speaking `messageLeadMs` after the message
-    // (silence PREPENDED to the WAV). Configurable (MESSAGE_LEAD_MS); 0 = no wait.
-    if (deps.config.messageLeadMs > 0) outReq.leadSilenceMs = deps.config.messageLeadMs;
-
-    const queued = await player.say(outReq);
 
     // Streak 🔥 (F1, TikTok style): "Day N" notice ONLY on the 1st message of each day, from Day 2
     // onwards (announcing everyone's Day 1 every day would be spam), and only if the speech

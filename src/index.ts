@@ -328,6 +328,9 @@ async function main(): Promise<void> {
           ownerId: config.ownerId,
           adminClientId: config.adminClientId,
           logInfo: (m) => log.info(m),
+          defaultVoice: config.defaultVoice,
+          availableModels,
+          defaultEngine: config.ttsEngine,
           // Live guild snapshot for the servers tab: id/name/icon/memberCount only. The usage
           // stats come from talk_stats (already stored), never from a fresh read.
           resolveGuilds: () =>

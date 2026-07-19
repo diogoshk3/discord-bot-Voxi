@@ -218,7 +218,14 @@ describe('admin console — HTTP router', () => {
     const r = await get(`${base}/api/admin/toptalkers`, { authorization: `Bearer ${session}` });
     expect(r.status).toBe(200);
     const d = (await r.json()) as {
-      talkers: Array<{ id: string; total: number; language: string; engine: string }>;
+      talkers: Array<{
+        id: string;
+        total: number;
+        language: string;
+        engine: string;
+        usageSamples: number;
+        usageSource: string;
+      }>;
     };
     expect(d.talkers).toContainEqual(
       expect.objectContaining({
@@ -226,6 +233,8 @@ describe('admin console — HTTP router', () => {
         total: 1,
         language: 'English (US)',
         engine: 'Padrão (local)',
+        usageSamples: 0,
+        usageSource: 'configured',
       }),
     );
   });

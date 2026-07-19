@@ -37,6 +37,23 @@ export function bumpTalkUsage(
 export interface DominantTalkUsage {
   language: string | null;
   engine: UserEngine | null;
+  /** Real queued-message samples, never inferred from historical talk_stats. */
+  samples: number;
+  /** `configured` is an honest current-state fallback until real samples exist. */
+  source: 'measured' | 'configured' | 'none';
+}
+
+export interface DominantTalkUsageOptions {
+  /** Runtime global fallback; defaults to the same value as AppConfig. */
+  defaultModel?: string;
+  /** Runtime catalogue, used to mirror prepareSpeech's unavailable-model fallback. */
+  availableModels?: readonly string[];
+  /** Resolves current paid-engine gating (for example expired Google HD -> default). */
+  resolveConfiguredEngine?: (
+    guildId: string,
+    userId: string,
+    storedEngine: UserEngine,
+  ) => UserEngine;
 }
 
 type UsageRow = {
@@ -47,13 +64,13 @@ type UsageRow = {
   spoken_count: number;
 };
 
-type LegacyRow = {
+type ConfiguredRow = {
   guild_id: string;
   user_id: string;
   spoken_count: number;
-  tracked_count: number;
-  voice_model: string;
-  engine: string;
+  user_model: string | null;
+  guild_model: string | null;
+  engine: string | null;
 };
 
 function addCount<T extends string>(map: Map<T, number>, key: T, count: number): void {
@@ -75,14 +92,15 @@ function winner<T extends string>(counts: Map<T, number>): T | null {
 /**
  * Dominant language and engine for each requested user, aggregated across every guild.
  *
- * `talk_usage` is exact from the migration onwards. Older talk_stats rows predate that counter;
- * their remaining count is attributed to the user's current per-guild voice (or guild/default
- * voice) so the existing top 10 is useful immediately. As new messages arrive, the exact rows
- * replace that legacy estimate one-for-one (`spoken_count - tracked_count`).
+ * `talk_usage` is measured from the migration onwards. Historical talk_stats must NEVER be
+ * attributed to a person's current setting: doing that turns present state into invented history
+ * and lets hundreds of legacy messages drown out new real measurements. Until a user has a real
+ * sample, this returns their effective CURRENT configuration and marks it as `configured`.
  */
 export function getDominantTalkUsage(
   db: Database.Database,
   userIds: string[],
+  options: DominantTalkUsageOptions = {},
 ): Map<string, DominantTalkUsage> {
   const ids = [...new Set(userIds)].filter(Boolean);
   const result = new Map<string, DominantTalkUsage>();
@@ -96,55 +114,88 @@ export function getDominantTalkUsage(
     )
     .all(...ids) as UsageRow[];
 
-  const legacy = db
+  const configured = db
     .prepare(
       `SELECT ts.guild_id, ts.user_id, ts.spoken_count,
-              COALESCE(tracked.total, 0) AS tracked_count,
-              COALESCE(uv.voice_model, gc.default_voice, ?) AS voice_model,
-              COALESCE(uv.engine, 'google') AS engine
+              uv.voice_model AS user_model,
+              gc.default_voice AS guild_model,
+              uv.engine AS engine
        FROM talk_stats ts
-       LEFT JOIN (
-         SELECT guild_id, user_id, SUM(spoken_count) AS total
-         FROM talk_usage GROUP BY guild_id, user_id
-       ) tracked ON tracked.guild_id = ts.guild_id AND tracked.user_id = ts.user_id
        LEFT JOIN user_voice uv ON uv.guild_id = ts.guild_id AND uv.user_id = ts.user_id
        LEFT JOIN guild_config gc ON gc.guild_id = ts.guild_id
        WHERE ts.user_id IN (${placeholders})`,
     )
-    .all(DEFAULT_MODEL, ...ids) as LegacyRow[];
+    .all(...ids) as ConfiguredRow[];
 
-  const languages = new Map<string, Map<string, number>>();
-  const engines = new Map<string, Map<UserEngine, number>>();
-  const buckets = (userId: string) => {
-    let lang = languages.get(userId);
-    if (!lang) languages.set(userId, (lang = new Map()));
-    let engine = engines.get(userId);
-    if (!engine) engines.set(userId, (engine = new Map()));
+  const measuredLanguages = new Map<string, Map<string, number>>();
+  const measuredEngines = new Map<string, Map<UserEngine, number>>();
+  const samples = new Map<string, number>();
+  const measuredBuckets = (userId: string) => {
+    let lang = measuredLanguages.get(userId);
+    if (!lang) measuredLanguages.set(userId, (lang = new Map()));
+    let engine = measuredEngines.get(userId);
+    if (!engine) measuredEngines.set(userId, (engine = new Map()));
     return { lang, engine };
   };
 
   for (const row of usage) {
     const count = Math.max(0, Number(row.spoken_count) || 0);
-    const b = buckets(row.user_id);
+    if (count === 0) continue;
+    const b = measuredBuckets(row.user_id);
     addCount(b.lang, row.language, count);
     addCount(b.engine, normalizeEngine(row.engine), count);
+    samples.set(row.user_id, (samples.get(row.user_id) ?? 0) + count);
   }
 
-  for (const row of legacy) {
-    const remaining = Math.max(
-      0,
-      (Number(row.spoken_count) || 0) - (Number(row.tracked_count) || 0),
-    );
-    if (remaining === 0) continue;
-    const b = buckets(row.user_id);
-    addCount(b.lang, voiceLocale(row.voice_model), remaining);
-    addCount(b.engine, normalizeEngine(row.engine), remaining);
+  const currentLanguages = new Map<string, Map<string, number>>();
+  const currentEngines = new Map<string, Map<UserEngine, number>>();
+  const defaultModel = options.defaultModel?.trim() || DEFAULT_MODEL;
+  for (const row of configured) {
+    // Exact data wins completely. Current configuration is a fallback, never mixed into measured
+    // history. Weighting only chooses a representative CURRENT config for multi-guild users.
+    if ((samples.get(row.user_id) ?? 0) > 0) continue;
+    const count = Math.max(0, Number(row.spoken_count) || 0);
+    if (count === 0) continue;
+    const configuredModels = [row.user_model, row.guild_model, defaultModel]
+      .map((model) => model?.trim() ?? '')
+      .filter(Boolean);
+    const model = options.availableModels
+      ? (configuredModels.find((candidate) => options.availableModels!.includes(candidate)) ??
+        options.availableModels[0] ??
+        configuredModels[0] ??
+        DEFAULT_MODEL)
+      : (configuredModels[0] ?? DEFAULT_MODEL);
+    const storedEngine = normalizeEngine(row.engine);
+    const engine = options.resolveConfiguredEngine
+      ? options.resolveConfiguredEngine(row.guild_id, row.user_id, storedEngine)
+      : storedEngine;
+
+    let langCounts = currentLanguages.get(row.user_id);
+    if (!langCounts) currentLanguages.set(row.user_id, (langCounts = new Map()));
+    let engineCounts = currentEngines.get(row.user_id);
+    if (!engineCounts) currentEngines.set(row.user_id, (engineCounts = new Map()));
+    addCount(langCounts, voiceLocale(model), count);
+    addCount(engineCounts, engine, count);
   }
 
   for (const userId of ids) {
+    const sampleCount = samples.get(userId) ?? 0;
+    if (sampleCount > 0) {
+      result.set(userId, {
+        language: winner(measuredLanguages.get(userId) ?? new Map()),
+        engine: winner(measuredEngines.get(userId) ?? new Map()),
+        samples: sampleCount,
+        source: 'measured',
+      });
+      continue;
+    }
+    const language = winner(currentLanguages.get(userId) ?? new Map());
+    const engine = winner(currentEngines.get(userId) ?? new Map());
     result.set(userId, {
-      language: winner(languages.get(userId) ?? new Map()),
-      engine: winner(engines.get(userId) ?? new Map()),
+      language,
+      engine,
+      samples: 0,
+      source: language && engine ? 'configured' : 'none',
     });
   }
   return result;

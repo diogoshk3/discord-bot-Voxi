@@ -11,6 +11,7 @@
 // the other three are product names and stay as-is in every language.
 
 import type { UserEngine } from '../store/userVoice';
+import type { TtsEngineKind } from '../config/index';
 import { t } from '../i18n/index';
 
 /** Brand names — identical in every locale. The default is resolved via i18n below. */
@@ -24,6 +25,17 @@ const BRAND: Partial<Record<UserEngine, string>> = {
  * User-facing name of an engine, in `locale`. Total over UserEngine: an unmapped value
  * falls back to the default label rather than leaking the raw id.
  */
-export function engineLabel(engine: UserEngine, locale: string): string {
-  return BRAND[engine] ?? t('voice.config.engDefault', locale);
+export function engineLabel(
+  engine: UserEngine,
+  locale: string,
+  runtimeDefault?: TtsEngineKind,
+): string {
+  const brand = BRAND[engine];
+  if (brand) return brand;
+  // `google` is a legacy database id meaning "the operator's default", not a concrete engine.
+  // When runtime config is known, name that concrete route instead of assuming it is local.
+  if (runtimeDefault === 'piper') return 'Piper';
+  if (runtimeDefault === 'gtts' || runtimeDefault === 'router') return 'Google (gTTS)';
+  if (runtimeDefault === 'neural') return 'Neural';
+  return t('voice.config.engDefault', locale);
 }

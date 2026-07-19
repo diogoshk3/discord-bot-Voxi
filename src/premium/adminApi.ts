@@ -14,6 +14,7 @@
 //   grant()/revoke() reuse the tested grantUserPremium/grantGuildPass and the adminPasses revokes.
 
 import type Database from 'better-sqlite3';
+import type { TtsEngineKind } from '../config/index';
 import { grantGuildPass, grantUserPremium } from '../store/premium';
 import {
   listActivePremium,
@@ -27,6 +28,7 @@ import { getGuildStreak } from '../store/guildTalkStreak';
 import { getDominantTalkUsage } from '../store/talkUsage';
 import { LOCALE_NAMES } from '../language/voiceMap';
 import { engineLabel } from '../tts/engineLabels';
+import { resolveUserEngine } from '../tts/resolveEngine';
 import { signAdminSession, verifyAdminSession } from './adminAuth';
 import type { DiscordAuthorization } from './statusApi';
 
@@ -46,6 +48,10 @@ export interface AdminApiDeps {
   logInfo: (m: string) => void;
   /** Session lifetime; default 8h. */
   sessionTtlSec?: number;
+  /** Runtime voice fallback/catalogue, used to mirror prepareSpeech for current-state rows. */
+  defaultVoice?: string;
+  availableModels?: readonly string[];
+  defaultEngine?: TtsEngineKind;
   /** Live snapshot of the bot's guilds (from client.guilds.cache). Absent => the servers tab is
    *  empty. Only id/name/icon/memberCount leave — the stats come from data already in the db. */
   resolveGuilds?: () => AdminGuildBrief[];
@@ -96,6 +102,10 @@ export interface AdminTopTalker extends AdminUserBrief {
   language: string | null;
   /** Most-used resolved engine, already formatted for the Portuguese owner console. */
   engine: string | null;
+  /** Number of real queued-message observations behind language/engine. */
+  usageSamples: number;
+  /** Distinguishes measured usage from the honest current-configuration fallback. */
+  usageSource: 'measured' | 'configured' | 'none';
 }
 
 export type AdminGrantInput =
@@ -242,6 +252,12 @@ export function createAdminApi(deps: AdminApiDeps): AdminApi {
     const dominant = getDominantTalkUsage(
       deps.db,
       rows.map((r) => r.user_id),
+      {
+        defaultModel: deps.defaultVoice,
+        availableModels: deps.availableModels,
+        resolveConfiguredEngine: (guildId, userId, storedEngine) =>
+          resolveUserEngine(deps.db, guildId, userId, storedEngine, deps.now()).engine ?? 'google',
+      },
     );
     const base: AdminTopTalker[] = rows.map((r) => {
       const usage = dominant.get(r.user_id);
@@ -252,7 +268,9 @@ export function createAdminApi(deps: AdminApiDeps): AdminApi {
         username: null,
         avatar: null,
         language: locale ? (LOCALE_NAMES[locale] ?? locale.replace('_', '-')) : null,
-        engine: usage?.engine ? engineLabel(usage.engine, 'pt') : null,
+        engine: usage?.engine ? engineLabel(usage.engine, 'pt', deps.defaultEngine) : null,
+        usageSamples: usage?.samples ?? 0,
+        usageSource: usage?.source ?? 'none',
       };
     });
     if (!deps.resolveUsers || base.length === 0) return base;

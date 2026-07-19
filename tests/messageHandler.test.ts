@@ -136,7 +136,8 @@ describe('handleMessage — branches not covered by the existing tests', () => {
 
   beforeEach(() => {
     db = initDb(':memory:');
-    say = vi.fn().mockResolvedValue(undefined);
+    // GuildVoicePlayer.say() returns the real synchronous queue-admission result.
+    say = vi.fn().mockResolvedValue(true);
     // Base configuration: autoread active on channel CHAN, bot enabled
     setGuildConfig(db, GUILD, {
       autoread: true,

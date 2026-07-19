@@ -28,22 +28,59 @@ describe('talkUsage — aggregate language/engine counters', () => {
     expect(getDominantTalkUsage(db, ['U']).get('U')).toEqual({
       language: 'pt_PT',
       engine: 'piper',
+      samples: 4,
+      source: 'measured',
     });
   });
 
-  it('uses the current voice only for legacy messages not yet covered by exact counters', () => {
+  it('never lets inferred historical messages drown out real measurements', () => {
     const now = new Date('2026-07-19T12:00:00Z');
     for (let i = 0; i < 5; i += 1) bumpTalk(db, 'G', 'U', now);
     setUserVoice(db, 'G', 'U', 'fr_FR-siwis-medium', 1, 'gcloud');
 
-    // Two exact new messages; the three historical messages use the current preference as the
-    // best available estimate, so French/Google HD win 3-2 until exact data replaces them.
+    // The five old talk_stats rows do not say which voice/engine was used. Even though the current
+    // setting is French/Google HD, it must not contaminate the two real Portuguese/Piper samples.
     bumpTalkUsage(db, 'G', 'U', 'pt_PT-a-medium', 'piper');
     bumpTalkUsage(db, 'G', 'U', 'pt_PT-a-medium', 'piper');
 
     expect(getDominantTalkUsage(db, ['U']).get('U')).toEqual({
+      language: 'pt_PT',
+      engine: 'piper',
+      samples: 2,
+      source: 'measured',
+    });
+  });
+
+  it('labels the effective current setting as configured until real samples exist', () => {
+    bumpTalk(db, 'G', 'U', new Date('2026-07-19T12:00:00Z'));
+    setUserVoice(db, 'G', 'U', 'fr_FR-siwis-medium', 1, 'gcloud');
+
+    expect(
+      getDominantTalkUsage(db, ['U'], {
+        resolveConfiguredEngine: () => 'google',
+      }).get('U'),
+    ).toEqual({
       language: 'fr_FR',
-      engine: 'gcloud',
+      engine: 'google',
+      samples: 0,
+      source: 'configured',
+    });
+  });
+
+  it('treats empty user/guild models as missing, like prepareSpeech does', () => {
+    bumpTalk(db, 'G', 'U', new Date('2026-07-19T12:00:00Z'));
+    db.prepare('INSERT INTO guild_config (guild_id, default_voice) VALUES (?, ?)').run('G', '');
+
+    expect(
+      getDominantTalkUsage(db, ['U'], {
+        defaultModel: 'pt_PT-google-medium',
+        availableModels: ['pt_PT-google-medium'],
+      }).get('U'),
+    ).toEqual({
+      language: 'pt_PT',
+      engine: 'google',
+      samples: 0,
+      source: 'configured',
     });
   });
 
@@ -51,6 +88,8 @@ describe('talkUsage — aggregate language/engine counters', () => {
     expect(getDominantTalkUsage(db, ['missing']).get('missing')).toEqual({
       language: null,
       engine: null,
+      samples: 0,
+      source: 'none',
     });
   });
 });

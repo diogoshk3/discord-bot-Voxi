@@ -309,6 +309,8 @@ describe('adminApi — listTopTalkers (global top 10, identity+voice usage)', ()
       avatar: null,
       language: 'English (US)',
       engine: 'Padrão (local)',
+      usageSamples: 0,
+      usageSource: 'configured',
     });
     // u3 (2) ranks above u2 (1) and the 1-message crowd.
     expect(rows.map((r) => r.id).slice(0, 3)).toEqual(['u1', 'u3', 'u2']);
@@ -325,8 +327,19 @@ describe('adminApi — listTopTalkers (global top 10, identity+voice usage)', ()
         avatar: null,
         language: 'English (US)',
         engine: 'Padrão (local)',
+        usageSamples: 0,
+        usageSource: 'configured',
       },
     ]);
+  });
+
+  it('labels the legacy default engine from the actual runtime configuration', async () => {
+    bumpTalk(db, 'A', 'u1', new Date(NOW));
+    const [row] = await make(db, { defaultEngine: 'gtts' }).listTopTalkers();
+    expect(row).toMatchObject({
+      engine: 'Google (gTTS)',
+      usageSource: 'configured',
+    });
   });
 
   it('WITH resolveUsers -> merges name+avatar; an unresolved user stays id-only', async () => {
@@ -352,6 +365,8 @@ describe('adminApi — listTopTalkers (global top 10, identity+voice usage)', ()
       avatar: 'https://cdn.discordapp.com/avatars/u2/a.webp',
       language: 'English (US)',
       engine: 'Padrão (local)',
+      usageSamples: 0,
+      usageSource: 'configured',
     });
     expect(rows[1]).toEqual({
       id: 'u1',
@@ -360,6 +375,8 @@ describe('adminApi — listTopTalkers (global top 10, identity+voice usage)', ()
       avatar: null,
       language: 'English (US)',
       engine: 'Padrão (local)',
+      usageSamples: 0,
+      usageSource: 'configured',
     });
   });
 
@@ -379,6 +396,8 @@ describe('adminApi — listTopTalkers (global top 10, identity+voice usage)', ()
         avatar: null,
         language: 'English (US)',
         engine: 'Padrão (local)',
+        usageSamples: 0,
+        usageSource: 'configured',
       },
     ]);
   });
@@ -396,6 +415,8 @@ describe('adminApi — listTopTalkers (global top 10, identity+voice usage)', ()
     expect(row).toMatchObject({
       language: 'Português (Portugal)',
       engine: 'Kokoro',
+      usageSamples: 5,
+      usageSource: 'measured',
     });
   });
 });
