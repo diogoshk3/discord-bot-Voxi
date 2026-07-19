@@ -3715,7 +3715,7 @@ body.page-account .ppanel__logout {
 }
 
 /* Large desktop: reproduce the comfortable 133% browser scale at native 100%. */
-@media (min-width: 1500px) and (min-height: 800px) {
+@media (min-width: 1280px) and (min-height: 800px) {
   body.page-account .nav {
     display: none;
   }
@@ -3766,7 +3766,7 @@ body.page-account .ppanel__logout {
   }
 
   body.page-account .account-workspace {
-    grid-template-columns: minmax(0, 1fr) 520px;
+    grid-template-columns: minmax(0, 1fr) clamp(430px, 33.333%, 520px);
     gap: 32px;
   }
 
