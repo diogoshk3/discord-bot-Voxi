@@ -58,6 +58,9 @@ function seedGuild(db: Database.Database, g: string, u: string): void {
     14,
   );
   db.prepare('INSERT INTO talk_stats (guild_id, user_id) VALUES (?,?)').run(g, u);
+  db.prepare(
+    'INSERT INTO talk_usage (guild_id, user_id, language, engine, spoken_count) VALUES (?,?,?,?,?)',
+  ).run(g, u, 'en_US', 'google', 1);
   db.prepare('INSERT INTO guild_talk_streak (guild_id) VALUES (?)').run(g);
   db.prepare('INSERT INTO user_effect (guild_id, user_id, effect) VALUES (?,?,?)').run(
     g,

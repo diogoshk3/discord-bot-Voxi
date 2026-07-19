@@ -120,6 +120,18 @@ export function initDb(path: string): Database.Database {
         PRIMARY KEY (guild_id, user_id)
       );
 
+      -- Aggregate language/engine usage for the owner top-10 card. One counter per resolved
+      -- combination; never stores message content. Existing databases start collecting on deploy.
+      CREATE TABLE IF NOT EXISTS talk_usage (
+        guild_id     TEXT NOT NULL,
+        user_id      TEXT NOT NULL,
+        language     TEXT NOT NULL,
+        engine       TEXT NOT NULL,
+        spoken_count INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (guild_id, user_id, language, engine)
+      );
+      CREATE INDEX IF NOT EXISTS idx_talk_usage_user ON talk_usage (user_id);
+
       -- Per-SERVER talk streak (admin console only): consecutive days on which at least one
       -- person spoke. Same Duolingo rules as talk_stats' per-user streak. No message content,
       -- no per-user data — one row per guild. last_date is the local YYYY-MM-DD of the latest day.

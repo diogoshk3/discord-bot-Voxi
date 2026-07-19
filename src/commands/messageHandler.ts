@@ -15,6 +15,7 @@ import { isRepetitionSpam } from '../moderation/antispam';
 import { metrics } from '../metrics';
 import { getVoiceEffect } from '../store/voiceEffect';
 import { bumpTalk, getTopSpeakers, type TalkBump } from '../store/talkStats';
+import { bumpTalkUsage } from '../store/talkUsage';
 import { bumpGuildTalk } from '../store/guildTalkStreak';
 import { renderLeaderboard } from '../leaderboard/randomPost';
 import { getUserPronunciations, getServerPronunciations } from '../store/pronunciation';
@@ -392,6 +393,20 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     if (countsForStats) {
       try {
         talk = bumpTalk(deps.db, message.guildId, message.author.id, new Date());
+        try {
+          // Same unit as talk_stats: one accepted/read message. The request already contains the
+          // resolved base voice and the engine after the Premium gate, so this records what this
+          // message actually routed through rather than merely the user's saved preference.
+          bumpTalkUsage(
+            deps.db,
+            message.guildId,
+            message.author.id,
+            outReq.model,
+            outReq.engine ?? 'google',
+          );
+        } catch (err) {
+          log.warn('[messageHandler] failed to update language/engine statistics (ignored)', err);
+        }
       } catch (err) {
         log.warn('[messageHandler] failed to update speaker statistics (ignored)', err);
       }

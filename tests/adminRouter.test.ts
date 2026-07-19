@@ -217,8 +217,17 @@ describe('admin console — HTTP router', () => {
     const session = signAdminSession(OWNER, SECRET, NOW);
     const r = await get(`${base}/api/admin/toptalkers`, { authorization: `Bearer ${session}` });
     expect(r.status).toBe(200);
-    const d = (await r.json()) as { talkers: Array<{ id: string; total: number }> };
-    expect(d.talkers.some((t) => t.id === '424242424242424242' && t.total === 1)).toBe(true);
+    const d = (await r.json()) as {
+      talkers: Array<{ id: string; total: number; language: string; engine: string }>;
+    };
+    expect(d.talkers).toContainEqual(
+      expect.objectContaining({
+        id: '424242424242424242',
+        total: 1,
+        language: 'English (US)',
+        engine: 'Padrão (local)',
+      }),
+    );
   });
 
   it('an ASYNC store error inside /toptalkers returns 500, not a process crash', async () => {

@@ -25,6 +25,7 @@ export const GUILD_PURGE_TABLES = [
   'game_score',
   'user_birthday',
   'talk_stats',
+  'talk_usage', // aggregate language/engine counters; still scoped to guild + user
   'guild_talk_streak', // per-server talk streak (aggregate, no per-user data) — dies with the server
   'user_effect',
   'voice_presence',
@@ -49,6 +50,7 @@ export const USER_ERASE_TABLES = [
   'game_score',
   'user_birthday',
   'talk_stats',
+  'talk_usage',
   'user_effect',
   'user_abbreviation',
   'pronunciation_user',

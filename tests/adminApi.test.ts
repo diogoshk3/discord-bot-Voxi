@@ -3,6 +3,7 @@ import type Database from 'better-sqlite3';
 import { initDb } from '../src/store/db';
 import { isUserPremium } from '../src/store/premium';
 import { bumpTalk } from '../src/store/talkStats';
+import { bumpTalkUsage } from '../src/store/talkUsage';
 import { bumpGuildTalk } from '../src/store/guildTalkStreak';
 import { signAdminSession } from '../src/premium/adminAuth';
 import { createAdminApi, type AdminApi } from '../src/premium/adminApi';
@@ -282,7 +283,7 @@ describe('adminApi — listGuilds (servers tab)', () => {
   });
 });
 
-describe('adminApi — listTopTalkers (global top 10, avatar+name)', () => {
+describe('adminApi — listTopTalkers (global top 10, identity+voice usage)', () => {
   let db: Database.Database;
   beforeEach(() => (db = initDb(':memory:')));
   afterEach(() => db.close());
@@ -301,7 +302,14 @@ describe('adminApi — listTopTalkers (global top 10, avatar+name)', () => {
 
     const rows = await make(db).listTopTalkers();
     expect(rows).toHaveLength(10);
-    expect(rows[0]).toEqual({ id: 'u1', total: 3, username: null, avatar: null });
+    expect(rows[0]).toEqual({
+      id: 'u1',
+      total: 3,
+      username: null,
+      avatar: null,
+      language: 'English (US)',
+      engine: 'Padrão (local)',
+    });
     // u3 (2) ranks above u2 (1) and the 1-message crowd.
     expect(rows.map((r) => r.id).slice(0, 3)).toEqual(['u1', 'u3', 'u2']);
   });
@@ -309,7 +317,16 @@ describe('adminApi — listTopTalkers (global top 10, avatar+name)', () => {
   it('WITHOUT resolveUsers -> rows with null username/avatar (UI falls back to the id), NOT empty', async () => {
     bumpTalk(db, 'A', 'u1', new Date(NOW));
     const rows = await make(db).listTopTalkers();
-    expect(rows).toEqual([{ id: 'u1', total: 1, username: null, avatar: null }]);
+    expect(rows).toEqual([
+      {
+        id: 'u1',
+        total: 1,
+        username: null,
+        avatar: null,
+        language: 'English (US)',
+        engine: 'Padrão (local)',
+      },
+    ]);
   });
 
   it('WITH resolveUsers -> merges name+avatar; an unresolved user stays id-only', async () => {
@@ -333,8 +350,17 @@ describe('adminApi — listTopTalkers (global top 10, avatar+name)', () => {
       total: 2,
       username: 'Duo',
       avatar: 'https://cdn.discordapp.com/avatars/u2/a.webp',
+      language: 'English (US)',
+      engine: 'Padrão (local)',
     });
-    expect(rows[1]).toEqual({ id: 'u1', total: 1, username: null, avatar: null });
+    expect(rows[1]).toEqual({
+      id: 'u1',
+      total: 1,
+      username: null,
+      avatar: null,
+      language: 'English (US)',
+      engine: 'Padrão (local)',
+    });
   });
 
   it('a THROWING resolveUsers degrades to ids-only instead of failing the whole list', async () => {
@@ -345,6 +371,31 @@ describe('adminApi — listTopTalkers (global top 10, avatar+name)', () => {
       },
     });
     const rows = await api.listTopTalkers();
-    expect(rows).toEqual([{ id: 'u1', total: 1, username: null, avatar: null }]);
+    expect(rows).toEqual([
+      {
+        id: 'u1',
+        total: 1,
+        username: null,
+        avatar: null,
+        language: 'English (US)',
+        engine: 'Padrão (local)',
+      },
+    ]);
+  });
+
+  it('returns the independently most-used language and engine for each speaker', async () => {
+    const now = new Date(NOW);
+    for (let i = 0; i < 5; i += 1) bumpTalk(db, 'A', 'u1', now);
+    bumpTalkUsage(db, 'A', 'u1', 'pt_PT-tugao-medium', 'piper');
+    bumpTalkUsage(db, 'A', 'u1', 'pt_PT-tugao-medium', 'kokoro');
+    bumpTalkUsage(db, 'A', 'u1', 'pt_PT-tugao-medium', 'kokoro');
+    bumpTalkUsage(db, 'A', 'u1', 'en_US-amy-medium', 'kokoro');
+    bumpTalkUsage(db, 'A', 'u1', 'en_US-amy-medium', 'kokoro');
+
+    const [row] = await make(db).listTopTalkers();
+    expect(row).toMatchObject({
+      language: 'Português (Portugal)',
+      engine: 'Kokoro',
+    });
   });
 });

@@ -24,6 +24,9 @@ import {
 import { listAllUnclaimedPending, type PendingGrant } from '../store/kofiPending';
 import { buildServerStats } from '../store/serverStats';
 import { getGuildStreak } from '../store/guildTalkStreak';
+import { getDominantTalkUsage } from '../store/talkUsage';
+import { LOCALE_NAMES } from '../language/voiceMap';
+import { engineLabel } from '../tts/engineLabels';
 import { signAdminSession, verifyAdminSession } from './adminAuth';
 import type { DiscordAuthorization } from './statusApi';
 
@@ -89,6 +92,10 @@ export interface AdminUserBrief {
 /** One row of the global top-talkers card: an identity + total messages read across ALL servers. */
 export interface AdminTopTalker extends AdminUserBrief {
   total: number;
+  /** Most-used base voice language across all counted messages/guilds. */
+  language: string | null;
+  /** Most-used resolved engine, already formatted for the Portuguese owner console. */
+  engine: string | null;
 }
 
 export type AdminGrantInput =
@@ -225,19 +232,29 @@ export function createAdminApi(deps: AdminApiDeps): AdminApi {
 
   async function listTopTalkers(): Promise<AdminTopTalker[]> {
     // Global aggregate over talk_stats (counts already stored, already public per-server via
-    // /topspeakers). No message content, no new collection — just SUM across servers.
+    // /topspeakers). Language/engine come from aggregate counters only — never message content.
     const rows = deps.db
       .prepare(
         `SELECT user_id, SUM(spoken_count) AS total FROM talk_stats
          GROUP BY user_id ORDER BY total DESC, user_id ASC LIMIT ?`,
       )
       .all(TOP_TALKERS) as { user_id: string; total: number }[];
-    const base: AdminTopTalker[] = rows.map((r) => ({
-      id: r.user_id,
-      total: r.total,
-      username: null,
-      avatar: null,
-    }));
+    const dominant = getDominantTalkUsage(
+      deps.db,
+      rows.map((r) => r.user_id),
+    );
+    const base: AdminTopTalker[] = rows.map((r) => {
+      const usage = dominant.get(r.user_id);
+      const locale = usage?.language ?? null;
+      return {
+        id: r.user_id,
+        total: r.total,
+        username: null,
+        avatar: null,
+        language: locale ? (LOCALE_NAMES[locale] ?? locale.replace('_', '-')) : null,
+        engine: usage?.engine ? engineLabel(usage.engine, 'pt') : null,
+      };
+    });
     if (!deps.resolveUsers || base.length === 0) return base;
     // Identity resolution is best-effort: a whole-batch failure (REST down) degrades to ids-only
     // rather than failing the card; a single unresolved user simply keeps its null fields below.
