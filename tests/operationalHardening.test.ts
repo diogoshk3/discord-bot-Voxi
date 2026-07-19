@@ -11,7 +11,7 @@ const source = (path: string): string =>
 const SITE_JS = 'site/js/main-v38.js';
 const SITE_I18N = 'site/js/i18n-v34.js';
 const SITE_CSS = 'site/css/main-v38.css';
-const ACCOUNT_CSS = 'site/css/account-v2.css';
+const ACCOUNT_CSS = 'site/css/account-v3.css';
 
 /** Body of a top-level function in the site bundle, comments stripped. Comments are dropped
  *  because these assertions are about the markup a function RENDERS — a comment explaining why
@@ -40,8 +40,9 @@ describe('operational security configuration', () => {
     const page = source('site/account.html');
     const css = source(ACCOUNT_CSS);
 
-    expect(page).toContain('css/account-v2.css');
-    expect(page).not.toContain('css/account-v1.css');
+    expect(page).toContain('css/account-v3.css');
+    expect(page).not.toContain('css/account-v2.css');
+    expect(page).toContain('<header class="nav" id="nav">');
     expect(page).toContain('class="account-workspace"');
     expect(page).toContain('class="account-membership"');
     expect(page).toContain('class="account-tasklist"');
@@ -51,6 +52,7 @@ describe('operational security configuration', () => {
     expect(css).toMatch(/@media\s*\(max-width:\s*760px\)/);
     expect(css).toMatch(/@media\s*\(min-width:\s*1280px\)\s*and\s*\(min-height:\s*800px\)/);
     expect(css).toContain('clamp(430px, 33.333%, 520px)');
+    expect(css).not.toMatch(/body\.page-account\s+\.nav\s*\{[^}]*display:\s*none;?[^}]*\}/s);
   });
 
   it('keeps the account journey focused and the session exit visible', () => {

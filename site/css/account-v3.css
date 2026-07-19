@@ -3716,13 +3716,17 @@ body.page-account .ppanel__logout {
 
 /* Large desktop: reproduce the comfortable 133% browser scale at native 100%. */
 @media (min-width: 1280px) and (min-height: 800px) {
-  body.page-account .nav {
-    display: none;
+  body.page-account {
+    height: auto;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
   body.page-account main,
   body.page-account .account-section {
-    height: 100dvh;
+    height: auto;
+    min-height: calc(100dvh - var(--nav-h) - 1px);
   }
 
   body.page-account .account-section {
