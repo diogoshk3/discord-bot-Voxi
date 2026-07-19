@@ -3457,26 +3457,31 @@ body.page-account #ppClaimHelp {
   }
 
   body.page-account .ppanel__account {
-    grid-template-columns: 70px minmax(0, 1fr);
-    gap: 17px;
-    padding-bottom: 16px;
+    grid-template-columns: 84px minmax(0, 1fr);
+    gap: 20px;
+    padding-bottom: 18px;
   }
 
   body.page-account .ppanel__av {
-    width: 68px;
-    height: 68px;
-    border-radius: 19px;
-    font-size: 23px;
+    width: 82px;
+    height: 82px;
+    border-radius: 22px;
+    font-size: 26px;
   }
 
   body.page-account .ppanel__name {
-    font-size: 24px;
+    font-size: 27px;
   }
 
-  body.page-account .ppanel__id,
+  body.page-account .ppanel__id {
+    min-height: 40px;
+    font-size: 12.5px;
+  }
+
   body.page-account .ppanel__logout {
-    min-height: 38px;
-    font-size: 12px;
+    min-height: 42px;
+    padding: 9px 15px;
+    font-size: 13px;
   }
 
   body.page-account .ppanel__benefitshead {
@@ -3707,4 +3712,221 @@ body.page-account .ppanel__logout {
   box-shadow:
     inset 0 1px 0 rgba(255, 219, 228, 0.08),
     0 18px 38px -27px rgba(255, 91, 132, 0.95);
+}
+
+/* Large desktop: reproduce the comfortable 133% browser scale at native 100%. */
+@media (min-width: 1500px) and (min-height: 800px) {
+  body.page-account .nav {
+    display: none;
+  }
+
+  body.page-account main,
+  body.page-account .account-section {
+    height: 100dvh;
+  }
+
+  body.page-account .account-section {
+    padding: 20px 0 12px;
+  }
+
+  body.page-account .account-shell {
+    width: calc(100% - 48px);
+    max-width: 1560px;
+    padding-inline: 0;
+  }
+
+  body.page-account .account-back {
+    min-height: 34px;
+    margin-bottom: 5px;
+    font-size: 16px;
+  }
+
+  body.page-account .account-back svg {
+    width: 21px;
+    height: 21px;
+  }
+
+  body.page-account .account-hero {
+    margin-bottom: 24px;
+  }
+
+  body.page-account .account-hero__copy {
+    grid-template-columns: max-content minmax(360px, 1fr);
+    column-gap: 32px;
+  }
+
+  body.page-account .account-hero h1 {
+    font-size: 72px;
+  }
+
+  body.page-account .account-hero p {
+    max-width: 630px;
+    margin-bottom: 5px;
+    font-size: 18px;
+  }
+
+  body.page-account .account-workspace {
+    grid-template-columns: minmax(0, 1fr) 520px;
+    gap: 32px;
+  }
+
+  body.page-account .account-membership,
+  body.page-account .account-rail {
+    border-radius: 30px;
+  }
+
+  body.page-account .account-membership {
+    padding: 35px 36px;
+  }
+
+  body.page-account .account-section-head {
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+  }
+
+  body.page-account .account-kicker {
+    font-size: 13px;
+  }
+
+  body.page-account .account-section-head h2 {
+    font-size: 36px;
+  }
+
+  body.page-account .account-sync {
+    min-height: 40px;
+    padding: 7px 13px;
+    font-size: 13px;
+  }
+
+  body.page-account .ppanel__account {
+    grid-template-columns: 94px minmax(0, 1fr);
+    gap: 24px;
+    padding-bottom: 24px;
+  }
+
+  body.page-account .ppanel__av {
+    width: 92px;
+    height: 92px;
+    border-radius: 25px;
+    font-size: 30px;
+  }
+
+  body.page-account .ppanel__name {
+    font-size: 32px;
+  }
+
+  body.page-account .ppanel__id {
+    min-height: 46px;
+    font-size: 15px;
+  }
+
+  body.page-account .ppanel__logout {
+    min-height: 50px;
+    padding: 12px 18px;
+    font-size: 15px;
+  }
+
+  body.page-account .ppanel__benefitshead {
+    margin-bottom: 16px;
+    padding-top: 18px;
+  }
+
+  body.page-account .ppanel__benefitshead h3 {
+    font-size: 30px;
+  }
+
+  body.page-account .ppanel__benefitshead p {
+    max-width: 450px;
+    font-size: 14px;
+  }
+
+  body.page-account .ppanel__statusgrid {
+    gap: 16px;
+  }
+
+  body.page-account .ppanel__status {
+    min-height: 144px;
+    padding: 22px;
+    border-radius: 22px;
+  }
+
+  body.page-account .ppanel__status-label {
+    font-size: 19px;
+  }
+
+  body.page-account .ppanel__mark {
+    font-size: 11px;
+  }
+
+  body.page-account .ppanel__status-detail {
+    margin-top: 17px;
+    font-size: 14px;
+  }
+
+  body.page-account .ppanel__servers {
+    min-height: 90px;
+    margin-top: 16px;
+    padding: 17px 20px;
+  }
+
+  body.page-account .ppanel__servers .ppanel__meta,
+  body.page-account .ppanel__servers li {
+    font-size: 14px;
+  }
+
+  body.page-account .account-next {
+    padding: 32px 30px 24px;
+  }
+
+  body.page-account .account-next h2 {
+    font-size: 42px;
+  }
+
+  body.page-account .account-next > p {
+    margin-top: 10px;
+    font-size: 17px;
+  }
+
+  body.page-account .account-tasklist {
+    gap: 15px;
+    margin-top: 22px;
+  }
+
+  body.page-account .account-task {
+    min-height: 104px;
+    padding: 17px;
+    border-radius: 20px;
+  }
+
+  body.page-account .account-task__icon {
+    width: 58px;
+    height: 58px;
+    border-radius: 15px;
+  }
+
+  body.page-account .account-task__copy b {
+    font-size: 18px;
+  }
+
+  body.page-account .account-task__copy small {
+    font-size: 14px;
+  }
+
+  body.page-account .account-plans-link {
+    margin-top: 18px;
+    font-size: 15px;
+  }
+
+  body.page-account .account-trust {
+    padding: 19px 30px;
+  }
+
+  body.page-account .account-trust p {
+    font-size: 13px;
+  }
+
+  body.page-account .account-help a {
+    min-height: 65px;
+    font-size: 14px;
+  }
 }
