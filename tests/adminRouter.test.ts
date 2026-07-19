@@ -20,8 +20,9 @@ const NOW = 1_000_000;
 
 const CLIENT = '1526211106081734666'; // the console's OAuth app id (audience)
 const resolveAuthorization = vi.fn(async (token: string) => {
-  if (token === 'owner-token') return { userId: OWNER, applicationId: CLIENT };
-  if (token === 'other-token') return { userId: '222333444555666777', applicationId: CLIENT };
+  if (token === 'owner-token') return { userId: OWNER, applicationId: CLIENT, scopes: [] };
+  if (token === 'other-token')
+    return { userId: '222333444555666777', applicationId: CLIENT, scopes: [] };
   return null;
 });
 

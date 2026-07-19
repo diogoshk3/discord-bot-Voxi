@@ -175,9 +175,24 @@
     "claim.help.sendError": "Não conseguimos enviar. Copia a mensagem abaixo e manda-nos no servidor de suporte.",
     "claim.help.stillStuck": "Continuas sem conseguir? Fala connosco no servidor de suporte →",
     "claim.help.close": "Fechar",
-    "claim.consent": "Aceito os {terms}.",
+    "claim.consent": "Peço a ativação imediata das funcionalidades pagas e reconheço que, ao começar a prestação, perco o direito de retratação aplicável; aceito os {terms}.",
     "claim.consentTerms": "termos e condições",
-    "claim.consentRequired": "Assinala a caixa acima para ativar já."
+    "claim.consentRequired": "Assinala a caixa acima para ativar já.",
+    "claim.instantHint": "Usa a ativação instantânea se a tua conta Ko-fi tiver o mesmo email desta conta Discord.",
+    "claim.instantBtn": "Ativação instantânea",
+    "claim.instantWorking": "A procurar a tua compra…",
+    "claim.giftNote": "Compraste para oferecer? Envia o código do recibo à pessoa — não cliques na ativação instantânea.",
+    "claim.orReceipt": "ou cola o código do recibo",
+    "claim.activationOk": "Feito! Estas compras estão agora ativas nesta conta.",
+    "claim.activationNotFound": "Nenhuma compra pendente corresponde ao email verificado do teu Discord. Usa o código do recibo abaixo.",
+    "claim.downloadConfirmation": "Descarregar confirmação",
+    "claim.emailMissing": "A tua conta Discord não disponibiliza um endereço de email.",
+    "claim.emailUnverified": "Verifica o email da tua conta Discord antes de usares a ativação instantânea.",
+    "claim.serviceUnavailable": "A ativação instantânea está temporariamente indisponível. Tenta novamente.",
+    "claim.loginAgain": "Inicia sessão novamente com o Discord para continuar.",
+    "claim.resumeExpired": "O pedido de ativação expirou ou os termos mudaram. Revê a caixa e tenta novamente.",
+    "claim.days": "dias",
+    "claim.seats": "lugares"
   },
   "commands": {
     "general": [

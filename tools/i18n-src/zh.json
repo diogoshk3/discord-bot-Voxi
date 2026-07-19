@@ -175,9 +175,24 @@
     "claim.help.sendError": "发送失败。请复制下面这段消息，到支持服务器发给我们。",
     "claim.help.stillStuck": "还是不行？到支持服务器找我们 →",
     "claim.help.close": "关闭",
-    "claim.consent": "我接受{terms}。",
+    "claim.consent": "我要求立即启用付费功能，并确认服务开始后，我将失去任何适用的撤回权；我接受{terms}。",
     "claim.consentTerms": "条款和条件",
-    "claim.consentRequired": "请勾选上方的方框以立即激活。"
+    "claim.consentRequired": "请勾选上方的方框以立即激活。",
+    "claim.instantHint": "如果你的 Ko-fi 帐户使用与此 Discord 帐户相同的电子邮件，请使用即时启用。",
+    "claim.instantBtn": "即时启用",
+    "claim.instantWorking": "正在查找你的购买记录…",
+    "claim.giftNote": "这是礼物吗？请把收据代码发给收件人——不要点击即时启用。",
+    "claim.orReceipt": "或粘贴收据代码",
+    "claim.activationOk": "完成！这些购买项目已在此帐户启用。",
+    "claim.activationNotFound": "没有待处理的购买与已验证的 Discord 电子邮件相符。请使用下方的收据代码。",
+    "claim.downloadConfirmation": "下载确认文件",
+    "claim.emailMissing": "你的 Discord 帐户未提供电子邮件地址。",
+    "claim.emailUnverified": "使用即时启用前，请先验证 Discord 帐户的电子邮件。",
+    "claim.serviceUnavailable": "即时启用暂时无法使用，请重试。",
+    "claim.loginAgain": "请再次使用 Discord 登录以继续。",
+    "claim.resumeExpired": "启用请求已过期或条款已更改。请重新查看复选框后再试。",
+    "claim.days": "天",
+    "claim.seats": "席位"
   },
   "commands": {
     "general": [

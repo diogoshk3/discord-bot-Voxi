@@ -8,7 +8,9 @@
 // resolve themselves). No network IO; testable in isolation.
 
 import type Database from 'better-sqlite3';
+import { randomUUID } from 'node:crypto';
 import { grantUserPremium, grantGuildPass, rememberKofiSupporter } from '../store/premium';
+import { recordKofiActivationConsent } from '../store/kofiActivationConsent';
 import {
   findUnclaimedPendingByTx,
   listUnclaimedPendingByEmailHash,
@@ -28,6 +30,20 @@ export type ClaimOutcome =
   | { ok: true; items: ClaimedItem[] }
   | { ok: false; reason: 'not_found' }
   | { ok: false; reason: 'use_receipt_code' };
+
+/** Stable version of the immediate-delivery terms accepted by the activation checkbox. */
+export const ACTIVATION_TERMS_VERSION = '2026-07-19';
+
+export interface ActivationConfirmation {
+  id: string;
+  acceptedAt: number;
+  termsVersion: string;
+  method: 'discord_email';
+}
+
+export type ActivationOutcome =
+  | { ok: true; items: ClaimedItem[]; confirmation: ActivationConfirmation }
+  | { ok: false; reason: 'not_found' };
 
 /** Applies ONE pending grant to the Discord ID (per-user Plus or Premium pass). source='kofi'. */
 function applyPending(
@@ -116,6 +132,51 @@ export function claimPendingGrant(
     if (items.length === 0) return { ok: false, reason: 'not_found' };
     if (emailHashForRemember) rememberKofiSupporter(db, emailHashForRemember, discordId, now);
     return { ok: true, items };
+  });
+  return tx();
+}
+
+/**
+ * Applies every unclaimed purchase matching the verified Discord-account email HMAC.
+ * The caller proves ownership of the email before entering this function. Claiming, grants,
+ * subscription binding, and consent evidence share one SQLite transaction.
+ */
+export function activateByEmailHash(
+  db: Database.Database,
+  discordId: string,
+  emailHash: string,
+  now: number,
+): ActivationOutcome {
+  const tx = db.transaction((): ActivationOutcome => {
+    const targets = listUnclaimedPendingByEmailHash(db, emailHash);
+    if (targets.length === 0) return { ok: false, reason: 'not_found' };
+
+    const confirmation: ActivationConfirmation = {
+      id: randomUUID(),
+      acceptedAt: now,
+      termsVersion: ACTIVATION_TERMS_VERSION,
+      method: 'discord_email',
+    };
+    const items: ClaimedItem[] = [];
+    let appliedSubscription = false;
+    for (const pending of targets) {
+      // This conditional update is the idempotency boundary. If another activation already won,
+      // neither a grant nor a consent row is written for that pending transaction.
+      if (!markPendingClaimed(db, pending.transactionId, now)) continue;
+      items.push(applyPending(db, discordId, pending, now));
+      recordKofiActivationConsent(db, {
+        transactionId: pending.transactionId,
+        confirmationId: confirmation.id,
+        discordId,
+        acceptedAt: confirmation.acceptedAt,
+        termsVersion: confirmation.termsVersion,
+        method: confirmation.method,
+      });
+      if (pending.isSubscription) appliedSubscription = true;
+    }
+    if (items.length === 0) return { ok: false, reason: 'not_found' };
+    if (appliedSubscription) rememberKofiSupporter(db, emailHash, discordId, now);
+    return { ok: true, items, confirmation };
   });
   return tx();
 }

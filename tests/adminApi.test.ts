@@ -22,9 +22,11 @@ const NOW = 1_700_000_000_000;
  *  'other-token'     → a different user, console app (wrong user);
  *  'wrong-app-token' → the owner, but minted by SOME OTHER app (audience-substitution attempt). */
 const resolveAuthorization = async (token: string) => {
-  if (token === 'owner-token') return { userId: OWNER, applicationId: CLIENT };
-  if (token === 'other-token') return { userId: '999999999999999999', applicationId: CLIENT };
-  if (token === 'wrong-app-token') return { userId: OWNER, applicationId: '999000999000999000' };
+  if (token === 'owner-token') return { userId: OWNER, applicationId: CLIENT, scopes: [] };
+  if (token === 'other-token')
+    return { userId: '999999999999999999', applicationId: CLIENT, scopes: [] };
+  if (token === 'wrong-app-token')
+    return { userId: OWNER, applicationId: '999000999000999000', scopes: [] };
   return null;
 };
 

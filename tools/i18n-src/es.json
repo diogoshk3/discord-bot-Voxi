@@ -175,9 +175,24 @@
     "claim.help.sendError": "No pudimos enviarlo. Copia el mensaje de abajo y mándanoslo en el servidor de soporte.",
     "claim.help.stillStuck": "¿Sigues sin poder? Escríbenos en el servidor de soporte →",
     "claim.help.close": "Cerrar",
-    "claim.consent": "Acepto los {terms}.",
+    "claim.consent": "Solicito la activación inmediata de las funciones de pago y reconozco que, una vez iniciada la prestación, pierdo cualquier derecho de desistimiento aplicable; acepto los {terms}.",
     "claim.consentTerms": "términos y condiciones",
-    "claim.consentRequired": "Marca la casilla de arriba para activar ahora."
+    "claim.consentRequired": "Marca la casilla de arriba para activar ahora.",
+    "claim.instantHint": "Usa la activación instantánea si tu cuenta de Ko-fi tiene el mismo correo que esta cuenta de Discord.",
+    "claim.instantBtn": "Activación instantánea",
+    "claim.instantWorking": "Buscando tu compra…",
+    "claim.giftNote": "¿Es un regalo? Envía el código del recibo a la persona — no pulses la activación instantánea.",
+    "claim.orReceipt": "o pega el código del recibo",
+    "claim.activationOk": "¡Listo! Estas compras ya están activas en esta cuenta.",
+    "claim.activationNotFound": "Ninguna compra pendiente coincide con el correo verificado de tu Discord. Usa el código del recibo de abajo.",
+    "claim.downloadConfirmation": "Descargar confirmación",
+    "claim.emailMissing": "Tu cuenta de Discord no proporciona una dirección de correo.",
+    "claim.emailUnverified": "Verifica el correo de tu cuenta de Discord antes de usar la activación instantánea.",
+    "claim.serviceUnavailable": "La activación instantánea no está disponible temporalmente. Inténtalo de nuevo.",
+    "claim.loginAgain": "Vuelve a iniciar sesión con Discord para continuar.",
+    "claim.resumeExpired": "La solicitud de activación caducó o cambiaron los términos. Revisa la casilla e inténtalo de nuevo.",
+    "claim.days": "días",
+    "claim.seats": "plazas"
   },
   "commands": {
     "general": [

@@ -198,6 +198,11 @@ describe('eraseUser', () => {
       db.prepare(
         'INSERT INTO premium_pass (user_id, seats, expires_at, source) VALUES (?,?,?,?)',
       ).run('U', 3, 9_999_999_999_999, 'kofi');
+      db.prepare(
+        `INSERT INTO kofi_activation_consent
+           (transaction_id, confirmation_id, discord_id, accepted_at, terms_version, method)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+      ).run('TX-U', 'CONF-U', 'U', 1, '2026-07-19', 'discord_email');
 
       eraseUser(db, 'U');
 
@@ -213,6 +218,7 @@ describe('eraseUser', () => {
       // Retained: intact.
       expect(count(db, 'premium_user', 'user_id', 'U')).toBe(1);
       expect(count(db, 'premium_pass', 'user_id', 'U')).toBe(1);
+      expect(count(db, 'kofi_activation_consent', 'discord_id', 'U')).toBe(1);
     } finally {
       db.close();
     }

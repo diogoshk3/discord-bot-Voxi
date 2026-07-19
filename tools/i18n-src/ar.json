@@ -175,9 +175,24 @@
     "claim.help.sendError": "تعذّر الإرسال. انسخ الرسالة أدناه وأرسلها إلينا على خادم الدعم.",
     "claim.help.stillStuck": "ما زلت عالقاً؟ تحدث إلينا على خادم الدعم ←",
     "claim.help.close": "إغلاق",
-    "claim.consent": "أوافق على {terms}.",
+    "claim.consent": "أطلب التفعيل الفوري للميزات المدفوعة وأقرّ بأنني، عند بدء تقديم الخدمة، أفقد أي حق انسحاب ينطبق؛ وأوافق على {terms}.",
     "claim.consentTerms": "الشروط والأحكام",
-    "claim.consentRequired": "يُرجى تحديد المربع أعلاه للتفعيل الآن."
+    "claim.consentRequired": "يُرجى تحديد المربع أعلاه للتفعيل الآن.",
+    "claim.instantHint": "استخدم التفعيل الفوري إذا كان حساب Ko-fi يستعمل البريد نفسه الموجود في حساب Discord هذا.",
+    "claim.instantBtn": "تفعيل فوري",
+    "claim.instantWorking": "جارٍ البحث عن عملية الشراء…",
+    "claim.giftNote": "اشتريتها كهدية؟ أرسل رمز الإيصال إلى المستلم — لا تضغط التفعيل الفوري.",
+    "claim.orReceipt": "أو الصق رمز الإيصال",
+    "claim.activationOk": "تم! أصبحت عمليات الشراء هذه نشطة على هذا الحساب.",
+    "claim.activationNotFound": "لا توجد عملية شراء معلّقة تطابق بريد Discord الموثّق. استخدم رمز الإيصال أدناه.",
+    "claim.downloadConfirmation": "تنزيل التأكيد",
+    "claim.emailMissing": "لا يوفّر حساب Discord عنوان بريد إلكتروني.",
+    "claim.emailUnverified": "وثّق بريد حساب Discord قبل استخدام التفعيل الفوري.",
+    "claim.serviceUnavailable": "التفعيل الفوري غير متاح مؤقتًا. حاول مرة أخرى.",
+    "claim.loginAgain": "سجّل الدخول مجددًا عبر Discord للمتابعة.",
+    "claim.resumeExpired": "انتهت صلاحية طلب التفعيل أو تغيّرت الشروط. راجع المربع وحاول مجددًا.",
+    "claim.days": "يومًا",
+    "claim.seats": "مقاعد"
   },
   "commands": {
     "general": [

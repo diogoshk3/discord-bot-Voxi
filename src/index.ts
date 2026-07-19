@@ -369,6 +369,7 @@ async function main(): Promise<void> {
     startKofiWebhook({
       db,
       token: config.kofiWebhookToken,
+      clientId: config.clientId,
       port: config.kofiWebhookPort,
       // Shop items (e.g. the annual passes): Ko-fi sends no product name, only the
       // direct_link_code — KOFI_SHOP_MAP is what turns that code into a grant. Parsed once.

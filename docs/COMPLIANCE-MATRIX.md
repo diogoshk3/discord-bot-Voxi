@@ -1,7 +1,7 @@
 # Compliance matrix — Vozen
 
 > Requirement → status → evidence, across every platform and jurisdiction Vozen touches.
-> Written 2026-07-15 during the mega-audit. This is **honest technical diligence, not legal
+> Written 2026-07-15 during the mega-audit; updated 2026-07-19 for instant activation. This is **honest technical diligence, not legal
 > advice** — it maps what the code and docs actually do to each policy's requirements. It does
 > not replace review by a qualified lawyer. Vozen is **self-hosted** (AGPL-3.0): each instance
 > operator is the data controller for their instance; this matrix describes the reference/
@@ -17,7 +17,7 @@
 | 1.2 | No AI training on message content | ✅ | No training pipeline exists; message text is transient (not stored in a table). Official Google Cloud TTS / OpenAI API used under their no-training API terms (see §8, §9). |
 | 1.3 | Privileged intents minimised + justified before verification (100-guild gate) | ✅ | Intents: `Guilds`, `GuildVoiceStates`, `GuildMessages`, `MessageContent` (`src/bot/client.ts:31-34`). Only **MessageContent** is privileged; `GuildMembers` is **not** requested. See `docs/COMPLIANCE-DISCORD.md §4`. |
 | 1.4 | Consent-first for anything acting on/about a user (recording) | ✅ | STT (`/transcribe`): per-speaker consent gate (`transcriptionSession.ts` `hasConsent`), un-deafen only during a session, audio never persisted. |
-| 1.5 | Every stored user datum disclosed AND has a user deletion path | ✅ | `PRIVACY.md §Your rights` table maps each datum to a command; `/privacy erase` wipes everything by user ID (`handlers/privacy.ts` + `store/dataLifecycle.eraseUser`). |
+| 1.5 | Every stored user datum disclosed AND has a deletion/retention path | ✅ | `PRIVACY.md` discloses every datum. `/privacy erase` removes user settings through `store/dataLifecycle.eraseUser`; active entitlements and minimum payment/activation-consent records may be retained only for disclosed accounting, fraud, dispute, and legal purposes. |
 | 1.6 | No unsolicited DMs; no contacting users outside Discord with API data | ✅ | No DM-send code path; `CLAUDE.md` hard rule. Support is pull-only (support server link). |
 | 1.7 | Default-safe output (no mass mentions/ban-risk) | ✅ | Client default `allowedMentions: { parse: [] }` (`client.ts:39`); opt-in per call site only. |
 | 1.8 | Paid features support Discord Premium Apps with price parity (≤ other channels) where available | ⚠️ | Entitlement sync shipped (`premium/entitlements*`), price-parity copy on site. **Operator action:** create SKUs in the Developer Portal post-verification and set `PREMIUM_*_SKU_ID` (external, not code). |
@@ -29,13 +29,13 @@
 | # | Requirement | Status | Evidence |
 | - | ----------- | ------ | -------- |
 | 2.1 | Controller identity + contact (Art. 13) | ✅ | `site/privacy.html §1`, `PRIVACY.md`; contact via support server. **Operator action (optional):** add a named controller + `privacy@` address for a hosted commercial instance. |
-| 2.2 | Lawful basis per purpose (Art. 6) | ✅ | `site/privacy.html §3`: 6(1)(b) service, (f) legitimate interests, (a) consent for STT, (c)/(f) financial records. |
-| 2.3 | Transparency of processing + third parties (Art. 13/14) | ✅ | `PRIVACY.md`, `site/privacy.html §8` (Google/Discord/Ko-fi/top.gg/GitHub Pages/Hetzner). |
+| 2.2 | Lawful basis per purpose (Art. 6) | ✅ | `site/privacy.html §3`: 6(1)(b)/(f) service and one-time activation match, (f) legitimate interests, (a) consent for STT, (c)/(f) financial and activation-consent records. |
+| 2.3 | Transparency of processing + third parties (Art. 13/14) | ✅ | `PRIVACY.md` and `site/privacy.html` disclose the Discord `email` scope, uncached one-time verified-email/HMAC processing, consent evidence, and providers (Google/Discord/Ko-fi/top.gg/GitHub Pages/Hetzner). |
 | 2.4 | Right of access, rectification, erasure, restriction, portability, objection (Art. 15-21) | ✅ | Access/other rights via operator (support server); erasure self-service via `/privacy erase`; per-datum rectification/removal commands (`PRIVACY.md` table). `/privacy view` claim removed from docs (audit fix — access is via operator, satisfying Art. 15). |
 | 2.5 | Consent is explicit + withdrawable (Art. 7) for special-category-adjacent data (voice) | ✅ | STT consent per speaker; withdrawal: `/transcribe revoke`. |
-| 2.6 | Storage limitation / retention (Art. 5(1)(e)) | ✅ | 30-day guild-departure purge (`store/guildDeparted`), ~3-month `gcloud_usage` purge, 90-day `kofi_pending` purge, bounded LRU audio cache (500/namespace), STT temp-WAV startup sweep (audit fix). |
+| 2.6 | Storage limitation / retention (Art. 5(1)(e)) | ✅ | 30-day guild-departure purge (`store/guildDeparted`), ~3-month `gcloud_usage` purge, 90-day unclaimed `kofi_pending` purge, bounded LRU audio cache, and STT temp-WAV sweep. Minimum `kofi_activation_consent` evidence follows the disclosed payment-record retention and contains no email/hash. |
 | 2.7 | International transfers safeguarded (Ch. V) | ✅ | Hetzner DE (EU); GitHub Pages US via DPF+SCC; Google/OpenAI US via DPF/API terms (`site/privacy.html §9`). |
-| 2.8 | No cookies/trackers without consent (ePrivacy) | ✅ | Site: zero cookies/analytics; only `sessionStorage` OAuth token + `localStorage` language (strictly-necessary), self-hosted fonts, tight CSP → no banner needed. |
+| 2.8 | No cookies/trackers without consent (ePrivacy) | ✅ | Site: zero cookies/analytics; `sessionStorage` holds the OAuth token and at most a five-minute one-shot activation intent; `localStorage` holds language. These are strictly necessary; fonts are self-hosted and CSP is tight. |
 | 2.9 | Right to lodge a complaint (Art. 77) | ✅ | `site/privacy.html §11` names the Portuguese CNPD (cnpd.pt). |
 | 2.10 | No solely-automated decisions with legal effect (Art. 22) | ✅ | None; disclosed in `site/privacy.html §12`. |
 
@@ -53,7 +53,8 @@
 | 4.1 | Seller identity + honest description of the digital reward | ✅ | `TERMS.md §Premium & payments`: Vozen operator is the seller, Ko-fi is the platform; Premium is a digital perk. |
 | 4.2 | Webhook secure + idempotent (no double-grant) | ✅ | `premium/kofiWebhook.ts`: SHA-256 + `timingSafeEqual` on the token, `kofi_transaction` ledger inside the grant transaction, 503-on-persist-failure for safe Ko-fi retry (audit-confirmed clean). |
 | 4.3 | Refunds / non-delivery handling | ✅ | `TERMS.md`: Ko-fi refunds handled by the operator; consumer withdrawal (EU 14-day) preserved. |
-| 4.4 | Claim binds a payment to the right Discord user without an oracle | ✅ | Claim by receipt code only (email is no longer proof of ownership — plan 021); single-use pending grant. |
+| 4.4 | Claim binds a payment to the right Discord user without an arbitrary ID | ✅ | Legacy receipt claim remains single-use. Instant activation validates the bearer token's Discord application audience, `identify email` scopes, matching user IDs, and a verified account email before matching its transient HMAC to all unclaimed purchases. |
+| 4.5 | Immediate delivery is explicit and auditable | ⚠️ | The site requires an explicit, versioned checkbox; the grant and one consent row per transaction commit atomically; the user can download a confirmation. **Production gate:** qualified legal review must confirm that this confirmation is adequate durable-medium evidence; otherwise HOLD production. |
 
 ## 5. top.gg
 
@@ -99,6 +100,7 @@
 1. **Discord Portal:** fill Privacy/Terms URLs; confirm Premium Apps monetization eligibility and set `PREMIUM_*_SKU_ID` post-verification (COMPL·1, item 1.8).
 2. **GDPR polish (optional):** named controller + `privacy@vozen.org` contact for a commercial hosted instance (item 2.1).
 3. **journald retention (optional VPS hygiene):** cap system logs (one-liner handed over separately).
+4. **Activation legal gate (required before production):** obtain qualified review of the immediate-delivery/withdrawal wording and downloadable confirmation; keep production on HOLD if a different durable-medium mechanism is required (item 4.5).
 
 ## Areas confirmed CLEAN by the 2026-07-15 deep audit (not gaps)
 

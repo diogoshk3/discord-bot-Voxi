@@ -175,9 +175,24 @@
     "claim.help.sendError": "Senden hat nicht geklappt. Kopier die Nachricht unten und schick sie uns auf dem Support-Server.",
     "claim.help.stillStuck": "Klappt immer noch nicht? Frag uns auf dem Support-Server →",
     "claim.help.close": "Schließen",
-    "claim.consent": "Ich akzeptiere die {terms}.",
+    "claim.consent": "Ich verlange die sofortige Aktivierung der kostenpflichtigen Funktionen und erkenne an, dass ich mit Beginn der Leistung jedes anwendbare Widerrufsrecht verliere; ich akzeptiere die {terms}.",
     "claim.consentTerms": "Nutzungsbedingungen",
-    "claim.consentRequired": "Bitte kreuze das Kästchen oben an, um jetzt zu aktivieren."
+    "claim.consentRequired": "Bitte kreuze das Kästchen oben an, um jetzt zu aktivieren.",
+    "claim.instantHint": "Nutze die Sofortaktivierung, wenn dein Ko-fi-Konto dieselbe E-Mail wie dieses Discord-Konto verwendet.",
+    "claim.instantBtn": "Sofortaktivierung",
+    "claim.instantWorking": "Dein Kauf wird gesucht…",
+    "claim.giftNote": "Als Geschenk gekauft? Sende der Person den Belegcode — klicke nicht auf Sofortaktivierung.",
+    "claim.orReceipt": "oder Belegcode einfügen",
+    "claim.activationOk": "Fertig! Diese Käufe sind jetzt auf diesem Konto aktiv.",
+    "claim.activationNotFound": "Kein offener Kauf passt zur verifizierten E-Mail deines Discord-Kontos. Nutze unten den Belegcode.",
+    "claim.downloadConfirmation": "Bestätigung herunterladen",
+    "claim.emailMissing": "Dein Discord-Konto stellt keine E-Mail-Adresse bereit.",
+    "claim.emailUnverified": "Bestätige die E-Mail deines Discord-Kontos vor der Sofortaktivierung.",
+    "claim.serviceUnavailable": "Die Sofortaktivierung ist vorübergehend nicht verfügbar. Versuche es erneut.",
+    "claim.loginAgain": "Melde dich erneut mit Discord an, um fortzufahren.",
+    "claim.resumeExpired": "Die Aktivierungsanfrage ist abgelaufen oder die Bedingungen wurden geändert. Prüfe das Kästchen und versuche es erneut.",
+    "claim.days": "Tage",
+    "claim.seats": "Plätze"
   },
   "commands": {
     "general": [

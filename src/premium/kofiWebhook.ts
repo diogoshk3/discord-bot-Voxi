@@ -15,7 +15,7 @@ import {
   recordKofiTransaction,
 } from '../store/premium';
 import { recordPendingGrant } from '../store/kofiPending';
-import { claimPendingGrant } from './claim';
+import { ACTIVATION_TERMS_VERSION, activateByEmailHash, claimPendingGrant } from './claim';
 import { sanitizeEmail, sendClaimHelp, shouldSendClaimHelp } from './claimHelp';
 import {
   parseKofiPayload,
@@ -34,6 +34,8 @@ import { handleVoteWebhook } from '../vote';
 export interface KofiWebhookDeps {
   db: Database.Database;
   token: string | undefined;
+  /** Discord OAuth application audience required by instant email activation. */
+  clientId?: string;
   port: number;
   now: () => number;
   logInfo: (m: string) => void;
@@ -266,6 +268,157 @@ interface ClaimCtx {
   rate: Map<string, RateState>;
   rateMaxEntries: number;
   logError: (m: string, err: unknown) => void;
+}
+
+interface ActivationCtx extends ClaimCtx {
+  kofiToken: string | undefined;
+  clientId: string | undefined;
+}
+
+/** Handles the explicit-consent activation path backed by a verified Discord-account email. */
+function handleActivationRequest(
+  req: import('node:http').IncomingMessage,
+  res: import('node:http').ServerResponse,
+  ctx: ActivationCtx,
+): void {
+  const cors: Record<string, string> = {
+    'Access-Control-Allow-Origin': ctx.apiOrigin,
+    Vary: 'Origin',
+    ...API_SECURITY_HEADERS,
+  };
+  const respond = (code: number, payload: unknown): void => {
+    res
+      .writeHead(code, { ...cors, 'Content-Type': 'application/json' })
+      .end(JSON.stringify(payload));
+  };
+  if (req.method === 'OPTIONS') {
+    res
+      .writeHead(204, {
+        ...cors,
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+        'Access-Control-Max-Age': '600',
+      })
+      .end();
+    return;
+  }
+  if (req.method !== 'POST') {
+    res.writeHead(405, cors).end('method not allowed');
+    return;
+  }
+  if (
+    isRateLimited(
+      ctx.rate,
+      clientIp(req),
+      ctx.now(),
+      ctx.rateMaxEntries,
+      CLAIM_RATE_MAX,
+      CLAIM_RATE_WINDOW_MS,
+    )
+  ) {
+    respond(429, { error: 'rate_limited' });
+    return;
+  }
+
+  const auth = req.headers['authorization'];
+  const bearer =
+    typeof auth === 'string' && auth.startsWith('Bearer ') ? auth.slice(7).trim() : null;
+  let body = '';
+  let aborted = false;
+  req.on('data', (chunk) => {
+    if (aborted) return;
+    body += chunk;
+    if (body.length > 4_000) {
+      aborted = true;
+      res.writeHead(413, cors).end('too large');
+      req.destroy();
+    }
+  });
+  req.on('end', () => {
+    if (aborted) return;
+    let parsed: { termsAccepted?: unknown; termsVersion?: unknown };
+    try {
+      const value = JSON.parse(body || '{}') as unknown;
+      if (!value || typeof value !== 'object' || Array.isArray(value)) {
+        respond(400, { error: 'bad_request' });
+        return;
+      }
+      parsed = value as { termsAccepted?: unknown; termsVersion?: unknown };
+    } catch {
+      respond(400, { error: 'bad_request' });
+      return;
+    }
+    if (parsed.termsAccepted !== true) {
+      respond(400, { error: 'consent_required' });
+      return;
+    }
+    if (parsed.termsVersion !== ACTIVATION_TERMS_VERSION) {
+      respond(400, { error: 'bad_terms_version' });
+      return;
+    }
+    if (!bearer) {
+      respond(401, { error: 'no_token' });
+      return;
+    }
+    if (!ctx.kofiToken || !ctx.clientId) {
+      respond(503, { error: 'kofi_unavailable' });
+      return;
+    }
+
+    ctx.statusApi
+      .resolveActivationIdentity(bearer, ctx.clientId)
+      .then((identityResult) => {
+        if (!identityResult.ok) {
+          switch (identityResult.reason) {
+            case 'no_email_scope':
+              respond(403, { error: 'no_email_scope' });
+              return;
+            case 'email_missing':
+            case 'email_unverified':
+              respond(422, { error: identityResult.reason });
+              return;
+            case 'discord_unavailable':
+              respond(503, { error: 'discord_unavailable' });
+              return;
+            case 'wrong_audience':
+            case 'invalid_token':
+              respond(401, { error: 'invalid_token' });
+              return;
+          }
+        }
+        const emailHash = hashKofiEmail(ctx.kofiToken!, identityResult.identity.email);
+        const outcome = activateByEmailHash(
+          ctx.db,
+          identityResult.identity.id,
+          emailHash,
+          ctx.now(),
+        );
+        if (!outcome.ok) {
+          respond(404, { error: 'not_found' });
+          return;
+        }
+        respond(200, {
+          ok: true,
+          items: outcome.items,
+          confirmation: outcome.confirmation,
+        });
+      })
+      .catch((err) => {
+        // Keep upstream/token/email data out of logs. The error class is sufficient for alerting.
+        ctx.logError(
+          '[activation] failed to process verified-email activation',
+          err instanceof Error ? err.name : 'activation_error',
+        );
+        try {
+          respond(500, { error: 'internal' });
+        } catch {
+          /* response already sent */
+        }
+      });
+  });
+  req.on('error', (err) =>
+    ctx.logError('[activation] request error', err instanceof Error ? err.name : 'request_error'),
+  );
 }
 
 /**
@@ -1036,6 +1189,7 @@ export function startKofiWebhook(deps: KofiWebhookDeps): Server | null {
   }
   const rate = new Map<string, RateState>();
   const claimRate = new Map<string, RateState>(); // SEPARATE bucket for the claim (tight limit)
+  const activationRate = new Map<string, RateState>(); // Independent from receipt-code attempts.
   // Own bucket too: help requests must not eat the claim's 5-per-10-min budget. Someone who just
   // asked for help is exactly the person about to try activating again.
   const claimHelpRate = new Map<string, RateState>();
@@ -1064,6 +1218,22 @@ export function startKofiWebhook(deps: KofiWebhookDeps): Server | null {
         rate: claimRate,
         rateMaxEntries,
         logError,
+      });
+      return;
+    }
+
+    // ── Verified Discord-email activation: POST/OPTIONS /api/activate ─────────────
+    if (statusApi && apiOrigin && path === '/api/activate') {
+      handleActivationRequest(req, res, {
+        statusApi,
+        apiOrigin,
+        db,
+        now,
+        rate: activationRate,
+        rateMaxEntries,
+        logError,
+        kofiToken: token,
+        clientId: deps.clientId,
       });
       return;
     }

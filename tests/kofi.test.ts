@@ -415,6 +415,7 @@ describe('kofiWebhook — API Premium HTTP', () => {
       getStatus: vi.fn(getStatus),
       resolveIdentity: vi.fn(),
       resolveAuthorization: vi.fn(),
+      resolveActivationIdentity: vi.fn(),
     };
     server = startKofiWebhook({
       db,
@@ -464,6 +465,7 @@ describe('kofiWebhook — API Premium HTTP', () => {
       getStatus: vi.fn(async () => ({ code: 401, body: { error: 'invalid_token' } })),
       resolveIdentity: vi.fn(),
       resolveAuthorization: vi.fn(),
+      resolveActivationIdentity: vi.fn(),
     };
     server = startKofiWebhook({
       db,
@@ -501,6 +503,7 @@ describe('kofiWebhook — API Premium HTTP', () => {
       getStatus: vi.fn(async () => ({ code: 401, body: { error: 'invalid_token' } })),
       resolveIdentity: vi.fn(),
       resolveAuthorization: vi.fn(),
+      resolveActivationIdentity: vi.fn(),
     };
     server = startKofiWebhook({
       db,

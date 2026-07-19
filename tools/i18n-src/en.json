@@ -175,9 +175,24 @@
     "claim.help.sendError": "Couldn't send that. Copy the message below and send it to us on the support server.",
     "claim.help.stillStuck": "Still stuck? Talk to us on the support server →",
     "claim.help.close": "Close",
-    "claim.consent": "I accept the {terms}.",
+    "claim.consent": "I request immediate activation of the paid features and acknowledge that, once performance begins, I lose any applicable withdrawal right; I accept the {terms}.",
     "claim.consentTerms": "terms and conditions",
-    "claim.consentRequired": "Please tick the box above to activate now."
+    "claim.consentRequired": "Please tick the box above to activate now.",
+    "claim.instantHint": "Use instant activation if your Ko-fi account uses the same email as this Discord account.",
+    "claim.instantBtn": "Instant activation",
+    "claim.instantWorking": "Looking for your purchase…",
+    "claim.giftNote": "Bought this as a gift? Send the recipient the receipt code — do not click instant activation.",
+    "claim.orReceipt": "or paste the receipt code",
+    "claim.activationOk": "Done! These purchases are now active on this account.",
+    "claim.activationNotFound": "No pending purchase matched your verified Discord email. Use the receipt code below.",
+    "claim.downloadConfirmation": "Download confirmation",
+    "claim.emailMissing": "Your Discord account does not provide an email address.",
+    "claim.emailUnverified": "Verify the email on your Discord account before using instant activation.",
+    "claim.serviceUnavailable": "Instant activation is temporarily unavailable. Please try again.",
+    "claim.loginAgain": "Log in with Discord again to continue.",
+    "claim.resumeExpired": "The activation request expired or the terms changed. Review the checkbox and try again.",
+    "claim.days": "days",
+    "claim.seats": "seats"
   },
   "commands": {
     "general": [

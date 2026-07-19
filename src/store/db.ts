@@ -240,6 +240,20 @@ export function initDb(path: string): Database.Database {
       CREATE INDEX IF NOT EXISTS idx_kofi_pending_email
         ON kofi_pending (email_hash);
 
+      -- Minimum, non-email evidence of explicit consent for instant Ko-fi activation. One row
+      -- per applied purchase; every purchase in the same batch shares a confirmation_id.
+      -- Retained with the financial/entitlement record for disputes and legal obligations.
+      CREATE TABLE IF NOT EXISTS kofi_activation_consent (
+        transaction_id TEXT PRIMARY KEY,
+        confirmation_id TEXT NOT NULL,
+        discord_id      TEXT NOT NULL,
+        accepted_at     INTEGER NOT NULL,
+        terms_version   TEXT NOT NULL,
+        method          TEXT NOT NULL CHECK (method IN ('discord_email', 'receipt'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_kofi_activation_consent_confirmation
+        ON kofi_activation_consent (confirmation_id);
+
       -- Per-guild 24/7 voice presence. Stored on Premium joins and deleted by /leave or
       -- guildDelete, but not by generic teardown or shutdown so it survives deployment.
       -- ClientReady restores valid Premium rows and removes stale non-Premium rows.

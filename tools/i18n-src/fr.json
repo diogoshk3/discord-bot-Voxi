@@ -175,9 +175,24 @@
     "claim.help.sendError": "Envoi impossible. Copiez le message ci-dessous et envoyez-le-nous sur le serveur d’assistance.",
     "claim.help.stillStuck": "Toujours bloqué ? Écrivez-nous sur le serveur d’assistance →",
     "claim.help.close": "Fermer",
-    "claim.consent": "J'accepte les {terms}.",
+    "claim.consent": "Je demande l’activation immédiate des fonctionnalités payantes et reconnais qu’une fois l’exécution commencée, je perds tout droit de rétractation applicable ; j’accepte les {terms}.",
     "claim.consentTerms": "conditions générales",
-    "claim.consentRequired": "Cochez la case ci-dessus pour activer maintenant."
+    "claim.consentRequired": "Cochez la case ci-dessus pour activer maintenant.",
+    "claim.instantHint": "Utilisez l’activation instantanée si votre compte Ko-fi utilise le même e-mail que ce compte Discord.",
+    "claim.instantBtn": "Activation instantanée",
+    "claim.instantWorking": "Recherche de votre achat…",
+    "claim.giftNote": "C’est un cadeau ? Envoyez le code du reçu au destinataire — ne cliquez pas sur l’activation instantanée.",
+    "claim.orReceipt": "ou collez le code du reçu",
+    "claim.activationOk": "C’est fait ! Ces achats sont maintenant actifs sur ce compte.",
+    "claim.activationNotFound": "Aucun achat en attente ne correspond à l’e-mail vérifié de votre Discord. Utilisez le code du reçu ci-dessous.",
+    "claim.downloadConfirmation": "Télécharger la confirmation",
+    "claim.emailMissing": "Votre compte Discord ne fournit pas d’adresse e-mail.",
+    "claim.emailUnverified": "Vérifiez l’e-mail de votre compte Discord avant l’activation instantanée.",
+    "claim.serviceUnavailable": "L’activation instantanée est temporairement indisponible. Réessayez.",
+    "claim.loginAgain": "Reconnectez-vous avec Discord pour continuer.",
+    "claim.resumeExpired": "La demande d’activation a expiré ou les conditions ont changé. Relisez la case et réessayez.",
+    "claim.days": "jours",
+    "claim.seats": "places"
   },
   "commands": {
     "general": [

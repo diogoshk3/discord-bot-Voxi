@@ -14,6 +14,7 @@ export default tseslint.config(
       'node_modules/',
       'audio-cache/',
       'scratchpad/',
+      '.gstack/',
     ],
   },
   js.configs.recommended,

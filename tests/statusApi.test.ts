@@ -5,6 +5,8 @@ import { grantUserPremium, grantGuildPass, activateSeat } from '../src/store/pre
 import { createStatusApi } from '../src/premium/statusApi';
 
 const DID = '123456789012345678';
+const CLIENT_ID = '1523826014935842997';
+const EMAIL = 'buyer@example.com';
 
 /** Fake fetch: devolve o utilizador `id` para o token `goodToken`; 401 para o resto. */
 function fakeFetch(goodToken: string, id: string, user: Record<string, unknown> = {}) {
@@ -15,6 +17,46 @@ function fakeFetch(goodToken: string, id: string, user: Record<string, unknown> 
       ok,
       json: async () =>
         ok ? { id, username: 'buyer', ...user } : { message: '401: Unauthorized' },
+    } as unknown as Response;
+  });
+  return fn as unknown as typeof fetch & typeof fn;
+}
+
+interface ActivationFetchOptions {
+  applicationId?: string;
+  oauthUserId?: string;
+  scopes?: string[];
+  userId?: string;
+  email?: string | null;
+  verified?: boolean;
+  oauthStatus?: number;
+  userStatus?: number;
+  throwOn?: 'oauth' | 'user';
+}
+
+function activationFetch(options: ActivationFetchOptions = {}) {
+  const email = Object.prototype.hasOwnProperty.call(options, 'email') ? options.email : EMAIL;
+  const {
+    applicationId = CLIENT_ID,
+    oauthUserId = DID,
+    scopes = ['identify', 'email'],
+    userId = DID,
+    verified = true,
+    oauthStatus = 200,
+    userStatus = 200,
+    throwOn,
+  } = options;
+  const fn = vi.fn(async (url: unknown) => {
+    const isOauth = String(url).endsWith('/oauth2/@me');
+    if (throwOn === (isOauth ? 'oauth' : 'user')) throw new Error('discord offline');
+    const status = isOauth ? oauthStatus : userStatus;
+    return {
+      ok: status >= 200 && status < 300,
+      status,
+      json: async () =>
+        isOauth
+          ? { application: { id: applicationId }, user: { id: oauthUserId }, scopes }
+          : { id: userId, email, verified, username: 'buyer' },
     } as unknown as Response;
   });
   return fn as unknown as typeof fetch & typeof fn;
@@ -120,5 +162,108 @@ describe('statusApi — validação de token e montagem do estado', () => {
     await api.getStatus('mau-1');
 
     expect(fetchImpl).toHaveBeenCalledTimes(4);
+  });
+
+  describe('resolveActivationIdentity', () => {
+    it('accepts a verified email token minted for this application with both required scopes', async () => {
+      const fetchImpl = activationFetch();
+      const api = createStatusApi({ db, now: () => now, fetchImpl });
+
+      await expect(api.resolveActivationIdentity('secret-token', CLIENT_ID)).resolves.toEqual({
+        ok: true,
+        identity: { id: DID, email: EMAIL },
+      });
+      expect(fetchImpl).toHaveBeenCalledTimes(2);
+    });
+
+    it('rejects a valid Discord token minted for a different OAuth application', async () => {
+      const api = createStatusApi({
+        db,
+        now: () => now,
+        fetchImpl: activationFetch({ applicationId: 'different-app' }),
+      });
+
+      await expect(api.resolveActivationIdentity('secret-token', CLIENT_ID)).resolves.toEqual({
+        ok: false,
+        reason: 'wrong_audience',
+      });
+    });
+
+    it('rejects a token without the email scope before requesting /users/@me', async () => {
+      const fetchImpl = activationFetch({ scopes: ['identify'] });
+      const api = createStatusApi({ db, now: () => now, fetchImpl });
+
+      await expect(api.resolveActivationIdentity('secret-token', CLIENT_ID)).resolves.toEqual({
+        ok: false,
+        reason: 'no_email_scope',
+      });
+      expect(fetchImpl).toHaveBeenCalledTimes(1);
+    });
+
+    it('fails closed when /oauth2/@me and /users/@me identify different users', async () => {
+      const api = createStatusApi({
+        db,
+        now: () => now,
+        fetchImpl: activationFetch({ userId: 'different-user' }),
+      });
+
+      await expect(api.resolveActivationIdentity('secret-token', CLIENT_ID)).resolves.toEqual({
+        ok: false,
+        reason: 'invalid_token',
+      });
+    });
+
+    it.each([
+      [{ email: null }, 'email_missing'],
+      [{ email: undefined }, 'email_missing'],
+      [{ verified: false }, 'email_unverified'],
+    ] as const)('maps unusable Discord email data to %s', async (overrides, reason) => {
+      const api = createStatusApi({
+        db,
+        now: () => now,
+        fetchImpl: activationFetch(overrides),
+      });
+
+      await expect(api.resolveActivationIdentity('secret-token', CLIENT_ID)).resolves.toEqual({
+        ok: false,
+        reason,
+      });
+    });
+
+    it.each([
+      [{ oauthStatus: 401 }, 'invalid_token'],
+      [{ userStatus: 403 }, 'invalid_token'],
+      [{ oauthStatus: 429 }, 'discord_unavailable'],
+      [{ userStatus: 500 }, 'discord_unavailable'],
+      [{ throwOn: 'oauth' as const }, 'discord_unavailable'],
+    ] as const)(
+      'maps Discord failures without treating outages as expired tokens',
+      async (overrides, reason) => {
+        const api = createStatusApi({
+          db,
+          now: () => now,
+          fetchImpl: activationFetch(overrides),
+        });
+
+        await expect(api.resolveActivationIdentity('secret-token', CLIENT_ID)).resolves.toEqual({
+          ok: false,
+          reason,
+        });
+      },
+    );
+
+    it('does not cache the activation email or leak token/email through the logger', async () => {
+      const fetchImpl = activationFetch({ throwOn: 'user' });
+      const logError = vi.fn();
+      const api = createStatusApi({ db, now: () => now, fetchImpl, logError });
+
+      await api.resolveActivationIdentity('secret-token', CLIENT_ID);
+      await api.resolveActivationIdentity('secret-token', CLIENT_ID);
+
+      expect(fetchImpl).toHaveBeenCalledTimes(4);
+      const logged = JSON.stringify(logError.mock.calls);
+      expect(logged).not.toContain('secret-token');
+      expect(logged).not.toContain(EMAIL);
+    });
   });
 });

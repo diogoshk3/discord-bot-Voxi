@@ -9,8 +9,16 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import type Database from 'better-sqlite3';
 import { initDb } from '../src/store/db';
-import { recordPendingGrant, findUnclaimedPendingByTx } from '../src/store/kofiPending';
-import { claimPendingGrant } from '../src/premium/claim';
+import {
+  recordPendingGrant,
+  findUnclaimedPendingByTx,
+  markPendingClaimed,
+} from '../src/store/kofiPending';
+import {
+  ACTIVATION_TERMS_VERSION,
+  activateByEmailHash,
+  claimPendingGrant,
+} from '../src/premium/claim';
 import { hashKofiEmail } from '../src/premium/kofi';
 import { isUserPremium, getPremiumPass, lookupKofiSupporter } from '../src/store/premium';
 
@@ -235,5 +243,121 @@ describe('claimPendingGrant — claim a pending purchase (code only, plan 021)',
       ok: false,
       reason: 'not_found',
     });
+  });
+
+  // ── Verified Discord-email activation (plan 040) ──────────────────────────────────────────
+  it('creates the consent table in new databases', () => {
+    const table = db
+      .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?")
+      .get('kofi_activation_consent') as { name?: string } | undefined;
+    expect(table?.name).toBe('kofi_activation_consent');
+  });
+
+  it('returns not_found and writes no consent when the email has no pending purchase', () => {
+    expect(activateByEmailHash(db, DID, EMAIL_HASH, now)).toEqual({
+      ok: false,
+      reason: 'not_found',
+    });
+    const count = db.prepare('SELECT COUNT(*) AS n FROM kofi_activation_consent').get() as {
+      n: number;
+    };
+    expect(count.n).toBe(0);
+  });
+
+  it('applies one Shop purchase without creating a renewal binding', () => {
+    recordPendingGrant(db, pend({ transactionId: 'shop-1', isSubscription: false }), now);
+
+    const out = activateByEmailHash(db, DID, EMAIL_HASH, now + 10);
+
+    expect(out.ok).toBe(true);
+    if (out.ok) {
+      expect(out.items).toHaveLength(1);
+      expect(out.confirmation.termsVersion).toBe(ACTIVATION_TERMS_VERSION);
+      expect(out.confirmation.method).toBe('discord_email');
+    }
+    expect(lookupKofiSupporter(db, EMAIL_HASH)).toBeNull();
+  });
+
+  it('applies one subscription and binds future renewals to the Discord user', () => {
+    recordPendingGrant(db, pend({ transactionId: 'sub-1', isSubscription: true }), now);
+
+    const out = activateByEmailHash(db, DID, EMAIL_HASH, now + 10);
+
+    expect(out.ok).toBe(true);
+    expect(lookupKofiSupporter(db, EMAIL_HASH)).toBe(DID);
+  });
+
+  it('applies every pending Shop and subscription purchase in one batch', () => {
+    recordPendingGrant(db, pend({ transactionId: 'shop-1', isSubscription: false }), now);
+    recordPendingGrant(
+      db,
+      pend({ transactionId: 'sub-1', plan: 'premium', seats: 8, isSubscription: true }),
+      now + 1,
+    );
+
+    const out = activateByEmailHash(db, DID, EMAIL_HASH, now + 10);
+
+    expect(out.ok).toBe(true);
+    if (!out.ok) return;
+    expect(out.items.map((item) => item.plan)).toEqual(['plus', 'premium']);
+    expect(findUnclaimedPendingByTx(db, 'shop-1')).toBeNull();
+    expect(findUnclaimedPendingByTx(db, 'sub-1')).toBeNull();
+    expect(lookupKofiSupporter(db, EMAIL_HASH)).toBe(DID);
+
+    const rows = db
+      .prepare(
+        `SELECT transaction_id, confirmation_id, discord_id, accepted_at, terms_version, method
+           FROM kofi_activation_consent ORDER BY transaction_id`,
+      )
+      .all() as Array<Record<string, string | number>>;
+    expect(rows).toHaveLength(2);
+    expect(new Set(rows.map((row) => row.confirmation_id))).toEqual(new Set([out.confirmation.id]));
+    for (const row of rows) {
+      expect(row.discord_id).toBe(DID);
+      expect(row.accepted_at).toBe(now + 10);
+      expect(row.terms_version).toBe(ACTIVATION_TERMS_VERSION);
+      expect(row.method).toBe('discord_email');
+    }
+  });
+
+  it('does not bind when the only subscription lost the race and only Shop is applied', () => {
+    recordPendingGrant(db, pend({ transactionId: 'sub-1', isSubscription: true }), now);
+    recordPendingGrant(db, pend({ transactionId: 'shop-1', isSubscription: false }), now + 1);
+    expect(markPendingClaimed(db, 'sub-1', now + 5)).toBe(true);
+
+    const out = activateByEmailHash(db, DID, EMAIL_HASH, now + 10);
+
+    expect(out.ok).toBe(true);
+    if (out.ok) expect(out.items).toHaveLength(1);
+    expect(lookupKofiSupporter(db, EMAIL_HASH)).toBeNull();
+  });
+
+  it('is single-use and never extends the entitlement twice', () => {
+    recordPendingGrant(db, pend({ transactionId: 'shop-1' }), now);
+    const first = activateByEmailHash(db, DID, EMAIL_HASH, now + 10);
+    expect(first.ok).toBe(true);
+    const expiresAt = first.ok ? first.items[0]?.expiresAt : null;
+
+    expect(activateByEmailHash(db, DID, EMAIL_HASH, now + 20)).toEqual({
+      ok: false,
+      reason: 'not_found',
+    });
+    expect(isUserPremium(db, DID, Number(expiresAt) - 1)).toBe(true);
+  });
+
+  it('rolls back the grant and pending claim when consent persistence fails', () => {
+    recordPendingGrant(db, pend({ transactionId: 'shop-1' }), now);
+    db.exec(`CREATE TRIGGER fail_activation_consent
+      BEFORE INSERT ON kofi_activation_consent
+      BEGIN
+        SELECT RAISE(ABORT, 'consent write failed');
+      END`);
+
+    expect(() => activateByEmailHash(db, DID, EMAIL_HASH, now + 10)).toThrow(
+      /consent write failed/,
+    );
+    expect(findUnclaimedPendingByTx(db, 'shop-1')).not.toBeNull();
+    expect(isUserPremium(db, DID, now + 20)).toBe(false);
+    expect(lookupKofiSupporter(db, EMAIL_HASH)).toBeNull();
   });
 });

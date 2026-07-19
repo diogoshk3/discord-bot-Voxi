@@ -89,6 +89,7 @@ export const LIFECYCLE_REVIEWED_EXEMPT = [
   'premium_code', // code ledger: created_by/redeemed_by = proof of purchase/redemption, retained
   'kofi_transaction', // idempotency ledger: Ko-fi transaction_id, not a user ID
   'kofi_pending', // pending purchases, purged by TTL (startPendingPurgeJob); tx id + email_hash
+  'kofi_activation_consent', // versioned immediate-delivery evidence retained with payment records
 ] as const;
 
 /**

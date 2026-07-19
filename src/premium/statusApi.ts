@@ -24,7 +24,25 @@ export interface DiscordIdentity {
 export interface DiscordAuthorization {
   userId: string;
   applicationId: string;
+  scopes: string[];
 }
+
+export interface DiscordActivationIdentity {
+  id: string;
+  email: string;
+}
+
+export type ActivationIdentityFailure =
+  | 'invalid_token'
+  | 'wrong_audience'
+  | 'no_email_scope'
+  | 'email_missing'
+  | 'email_unverified'
+  | 'discord_unavailable';
+
+export type ActivationIdentityResult =
+  | { ok: true; identity: DiscordActivationIdentity }
+  | { ok: false; reason: ActivationIdentityFailure };
 
 export interface StatusApiDeps {
   db: Database.Database;
@@ -49,6 +67,10 @@ export interface StatusApi {
   getStatus(token: string | null): Promise<StatusResponse>;
   resolveIdentity(token: string): Promise<DiscordIdentity | null>;
   resolveAuthorization(token: string): Promise<DiscordAuthorization | null>;
+  resolveActivationIdentity(
+    token: string,
+    expectedClientId: string,
+  ): Promise<ActivationIdentityResult>;
 }
 
 const DISCORD_ME = 'https://discord.com/api/v10/users/@me';
@@ -78,6 +100,40 @@ export function createStatusApi(deps: StatusApiDeps): StatusApi {
       const oldest = cache.keys().next().value as string | undefined;
       if (!oldest) break;
       cache.delete(oldest);
+    }
+  }
+
+  async function fetchDiscordJson(
+    url: string,
+    token: string,
+  ): Promise<
+    { ok: true; body: unknown } | { ok: false; reason: 'invalid_token' | 'discord_unavailable' }
+  > {
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), DISCORD_FETCH_TIMEOUT_MS);
+    try {
+      const res = await deps.fetchImpl(url, {
+        headers: { Authorization: `Bearer ${token}` },
+        signal: ac.signal,
+      });
+      if (!res.ok) {
+        return {
+          ok: false,
+          reason:
+            res.status === 401 || res.status === 403 ? 'invalid_token' : 'discord_unavailable',
+        };
+      }
+      return { ok: true, body: await res.json() };
+    } catch (err) {
+      // Do not pass arbitrary upstream error messages to the logger: a fetch implementation may
+      // include request headers or response data in them. The error class is enough operationally.
+      deps.logError?.(
+        '[premium-api] Discord authorization request failed',
+        err instanceof Error ? err.name : 'fetch_error',
+      );
+      return { ok: false, reason: 'discord_unavailable' };
+    } finally {
+      clearTimeout(timer);
     }
   }
 
@@ -161,28 +217,65 @@ export function createStatusApi(deps: StatusApiDeps): StatusApi {
    *  console refuse a token minted for the owner by any OTHER application. Not cached: admin
    *  logins are rare and a stale audience must never be reused. Fails closed (null) on any error. */
   async function resolveAuthorization(token: string): Promise<DiscordAuthorization | null> {
-    const ac = new AbortController();
-    const timer = setTimeout(() => ac.abort(), DISCORD_FETCH_TIMEOUT_MS);
-    try {
-      const res = await deps.fetchImpl(DISCORD_OAUTH_ME, {
-        headers: { Authorization: `Bearer ${token}` },
-        signal: ac.signal,
-      });
-      if (!res.ok) return null;
-      const o = (await res.json()) as { application?: { id?: unknown }; user?: { id?: unknown } };
-      const userId = o.user?.id;
-      const applicationId = o.application?.id;
-      if (typeof userId === 'string' && typeof applicationId === 'string') {
-        return { userId, applicationId };
-      }
-      return null;
-    } catch (err) {
-      deps.logError?.('[premium-api] failed to validate the OAuth authorization', err);
-      return null;
-    } finally {
-      clearTimeout(timer);
+    const result = await fetchDiscordJson(DISCORD_OAUTH_ME, token);
+    if (!result.ok) return null;
+    const o = result.body as {
+      application?: { id?: unknown };
+      user?: { id?: unknown };
+      scopes?: unknown;
+    };
+    const userId = o.user?.id;
+    const applicationId = o.application?.id;
+    if (typeof userId === 'string' && typeof applicationId === 'string') {
+      return {
+        userId,
+        applicationId,
+        scopes: Array.isArray(o.scopes)
+          ? o.scopes.filter((s): s is string => typeof s === 'string')
+          : [],
+      };
     }
+    return null;
   }
 
-  return { getStatus, resolveIdentity, resolveAuthorization };
+  /** Resolves the verified Discord-account email for the activation request only. This path is
+   * deliberately uncached: the email is used transiently by the caller to derive an HMAC and is
+   * never retained in the token identity cache. */
+  async function resolveActivationIdentity(
+    token: string,
+    expectedClientId: string,
+  ): Promise<ActivationIdentityResult> {
+    const authorization = await fetchDiscordJson(DISCORD_OAUTH_ME, token);
+    if (!authorization.ok) return authorization;
+    const oauth = authorization.body as {
+      application?: { id?: unknown };
+      user?: { id?: unknown };
+      scopes?: unknown;
+    };
+    const applicationId = oauth.application?.id;
+    const oauthUserId = oauth.user?.id;
+    if (typeof applicationId !== 'string' || typeof oauthUserId !== 'string') {
+      return { ok: false, reason: 'invalid_token' };
+    }
+    if (applicationId !== expectedClientId) return { ok: false, reason: 'wrong_audience' };
+    const scopes = Array.isArray(oauth.scopes)
+      ? oauth.scopes.filter((scope): scope is string => typeof scope === 'string')
+      : [];
+    if (!scopes.includes('identify')) return { ok: false, reason: 'invalid_token' };
+    if (!scopes.includes('email')) return { ok: false, reason: 'no_email_scope' };
+
+    const identity = await fetchDiscordJson(DISCORD_ME, token);
+    if (!identity.ok) return identity;
+    const user = identity.body as { id?: unknown; email?: unknown; verified?: unknown };
+    if (typeof user.id !== 'string' || user.id !== oauthUserId) {
+      return { ok: false, reason: 'invalid_token' };
+    }
+    if (typeof user.email !== 'string' || !user.email.trim()) {
+      return { ok: false, reason: 'email_missing' };
+    }
+    if (user.verified !== true) return { ok: false, reason: 'email_unverified' };
+    return { ok: true, identity: { id: user.id, email: user.email } };
+  }
+
+  return { getStatus, resolveIdentity, resolveAuthorization, resolveActivationIdentity };
 }
