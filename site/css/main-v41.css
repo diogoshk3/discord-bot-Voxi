@@ -1713,9 +1713,8 @@ body.is-modal-open { overflow: hidden; }
   .show, .show--rev .show__visual { grid-template-columns: 1fr; order: 0; }
   .show { gap: 38px; }
 }
-/* Navbar colapsa para burger cedo (900px): com 6 links + ícone GitHub + toggle + CTA,
-   a barra transbordava a ~768px (tablet) e criava scroll horizontal na página toda. */
-@media (max-width: 900px) {
+/* Navbar colapsa antes de os seis links e ações se apertarem. */
+@media (max-width: 1000px) {
   .nav__links { display: none; }
   .nav__links.is-open {
     display: flex; flex-direction: column; position: absolute; top: var(--nav-h); left: 0; right: 0;
@@ -1765,21 +1764,20 @@ body.is-modal-open { overflow: hidden; }
   .orb { animation: none; }
 }
 
-/* Desktop presence pass. CSS zoom mirrors a 110% browser zoom while the reciprocal width keeps
-   the page inside the viewport. Account content keeps its purpose-built scale; its navigation is
-   enlarged separately in account-v4.css. Mobile and tablet layouts are intentionally unchanged. */
-@media (min-width: 1001px) {
+/* Desktop presence pass. CSS zoom mirrors a 110% browser zoom. Keep the body at its natural
+   width: compensating it a second time made the canvas end early and shifted every centered
+   container to the left. Small desktops stay at 100% so the full navigation remains comfortable. */
+@media (min-width: 1101px) {
   :root {
     --site-desktop-scale: 1.1;
   }
 
   body:not(.page-account) {
-    width: calc(100% / var(--site-desktop-scale));
     zoom: var(--site-desktop-scale);
   }
 }
 
-/* Every translation keeps the hero as two deliberate phrases. main-v40.js reduces the shared
+/* Every translation keeps the hero as two deliberate phrases. main-v41.js reduces the shared
    font size only when the real glyph width would exceed this line. */
 .hero__title span {
   white-space: nowrap;

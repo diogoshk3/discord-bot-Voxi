@@ -46,7 +46,7 @@ describe('site acquisition and trust contracts', () => {
   it('keeps the bot, runtime, HTML fallbacks, and README on one invite bitfield', () => {
     expect(INVITE_PERMISSIONS).toBe(CANONICAL_PERMISSIONS);
 
-    const runtime = source('site/js/main-v40.js');
+    const runtime = source('site/js/main-v41.js');
     expect(runtime).toContain(`const INVITE_PERMISSIONS = "${CANONICAL_PERMISSIONS}";`);
     expect(runtime).toContain(
       '`https://discord.com/oauth2/authorize?client_id=${CLIENT_ID}&permissions=${INVITE_PERMISSIONS}&scope=bot%20applications.commands`',
@@ -75,7 +75,7 @@ describe('site acquisition and trust contracts', () => {
       'site/index.html',
       'site/privacy.html',
       'site/terms.html',
-      'site/js/main-v40.js',
+      'site/js/main-v41.js',
     ]) {
       const urls = supportUrls(source(path));
       expect(urls.length, path).toBeGreaterThan(0);

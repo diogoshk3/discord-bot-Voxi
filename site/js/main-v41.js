@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   Vozen site — main-v40.js
+   Vozen site — main-v41.js
    ═══════════════════════════════════════════════════════════ */
 (function () {
   "use strict";
@@ -664,7 +664,7 @@
       `<div class="ppanel__wayhead"><span class="ppanel__waynum">01</span><span><b>${t("claim.instantBtn")}</b><small>${t("account.recommended")}</small></span></div>` +
       `<p class="ppanel__claimhint">${t("claim.instantHint")}</p>` +
       `<label class="ppanel__claimconsent"><input type="checkbox" id="ppClaimConsent"> <span>${t("claim.consent").replace("{terms}", `<a href="/terms" target="_blank" rel="noopener">${t("claim.consentTerms")}</a>`)}</span></label>` +
-      `<p class="ppanel__claimmsg" id="ppClaimMsg" role="status" aria-live="polite" hidden></p>` +
+      `<p class="ppanel__claimmsg" id="ppInstantMsg" role="status" aria-live="polite" hidden></p>` +
       `<button type="button" class="ppanel__activatebtn" id="ppActivateBtn">${t("claim.instantBtn")}</button>` +
       `<p class="ppanel__gift">${t("claim.giftNote")}</p></section>` +
       `<details class="ppanel__receipt">` +
@@ -676,6 +676,7 @@
       `<input type="text" id="ppClaimCode" class="ppanel__claiminput" placeholder="${esc(t("claim.placeholder"))}" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="120">` +
       `<button type="submit" class="ppanel__claimbtn" id="ppClaimBtn">${t("claim.btn")}</button>` +
       `</form>` +
+      `<p class="ppanel__claimmsg" id="ppClaimMsg" role="status" aria-live="polite" hidden></p>` +
       // Sits AFTER the status message on purpose: "no purchase found" is the moment someone
       // realises they no longer have the receipt, and the way out should be the next thing they
       // read. Closing the receipt tab was never a dead end — Ko-fi emails every buyer a copy —
@@ -768,7 +769,7 @@
   }
 
   function setClaimMessage(text, kind) {
-    const msg = document.getElementById("ppClaimMsg");
+    const msg = document.getElementById("ppInstantMsg");
     if (!msg) return null;
     msg.hidden = false;
     msg.textContent = text;
@@ -855,7 +856,9 @@
     const consent = document.getElementById("ppClaimConsent");
     const receiptButton = document.getElementById("ppClaimBtn");
     const receiptInput = document.getElementById("ppClaimCode");
+    const receiptMessage = document.getElementById("ppClaimMsg");
     if (!button) return;
+    if (receiptMessage) receiptMessage.hidden = true;
     if (!consent || !consent.checked) {
       setClaimMessage(t("claim.consentRequired"), "err");
       consent?.focus();
@@ -959,8 +962,10 @@
     const input = document.getElementById("ppClaimCode");
     const btn = document.getElementById("ppClaimBtn");
     const msg = document.getElementById("ppClaimMsg");
+    const instantMessage = document.getElementById("ppInstantMsg");
     const consent = document.getElementById("ppClaimConsent");
     if (!input || !btn) return;
+    if (instantMessage) instantMessage.hidden = true;
     const code = (input.value || "").trim();
     const setMsg = (text, kind) => {
       if (!msg) return;

@@ -901,6 +901,14 @@ body.page-account .ppanel__claimmsg {
   background: rgba(255, 255, 255, 0.025);
 }
 
+body.page-account .ppanel__activationway--instant .ppanel__claimmsg {
+  margin: 10px 0 14px;
+}
+
+body.page-account .ppanel__receiptbody .ppanel__claimmsg {
+  margin: 10px 0 0;
+}
+
 body.page-account .ppanel__claimmsg.is-ok {
   color: var(--aqua);
   border-color: rgba(46, 230, 200, 0.24);

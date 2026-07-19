@@ -85,19 +85,19 @@ describe('site localization contract', () => {
     for (const pagePath of pages) {
       const page = source(pagePath);
       expect(page, pagePath).toContain('js/i18n-v37.js');
-      expect(page, pagePath).toContain('js/main-v40.js');
+      expect(page, pagePath).toContain('js/main-v41.js');
       expect(page, pagePath).not.toContain('js/i18n-v36.js');
-      expect(page, pagePath).not.toContain('js/main-v39.js');
+      expect(page, pagePath).not.toContain('js/main-v40.js');
     }
     expect(source('site/dashboard.html')).toContain('js/dashboard-v6.js');
     expect(source('site/dashboard.html')).not.toContain('js/dashboard-v5.js');
     expect(existsSync(resolve(process.cwd(), 'site/js/i18n-v36.js'))).toBe(false);
-    expect(existsSync(resolve(process.cwd(), 'site/js/main-v39.js'))).toBe(false);
+    expect(existsSync(resolve(process.cwd(), 'site/js/main-v40.js'))).toBe(false);
     expect(existsSync(resolve(process.cwd(), 'site/js/dashboard-v5.js'))).toBe(false);
   });
 
   it('translates text, accessible attributes and the document title before announcing changes', () => {
-    const script = source('site/js/main-v40.js');
+    const script = source('site/js/main-v41.js');
     expect(script).toContain('[data-i18n]');
     expect(script).toContain('"data-i18n-aria-label"');
     expect(script).toContain('"data-i18n-placeholder"');

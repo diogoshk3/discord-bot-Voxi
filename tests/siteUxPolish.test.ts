@@ -9,7 +9,7 @@ const LANGS = ['en', 'pt', 'fr', 'es', 'de', 'tr', 'ar', 'zh', 'ru', 'ko'] as co
 
 describe('site UX polish contract', () => {
   it('requires a translated, accessible confirmation before logging out', () => {
-    const script = source('site/js/main-v40.js');
+    const script = source('site/js/main-v41.js');
 
     expect(script).toContain('function logoutConfirmModal()');
     expect(script).toContain('id="ppLogoutConfirm"');
@@ -25,31 +25,43 @@ describe('site UX polish contract', () => {
   });
 
   it('shows a specific inline error before submitting an empty Ko-fi receipt', () => {
-    const script = source('site/js/main-v40.js');
+    const script = source('site/js/main-v41.js');
     const emptyGuard = script.indexOf('setMsg(t("claim.receiptRequired"), "err")');
     const linkRequest = script.indexOf('PREMIUM_API_BASE + "/api/link"');
+    const instantMessage = script.indexOf('id="ppInstantMsg"');
+    const receiptBody = script.indexOf('class="ppanel__receiptbody"');
+    const receiptMessage = script.indexOf('id="ppClaimMsg"');
 
     expect(script).toContain('id="ppClaimForm"');
+    expect(script).toContain('const msg = document.getElementById("ppInstantMsg")');
     expect(script).toContain('const input = document.getElementById("ppClaimCode")');
     expect(script).toContain('const btn = document.getElementById("ppClaimBtn")');
     expect(script).toContain('const button = document.getElementById("ppActivateBtn")');
     expect(emptyGuard).toBeGreaterThan(-1);
     expect(linkRequest).toBeGreaterThan(emptyGuard);
+    expect(instantMessage).toBeGreaterThan(-1);
+    expect(instantMessage).toBeLessThan(receiptBody);
+    expect(receiptMessage).toBeGreaterThan(receiptBody);
   });
 
   it('fits translated hero lines without changing the shared visual footprint', () => {
-    const script = source('site/js/main-v40.js');
-    const css = source('site/css/main-v40.css');
+    const script = source('site/js/main-v41.js');
+    const css = source('site/css/main-v41.css');
 
     expect(script).toContain('function fitHeroTitle()');
     expect(script).toContain('fitHeroTitle();');
     expect(css).toMatch(/\.hero__title span\s*\{[^}]*white-space:\s*nowrap;/s);
     expect(css).toContain('--site-desktop-scale: 1.1');
+    expect(css).toMatch(/@media\s*\(min-width:\s*1101px\)/);
+    expect(css).toMatch(
+      /@media\s*\(max-width:\s*1000px\)[\s\S]*?\.nav__links\s*\{\s*display:\s*none;/,
+    );
+    expect(css).not.toContain('width: calc(100% / var(--site-desktop-scale))');
   });
 
   it('has a short-desktop account layout and equal paid-plan CTA footers', () => {
-    const accountCss = source('site/css/account-v4.css');
-    const siteCss = source('site/css/main-v40.css');
+    const accountCss = source('site/css/account-v5.css');
+    const siteCss = source('site/css/main-v41.css');
 
     expect(accountCss).toMatch(/@media\s*\(min-width:\s*1021px\)\s*and\s*\(max-height:\s*699px\)/);
     expect(accountCss).toMatch(/\.ppanel__logoutconfirm\s*\{/);
