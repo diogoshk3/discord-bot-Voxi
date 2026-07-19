@@ -38,6 +38,13 @@
   // Página dedicada da conta (account.html). Só aí o painel Premium é o conteúdo
   // principal — e mostra o estado "em breve" enquanto o backend não está no ar.
   const IS_ACCOUNT = document.body.classList.contains("page-account");
+  // Deterministic fixture for local visual QA. The hostname gate keeps this branch unreachable on
+  // vozen.org; it exists so the authenticated layout can be reviewed without copying a real token
+  // or Discord profile into development tools.
+  const IS_ACCOUNT_PREVIEW =
+    IS_ACCOUNT &&
+    (location.hostname === "127.0.0.1" || location.hostname === "localhost") &&
+    new URLSearchParams(location.search).get("preview") === "account";
 
   /* ── external links ──────────────────────────────────── */
   // target=_blank links get rel=noopener noreferrer (reverse-tabnabbing defence). The static
@@ -439,6 +446,23 @@
   }
 
   async function loadPanel() {
+    if (IS_ACCOUNT_PREVIEW) {
+      setPanel({
+        mode: "ok",
+        data: {
+          user: { id: "483291760145882112", username: "Rexy", avatar: null },
+          plus: { active: true, expiresAt: "2026-10-19T00:00:00.000Z" },
+          pass: {
+            active: true,
+            used: 1,
+            seats: 3,
+            expiresAt: "2026-10-19T00:00:00.000Z",
+            servers: [{ id: "123456789012345678", name: "Vozen Lab" }],
+          },
+        },
+      });
+      return;
+    }
     if (!PREMIUM_API_BASE) {
       // Backend ainda não está no ar: na página da conta mostramos "em breve"
       // (nunca disparamos o OAuth, senão o redirect não registado dava erro no
@@ -519,24 +543,25 @@
     const initial = esc((u.username || "?").slice(0, 1).toUpperCase());
     if (u.id && u.avatar) {
       const ext = String(u.avatar).startsWith("a_") ? "gif" : "png";
-      return `<img class="${cls}" src="https://cdn.discordapp.com/avatars/${esc(u.id)}/${esc(u.avatar)}.${ext}?size=${size}" alt="" width="${size}" height="${size}" referrerpolicy="no-referrer">`;
+      const alt = esc(`${u.username || "Discord user"} avatar`);
+      return `<img class="${cls}" src="https://cdn.discordapp.com/avatars/${esc(u.id)}/${esc(u.avatar)}.${ext}?size=${size}" alt="${alt}" width="${size}" height="${size}" referrerpolicy="no-referrer">`;
     }
     return `<span class="${cls} ${cls}--none">${initial}</span>`;
   }
 
   function statusRow(label, active, detail) {
     const state = active ? "is-on" : "is-off";
-    const text = active ? "Active" : "Inactive";
-    const mark = active ? "&#10003;" : "&#10005;";
+    const text = active ? "Active" : "Not active";
     const action = active
       ? ""
       : `<a class="ppanel__get" href="/#premium">${t("nav.premium")} <span aria-hidden="true">→</span></a>`;
     return (
-      `<div class="ppanel__status ${state}">` +
-      `<span>${esc(label)}</span><b class="ppanel__mark ${state}" aria-label="${text}">${mark}</b>` +
-      (detail ? `<small>${detail}</small>` : "") +
+      `<article class="ppanel__status ${state}">` +
+      `<div class="ppanel__status-top"><span class="ppanel__status-label">${esc(label)}</span>` +
+      `<b class="ppanel__mark ${state}">${text}</b></div>` +
+      (detail ? `<small class="ppanel__status-detail">${detail}</small>` : "") +
       action +
-      `</div>`
+      `</article>`
     );
   }
 
@@ -560,19 +585,27 @@
   // autenticado a /api/link — ver doClaim. Aparece sempre que a pessoa está logada.
   function claimCard() {
     return (
-      `<div class="ppanel__claim">` +
-      `<span class="ppanel__claimtitle">${t("claim.title")}</span>` +
-      `<p class="ppanel__claimhint">${t("claim.instantHint")}</p>` +
-      `<button type="button" class="ppanel__activatebtn" id="ppActivateBtn">${t("claim.instantBtn")}</button>` +
-      `<p class="ppanel__gift">${t("claim.giftNote")}</p>` +
+      `<div class="ppanel__claim ppmodal" id="activate-purchase" role="dialog" aria-modal="true" aria-labelledby="ppClaimTitle" hidden>` +
+      `<div class="ppanel__claimbox" tabindex="-1">` +
+      `<button type="button" class="ppanel__claimclose" id="ppClaimClose" aria-label="Close purchase activation">&times;</button>` +
+      `<div class="ppanel__claimhead"><span class="ppanel__claimeyebrow">Purchase activation</span>` +
+      `<span class="ppanel__claimtitle" id="ppClaimTitle">${t("claim.title")}</span></div>` +
       // Consent is explicit in the label itself, before either delivery path. The server records a
       // stable terms version for instant activation; receipt-code activation keeps its HTTP contract.
       // {terms} no texto de claim.consent marca onde entra o link — substituido por um <a> para
       // /terms. O <a> e conteudo interativo: clicar nele abre os termos sem marcar a checkbox
       // (comportamento do <label> no HTML) — confirmado no browser.
+      `<section class="ppanel__activationway ppanel__activationway--instant">` +
+      `<div class="ppanel__wayhead"><span class="ppanel__waynum">01</span><span><b>${t("claim.instantBtn")}</b><small>Recommended</small></span></div>` +
+      `<p class="ppanel__claimhint">${t("claim.instantHint")}</p>` +
       `<label class="ppanel__claimconsent"><input type="checkbox" id="ppClaimConsent"> <span>${t("claim.consent").replace("{terms}", `<a href="/terms" target="_blank" rel="noopener">${t("claim.consentTerms")}</a>`)}</span></label>` +
       `<p class="ppanel__claimmsg" id="ppClaimMsg" role="status" aria-live="polite" hidden></p>` +
-      `<div class="ppanel__claimsep"><span>${t("claim.orReceipt")}</span></div>` +
+      `<button type="button" class="ppanel__activatebtn" id="ppActivateBtn">${t("claim.instantBtn")}</button>` +
+      `<p class="ppanel__gift">${t("claim.giftNote")}</p></section>` +
+      `<details class="ppanel__receipt">` +
+      `<summary><span class="ppanel__waynum">02</span><span><b>${t("claim.orReceipt")}</b><small>${t("claim.hint")}</small></span>` +
+      `<svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 8 4 4 4-4"/></svg></summary>` +
+      `<section class="ppanel__receiptbody">` +
       `<p class="ppanel__claimhint">${t("claim.hint")}</p>` +
       `<form class="ppanel__claimform" id="ppClaimForm">` +
       `<input type="text" id="ppClaimCode" class="ppanel__claiminput" placeholder="${esc(t("claim.placeholder"))}" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="120">` +
@@ -582,7 +615,9 @@
       // realises they no longer have the receipt, and the way out should be the next thing they
       // read. Closing the receipt tab was never a dead end — Ko-fi emails every buyer a copy —
       // but the card never said so, which made it one in practice.
-      `<p class="ppanel__claimlost">${t("claim.lost")} <button type="button" class="ppanel__claimlostbtn" id="ppClaimHelpOpen">${t("claim.lostHelp")}</button></p>` +
+      `<p class="ppanel__claimlost">${t("claim.lost")} <button type="button" class="ppanel__claimlostbtn" id="ppClaimHelpOpen">${t("claim.lostHelp")}</button></p></section>` +
+      `</details>` +
+      `</div>` +
       `</div>`
     );
   }
@@ -657,7 +692,9 @@
       `<svg class="ppanel__copyic" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 7a3 3 0 0 1 3-3h7a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-1v-2h1a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-7a1 1 0 0 0-1 1v1H8V7Z"/><path d="M3 10a3 3 0 0 1 3-3h7a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3v-7Zm3-1a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1v-7a1 1 0 0 0-1-1H6Z"/></svg>` +
       `<svg class="ppanel__okic" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M9.2 16.6 4.9 12.3l1.4-1.4 2.9 2.9 8.5-8.5 1.4 1.4-9.9 9.9Z"/></svg>` +
       `<span class="ppanel__tip" aria-hidden="true">Click to copy</span></button>` +
-      `<button type="button" class="ppanel__logout" id="ppLogout">${t("panel.logout")}</button></div></div>` +
+      `<button type="button" class="ppanel__logout" id="ppLogout"><svg class="ppanel__logout-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M10 5H6.5A2.5 2.5 0 0 0 4 7.5v9A2.5 2.5 0 0 0 6.5 19H10M14 8l4 4-4 4M8 12h10"/></svg><span>${t("panel.logout")}</span></button></div></div>` +
+      `<div class="ppanel__benefitshead"><div><span class="account-kicker">Your benefits</span><h3>What is active</h3></div>` +
+      `<p><b>Plus</b> follows your Discord account. <b>Premium</b> is used on selected servers.</p></div>` +
       `<div class="ppanel__statusgrid">` +
       statusRow("Vozen Premium", premiumActive, premiumParts.join(" &middot; ")) +
       statusRow("Vozen Plus", plusActive, plusDetail) +
@@ -938,6 +975,39 @@
     }
   }
 
+  let purchaseActivationOpener = null;
+
+  // Move the purchase flow to <body>. The account card uses backdrop-filter, which would trap a
+  // fixed descendant inside the card instead of letting it cover the viewport.
+  function mountPurchaseActivation(el) {
+    const modal = el.querySelector("#activate-purchase");
+    if (!modal) return;
+    document.body.appendChild(modal);
+  }
+
+  function openPurchaseActivation() {
+    const modal = document.getElementById("activate-purchase");
+    if (!modal) return;
+    purchaseActivationOpener = document.activeElement;
+    modal.hidden = false;
+    document.body.classList.add("is-claim-open");
+    document.getElementById("ppClaimClose")?.focus();
+  }
+
+  function closePurchaseActivation() {
+    const modal = document.getElementById("activate-purchase");
+    if (!modal || modal.hidden) return;
+    modal.hidden = true;
+    document.body.classList.remove("is-claim-open");
+    if (
+      purchaseActivationOpener &&
+      typeof purchaseActivationOpener.focus === "function"
+    ) {
+      purchaseActivationOpener.focus();
+    }
+    purchaseActivationOpener = null;
+  }
+
   // Quem abriu o modal, para lhe devolver o foco ao fechar. Sem isto, quem navega por teclado
   // volta ao topo do documento e tem de refazer o caminho todo ate ao cartao.
   let claimHelpOpener = null;
@@ -984,7 +1054,13 @@
   // Esc fecha. Registado UMA vez no documento (nao por render) — o painel volta a desenhar-se a
   // cada loadPanel e um listener por render acumulava-se em silencio.
   document.addEventListener("keydown", (ev) => {
-    if (ev.key === "Escape") closeClaimHelp();
+    if (ev.key !== "Escape") return;
+    const help = document.getElementById("ppClaimHelp");
+    if (help && !help.hidden) {
+      closeClaimHelp();
+      return;
+    }
+    closePurchaseActivation();
   });
 
   // Um UUID em qualquer forma (codigo solto, ou dentro de um link de recibo). Se aparecer no campo
@@ -1078,6 +1154,12 @@
   function renderPanel() {
     const el = document.getElementById("premiumPanel");
     if (!el) return;
+    const previousPurchaseModal = document.getElementById("activate-purchase");
+    if (previousPurchaseModal && !el.contains(previousPurchaseModal)) {
+      previousPurchaseModal.remove();
+      document.body.classList.remove("is-claim-open");
+      purchaseActivationOpener = null;
+    }
     if (panelState.mode === "hidden") {
       el.hidden = true;
       el.innerHTML = "";
@@ -1109,7 +1191,12 @@
     byId("ppActivateBtn")?.addEventListener("click", doInstantActivation);
     byId("ppClaimForm")?.addEventListener("submit", doClaim);
     byId("ppClaimHelpOpen")?.addEventListener("click", () => openClaimHelp(""));
+    byId("ppClaimClose")?.addEventListener("click", closePurchaseActivation);
+    byId("activate-purchase")?.addEventListener("click", (ev) => {
+      if (ev.target === ev.currentTarget) closePurchaseActivation();
+    });
     mountClaimHelp(el);
+    mountPurchaseActivation(el);
     el.querySelector(".ppanel__id")?.addEventListener("click", async (ev) => {
       const btn = ev.currentTarget;
       const id = btn.dataset.id || "";
@@ -1126,6 +1213,10 @@
       } catch {}
     });
   }
+
+  document
+    .getElementById("accountActivateOpen")
+    ?.addEventListener("click", openPurchaseActivation);
 
   // Botão de login na navbar: leva à página dedicada da conta (account.html). Já na
   // página da conta, faz login OAuth quando o backend está no ar; senão faz scroll ao

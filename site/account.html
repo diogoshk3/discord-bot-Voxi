@@ -21,6 +21,7 @@
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
 
     <link rel="stylesheet" href="css/main-v38.css" />
+    <link rel="stylesheet" href="css/account-v1.css" />
     <style>
       body.page-account:not(.is-account-ready) main,
       body.page-account:not(.is-account-ready) .foot {
@@ -96,43 +97,78 @@
     </header>
 
     <main>
-      <!-- ─────────────── ACCOUNT ─────────────── -->
-      <section class="section account-section" id="account">
+      <section class="account-section" id="account">
         <div class="wrap account-shell">
-          <header class="account-hero reveal">
-            <span class="eyebrow eyebrow--amber">Account</span>
-            <h1>Your benefits</h1>
-            <p>Discord identity, server licenses and personal perks in one place.</p>
+          <a class="account-back" href="/">
+            <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m12.5 4.5-5.5 5.5 5.5 5.5"/></svg>
+            <span>Back to Vozen</span>
+          </a>
+
+          <header class="account-hero">
+            <div class="account-hero__copy">
+              <h1>Your Vozen account</h1>
+              <p>Check what is active and choose what you want to do next.</p>
+            </div>
           </header>
 
-          <div class="account-grid">
-            <!-- Painel Premium: login com Discord + estado da conta. Preenchido pelo main.js. -->
-            <div class="premium-panel" id="premiumPanel" aria-live="polite"></div>
+          <div class="account-workspace">
+            <aside class="account-rail" aria-labelledby="accountNextTitle">
+              <section class="account-next">
+                <span class="account-kicker">Start here</span>
+                <h2 id="accountNextTitle">What do you want to do?</h2>
+                <p>Choose one task. You can always come back for the others.</p>
 
-            <aside class="account-rail" aria-label="Account summary">
-              <!-- Descoberta do dashboard: sem este cartão, quem faz login na conta não
-                   tinha NENHUM caminho para a página de configuração (/dashboard). -->
-              <div class="account-card account-card--accent">
-                <span class="account-card__icon">⚙</span>
-                <b data-i18n="dash.cardTitle">Server dashboard</b>
-                <p data-i18n="dash.cardBody">Configure Vozen on your servers from the browser — no slash commands needed.</p>
-                <a class="btn btn--primary btn--sm" href="/dashboard" style="margin-top: 12px" data-i18n="dash.cardBtn">Open dashboard</a>
+                <nav class="account-tasklist" aria-label="Account tasks">
+                  <a class="account-task account-task--primary" href="/dashboard">
+                    <span class="account-task__icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5.5h6v6H4zM14 5.5h6v3h-6zM14 12.5h6v6h-6zM4 15.5h6v3H4z"/></svg>
+                    </span>
+                    <span class="account-task__copy">
+                      <b>Manage a server</b>
+                      <small>Change voices, channels and bot settings.</small>
+                    </span>
+                    <svg class="account-task__arrow" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 10h10M11 6l4 4-4 4"/></svg>
+                  </a>
+
+                  <button class="account-task" id="accountActivateOpen" type="button">
+                    <span class="account-task__icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 7.5h14v11H5zM8 4.5h8v3H8zM9 13h6M12 10v6"/></svg>
+                    </span>
+                    <span class="account-task__copy">
+                      <b>Activate a purchase</b>
+                      <small>Connect Plus or Premium bought on Ko-fi.</small>
+                    </span>
+                    <svg class="account-task__arrow" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 10h10M11 6l4 4-4 4"/></svg>
+                  </button>
+                </nav>
+
+                <a class="account-plans-link" href="/#premium">Not sure which plan you need? Compare plans <span aria-hidden="true">↗</span></a>
+              </section>
+
+              <div class="account-trust">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3.5 19 6v5.3c0 4.5-2.7 7.7-7 9.2-4.3-1.5-7-4.7-7-9.2V6l7-2.5Z"/><path d="m9 12 2 2 4-4"/></svg>
+                <p><b>Discord handles your sign-in.</b> Vozen never sees your Discord password.</p>
               </div>
-              <div class="account-card account-card--accent">
-                <span class="account-card__icon">◆</span>
-                <b>3 server licenses</b>
-                <p>Vozen Premium can be active on up to three servers.</p>
-              </div>
-              <div class="account-card">
-                <span class="account-card__icon account-card__icon--plus">✦</span>
-                <b>Personal Plus</b>
-                <p>Perks follow your Discord account across every server.</p>
-              </div>
-              <div class="account-actions">
-                <a href="/#premium">View plans</a>
+
+              <nav class="account-help" aria-label="Account help">
                 <a href="#" class="js-support">Support</a>
-              </div>
+                <a href="/terms">Terms</a>
+                <a href="/privacy">Privacy</a>
+              </nav>
             </aside>
+
+            <section class="account-membership" aria-labelledby="accountMembershipTitle">
+              <div class="account-section-head">
+                <div>
+                  <span class="account-kicker">Signed in with Discord</span>
+                  <h2 id="accountMembershipTitle">Your account</h2>
+                </div>
+                <span class="account-sync"><i aria-hidden="true"></i> Synced with Discord</span>
+              </div>
+
+              <!-- Discord identity, entitlements and purchase activation are rendered here. -->
+              <div class="premium-panel" id="premiumPanel" aria-live="polite"></div>
+            </section>
           </div>
         </div>
       </section>
@@ -174,6 +210,6 @@
     </footer>
 
     <script defer src="js/i18n-v34.js"></script>
-    <script defer src="js/main-v37.js"></script>
+    <script defer src="js/main-v38.js"></script>
   </body>
 </html>

@@ -8,9 +8,10 @@ const source = (path: string): string =>
 
 // The site's assets are cache-busted by FILENAME (never a query string), so every rename churns
 // these tests too. One constant each: the rename is then a one-line edit here, not a hunt.
-const SITE_JS = 'site/js/main-v37.js';
+const SITE_JS = 'site/js/main-v38.js';
 const SITE_I18N = 'site/js/i18n-v34.js';
 const SITE_CSS = 'site/css/main-v38.css';
+const ACCOUNT_CSS = 'site/css/account-v1.css';
 
 /** Body of a top-level function in the site bundle, comments stripped. Comments are dropped
  *  because these assertions are about the markup a function RENDERS — a comment explaining why
@@ -35,6 +36,34 @@ const i18nBundle = (): Record<string, Record<string, string>> => {
 };
 
 describe('operational security configuration', () => {
+  it('keeps the account redesign isolated, responsive, and wired to the versioned runtime', () => {
+    const page = source('site/account.html');
+    const css = source(ACCOUNT_CSS);
+
+    expect(page).toContain('css/account-v1.css');
+    expect(page).toContain('class="account-workspace"');
+    expect(page).toContain('class="account-membership"');
+    expect(page).toContain('class="account-tasklist"');
+    expect(page).toContain('id="accountActivateOpen"');
+    expect(page).toContain('js/main-v38.js');
+    expect(css).toContain('body.page-account');
+    expect(css).toMatch(/@media\s*\(max-width:\s*760px\)/);
+  });
+
+  it('keeps the account journey focused and the session exit visible', () => {
+    const script = source(SITE_JS);
+    const claim = claimCardSource();
+
+    expect(claim).toContain('id="activate-purchase"');
+    expect(claim).toContain('role="dialog"');
+    expect(claim).toContain('id="ppClaimClose"');
+    expect(claim).toContain('<details class="ppanel__receipt"');
+    expect(claim).toContain('class="ppanel__activatebtn"');
+    expect(script).toContain('class="ppanel__logout-icon"');
+    expect(script).toContain('function openPurchaseActivation()');
+    expect(script).toContain('function mountPurchaseActivation(el)');
+  });
+
   it('keeps the Cloudflare CSP aligned with the self-hosted-font privacy promise', () => {
     const script = source('tools/cf-security-headers.mjs');
     expect(script).not.toContain('fonts.googleapis.com');
