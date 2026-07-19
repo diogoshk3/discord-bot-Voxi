@@ -10,7 +10,7 @@ const source = (path: string): string =>
 // these tests too. One constant each: the rename is then a one-line edit here, not a hunt.
 const SITE_JS = 'site/js/main-v38.js';
 const SITE_I18N = 'site/js/i18n-v34.js';
-const SITE_CSS = 'site/css/main-v38.css';
+const SITE_CSS = 'site/css/main-v39.css';
 const ACCOUNT_CSS = 'site/css/account-v3.css';
 
 /** Body of a top-level function in the site bundle, comments stripped. Comments are dropped
@@ -36,6 +36,55 @@ const i18nBundle = (): Record<string, Record<string, string>> => {
 };
 
 describe('operational security configuration', () => {
+  it('keeps the Night Signal treatment scoped to Discord entry points', () => {
+    const css = source(SITE_CSS);
+    const index = source('site/index.html');
+    const account = source('site/account.html');
+    const dashboard = source('site/dashboard.html');
+
+    for (const pagePath of [
+      'site/index.html',
+      'site/account.html',
+      'site/dashboard.html',
+      'site/privacy.html',
+      'site/terms.html',
+    ]) {
+      const page = source(pagePath);
+      expect(page, pagePath).toContain('css/main-v39.css');
+      expect(page, pagePath).not.toContain('css/main-v38.css');
+    }
+    expect(existsSync(resolve(process.cwd(), 'site/css/main-v38.css'))).toBe(false);
+
+    for (const [pagePath, page] of [
+      ['site/index.html', index],
+      ['site/account.html', account],
+      ['site/dashboard.html', dashboard],
+    ] as const) {
+      const navLoginClasses = page.match(
+        /<button class="([^"]+)" id="navLogin" type="button">/,
+      )?.[1];
+      expect(navLoginClasses, pagePath).toContain('btn--discord-cta');
+    }
+
+    const inviteClasses = [...index.matchAll(/<a class="([^"]*\bjs-invite\b[^"]*)"/g)].map(
+      (match) => match[1],
+    );
+    expect(inviteClasses).toHaveLength(2);
+    for (const classes of inviteClasses) expect(classes).toContain('btn--discord-cta');
+
+    expect(css).toMatch(
+      /\.btn--discord-cta\s*\{[^}]*color:\s*#fff;[^}]*linear-gradient\(115deg,\s*#4f46e5 0%,\s*#365bc9 52%,\s*#0f766e 100%\)/s,
+    );
+    expect(css).toContain('.btn--discord-cta:hover');
+    expect(css).toContain('.btn--discord-cta:active');
+    expect(css).toContain('.btn--discord-cta:focus-visible');
+    expect(css).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)[\s\S]*\.btn--discord-cta/);
+
+    const dashboardScript = source('site/js/dashboard-v4.js');
+    expect(dashboardScript).toContain('var BTN = "btn btn--primary";');
+    expect(dashboardScript).not.toContain('var BTN = "btn btn--primary btn--discord-cta";');
+  });
+
   it('keeps the account redesign isolated, responsive, and wired to the versioned runtime', () => {
     const page = source('site/account.html');
     const css = source(ACCOUNT_CSS);

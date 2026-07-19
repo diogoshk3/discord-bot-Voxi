@@ -489,6 +489,51 @@ body > *:not(.grain):not(.orbs):not(.nav):not(.ppmodal) { position: relative; z-
 }
 .btn--primary:hover { transform: translateY(-2px); box-shadow: 0 18px 46px -10px rgba(46, 230, 200, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.3); }
 .btn--primary:hover::after { transform: translateX(120%); }
+/* Night Signal is reserved for Discord entry points. Generic dashboard actions keep
+   the brighter primary treatment above, while Discord CTAs get a calmer indigo -> teal
+   gradient with a white foreground and two-tone glow. */
+.btn--discord-cta {
+  color: #fff;
+  background: linear-gradient(115deg, #4f46e5 0%, #365bc9 52%, #0f766e 100%);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 12px 34px -10px rgba(79, 70, 229, 0.72),
+    0 12px 30px -15px rgba(15, 118, 110, 0.72),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+}
+.btn--discord-cta::after {
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.24) 50%, transparent 70%);
+}
+.btn--discord-cta:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 18px 44px -11px rgba(79, 70, 229, 0.82),
+    0 18px 38px -16px rgba(15, 118, 110, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+.btn--discord-cta:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow:
+    0 8px 24px -10px rgba(79, 70, 229, 0.7),
+    0 8px 22px -14px rgba(15, 118, 110, 0.72),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+.btn--discord-cta:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 3px rgba(5, 6, 15, 0.94),
+    0 0 0 6px rgba(191, 201, 255, 0.86),
+    0 14px 38px -10px rgba(79, 70, 229, 0.76),
+    0 14px 32px -15px rgba(15, 118, 110, 0.72);
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn--discord-cta,
+  .btn--discord-cta::after { transition: none; }
+  .btn--discord-cta:hover,
+  .btn--discord-cta:active { transform: none; }
+  .btn--discord-cta::after,
+  .btn--discord-cta:hover::after { transform: translateX(-120%); }
+}
 .btn--ghost {
   color: var(--text-0); background: rgba(255, 255, 255, 0.045); border-color: var(--line-2);
 }
