@@ -5,7 +5,7 @@
 <p align="center"><em>type it, hear it.</em></p>
 
 <p align="center">
-  <a href="https://discord.com/oauth2/authorize?client_id=1523826014935842997&permissions=3148800&scope=bot%20applications.commands"><img src="https://img.shields.io/badge/Add%20to-Discord-5865F2?logo=discord&logoColor=white" alt="Add to Discord"></a>
+  <a href="https://discord.com/oauth2/authorize?client_id=1523826014935842997&permissions=326420745216&scope=bot%20applications.commands"><img src="https://img.shields.io/badge/Add%20to-Discord-5865F2?logo=discord&logoColor=white" alt="Add to Discord"></a>
   <a href="https://vozen.org"><img src="https://img.shields.io/badge/website-vozen.org-7c5cff" alt="Website"></a>
   <a href="https://discord.gg/V6PZYZmhcQ"><img src="https://img.shields.io/badge/support-server-5865F2?logo=discord&logoColor=white" alt="Support server"></a>
   <a href="https://top.gg/bot/1523826014935842997/vote"><img src="https://img.shields.io/badge/vote-top.gg-ff3366" alt="Vote on top.gg"></a>
@@ -23,7 +23,7 @@ of going quiet for hours.
 
 ## Add it
 
-**[→ Add Vozen to your server](https://discord.com/oauth2/authorize?client_id=1523826014935842997&permissions=3148800&scope=bot%20applications.commands)**
+**[→ Add Vozen to your server](https://discord.com/oauth2/authorize?client_id=1523826014935842997&permissions=326420745216&scope=bot%20applications.commands)**
 
 Then run **`/setup`** — it picks the channel to read and turns auto-read on. Join a
 voice channel, type in the text channel, and you're done.
@@ -34,13 +34,13 @@ voice channel, type in the text channel, and you're done.
   there. No prefixes. It also reads mentions of and replies to the bot.
 - **A voice per person** — everyone picks their own voice, speed and engine with
   `/voice config`, and it reads all of their messages in it.
-- **30+ languages, detected automatically** — write in English, it answers in an
-  English voice; switch to Portuguese mid-conversation and so does the voice.
+- **35 languages, with optional automatic detection** — choose any of the 38 voices,
+  or opt in to per-message detection with `/voice detection on`.
 - **Says who's talking** — "Sam said hello", with nicknames you can set yourself.
 - **Reads Discord, not markup** — emoji, links, code blocks, spoilers and mentions
   come out as something a human would say.
 - **Stays in the call** — automatic reconnection; auto-leave when the channel empties.
-- **Games in voice** — `/game play` has 15+ games: Wordle, Hangman, Guess the
+- **Games in voice** — `/game play` has 16 games: Wordle, Hangman, Guess the
   Language, Dictation, Reflexes, Word Chain and more.
 - **Fun commands** — `/joke`, `/laugh`, `/8ball`, `/fortune`, `/fact`, `/wyr`,
   `/randomizer`, `/sound`, `/birthday`.
@@ -60,7 +60,7 @@ voice channel, type in the text channel, and you're done.
 | `/skip`          | Skip what's playing                                  |
 | `/config`        | Server settings (needs Manage Server)                |
 | `/help`          | The full command list                                |
-| `/privacy erase` | Delete everything Vozen stores about you             |
+| `/privacy erase` | Delete your erasable personal data from Vozen        |
 
 ## Premium
 
@@ -82,11 +82,11 @@ Something broken, or an idea? **[Join the support server](https://discord.gg/V6P
 Vozen is open source (AGPL-3.0), so you can run your own instance. Three paths —
 there is nothing easier than inviting the hosted bot:
 
-| Level      | Who it's for                             | How                                                                                                                                                                    |
-| ---------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Easy**   | Everyone                                 | [Invite the public bot](https://discord.com/oauth2/authorize?client_id=1523826014935842997&permissions=3148800&scope=bot%20applications.commands) — nothing to install |
-| **Normal** | You want it on your own VPS              | `docker compose` — [self-hosting guide §5](docs/SELF-HOST.md#5-deploy-on-a-vps-docker)                                                                                 |
-| **Hard**   | You want to change it or tune the voices | From source: Node + Piper + models — [self-hosting guide §1](docs/SELF-HOST.md#1-prerequisites)                                                                        |
+| Level      | Who it's for                             | How                                                                                                                                                                         |
+| ---------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Easy**   | Everyone                                 | [Invite the public bot](https://discord.com/oauth2/authorize?client_id=1523826014935842997&permissions=326420745216&scope=bot%20applications.commands) — nothing to install |
+| **Normal** | You want it on your own VPS              | `docker compose` — [self-hosting guide §5](docs/SELF-HOST.md#5-deploy-on-a-vps-docker)                                                                                      |
+| **Hard**   | You want to change it or tune the voices | From source: Node + Piper + models — [self-hosting guide §1](docs/SELF-HOST.md#1-prerequisites)                                                                             |
 
 ## Privacy and terms
 

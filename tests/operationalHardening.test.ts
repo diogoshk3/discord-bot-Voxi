@@ -44,7 +44,7 @@ describe('operational security configuration', () => {
     const pages = source('.github/workflows/pages.yml');
 
     expect(pkg.scripts?.['check:site']).toBe(
-      'vitest run tests/operationalHardening.test.ts && npm run build:site',
+      'vitest run tests/operationalHardening.test.ts tests/siteTrust.test.ts && npm run check:site-copy && npm run build:site',
     );
     expect(ci).toMatch(/\n {2}site:\s*\n/);
     expect(ci).toMatch(/\n\s+- run: npm run check:site\s*\n/);
@@ -85,7 +85,7 @@ describe('operational security configuration', () => {
     const inviteClasses = [...index.matchAll(/<a class="([^"]*\bjs-invite\b[^"]*)"/g)].map(
       (match) => match[1],
     );
-    expect(inviteClasses).toHaveLength(2);
+    expect(inviteClasses).toHaveLength(3);
     for (const classes of inviteClasses) expect(classes).toContain('btn--discord-cta');
 
     expect(css).toMatch(

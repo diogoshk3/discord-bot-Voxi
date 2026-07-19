@@ -19,7 +19,7 @@
   const ACTIVATION_INTENT_TTL_MS = 5 * 60 * 1000;
   const INVITE_URL =
     CLIENT_ID && CLIENT_ID !== "YOUR_CLIENT_ID"
-      ? `https://discord.com/oauth2/authorize?client_id=${CLIENT_ID}&scope=bot%20applications.commands&permissions=${INVITE_PERMISSIONS}`
+      ? `https://discord.com/oauth2/authorize?client_id=${CLIENT_ID}&permissions=${INVITE_PERMISSIONS}&scope=bot%20applications.commands`
       : "#";
   const TOPGG_URL =
     CLIENT_ID && CLIENT_ID !== "YOUR_CLIENT_ID" ? `https://top.gg/bot/${CLIENT_ID}/vote` : "#";
