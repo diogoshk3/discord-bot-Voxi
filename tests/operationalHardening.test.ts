@@ -8,8 +8,8 @@ const source = (path: string): string =>
 
 // The site's assets are cache-busted by FILENAME (never a query string), so every rename churns
 // these tests too. One constant each: the rename is then a one-line edit here, not a hunt.
-const SITE_JS = 'site/js/main-v38.js';
-const SITE_I18N = 'site/js/i18n-v34.js';
+const SITE_JS = 'site/js/main-v39.js';
+const SITE_I18N = 'site/js/i18n-v35.js';
 const SITE_CSS = 'site/css/main-v39.css';
 const ACCOUNT_CSS = 'site/css/account-v3.css';
 
@@ -44,7 +44,7 @@ describe('operational security configuration', () => {
     const pages = source('.github/workflows/pages.yml');
 
     expect(pkg.scripts?.['check:site']).toBe(
-      'vitest run tests/operationalHardening.test.ts tests/siteTrust.test.ts && npm run check:site-copy && npm run build:site',
+      'vitest run tests/operationalHardening.test.ts tests/siteTrust.test.ts tests/siteI18n.test.ts && npm run check:i18n && npm run check:site-copy && npm run build:site',
     );
     expect(ci).toMatch(/\n {2}site:\s*\n/);
     expect(ci).toMatch(/\n\s+- run: npm run check:site\s*\n/);
@@ -96,7 +96,7 @@ describe('operational security configuration', () => {
     expect(css).toContain('.btn--discord-cta:focus-visible');
     expect(css).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)[\s\S]*\.btn--discord-cta/);
 
-    const dashboardScript = source('site/js/dashboard-v4.js');
+    const dashboardScript = source('site/js/dashboard-v5.js');
     expect(dashboardScript).toContain('var BTN = "btn btn--primary";');
     expect(dashboardScript).not.toContain('var BTN = "btn btn--primary btn--discord-cta";');
   });
@@ -112,7 +112,7 @@ describe('operational security configuration', () => {
     expect(page).toContain('class="account-membership"');
     expect(page).toContain('class="account-tasklist"');
     expect(page).toContain('id="accountActivateOpen"');
-    expect(page).toContain('js/main-v38.js');
+    expect(page).toContain('js/main-v39.js');
     expect(css).toContain('body.page-account');
     expect(css).toMatch(/@media\s*\(max-width:\s*760px\)/);
     expect(css).toMatch(/@media\s*\(min-width:\s*1280px\)\s*and\s*\(min-height:\s*800px\)/);
@@ -171,10 +171,11 @@ describe('operational security configuration', () => {
     }
   });
 
-  it('keeps developer-facing accessibility labels in English', () => {
+  it('localizes account accessibility labels from the canonical dictionary', () => {
     const script = source(SITE_JS);
-    expect(script).toContain('aria-label="Copy Discord ID"');
-    expect(script).not.toContain('aria-label="Copiar Discord ID"');
+    expect(script).toContain('t("account.copyDiscordId")');
+    expect(script).toContain('t("account.closeActivation")');
+    expect(script).not.toContain('aria-label="Copy Discord ID"');
   });
 
   // Delivery happens when the buyer activates here, so the checkbox itself must explicitly name

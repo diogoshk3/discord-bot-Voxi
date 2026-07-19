@@ -1,0 +1,641 @@
+/* Vozen — dashboard web de configuração da guild.
+   OAuth: reutiliza o redirect /account (o único registado no portal) com scope
+   `identify guilds`; o main.js guarda o token no sessionStorage e salta de volta a
+   /dashboard (via `vozen.returnTo`). Aqui lemos o token e falamos com a API do bot
+   (/api/dashboard/*). A autorização real (MANAGE_GUILD + bot presente) é no servidor.
+   HUD v5: formulário agrupado por secções (Reading/Voice/Community/Limits), toggle
+   switches em vez de checkboxes nativas, campo de língua (locale — a API já o aceita),
+   e save com estado (só ativo quando há alterações). CSP: zero handlers inline, tudo
+   por addEventListener; CSS injetado num <style> (style-src tem 'unsafe-inline'). */
+(function () {
+  "use strict";
+  var CLIENT_ID = "1523826014935842997";
+  var API = "https://api.vozen.org";
+  var REDIRECT = new URL("/account", location.href).href;
+  var TOK_KEY = "vozen.dtoken";
+  var STATE_KEY = "vozen.oauthstate";
+  var RETURN_KEY = "vozen.returnTo";
+  var LS_LANG = "vozen.lang";
+
+  var root = document.getElementById("dashRoot");
+  if (!root) return;
+
+  /* Re-localização ao vivo: main-v39 anuncia `vozen:languagechange` depois de atualizar
+     texto, atributos e título. Cada vista regista aqui o seu relocalizador; no formulário
+     ele atua in-place para não tocar nos inputs nem no estado por guardar. */
+  var onLang = null;
+
+  /* O bundle versionado é a única fonte de strings da homepage, conta e painel. */
+  var DICT = window.VOZEN_I18N || {};
+  function lang() {
+    try {
+      var l = localStorage.getItem(LS_LANG) || "en";
+      return DICT[l] ? l : "en";
+    } catch (e) {
+      return "en";
+    }
+  }
+  function t(k) {
+    var l = lang();
+    return (DICT[l] && DICT[l][k]) || (DICT.en && DICT.en[k]) || k;
+  }
+
+  /* Estrutura do formulário: campos agrupados por tema. A whitelist de escrita é no
+     backend (DASHBOARD_FIELDS em src/premium/dashboardApi.ts) — isto é só a vista. */
+  var SECTIONS = [
+    { id: "reading", fields: ["autoread", "readBots", "textInVoice", "antispam"] },
+    { id: "voice", fields: ["xsaid", "autojoin", "greetOnJoin"] },
+    { id: "community", fields: ["streakAnnounce", "soundboard"] },
+    { id: "limits", fields: ["maxChars", "ratePerMin", "locale"] },
+  ];
+  var FIELD = {
+    autoread: { type: "toggle" },
+    readBots: { type: "toggle" },
+    textInVoice: { type: "toggle" },
+    antispam: { type: "toggle" },
+    xsaid: { type: "toggle" },
+    autojoin: { type: "toggle" },
+    greetOnJoin: { type: "toggle" },
+    streakAnnounce: { type: "toggle" },
+    soundboard: { type: "toggle" },
+    maxChars: { type: "num", min: 1, max: 2000 },
+    ratePerMin: { type: "num", min: 1, max: 120 },
+    locale: { type: "select" },
+  };
+
+  /* Línguas do servidor. Espelho de SUPPORTED_LOCALES (src/i18n/index.ts) com nomes
+     legíveis. Se divergir, o backend valida na mesma (sanitizePatch descarta locales
+     desconhecidos), por isso drift degrada para "opção em falta", nunca para erro. */
+  var LOCALES = [
+    ["en", "English"], ["pt", "Português"], ["es", "Español"], ["fr", "Français"],
+    ["de", "Deutsch"], ["nl", "Nederlands"], ["pl", "Polski"], ["tr", "Türkçe"],
+    ["cs", "Čeština"], ["sv", "Svenska"], ["fi", "Suomi"], ["da", "Dansk"],
+    ["ro", "Română"], ["hu", "Magyar"], ["cy", "Cymraeg"], ["is", "Íslenska"],
+    ["lb", "Lëtzebuergesch"], ["lv", "Latviešu"], ["sk", "Slovenčina"],
+    ["sl", "Slovenščina"], ["sw", "Kiswahili"], ["vi", "Tiếng Việt"],
+    ["ca", "Català"], ["it", "Italiano"], ["el", "Ελληνικά"], ["ru", "Русский"],
+    ["uk", "Українська"], ["kk", "Қазақ"], ["sr", "Српски"], ["ar", "العربية"],
+    ["fa", "فارسی"], ["ka", "ქართული"], ["ne", "नेपाली"], ["zh", "中文"], ["ja", "日本語"],
+  ];
+
+  function eachField(fn) {
+    for (var s = 0; s < SECTIONS.length; s++) {
+      var f = SECTIONS[s].fields;
+      for (var i = 0; i < f.length; i++) fn(f[i], FIELD[f[i]]);
+    }
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function token() {
+    try {
+      return sessionStorage.getItem(TOK_KEY);
+    } catch (e) {
+      return null;
+    }
+  }
+  function clearToken() {
+    try {
+      sessionStorage.removeItem(TOK_KEY);
+    } catch (e) {}
+  }
+  function authHeaders() {
+    return { Authorization: "Bearer " + token() };
+  }
+
+  /* ── OAuth: pede identify+guilds via o redirect /account; volta a /dashboard ── */
+  function randState() {
+    var a = new Uint8Array(16);
+    var c = window.crypto || window.msCrypto;
+    if (!c || typeof c.getRandomValues !== "function") throw new Error("no-csprng");
+    c.getRandomValues(a);
+    return [].map
+      .call(a, function (b) {
+        return b.toString(16).padStart(2, "0");
+      })
+      .join("");
+  }
+  function login() {
+    var state;
+    try {
+      state = randState();
+    } catch (e) {
+      alert(t("dashboard.secureTokenError"));
+      return;
+    }
+    try {
+      sessionStorage.setItem(STATE_KEY, state);
+      sessionStorage.setItem(RETURN_KEY, "/dashboard");
+    } catch (e) {}
+    var u = new URL("https://discord.com/oauth2/authorize");
+    u.searchParams.set("client_id", CLIENT_ID);
+    u.searchParams.set("redirect_uri", REDIRECT);
+    u.searchParams.set("response_type", "token");
+    u.searchParams.set("scope", "identify guilds");
+    u.searchParams.set("state", state);
+    location.href = u.toString();
+  }
+
+  /* ── estilos inline (CSP permite; usam as vars do tema do site) ── */
+  var CARD =
+    "background:var(--panel-2,#12121c);border:1px solid var(--line-2,#23233a);border-radius:16px;padding:22px;margin-top:18px";
+  var BTN = "btn btn--primary";
+  var MUTED = "color:var(--text-2,#9a9ab0)";
+
+  /* Seletor cai um SVG chevron via data: (img-src permite data:). %23 = # (cor). */
+  var SEL_ARROW =
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239a9ab0' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E";
+
+  /* Classes precisam de :hover/:focus/::after — impossível em style="" inline;
+     injetamos um <style> uma vez. */
+  var CSS = [
+    /* picker de servidores */
+    ".dash-guilds{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:14px;margin-top:16px}",
+    ".dash-guild{display:flex;flex-direction:column;align-items:center;gap:10px;padding:16px 10px;background:var(--bg-0,#0a0a12);border:1px solid var(--line-2,#23233a);border-radius:14px;cursor:pointer;font:inherit;color:var(--text-1,#e9e9f2);transition:border-color .15s ease,transform .15s ease}",
+    ".dash-guild:hover,.dash-guild:focus-visible{border-color:var(--aqua,#38e0c8);transform:translateY(-2px)}",
+    ".dash-guild:active{transform:scale(.97)}",
+    ".dash-guild__img,.dash-guild__ph{width:64px;height:64px;border-radius:50%;flex:none}",
+    ".dash-guild__img{object-fit:cover;background:var(--panel-2,#12121c)}",
+    ".dash-guild__ph{display:flex;align-items:center;justify-content:center;background:var(--panel-2,#12121c);border:1px solid var(--line-2,#23233a);font-weight:700;font-size:1.05rem;color:var(--aqua,#38e0c8)}",
+    ".dash-guild__name{font-size:.92rem;line-height:1.3;text-align:center;overflow-wrap:anywhere}",
+    /* formulário */
+    ".dash-form{background:var(--panel-2,#12121c);border:1px solid var(--line-2,#23233a);border-radius:16px;padding:22px;margin-top:18px}",
+    ".dash-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:4px}",
+    ".dash-head__ic,.dash-head__ph{width:44px;height:44px;border-radius:50%;flex:none}",
+    ".dash-head__ic{object-fit:cover;background:var(--bg-0,#0a0a12)}",
+    ".dash-head__ph{display:flex;align-items:center;justify-content:center;background:var(--bg-0,#0a0a12);border:1px solid var(--line-2,#23233a);font-weight:700;color:var(--aqua,#38e0c8)}",
+    ".dash-head__name{margin:0;font-size:1.2rem;font-family:var(--f-display,inherit);flex:1;min-width:120px;overflow-wrap:anywhere}",
+    ".dash-back{margin-left:auto}",
+    ".dash-sec{margin-top:22px}",
+    ".dash-sec__t{font-family:var(--f-mono,inherit);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--aqua,#38e0c8);margin:0 0 2px}",
+    ".dash-row{display:flex;align-items:center;gap:16px;padding:13px 10px;margin:0 -10px;border-radius:10px;border-bottom:1px solid var(--line-2,#23233a);cursor:pointer}",
+    ".dash-sec .dash-row:last-child{border-bottom:0}",
+    ".dash-row:hover{background:var(--glass,rgba(255,255,255,.03))}",
+    ".dash-row__txt{flex:1;min-width:0}",
+    ".dash-row__l{display:block;font-size:.98rem;color:var(--text-1,#e9e9f2)}",
+    ".dash-row__d{display:block;font-size:.82rem;color:var(--text-2,#9a9ab0);margin-top:2px}",
+    /* toggle switch */
+    ".dash-sw{position:relative;flex:none;width:44px;height:24px}",
+    ".dash-sw input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}",
+    ".dash-sw__tr{position:absolute;inset:0;border-radius:999px;background:var(--line-2,#23233a);transition:background .15s ease;pointer-events:none}",
+    ".dash-sw__tr::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .15s ease}",
+    ".dash-sw input:checked+.dash-sw__tr{background:var(--aqua,#38e0c8)}",
+    ".dash-sw input:checked+.dash-sw__tr::after{transform:translateX(20px)}",
+    ".dash-sw input:focus-visible+.dash-sw__tr{outline:2px solid var(--aqua,#38e0c8);outline-offset:2px}",
+    /* número + select */
+    ".dash-num,.dash-sel{background:var(--bg-0,#0a0a12);color:var(--text-1,#e9e9f2);border:1px solid var(--line-2,#23233a);border-radius:10px;font:inherit;transition:border-color .15s ease}",
+    ".dash-num{width:92px;padding:9px 10px;font-family:var(--f-mono,inherit);text-align:right}",
+    ".dash-sel{max-width:180px;padding:9px 30px 9px 11px;cursor:pointer;-webkit-appearance:none;-moz-appearance:none;appearance:none;background-image:url(\"" + SEL_ARROW + "\");background-repeat:no-repeat;background-position:right 10px center}",
+    ".dash-num:focus,.dash-sel:focus{outline:none;border-color:var(--aqua,#38e0c8)}",
+    /* barra de guardar */
+    ".dash-savebar{display:flex;align-items:center;gap:14px;margin-top:22px;padding-top:18px;border-top:1px solid var(--line-2,#23233a)}",
+    ".dash-save[disabled]{opacity:.45;cursor:not-allowed}",
+    ".dash-status{font-size:.9rem;color:var(--text-2,#9a9ab0)}",
+    ".dash-status--ok{color:var(--aqua,#38e0c8)}",
+    ".dash-status--err{color:var(--amber,#e6b34d)}",
+    /* mobile: barra de guardar colada ao fundo (forms longos) */
+    "@media(max-width:720px){.dash-savebar{position:sticky;bottom:0;margin:22px -22px -22px;padding:14px 22px;background:var(--panel-2,#12121c);border-top:1px solid var(--line-2,#23233a)}.dash-sel{max-width:150px}}",
+    "@media(prefers-reduced-motion:reduce){.dash-guild,.dash-sw__tr,.dash-sw__tr::after,.dash-num,.dash-sel{transition:none}}",
+  ].join("\n");
+  var styleEl = document.createElement("style");
+  styleEl.textContent = CSS;
+  document.head.appendChild(styleEl);
+
+  function view(html) {
+    root.innerHTML = html;
+  }
+
+  function renderLogin(msgKey) {
+    var msg = msgKey ? t(msgKey) : "";
+    view(
+      '<div style="' +
+        CARD +
+        '">' +
+        (msg ? '<p style="color:var(--amber,#e6b34d);margin:0 0 12px">' + esc(msg) + "</p>" : "") +
+        '<h2 style="margin:0 0 6px;font-size:1.25rem">' +
+        esc(t("dashboard.loginTitle")) +
+        '</h2><p style="' +
+        MUTED +
+        ';margin:0 0 18px">' +
+        esc(t("dashboard.loginSub")) +
+        '</p><button type="button" class="' +
+        BTN +
+        '" id="dashLogin">' +
+        esc(t("dashboard.loginBtn")) +
+        "</button></div>",
+    );
+    var b = document.getElementById("dashLogin");
+    if (b) b.addEventListener("click", login);
+    onLang = function () {
+      renderLogin(msgKey);
+    };
+  }
+
+  function renderMessage(titleKey, hintKey, opts) {
+    opts = opts || {};
+    var title = t(titleKey);
+    var hint = hintKey ? t(hintKey) : "";
+    view(
+      '<div style="' +
+        CARD +
+        '"><h2 style="margin:0 0 6px;font-size:1.25rem">' +
+        esc(title) +
+        '</h2><p style="' +
+        MUTED +
+        ';margin:0">' +
+        esc(hint) +
+        "</p>" +
+        (opts.retry
+          ? '<button type="button" class="' +
+            BTN +
+            '" id="dashRetry" style="margin-top:16px">' +
+            esc(t("dashboard.retry")) +
+            "</button>"
+          : "") +
+        "</div>",
+    );
+    if (opts.retry) {
+      var r = document.getElementById("dashRetry");
+      if (r) r.addEventListener("click", login);
+    }
+    // Keep semantic keys so a language change can also translate loading/error/empty states.
+    onLang = function () {
+      renderMessage(titleKey, hintKey, opts);
+    };
+  }
+
+  /* CDN de ícones da Discord (img-src já permite cdn.discordapp.com no CSP).
+     Ícones animados têm hash "a_..." e servem-se como .gif. */
+  function guildIconUrl(g) {
+    if (!g.icon) return null;
+    var ext = String(g.icon).indexOf("a_") === 0 ? "gif" : "png";
+    return "https://cdn.discordapp.com/icons/" + g.id + "/" + g.icon + "." + ext + "?size=128";
+  }
+  function guildInitials(name) {
+    var parts = String(name).trim().split(/\s+/).slice(0, 2);
+    var out = "";
+    for (var i = 0; i < parts.length; i++) out += parts[i].charAt(0);
+    return out.toUpperCase() || "?";
+  }
+  // Liga o fallback de um <img> de ícone: se falhar, troca por placeholder de iniciais.
+  function wireIconFallback(img, name, phClass) {
+    if (!img) return;
+    img.addEventListener("error", function () {
+      var ph = document.createElement("span");
+      ph.className = phClass;
+      ph.setAttribute("aria-hidden", "true");
+      ph.textContent = guildInitials(name || "?");
+      if (img.parentNode) img.parentNode.replaceChild(ph, img);
+    });
+  }
+
+  function renderPicker(guilds) {
+    var cards = guilds
+      .map(function (g, i) {
+        var url = guildIconUrl(g);
+        var art = url
+          ? '<img class="dash-guild__img" src="' + esc(url) + '" alt="">'
+          : '<span class="dash-guild__ph" aria-hidden="true">' +
+            esc(guildInitials(g.name)) +
+            "</span>";
+        return (
+          '<button type="button" class="dash-guild" data-i="' +
+          i +
+          '">' +
+          art +
+          '<span class="dash-guild__name">' +
+          esc(g.name) +
+          "</span></button>"
+        );
+      })
+      .join("");
+    view(
+      '<div style="' +
+        CARD +
+        '"><h2 style="margin:0 0 6px;font-size:1.25rem">' +
+        esc(t("dashboard.pick")) +
+        '</h2><p style="' +
+        MUTED +
+        ';margin:0">' +
+        esc(t("dashboard.pickHint")) +
+        '</p><div class="dash-guilds">' +
+        cards +
+        "</div></div>",
+    );
+    var btns = root.querySelectorAll(".dash-guild");
+    function onPick(ev) {
+      var g = guilds[Number(ev.currentTarget.getAttribute("data-i"))];
+      if (g) loadForm(g, guilds);
+    }
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].addEventListener("click", onPick);
+      var g = guilds[i];
+      wireIconFallback(btns[i].querySelector(".dash-guild__img"), g && g.name, "dash-guild__ph");
+    }
+    onLang = function () {
+      renderPicker(guilds);
+    };
+  }
+
+  /* ── construção das linhas do formulário ── */
+  function swHtml(key, on) {
+    return (
+      '<span class="dash-sw"><input type="checkbox" data-k="' +
+      key +
+      '"' +
+      (on ? " checked" : "") +
+      '><span class="dash-sw__tr"></span></span>'
+    );
+  }
+  function numHtml(key, f, val) {
+    return (
+      '<input class="dash-num" type="number" data-k="' +
+      key +
+      '" min="' +
+      f.min +
+      '" max="' +
+      f.max +
+      '" value="' +
+      esc(val) +
+      '">'
+    );
+  }
+  function selHtml(key, val) {
+    var opts = "";
+    for (var i = 0; i < LOCALES.length; i++) {
+      var code = LOCALES[i][0];
+      opts +=
+        '<option value="' +
+        esc(code) +
+        '"' +
+        (code === val ? " selected" : "") +
+        ">" +
+        esc(LOCALES[i][1]) +
+        "</option>";
+    }
+    return '<select class="dash-sel" data-k="' + key + '">' + opts + "</select>";
+  }
+  function rowHtml(key, cfg) {
+    var f = FIELD[key];
+    var control;
+    var desc = t("dashboard.d_" + key);
+    if (f.type === "toggle") control = swHtml(key, !!cfg[key]);
+    else if (f.type === "num") {
+      control = numHtml(key, f, cfg[key]);
+      desc += " (" + f.min + "–" + f.max + ")";
+    } else control = selHtml(key, cfg[key]);
+    return (
+      '<label class="dash-row"><span class="dash-row__txt"><span class="dash-row__l">' +
+      esc(t("dashboard.f_" + key)) +
+      '</span><span class="dash-row__d">' +
+      esc(desc) +
+      "</span></span>" +
+      control +
+      "</label>"
+    );
+  }
+  function headHtml(guild) {
+    var url = guildIconUrl(guild);
+    var art = url
+      ? '<img class="dash-head__ic" src="' + esc(url) + '" alt="">'
+      : '<span class="dash-head__ph" aria-hidden="true">' + esc(guildInitials(guild.name)) + "</span>";
+    return (
+      '<div class="dash-head">' +
+      art +
+      '<h2 class="dash-head__name">' +
+      esc(guild.name) +
+      '</h2><button type="button" id="dashBack" class="btn btn--ghost btn--sm dash-back">' +
+      esc(t("dashboard.back")) +
+      "</button></div>"
+    );
+  }
+
+  function loadForm(guild, guilds) {
+    renderMessage("dashboard.loading", "");
+    fetch(API + "/api/dashboard/guild/" + guild.id, { headers: authHeaders() })
+      .then(function (res) {
+        if (res.status === 401) {
+          clearToken();
+          renderLogin("dashboard.expired");
+          return null;
+        }
+        if (res.status === 403) {
+          renderMessage("dashboard.forbidden", "dashboard.noneHint");
+          return null;
+        }
+        if (!res.ok) {
+          renderMessage("dashboard.error", "");
+          return null;
+        }
+        return res.json();
+      })
+      .then(function (data) {
+        if (data && data.config) renderForm(guild, data.config, guilds);
+      })
+      .catch(function () {
+        renderMessage("dashboard.error", "");
+      });
+  }
+
+  // Valor normalizado de um campo (bool/num/string) a partir de um objeto de config.
+  function fieldValue(key, src) {
+    var f = FIELD[key];
+    if (f.type === "toggle") return !!src[key];
+    if (f.type === "num") return Number(src[key]);
+    return String(src[key] || "en");
+  }
+  // Lê o valor atual do controlo no DOM.
+  function domValue(key) {
+    var el = root.querySelector('[data-k="' + key + '"]');
+    if (!el) return undefined;
+    var f = FIELD[key];
+    if (f.type === "toggle") return el.checked;
+    if (f.type === "num") return Number(el.value);
+    return el.value;
+  }
+
+  function renderForm(guild, cfg, guilds) {
+    // Baseline para dirty-tracking: o botão só fica ativo quando algo muda.
+    var baseline = {};
+    eachField(function (key) {
+      baseline[key] = fieldValue(key, cfg);
+    });
+
+    var sections = SECTIONS.map(function (sec) {
+      var rows = sec.fields
+        .map(function (k) {
+          return rowHtml(k, cfg);
+        })
+        .join("");
+      return (
+        '<div class="dash-sec"><p class="dash-sec__t">' +
+        esc(t("dashboard.sec_" + sec.id)) +
+        "</p>" +
+        rows +
+        "</div>"
+      );
+    }).join("");
+
+    var savebar =
+      '<div class="dash-savebar"><button type="button" class="' +
+      BTN +
+      ' dash-save" id="dashSave" disabled>' +
+      esc(t("dashboard.save")) +
+      '</button><span class="dash-status" id="dashStatus" aria-live="polite"></span></div>';
+
+    view('<div class="dash-form">' + headHtml(guild) + sections + savebar + "</div>");
+    wireIconFallback(root.querySelector(".dash-head__ic"), guild.name, "dash-head__ph");
+
+    var formEl = root.querySelector(".dash-form");
+    var saveBtn = document.getElementById("dashSave");
+    var statusEl = document.getElementById("dashStatus");
+
+    function countChanges() {
+      var n = 0;
+      eachField(function (key) {
+        if (domValue(key) !== baseline[key]) n++;
+      });
+      return n;
+    }
+    function setStatus(msg, cls) {
+      statusEl.textContent = msg || "";
+      statusEl.className = "dash-status" + (cls ? " dash-status--" + cls : "");
+    }
+    function refresh() {
+      var n = countChanges();
+      saveBtn.disabled = n === 0;
+      saveBtn.textContent =
+        n === 0
+          ? t("dashboard.save")
+          : n === 1
+            ? t("dashboard.save1")
+            : t("dashboard.saveN").replace("{n}", n);
+      if (n > 0) setStatus(""); // limpa "Guardado ✓" assim que se volta a mexer
+    }
+
+    document.getElementById("dashBack").addEventListener("click", function () {
+      renderPicker(guilds);
+    });
+    // Listeners no próprio form (substituído a cada render -> morrem com ele; sem leaks).
+    formEl.addEventListener("input", refresh);
+    formEl.addEventListener("change", refresh);
+
+    saveBtn.addEventListener("click", function () {
+      if (saveBtn.disabled) return;
+      var patch = {};
+      eachField(function (key) {
+        var v = domValue(key);
+        if (v === baseline[key]) return;
+        if (FIELD[key].type === "num" && !isFinite(v)) return; // campo vazio -> não envia
+        patch[key] = v;
+      });
+      saveBtn.disabled = true;
+      saveBtn.textContent = t("dashboard.saving");
+      setStatus("");
+      fetch(API + "/api/dashboard/guild/" + guild.id, {
+        method: "POST",
+        headers: Object.assign({ "Content-Type": "application/json" }, authHeaders()),
+        body: JSON.stringify(patch),
+      })
+        .then(function (res) {
+          if (res.status === 401) {
+            clearToken();
+            renderLogin("dashboard.expired");
+            return;
+          }
+          if (res.status === 403) {
+            renderMessage("dashboard.forbidden", "dashboard.noneHint");
+            return;
+          }
+          if (!res.ok) {
+            setStatus(t("dashboard.saveFail"), "err");
+            refresh();
+            return;
+          }
+          // Guardado: a baseline passa a ser o estado atual (voltar a mexer reativa).
+          eachField(function (key) {
+            baseline[key] = domValue(key);
+          });
+          refresh();
+          setStatus(t("dashboard.saved"), "ok");
+        })
+        .catch(function () {
+          setStatus(t("dashboard.saveFail"), "err");
+          refresh();
+        });
+    });
+
+    refresh(); // estado inicial: sem alterações -> desativado
+
+    // Re-localizador in-place: reescreve só os text-nodes traduzíveis (títulos de secção,
+    // nomes/descrições dos campos, botão voltar) e deixa o refresh() recalcular o rótulo do
+    // Guardar com a contagem de alterações atual. Não toca nos inputs -> preserva valores e
+    // o estado "por guardar". Registado como re-localizador enquanto o form está visível.
+    onLang = function relocalizeForm() {
+      var secEls = root.querySelectorAll(".dash-sec");
+      SECTIONS.forEach(function (sec, i) {
+        var tEl = secEls[i] && secEls[i].querySelector(".dash-sec__t");
+        if (tEl) tEl.textContent = t("dashboard.sec_" + sec.id);
+      });
+      eachField(function (key) {
+        var ctrl = root.querySelector('[data-k="' + key + '"]');
+        var row = ctrl && ctrl.closest ? ctrl.closest(".dash-row") : null;
+        if (!row) return;
+        var lEl = row.querySelector(".dash-row__l");
+        var dEl = row.querySelector(".dash-row__d");
+        if (lEl) lEl.textContent = t("dashboard.f_" + key);
+        if (dEl) {
+          var desc = t("dashboard.d_" + key);
+          if (FIELD[key].type === "num") desc += " (" + FIELD[key].min + "–" + FIELD[key].max + ")";
+          dEl.textContent = desc;
+        }
+      });
+      var back = document.getElementById("dashBack");
+      if (back) back.textContent = t("dashboard.back");
+      refresh(); // recomputa o rótulo do Guardar (usa a baseline/contagem do closure)
+    };
+  }
+
+  function boot() {
+    var tok = token();
+    if (!tok) {
+      renderLogin("");
+      return;
+    }
+    renderMessage("dashboard.loading", "");
+    fetch(API + "/api/dashboard/guilds", { headers: authHeaders() })
+      .then(function (res) {
+        if (res.status === 401) {
+          clearToken();
+          renderLogin("dashboard.expired");
+          return null;
+        }
+        if (!res.ok) {
+          renderMessage("dashboard.error", "", { retry: true });
+          return null;
+        }
+        return res.json();
+      })
+      .then(function (data) {
+        if (!data) return;
+        var guilds = data.guilds || [];
+        if (!guilds.length) {
+          renderMessage("dashboard.none", "dashboard.noneHint");
+          return;
+        }
+        renderPicker(guilds);
+      })
+      .catch(function () {
+        renderMessage("dashboard.error", "", { retry: true });
+      });
+  }
+
+  window.addEventListener("vozen:languagechange", function () {
+    if (typeof onLang === "function") onLang();
+  });
+
+  boot();
+})();
