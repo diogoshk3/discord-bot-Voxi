@@ -4,7 +4,8 @@
 // EN is the CANONICAL one (defines the keys/ids/order); the other languages must match.
 // Output: window.VOZEN_I18N / VOZEN_COMMANDS / VOZEN_FAQ (the format main-v*.js reads).
 //
-// Run: node tools/build-i18n.mjs   (then npm run build:site minifies.)
+// Run: node tools/build-i18n.mjs          (regenerate the versioned bundle)
+//      node tools/build-i18n.mjs --check  (verify without writing)
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
@@ -14,6 +15,8 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = join(ROOT, 'tools', 'i18n-src');
 // Order = order in the site selector.
 const LANGS = ['en', 'pt', 'fr', 'es', 'de', 'tr', 'ar', 'zh', 'ru', 'ko'];
+const OUTPUT = join(ROOT, 'site', 'js', 'i18n-v35.js');
+const checkOnly = process.argv.includes('--check');
 
 const data = {};
 for (const l of LANGS) data[l] = JSON.parse(readFileSync(join(SRC, `${l}.json`), 'utf8'));
@@ -22,14 +25,30 @@ const en = data.en;
 const uiKeys = Object.keys(en.ui);
 const cats = Object.keys(en.commands);
 
-// Validation: each language must have the SAME ui keys, command ids and FAQ count.
+// Validation: each language must have the SAME ui keys, command categories/ids and FAQ count.
 for (const l of LANGS) {
   const d = data[l];
   const missing = uiKeys.filter((k) => d.ui[k] == null);
-  if (missing.length) throw new Error(`${l}: missing ui keys: ${missing.slice(0, 5).join(', ')}`);
+  const extra = Object.keys(d.ui).filter((k) => en.ui[k] == null);
+  if (missing.length || extra.length) {
+    throw new Error(
+      `${l}: ui key mismatch` +
+        (missing.length ? `; missing: ${missing.slice(0, 5).join(', ')}` : '') +
+        (extra.length ? `; extra: ${extra.slice(0, 5).join(', ')}` : ''),
+    );
+  }
+  const languageCats = Object.keys(d.commands);
+  if (cats.some((c) => !languageCats.includes(c)) || languageCats.some((c) => !cats.includes(c))) {
+    throw new Error(`${l}: command category mismatch`);
+  }
   for (const c of cats) {
     if ((d.commands[c] || []).length !== en.commands[c].length)
       throw new Error(`${l}: command '${c}' has a different item count`);
+    const ids = d.commands[c].map(([id]) => id);
+    const expectedIds = en.commands[c].map(([id]) => id);
+    if (JSON.stringify(ids) !== JSON.stringify(expectedIds)) {
+      throw new Error(`${l}: command '${c}' ids/order differ from English`);
+    }
   }
   if (d.faq.length !== en.faq.length) throw new Error(`${l}: different FAQ item count`);
 }
@@ -67,7 +86,22 @@ const out =
   `window.VOZEN_COMMANDS = ${JSON.stringify(COMMANDS)};\n` +
   `window.VOZEN_FAQ = ${JSON.stringify(FAQ)};\n`;
 
-writeFileSync(join(ROOT, 'site', 'js', 'i18n-v34.js'), out);
-console.log(
-  `[build-i18n] ${LANGS.length} línguas · ${uiKeys.length} chaves ui · ${FAQ.length} FAQ -> site/js/i18n-v34.js`,
-);
+if (checkOnly) {
+  let current = '';
+  try {
+    current = readFileSync(OUTPUT, 'utf8');
+  } catch {
+    // The same actionable error covers a missing output and a stale one.
+  }
+  if (current !== out) {
+    throw new Error('site/js/i18n-v35.js is out of date; run npm run build:i18n');
+  }
+  console.log(
+    `[check-i18n] ${LANGS.length} languages · ${uiKeys.length} UI keys · generated bundle is current`,
+  );
+} else {
+  writeFileSync(OUTPUT, out);
+  console.log(
+    `[build-i18n] ${LANGS.length} languages · ${uiKeys.length} UI keys · ${FAQ.length} FAQ -> site/js/i18n-v35.js`,
+  );
+}

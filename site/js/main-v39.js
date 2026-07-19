@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   Vozen site — main.js
+   Vozen site — main-v39.js
    ═══════════════════════════════════════════════════════════ */
 (function () {
   "use strict";
@@ -140,11 +140,27 @@
       const k = el.getAttribute("data-i18n");
       if (d[k] != null) el.textContent = d[k];
     });
+    const translatedAttributes = [
+      ["data-i18n-aria-label", "aria-label"],
+      ["data-i18n-placeholder", "placeholder"],
+      ["data-i18n-title", "title"],
+    ];
+    translatedAttributes.forEach(([marker, attribute]) => {
+      $$(`[${marker}]`).forEach((el) => {
+        const k = el.getAttribute(marker);
+        if (d[k] != null) el.setAttribute(attribute, d[k]);
+      });
+    });
+    const documentTitleKey = document.body?.getAttribute("data-i18n-document-title");
+    if (documentTitleKey && d[documentTitleKey] != null) document.title = d[documentTitleKey];
     syncLangMenu(lang);
     localizeHear(lang);
     renderCommands();
     renderFaq();
     renderPanel(); // re-renderiza o painel Premium na língua atual (sem novo fetch)
+    window.dispatchEvent(
+      new CustomEvent("vozen:languagechange", { detail: { language: lang } }),
+    );
   }
 
   // Dropdown custom de idioma (estilo MEE6): botão-trigger + painel role="listbox".
@@ -543,7 +559,9 @@
     const initial = esc((u.username || "?").slice(0, 1).toUpperCase());
     if (u.id && u.avatar) {
       const ext = String(u.avatar).startsWith("a_") ? "gif" : "png";
-      const alt = esc(`${u.username || "Discord user"} avatar`);
+      const alt = esc(
+        t("account.discordAvatar").replace("{name}", u.username || t("account.defaultUser")),
+      );
       return `<img class="${cls}" src="https://cdn.discordapp.com/avatars/${esc(u.id)}/${esc(u.avatar)}.${ext}?size=${size}" alt="${alt}" width="${size}" height="${size}" referrerpolicy="no-referrer">`;
     }
     return `<span class="${cls} ${cls}--none">${initial}</span>`;
@@ -551,7 +569,7 @@
 
   function statusRow(label, active, detail) {
     const state = active ? "is-on" : "is-off";
-    const text = active ? "Active" : "Not active";
+    const text = active ? t("account.active") : t("account.notActive");
     const action = active
       ? ""
       : `<a class="ppanel__get" href="/#premium">${t("nav.premium")} <span aria-hidden="true">→</span></a>`;
@@ -576,8 +594,9 @@
       return;
     }
     btn.classList.add("nav__login--account");
-    btn.setAttribute("aria-label", `Discord account: ${u.username || "user"}`);
-    btn.innerHTML = `${avatarMarkup(u, "nav__login-av", 24)}<span>${esc(u.username || "Account")}</span>`;
+    const username = u.username || t("account.defaultUser");
+    btn.setAttribute("aria-label", t("account.discordAccount").replace("{name}", username));
+    btn.innerHTML = `${avatarMarkup(u, "nav__login-av", 24)}<span>${esc(username)}</span>`;
   }
 
   // Card "Ativar uma compra": o comprador cola o código do recibo Ko-fi e reclama a compra
@@ -587,8 +606,8 @@
     return (
       `<div class="ppanel__claim ppmodal" id="activate-purchase" role="dialog" aria-modal="true" aria-labelledby="ppClaimTitle" hidden>` +
       `<div class="ppanel__claimbox" tabindex="-1">` +
-      `<button type="button" class="ppanel__claimclose" id="ppClaimClose" aria-label="Close purchase activation">&times;</button>` +
-      `<div class="ppanel__claimhead"><span class="ppanel__claimeyebrow">Purchase activation</span>` +
+      `<button type="button" class="ppanel__claimclose" id="ppClaimClose" aria-label="${esc(t("account.closeActivation"))}">&times;</button>` +
+      `<div class="ppanel__claimhead"><span class="ppanel__claimeyebrow">${t("account.purchaseActivation")}</span>` +
       `<span class="ppanel__claimtitle" id="ppClaimTitle">${t("claim.title")}</span></div>` +
       // Consent is explicit in the label itself, before either delivery path. The server records a
       // stable terms version for instant activation; receipt-code activation keeps its HTTP contract.
@@ -596,7 +615,7 @@
       // /terms. O <a> e conteudo interativo: clicar nele abre os termos sem marcar a checkbox
       // (comportamento do <label> no HTML) — confirmado no browser.
       `<section class="ppanel__activationway ppanel__activationway--instant">` +
-      `<div class="ppanel__wayhead"><span class="ppanel__waynum">01</span><span><b>${t("claim.instantBtn")}</b><small>Recommended</small></span></div>` +
+      `<div class="ppanel__wayhead"><span class="ppanel__waynum">01</span><span><b>${t("claim.instantBtn")}</b><small>${t("account.recommended")}</small></span></div>` +
       `<p class="ppanel__claimhint">${t("claim.instantHint")}</p>` +
       `<label class="ppanel__claimconsent"><input type="checkbox" id="ppClaimConsent"> <span>${t("claim.consent").replace("{terms}", `<a href="/terms" target="_blank" rel="noopener">${t("claim.consentTerms")}</a>`)}</span></label>` +
       `<p class="ppanel__claimmsg" id="ppClaimMsg" role="status" aria-live="polite" hidden></p>` +
@@ -687,14 +706,14 @@
     return (
       `<div class="ppanel__account">` +
       `<div class="ppanel__user">${av}</div>` +
-      `<div class="ppanel__identity"><span class="ppanel__name">${esc(u.username || "Discord user")}</span>` +
-      `<button type="button" class="ppanel__id" data-id="${esc(u.id || "")}" aria-label="Copy Discord ID">Discord ID: <span class="ppanel__idnum">${esc(u.id || "-")}</span>` +
+      `<div class="ppanel__identity"><span class="ppanel__name">${esc(u.username || t("account.defaultUser"))}</span>` +
+      `<button type="button" class="ppanel__id" data-id="${esc(u.id || "")}" aria-label="${esc(t("account.copyDiscordId"))}">${t("account.discordId")}: <span class="ppanel__idnum">${esc(u.id || "-")}</span>` +
       `<svg class="ppanel__copyic" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 7a3 3 0 0 1 3-3h7a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-1v-2h1a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-7a1 1 0 0 0-1 1v1H8V7Z"/><path d="M3 10a3 3 0 0 1 3-3h7a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3v-7Zm3-1a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1v-7a1 1 0 0 0-1-1H6Z"/></svg>` +
       `<svg class="ppanel__okic" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M9.2 16.6 4.9 12.3l1.4-1.4 2.9 2.9 8.5-8.5 1.4 1.4-9.9 9.9Z"/></svg>` +
-      `<span class="ppanel__tip" aria-hidden="true">Click to copy</span></button>` +
+      `<span class="ppanel__tip" aria-hidden="true">${t("account.copyHint")}</span></button>` +
       `<button type="button" class="ppanel__logout" id="ppLogout"><svg class="ppanel__logout-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M10 5H6.5A2.5 2.5 0 0 0 4 7.5v9A2.5 2.5 0 0 0 6.5 19H10M14 8l4 4-4 4M8 12h10"/></svg><span>${t("panel.logout")}</span></button></div></div>` +
-      `<div class="ppanel__benefitshead"><div><span class="account-kicker">Your benefits</span><h3>What is active</h3></div>` +
-      `<p><b>Plus</b> follows your Discord account. <b>Premium</b> is used on selected servers.</p></div>` +
+      `<div class="ppanel__benefitshead"><div><span class="account-kicker">${t("account.benefits")}</span><h3>${t("account.activeTitle")}</h3></div>` +
+      `<p>${t("account.benefitsDescription")}</p></div>` +
       `<div class="ppanel__statusgrid">` +
       statusRow("Vozen Premium", premiumActive, premiumParts.join(" &middot; ")) +
       statusRow("Vozen Plus", plusActive, plusDetail) +
@@ -1168,7 +1187,7 @@
     }
     el.hidden = false;
     if (IS_ACCOUNT && panelState.mode !== "anon") unlockAccountPage();
-    const head = `<div class="ppanel__head"><span class="ppanel__title">💎 Membership status</span></div>`;
+    const head = `<div class="ppanel__head"><span class="ppanel__title">💎 ${t("account.membershipStatus")}</span></div>`;
     let body = "";
     if (panelState.mode === "soon") {
       // Estado dormente da página da conta: backend ainda não configurado.
@@ -1205,10 +1224,10 @@
       try {
         await navigator.clipboard.writeText(id);
         btn.classList.add("is-copied");
-        if (tip) tip.textContent = "Copied!";
+        if (tip) tip.textContent = t("account.copied");
         window.setTimeout(() => {
           btn.classList.remove("is-copied");
-          if (tip) tip.textContent = "Click to copy";
+          if (tip) tip.textContent = t("account.copyHint");
         }, 1500);
       } catch {}
     });
