@@ -1,23 +1,19 @@
-// src/tts/prosody.ts — synthetic QUESTION INTONATION (make the "?" sound like a question).
+// src/tts/prosody.ts — language-independent punctuation prosody.
 //
-// WHY: the pitch rise at the end of a question you hear in some languages (e.g.
-// Spanish) is Google's NATIVE voice, not a feature — and it varies by language (Google's
-// PT/EN sound flat). To give the SAME question intonation in ALL languages and ALL
-// engines, we apply it ourselves: we take the ALREADY synthesized WAV and RAISE the pitch
-// only at the END (the "tail" of the speech), which is the universal acoustic signature of
-// a question.
+// WHY: the expressive punctuation heard in some languages (especially Spanish) is Google's
+// NATIVE voice and varies by language. Volume alone made `!` louder but still flat in PT/EN.
+// We add a small rising tail for questions and a falling tail for emphatic statements to the
+// FINAL synthesized WAV, so the behavior is independent of language and TTS engine.
 //
 // HOW: ffmpeg CORE filters (asetrate+aresample+atempo — the same as the deep/chipmunk
 // effects; no rubberband, which may not be compiled into ffmpeg-static).
-// We cut the last ~QUESTION_TAIL_MS in JS (the WAV is always 22050/mono/16-bit — the
-// canonical format of gTTS and Piper), pitch ONLY that piece, and concatenate
-// [body + high-pitched tail].
+// We normalize the final WAV to 22050/mono/16-bit when necessary, cut its last syllable in JS,
+// pitch ONLY that piece, and concatenate [body + shaped tail].
 //
 // DECORATOR engine (same pattern as EffectEngine) with its own cache (namespace 'q') and
 // FAIL-SAFE: any error returns the CLEAN voice — NEVER throws (a synth that throws makes
-// the player SKIP the speech => silence). Only runs when the speech ENDS in `?` (the `?`
-// aligns with the audio tail). Engines that don't produce 22050/mono/16 (e.g. Kokoro
-// at 24k) fall into the fail-safe (splitTailWav returns null) and get no intonation — without crashing.
+// the player SKIP the speech => silence). Runs for a terminal `?`, terminal `!`, or a wholly
+// uppercase utterance. Non-canonical engines (e.g. Kokoro at 24 kHz) are normalized first.
 
 import { mkdtempSync, writeFileSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -28,6 +24,7 @@ import { applyEffect, type ApplyEffectDeps } from './effects';
 import { parseWav, buildWav, concatWavs } from './wavConcat';
 import { rmDirSafe } from './cleanupDir';
 import { log } from '../logging/logger';
+import { expressiveEmphasisStrength, type EmphasisStrength } from './emphasis';
 
 // Canonical format (gTTS/Piper). The split assumes it; splitTailWav validates it and bails if it doesn't match.
 const SR = 22050;
@@ -40,6 +37,9 @@ const BLOCK_ALIGN = (CHANNELS * BITS) / 8; // 2 bytes per sample-frame (mono 16-
 // tail; lower goes unnoticed. If it sounds artificial, this is where to tune it.
 const QUESTION_TAIL_MS = 500;
 const QUESTION_PITCH = 1.1;
+const EXCLAMATION_TAIL_MS = 650;
+const EXCLAMATION_PITCH_SOFT = 0.97;
+const EXCLAMATION_PITCH_STRONG = 0.94;
 
 // asetrate speeds up+raises pitch; aresample returns to 22050; atempo=1/pitch restores the
 // DURATION without lowering the pitch. Result: same length, higher pitch (same mechanic as deep/chipmunk).
@@ -47,9 +47,21 @@ export const QUESTION_FILTER = `asetrate=${SR}*${QUESTION_PITCH},aresample=${SR}
   1 / QUESTION_PITCH
 ).toFixed(4)}`;
 
+/** Falling pitch contours. Loudness remains in the player, avoiding double gain and clipping. */
+export const EXCLAMATION_FILTERS: Record<Exclude<EmphasisStrength, 'none'>, string> = {
+  soft: `asetrate=${SR}*${EXCLAMATION_PITCH_SOFT},aresample=${SR},atempo=${(
+    1 / EXCLAMATION_PITCH_SOFT
+  ).toFixed(4)}`,
+  strong: `asetrate=${SR}*${EXCLAMATION_PITCH_STRONG},aresample=${SR},atempo=${(
+    1 / EXCLAMATION_PITCH_STRONG
+  ).toFixed(4)}`,
+};
+
 /** Does the speech END in a question? (`?` at the end, tolerating quotes/parentheses/spaces after). PURE. */
 export function isQuestion(text: string): boolean {
-  return /\?["'”»)\]\s]*$/u.test(text);
+  // Arabic/full-width/Ethiopic marks are terminal. Armenian ՞ sits over the stressed vowel,
+  // so the final word may still contain letters after the punctuation code point.
+  return /(?:[?؟？፧]|՞[\p{L}\p{M}]*)["'”»)\]\s]*$/u.test(text);
 }
 
 /**
@@ -83,9 +95,10 @@ export function splitTailWav(wav: Buffer, tailMs: number): { head: Buffer; tail:
 }
 
 /**
- * Decorator engine that gives QUESTION INTONATION to speeches ending in `?`: raises the pitch
- * at the end via ffmpeg, with its own cache (namespace 'q', keyed by cacheKey(req)+'_q' — like
- * EffectEngine). Speeches without `?` pass through intact. Any error -> CLEAN voice (never throws).
+ * Decorator engine that gives punctuation INTONATION to the final WAV: questions rise;
+ * emphatic terminal `!` / all-uppercase utterances fall. It uses `emphasisSource` (the user's
+ * original body), so xsaid/media decorations cannot hide or invent punctuation. Any error ->
+ * CLEAN voice (never throws).
  */
 export class ProsodyEngine implements TTSEngine {
   constructor(
@@ -96,36 +109,50 @@ export class ProsodyEngine implements TTSEngine {
 
   async synth(req: SynthRequest): Promise<string> {
     const base = await this.inner.synth(req);
-    if (!isQuestion(req.text)) return base;
+    const source = req.emphasisSource ?? req.text;
+    const emphasis = expressiveEmphasisStrength(source);
+    const mode = isQuestion(source) ? 'question' : emphasis;
+    if (mode === 'none') return base;
 
-    const key = `${cacheKey(req)}_q`;
+    // v2 invalidates the old question cache now that emphasisSource and non-22050 audio are
+    // handled correctly. The mode prevents question/exclamation contours from colliding.
+    const key = `${cacheKey(req)}_${mode}_v2`;
     const hit = this.cache.get(key);
     if (hit) return hit;
 
     let workDir: string | null = null;
-    let pitchedDir: string | null = null;
+    let shapedDir: string | null = null;
+    let normalizedDir: string | null = null;
     try {
-      const split = splitTailWav(readFileSync(base), QUESTION_TAIL_MS);
-      if (!split) return base; // unexpected format -> clean voice
+      const tailMs = mode === 'question' ? QUESTION_TAIL_MS : EXCLAMATION_TAIL_MS;
+      let split = splitTailWav(readFileSync(base), tailMs);
+      if (!split) {
+        const normalizedPath = await applyEffect(base, 'anull', this.deps);
+        normalizedDir = dirname(normalizedPath);
+        split = splitTailWav(readFileSync(normalizedPath), tailMs);
+      }
+      if (!split) return base;
 
       workDir = mkdtempSync(join(tmpdir(), 'vozen-q-'));
       const tailPath = join(workDir, 'tail.wav');
       writeFileSync(tailPath, split.tail);
 
-      const pitchedPath = await applyEffect(tailPath, QUESTION_FILTER, this.deps);
-      pitchedDir = dirname(pitchedPath);
-      const out = concatWavs([split.head, readFileSync(pitchedPath)], { silenceMs: 0 });
+      const filter = mode === 'question' ? QUESTION_FILTER : EXCLAMATION_FILTERS[mode];
+      const shapedPath = await applyEffect(tailPath, filter, this.deps);
+      shapedDir = dirname(shapedPath);
+      const out = concatWavs([split.head, readFileSync(shapedPath)], { silenceMs: 0 });
 
       const outPath = join(workDir, 'out.wav');
       writeFileSync(outPath, out);
       return this.cache.put(key, outPath);
     } catch (err) {
-      log.warn('[prosody] question intonation failed; using clean voice:', err);
+      log.warn('[prosody] punctuation intonation failed; using clean voice:', err);
       return base;
     } finally {
       // applyEffect does NOT clean up its dir on success (the caller copies and cleans up);
       // cache.put already copied out.wav from the workDir, so we can clean up both.
-      if (pitchedDir) rmDirSafe(pitchedDir);
+      if (shapedDir) rmDirSafe(shapedDir);
+      if (normalizedDir) rmDirSafe(normalizedDir);
       if (workDir) rmDirSafe(workDir);
     }
   }

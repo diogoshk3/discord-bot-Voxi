@@ -130,11 +130,11 @@ async function main(): Promise<void> {
       ? createEngine(config, cache)
       : createPerUserEngine(config, cache, db); // db => persistent Google HD counters
   // External decorators, from inside out:
-  //   selectEngine (multi-segment) -> ProsodyEngine (question intonation) -> EffectEngine
-  //   (voice effect). ProsodyEngine sits OUTSIDE the multiseg (applies to the FINAL WAV of the
+  //   selectEngine (multi-segment) -> ProsodyEngine (question/exclamation intonation) ->
+  //   EffectEngine (voice effect). ProsodyEngine sits OUTSIDE the multiseg (applies to the FINAL WAV of the
   //   utterance) and INSIDE the effect (a voice effect comes on top). EffectEngine applies the
   //   effect ON TOP of the result; both fall back to the clean voice on failure and keep their
-  //   own cache. ProsodyEngine only runs when the utterance ends in `?` (own cache 'q').
+  //   own cache. ProsodyEngine runs only for a question or unambiguous emphasis (own cache 'q').
   const prosodyEngine = new ProsodyEngine(
     selectEngine(baseEngine, config, availableModels, cache),
     cache.withNamespace('q'),

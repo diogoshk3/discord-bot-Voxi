@@ -3,7 +3,13 @@ import { EventEmitter } from 'node:events';
 import { mkdtempSync, writeFileSync, readFileSync, rmSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { isQuestion, splitTailWav, ProsodyEngine, QUESTION_FILTER } from '../src/tts/prosody';
+import {
+  isQuestion,
+  splitTailWav,
+  ProsodyEngine,
+  QUESTION_FILTER,
+  EXCLAMATION_FILTERS,
+} from '../src/tts/prosody';
 import { silenceWav, parseWav, buildWav } from '../src/tts/wavConcat';
 import { AudioCache } from '../src/tts/cache';
 import type { SynthRequest, TTSEngine } from '../src/tts/engine';
@@ -14,6 +20,13 @@ describe('isQuestion — the speech ends with "?"', () => {
     expect(isQuestion('a sério?  ')).toBe(true);
     expect(isQuestion('(estás aí?)')).toBe(true);
     expect(isQuestion('ele disse "queres?"')).toBe(true);
+  });
+
+  it('recognizes localized question marks', () => {
+    expect(isQuestion('هل أنت بخير؟')).toBe(true);
+    expect(isQuestion('大丈夫？')).toBe(true);
+    expect(isQuestion('ինչպե՞ս')).toBe(true);
+    expect(isQuestion('ደህና ነህ፧')).toBe(true);
   });
 
   it('false when it is not a question or the "?" is in the middle', () => {
@@ -64,11 +77,13 @@ describe('splitTailWav — cuts the last ms as a WAV', () => {
 });
 
 // Fake of the ffmpeg spawn: 'ok' writes a VALID WAV to out and exits 0; 'fail' exits 1.
-function fakeFfmpeg(behavior: 'ok' | 'fail') {
+function fakeFfmpeg(behavior: 'ok' | 'fail', filters?: string[]) {
   return ((_ff: string, args: readonly string[]) => {
     const child = new EventEmitter() as EventEmitter & { stderr: EventEmitter; kill: () => void };
     child.stderr = new EventEmitter();
     child.kill = () => {};
+    const filterIndex = args.indexOf('-af');
+    if (filterIndex !== -1) filters?.push(args[filterIndex + 1]);
     queueMicrotask(() => {
       if (behavior === 'ok') {
         const outPath = args[args.length - 2]; // [..., outPath, '-y']
@@ -125,6 +140,43 @@ describe('ProsodyEngine — question intonation', () => {
     expect(out2).toBe(out1); // cache-hit
   });
 
+  it('terminal exclamation -> language-independent falling contour', async () => {
+    const base = baseWav();
+    const filters: string[] = [];
+    const eng = new ProsodyEngine(innerReturning(base), cache(), {
+      ffmpegPath: '/fake/ffmpeg',
+      spawnImpl: fakeFfmpeg('ok', filters),
+    });
+    const out = await eng.synth({ ...REQ_Q, text: 'cuidado!', emphasisSource: 'cuidado!' });
+    expect(out).not.toBe(base);
+    expect(filters).toContain(EXCLAMATION_FILTERS.soft);
+  });
+
+  it('strong exclamation uses the stronger contour', async () => {
+    const base = baseWav();
+    const filters: string[] = [];
+    const eng = new ProsodyEngine(innerReturning(base), cache(), {
+      ffmpegPath: '/fake/ffmpeg',
+      spawnImpl: fakeFfmpeg('ok', filters),
+    });
+    await eng.synth({ ...REQ_Q, text: 'STOP!', emphasisSource: 'STOP!' });
+    expect(filters).toContain(EXCLAMATION_FILTERS.strong);
+  });
+
+  it('uses emphasisSource, so an injected suffix cannot hide the user punctuation', async () => {
+    const base = baseWav();
+    const eng = new ProsodyEngine(innerReturning(base), cache(), {
+      ffmpegPath: '/fake/ffmpeg',
+      spawnImpl: fakeFfmpeg('ok'),
+    });
+    const out = await eng.synth({
+      ...REQ_Q,
+      text: 'Rexy said tudo bem a gif',
+      emphasisSource: 'tudo bem?',
+    });
+    expect(out).not.toBe(base);
+  });
+
   it('CRITICAL: ffmpeg failure -> falls back to the CLEAN VOICE (never throws)', async () => {
     const base = baseWav();
     const eng = new ProsodyEngine(innerReturning(base), cache(), {
@@ -134,18 +186,21 @@ describe('ProsodyEngine — question intonation', () => {
     await expect(eng.synth({ ...REQ_Q })).resolves.toBe(base);
   });
 
-  it('unexpected base format (not 22050) -> clean voice, without calling ffmpeg', async () => {
+  it('unexpected base sample rate is normalized, then receives the contour', async () => {
     const d = mkdtempSync(join(tmpdir(), 'q-odd-'));
     dirs.push(d);
     const odd = join(d, 'odd.wav');
     const wav = Buffer.from(silenceWav(1000));
     wav.writeUInt32LE(24000, 24); // wrong sample rate
     writeFileSync(odd, wav);
+    const filters: string[] = [];
     const eng = new ProsodyEngine(innerReturning(odd), cache(), {
       ffmpegPath: '/fake/ffmpeg',
-      spawnImpl: fakeFfmpeg('fail'), // would fail if it reached ffmpeg
+      spawnImpl: fakeFfmpeg('ok', filters),
     });
-    await expect(eng.synth({ ...REQ_Q })).resolves.toBe(odd);
+    await expect(eng.synth({ ...REQ_Q })).resolves.not.toBe(odd);
+    expect(filters[0]).toBe('anull');
+    expect(filters[1]).toBe(QUESTION_FILTER);
   });
 
   it('buildWav round-trip: the canonical header parses again', () => {

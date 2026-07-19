@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { emphasisGain } from '../src/tts/emphasis';
+import { emphasisGain, emphasisStrength, expressiveEmphasisStrength } from '../src/tts/emphasis';
 
 describe('emphasisGain — "louder when ! or UPPERCASE"', () => {
   it('normal text -> no gain (1.0)', () => {
@@ -45,5 +45,26 @@ describe('emphasisGain — "louder when ! or UPPERCASE"', () => {
 
   it('a single capital letter (sentence start) does NOT count as a shout', () => {
     expect(emphasisGain('Ola pessoal')).toBe(1);
+  });
+
+  it('exposes a stable strength for the audio-prosody layer', () => {
+    expect(emphasisStrength('calm text')).toBe('none');
+    expect(emphasisStrength('careful!')).toBe('soft');
+    expect(emphasisStrength('CAREFUL!')).toBe('strong');
+    expect(emphasisStrength('careful!!')).toBe('strong');
+  });
+
+  it('only shapes audio when the emphasis belongs to the utterance ending', () => {
+    expect(expressiveEmphasisStrength('careful!')).toBe('soft');
+    expect(expressiveEmphasisStrength('CAREFUL!')).toBe('strong');
+    expect(expressiveEmphasisStrength('HELP ME')).toBe('soft');
+    expect(expressiveEmphasisStrength('PARA quieto')).toBe('none');
+    expect(expressiveEmphasisStrength('wow! okay')).toBe('none');
+  });
+
+  it('recognizes localized exclamation marks used outside Latin text', () => {
+    expect(expressiveEmphasisStrength('危険！')).toBe('soft');
+    expect(expressiveEmphasisStrength('危険！！')).toBe('strong');
+    expect(expressiveEmphasisStrength('Զգույշ՜')).toBe('soft');
   });
 });
