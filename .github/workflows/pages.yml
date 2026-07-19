@@ -11,6 +11,9 @@ on:
     paths:
       - 'site/**'
       - 'tools/minify-site.mjs'
+      - 'tests/operationalHardening.test.ts'
+      - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -44,8 +47,9 @@ jobs:
       # postinstall de 363 deps. O build:site só usa html-minifier-terser/terser/clean-css
       # (JS puro), logo não é preciso reconstruir nenhum binário nativo aqui.
       - run: npm ci --ignore-scripts
-      - name: Build minified site (site/ -> site-dist/)
-        run: npm run build:site
+      - run: npm rebuild esbuild
+      - name: Verify and build site (site/ -> site-dist/)
+        run: npm run check:site
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
         with:
           enablement: true

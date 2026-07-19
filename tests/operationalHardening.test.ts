@@ -36,6 +36,22 @@ const i18nBundle = (): Record<string, Record<string, string>> => {
 };
 
 describe('operational security configuration', () => {
+  it('gates pull requests and GitHub Pages with the same site verification command', () => {
+    const pkg = JSON.parse(source('package.json')) as {
+      scripts?: Record<string, string>;
+    };
+    const ci = source('.github/workflows/ci.yml');
+    const pages = source('.github/workflows/pages.yml');
+
+    expect(pkg.scripts?.['check:site']).toBe(
+      'vitest run tests/operationalHardening.test.ts && npm run build:site',
+    );
+    expect(ci).toMatch(/\n {2}site:\s*\n/);
+    expect(ci).toMatch(/\n\s+- run: npm run check:site\s*\n/);
+    expect(pages).toMatch(/\n\s+run: npm run check:site\s*\n/);
+    expect(pages).not.toMatch(/\n\s+run: npm run build:site\s*\n/);
+  });
+
   it('keeps the Night Signal treatment scoped to Discord entry points', () => {
     const css = source(SITE_CSS);
     const index = source('site/index.html');

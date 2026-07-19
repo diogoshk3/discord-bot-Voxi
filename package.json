@@ -22,7 +22,8 @@
     "format:check": "prettier --check .",
     "check": "npm run build && npm run typecheck && npm run lint && npm run format:check && vitest run",
     "register": "tsx src/bot/registerCommands.ts",
-    "build:site": "node tools/minify-site.mjs"
+    "build:site": "node tools/minify-site.mjs",
+    "check:site": "vitest run tests/operationalHardening.test.ts && npm run build:site"
   },
   "dependencies": {
     "@discordjs/opus": "^0.10.0",
