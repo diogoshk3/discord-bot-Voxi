@@ -40,7 +40,7 @@
     "feat.2.t": "Senin sesin, senin dilin",
     "feat.2.d": "Her üye 35 dil arasından kendi sesini seçer — Google ya da yerel bir nöral motor.",
     "feat.3.t": "İnsan gibi konuşur",
-    "feat.3.d": "Her mesajın dilini algılar, tek bir cümlenin içinde sesleri harmanlar ve ! ya da BÜYÜK HARF kullandığında sesini yükseltir.",
+    "feat.3.d": "Varsayılan olarak seçtiğin sesi kullanır. Mesaj başına isteğe bağlı dil algılama /voice detection on ile açılır; ! ve BÜYÜK HARF vurgu ekler.",
     "feat.4.t": "16 sesli mini oyun",
     "feat.4.d": "Dil tahmin et, heceleme yarışları, Wordle, refleks düelloları — sunucu lider tablosuyla birlikte.",
     "feat.5.t": "Kişilik dahil",
@@ -301,7 +301,9 @@
     "account.discordAvatar": "{name} avatarı",
     "dashboard.retry": "Tekrar dene",
     "dashboard.secureTokenError": "Tarayıcın güvenli bir giriş belirteci oluşturamıyor. Lütfen güncelle.",
-    "price.m.21": "Kokoro nöral ses motoru"
+    "price.m.21": "Kokoro nöral ses motoru",
+    "price.m.22": "Google HD sesleri",
+    "price.m.23": "Canlı ses transkripsiyonu"
   },
   "commands": {
     "general": [
@@ -344,7 +346,6 @@
       ["/config default-voice", "Sunucunun varsayılan sesini ayarla"],
       ["/config autoread", "Otomatik okumayı aç/kapat"],
       ["/config blockword", "Engel listesini yönet"],
-      ["/config pronunciation", "Özel telaffuzlar"],
       ["/serverpronunciation", "Tüm sunucu için telaffuzlar (yönetici, 3 · Premium ile 50)"]
     ]
   },
@@ -355,7 +356,7 @@
     ],
     [
       "Premium neleri içerir?",
-      "Kokoro nöral ve Google HD motorları, 8 ses efektinin tamamı, 7/24 kanalda kalma, 50 kişisel telaffuz, /rizz ve Premium oyunlar. Aylık €3.99 3 sunucuyu, €7.99 ise 8 sunucuyu kapsar; Vozen Plus (€1.99/ay) kişisel ayrıcalıkları her sunucuda verir."
+      "Kokoro nöral ve Google HD motorları, 8 ses efektinin tamamı, 7/24 kanalda kalma, 50 kişisel telaffuz, /rizz ve Premium oyunlar. Sunucu Premium ayrıca canlı ses transkripsiyonu içerir. Aylık €3.99 3 sunucuyu, €7.99 ise 8 sunucuyu kapsar; Vozen Plus (€1.99/ay) kişisel ayrıcalıkları her sunucuda verir."
     ],
     [
       "Vozen'i sunucuma nasıl eklerim?",
@@ -371,7 +372,7 @@
     ],
     [
       "Herkesin farklı bir sesi olabilir mi?",
-      "Evet. Her üye /voice set ile kendi sesini ve dilini ayarlar, üstelik Vozen her mesajın dilini otomatik olarak bile algılayabilir."
+      "Evet. Her üye /voice set ile kendi sesini ve dilini ayarlar. Bu ses varsayılandır; mesaj başına isteğe bağlı algılama /voice detection on ile açılır."
     ],
     [
       "Piper, Kokoro veya Google HD — hangi ses motoru?",

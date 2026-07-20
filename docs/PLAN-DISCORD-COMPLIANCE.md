@@ -16,7 +16,7 @@ como regra permanente do projeto (toda a feature futura nasce conforme).
 - **Política de privacidade** completa e fiel (PRIVACY.md + vozen.org/privacy): divulga o envio
   do texto ao Google (gTTS) e OpenAI (neural), tabelas SQLite, cache de áudio, retenção. §5(a) ✓
 - **Eliminação por dado**: `/voice reset`, `/voice nickname`, `/voice optin`,
-  `/voice abbrev remove`, `/config pronunciation remove`, `/config reset`. §5(b) parcial ✓
+  `/voice abbrev remove`, `/serverpronunciation remove`, `/config reset`. §5(b) parcial ✓
 - **Opt-out de leitura** (`/voice optout`) — respeita a escolha do utilizador. Política #3 ✓
 - **Sem DMs não solicitadas** (só sends a canais de guild), **sem venda/partilha de dados**,
   **sem trackers/analytics**, **sem treino de IA** com conteúdo de mensagens. Política #5-7, #17-21 ✓

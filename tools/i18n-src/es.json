@@ -40,7 +40,7 @@
     "feat.2.t": "Tu voz, tu idioma",
     "feat.2.d": "Cada miembro elige su propia voz entre 35 idiomas — Google o un motor neuronal local.",
     "feat.3.t": "Habla como una persona",
-    "feat.3.d": "Detecta el idioma de cada mensaje, mezcla voces dentro de una misma frase y sube el volumen cuando usas ! o MAYÚSCULAS.",
+    "feat.3.d": "Usa tu voz elegida de forma predeterminada. La detección opcional por mensaje se activa con /voice detection on; ! y MAYÚSCULAS añaden énfasis.",
     "feat.4.t": "16 minijuegos de voz",
     "feat.4.d": "Adivina el idioma, concursos de deletreo, Wordle, duelos de reflejos — con una clasificación del servidor.",
     "feat.5.t": "Personalidad incluida",
@@ -301,7 +301,9 @@
     "account.discordAvatar": "Avatar de {name}",
     "dashboard.retry": "Intentar de nuevo",
     "dashboard.secureTokenError": "Tu navegador no puede generar un token de inicio de sesión seguro. Actualízalo.",
-    "price.m.21": "Motor neuronal Kokoro"
+    "price.m.21": "Motor neuronal Kokoro",
+    "price.m.22": "Voces Google HD",
+    "price.m.23": "Transcripción de voz en directo"
   },
   "commands": {
     "general": [
@@ -344,7 +346,6 @@
       ["/config default-voice", "Define la voz predeterminada del servidor"],
       ["/config autoread", "Activa o desactiva la lectura automática"],
       ["/config blockword", "Gestiona la lista de bloqueo"],
-      ["/config pronunciation", "Pronunciaciones personalizadas"],
       ["/serverpronunciation", "Pronunciaciones para todo el servidor (admin, 3 · 50 con Premium)"]
     ]
   },
@@ -355,7 +356,7 @@
     ],
     [
       "¿Qué incluye Premium?",
-      "Motores Kokoro neuronal y Google HD, los 8 efectos de voz, permanencia 24/7, 50 pronunciaciones personales, /rizz y los juegos Premium. 3,99 €/mes cubre 3 servidores o 7,99 €/mes cubre 8; Vozen Plus (1,99 €/mes) da las ventajas personales en cualquier servidor."
+      "Motores Kokoro neuronal y Google HD, los 8 efectos de voz, permanencia 24/7, 50 pronunciaciones personales, /rizz y los juegos Premium. Premium de servidor también incluye transcripción de voz en directo. 3,99 €/mes cubre 3 servidores o 7,99 €/mes cubre 8; Vozen Plus (1,99 €/mes) da las ventajas personales en cualquier servidor."
     ],
     [
       "¿Cómo añado Vozen a mi servidor?",
@@ -371,7 +372,7 @@
     ],
     [
       "¿Puede cada uno tener una voz distinta?",
-      "Sí. Cada miembro define su propia voz e idioma con /voice set, y Vozen puede incluso detectar el idioma de cada mensaje automáticamente."
+      "Sí. Cada miembro define su voz e idioma con /voice set. Esa voz se usa de forma predeterminada; la detección opcional por mensaje se activa con /voice detection on."
     ],
     [
       "Piper, Kokoro o Google HD — ¿qué motor de voz?",

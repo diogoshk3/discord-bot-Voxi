@@ -40,7 +40,7 @@
     "feat.2.t": "Your voice, your language",
     "feat.2.d": "Every member picks their own voice from 35 languages — Google or a local neural engine.",
     "feat.3.t": "Speaks like a human",
-    "feat.3.d": "Detects the language of each message, mixes voices inside one sentence, and gets louder when you use ! or CAPS.",
+    "feat.3.d": "Uses your chosen voice by default. Optional per-message detection is enabled with /voice detection on; ! and CAPS add emphasis.",
     "feat.4.t": "16 voice minigames",
     "feat.4.d": "Guess the language, spelling bees, Wordle, reflex duels — with a server leaderboard.",
     "feat.5.t": "Personality included",
@@ -301,7 +301,9 @@
     "account.discordAvatar": "{name} avatar",
     "dashboard.retry": "Try again",
     "dashboard.secureTokenError": "Your browser can't generate a secure login token. Please update it.",
-    "price.m.21": "Kokoro neural engine"
+    "price.m.21": "Kokoro neural engine",
+    "price.m.22": "Google HD voices",
+    "price.m.23": "Live voice transcription"
   },
   "commands": {
     "general": [
@@ -344,7 +346,6 @@
       ["/config default-voice", "Set the server's default voice"],
       ["/config autoread", "Turn auto-read on/off"],
       ["/config blockword", "Manage the blocklist"],
-      ["/config pronunciation", "Custom pronunciations"],
       [
         "/serverpronunciation",
         "Server-wide pronunciations for everyone (admin, 3 · 50 with Premium)"
@@ -358,7 +359,7 @@
     ],
     [
       "What does Premium include?",
-      "Kokoro neural and Google HD voice engines, all 8 voice effects, 24/7 in-call, 50 personal pronunciations, /rizz and the premium games (Word Chain, Wordle, Chess). €3.99/month covers 3 servers, or €7.99/month covers 8; annual saves about 20%. Vozen Plus (€1.99/month) gives the personal perks on any server."
+      "Kokoro neural and Google HD voice engines, all 8 voice effects, 24/7 in-call, 50 personal pronunciations, /rizz and the premium games (Word Chain, Wordle, Chess). Server Premium also includes live voice transcription. €3.99/month covers 3 servers, or €7.99/month covers 8; annual saves about 20%. Vozen Plus (€1.99/month) gives the personal perks on any server."
     ],
     [
       "How do I add Vozen to my server?",
@@ -374,7 +375,7 @@
     ],
     [
       "Can everyone have a different voice?",
-      "Yes. Each member sets their own voice and language with /voice set, and Vozen can even detect the language of each message automatically."
+      "Yes. Each member sets their own voice and language with /voice set. That voice is the default; optional per-message detection can be enabled with /voice detection on."
     ],
     [
       "Piper, Kokoro or Google HD — which voice engine?",

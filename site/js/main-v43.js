@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   Vozen site — main-v42.js
+   Vozen site — main-v43.js
    ═══════════════════════════════════════════════════════════ */
 (function () {
   "use strict";
@@ -130,8 +130,7 @@
   }
 
   // As 10 línguas do seletor: [código, bandeira, autónimo (nome na própria língua)].
-  // Sem RTL — todas usam layout normal LTR (o texto árabe alinha à esquerda; o bidi do
-  // Unicode continua a renderizar os caracteres na direção certa dentro da linha).
+  // O documento inteiro muda para RTL em árabe; as restantes línguas usam LTR.
   const LANG_UI = [
     ["en", "🇬🇧", "English"],
     ["pt", "🇵🇹", "Português"],
@@ -164,6 +163,7 @@
   function applyLang(l) {
     lang = DICT[l] ? l : "en";
     document.documentElement.lang = lang;
+    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
     const d = DICT[lang];
     $$("[data-i18n]").forEach((el) => {
       const k = el.getAttribute("data-i18n");
@@ -1376,16 +1376,21 @@
 
   const burger = $("#burger");
   const links = $(".nav__links");
+  function closeMobileNav(restoreFocus) {
+    links.classList.remove("is-open");
+    burger.setAttribute("aria-expanded", "false");
+    if (restoreFocus) burger.focus();
+  }
   burger.addEventListener("click", () => {
     const open = links.classList.toggle("is-open");
     burger.setAttribute("aria-expanded", String(open));
   });
   $$(".nav__links a").forEach((a) =>
-    a.addEventListener("click", () => {
-      links.classList.remove("is-open");
-      burger.setAttribute("aria-expanded", "false");
-    }),
+    a.addEventListener("click", () => closeMobileNav(false)),
   );
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && links.classList.contains("is-open")) closeMobileNav(true);
+  });
 
   /* ── reveal on scroll ────────────────────────────────── */
   const io = new IntersectionObserver(

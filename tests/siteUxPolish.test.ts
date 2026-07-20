@@ -9,7 +9,7 @@ const LANGS = ['en', 'pt', 'fr', 'es', 'de', 'tr', 'ar', 'zh', 'ru', 'ko'] as co
 
 describe('site UX polish contract', () => {
   it('requires a translated, accessible confirmation before logging out', () => {
-    const script = source('site/js/main-v42.js');
+    const script = source('site/js/main-v43.js');
 
     expect(script).toContain('function logoutConfirmModal()');
     expect(script).toContain('id="ppLogoutConfirm"');
@@ -25,7 +25,7 @@ describe('site UX polish contract', () => {
   });
 
   it('shows a specific inline error before submitting an empty Ko-fi receipt', () => {
-    const script = source('site/js/main-v42.js');
+    const script = source('site/js/main-v43.js');
     const emptyGuard = script.indexOf('setMsg(t("claim.receiptRequired"), "err")');
     const linkRequest = script.indexOf('PREMIUM_API_BASE + "/api/link"');
     const instantMessage = script.indexOf('id="ppInstantMsg"');
@@ -45,8 +45,8 @@ describe('site UX polish contract', () => {
   });
 
   it('fits translated hero lines without changing the shared visual footprint', () => {
-    const script = source('site/js/main-v42.js');
-    const css = source('site/css/main-v41.css');
+    const script = source('site/js/main-v43.js');
+    const css = source('site/css/main-v42.css');
 
     expect(script).toContain('function fitHeroTitle()');
     expect(script).toContain('fitHeroTitle();');
@@ -61,7 +61,7 @@ describe('site UX polish contract', () => {
 
   it('has a short-desktop account layout and equal paid-plan CTA footers', () => {
     const accountCss = source('site/css/account-v6.css');
-    const siteCss = source('site/css/main-v41.css');
+    const siteCss = source('site/css/main-v42.css');
 
     expect(accountCss).toMatch(/@media\s*\(min-width:\s*1021px\)\s*and\s*\(max-height:\s*699px\)/);
     expect(accountCss).toMatch(/\.ppanel__logoutconfirm\s*\{/);

@@ -40,7 +40,7 @@
     "feat.2.t": "你的語音，你的語言",
     "feat.2.d": "每位成員都能從 35 種語言中挑選自己的語音——Google 或本地神經網路引擎皆可。",
     "feat.3.t": "說起話來像真人",
-    "feat.3.d": "偵測每則訊息的語言，在同一句話中混合多種語音，並在你使用 ! 或全大寫時提高音量。",
+    "feat.3.d": "預設使用你選擇的語音。可用 /voice detection on 啟用每則訊息的選用語言偵測；! 和全大寫會加強語氣。",
     "feat.4.t": "16 款語音小遊戲",
     "feat.4.d": "猜語言、拼字比賽、Wordle、反應對決——還有伺服器排行榜。",
     "feat.5.t": "自帶個性",
@@ -301,7 +301,9 @@
     "account.discordAvatar": "{name} 的頭像",
     "dashboard.retry": "再試一次",
     "dashboard.secureTokenError": "你的瀏覽器無法產生安全的登入權杖，請更新瀏覽器。",
-    "price.m.21": "Kokoro 神经语音引擎"
+    "price.m.21": "Kokoro 神经语音引擎",
+    "price.m.22": "Google HD 語音",
+    "price.m.23": "即時語音轉錄"
   },
   "commands": {
     "general": [
@@ -344,7 +346,6 @@
       ["/config default-voice", "設定伺服器的預設語音"],
       ["/config autoread", "開啟／關閉自動朗讀"],
       ["/config blockword", "管理封鎖清單"],
-      ["/config pronunciation", "自訂發音"],
       ["/serverpronunciation", "全服务器发音（管理员，3 个 · Premium 50 个）"]
     ]
   },
@@ -355,7 +356,7 @@
     ],
     [
       "Premium 包含哪些內容？",
-      "Kokoro 神经语音与 Google HD 引擎、全部 8 种语音特效、全天候驻留、50 条个人发音、/rizz 和 Premium 游戏。每月 €3.99 覆盖 3 个服务器，€7.99 覆盖 8 个；Vozen Plus（每月 €1.99）可在任何服务器提供个人权益。"
+      "Kokoro 神经语音与 Google HD 引擎、全部 8 种语音特效、全天候驻留、50 条个人发音、/rizz 和 Premium 游戏。伺服器 Premium 也包含即時語音轉錄。每月 €3.99 覆盖 3 个服务器，€7.99 覆盖 8 个；Vozen Plus（每月 €1.99）可在任何服务器提供个人权益。"
     ],
     [
       "我要怎麼把 Vozen 加入我的伺服器？",
@@ -371,7 +372,7 @@
     ],
     [
       "每個人都能使用不同的語音嗎？",
-      "可以。每位成員都能用 /voice set 設定自己的語音與語言，Vozen 甚至能自動偵測每則訊息的語言。"
+      "可以。每位成員都能用 /voice set 設定自己的語音與語言。預設使用該語音；可用 /voice detection on 啟用每則訊息的選用語言偵測。"
     ],
     [
       "Piper、Kokoro 还是 Google HD——该选哪个语音引擎？",

@@ -64,9 +64,10 @@ voice channel, type in the text channel, and you're done.
 
 ## Premium
 
-Vozen's Piper-powered core is free and always will be. **Plus** and **Premium**
-unlock the Kokoro neural engine, Google HD voices, 24/7 always-on, voice→text
-transcription and higher limits.
+Vozen's Piper-powered core is free and always will be. **Plus** unlocks personal
+Kokoro, Google HD, all voice effects and higher personal limits on every server.
+**Premium** unlocks those voice perks for the server, plus 24/7 always-on and higher
+server limits. Live voice transcription is a server Premium feature.
 
 **[→ Plans and prices at vozen.org](https://vozen.org/#premium)** · run `/premium info`
 in Discord to see what you have.

@@ -41,7 +41,7 @@
 
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
 
-    <link rel="stylesheet" href="css/main-v41.css" />
+    <link rel="stylesheet" href="css/main-v42.css" />
 
     <!-- FAQ structured data (Google rich results). Mantém em sincronia com
          window.VOZEN_FAQ (js/i18n.js) — o JSON-LD tem de ser ESTÁTICO porque os
@@ -52,7 +52,7 @@
       "@type": "FAQPage",
       "mainEntity": [
         { "@type": "Question", "name": "Is Vozen really free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes — the core is free forever: 38 Piper voices in 35 languages, auto-read, greetings, most games and every admin control. Kokoro and Google HD are Premium voice engines; Plus unlocks them personally and server Premium unlocks them for that server." } },
-        { "@type": "Question", "name": "What does Premium include?", "acceptedAnswer": { "@type": "Answer", "text": "Kokoro neural and Google HD voice engines, all 8 voice effects, 24/7 in-call, 50 personal pronunciations, /rizz and the premium games (Word Chain, Wordle, Chess). €3.99/month covers 3 servers, or €7.99/month covers 8; annual saves about 20%. Vozen Plus (€1.99/month) gives the personal perks on any server." } },
+        { "@type": "Question", "name": "What does Premium include?", "acceptedAnswer": { "@type": "Answer", "text": "Kokoro neural and Google HD voice engines, all 8 voice effects, 24/7 in-call, 50 personal pronunciations, /rizz and the premium games (Word Chain, Wordle, Chess). Server Premium also includes live voice transcription. €3.99/month covers 3 servers, or €7.99/month covers 8; annual saves about 20%. Vozen Plus (€1.99/month) gives the personal perks on any server." } },
         { "@type": "Question", "name": "How do I add Vozen to my server?", "acceptedAnswer": { "@type": "Answer", "text": "Click \"Add to Discord\", pick your server (you need Manage Server), and run /setup. That's it." } },
         { "@type": "Question", "name": "Which languages does it support?", "acceptedAnswer": { "@type": "Answer", "text": "35 languages with 38 neural voices — Portuguese, English, Spanish, French, German, Japanese, Arabic, Russian and many more, each with a native voice." } },
         { "@type": "Question", "name": "Do I need to configure anything?", "acceptedAnswer": { "@type": "Answer", "text": "No. /setup does it in one step. After that, everything works with sensible defaults — you can fine-tune later with /config." } },
@@ -264,7 +264,7 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>
               </span>
               <h3 data-i18n="feat.3.t">Speaks like a human</h3>
-              <p data-i18n="feat.3.d">Detects the language of each message, mixes voices inside one sentence, and gets louder when you use ! or CAPS.</p>
+              <p data-i18n="feat.3.d">Uses your chosen voice by default. Optional per-message detection is enabled with /voice detection on; ! and CAPS add emphasis.</p>
             </article>
 
             <article class="card reveal">
@@ -470,6 +470,7 @@
               </div>
               <ul class="ticks price-card__highlights">
                 <li data-i18n="price.m.21">Kokoro neural engine</li>
+                <li data-i18n="price.m.22">Google HD voices</li>
                 <li data-i18n="price.m.9">All 8 voice effects (deep, demon, radio…)</li>
                 <li data-i18n="price.m.15">50 personal pronunciations</li>
                 <li data-i18n="price.m.11">Word Chain game</li>
@@ -510,9 +511,11 @@
               <ul class="ticks ticks--amber price-card__highlights">
                 <li data-i18n="price.m.18">Works for everyone in the server</li>
                 <li data-i18n="price.m.21">Kokoro neural engine</li>
+                <li data-i18n="price.m.22">Google HD voices</li>
                 <li data-i18n="price.m.9">All 8 voice effects (deep, demon, radio…)</li>
                 <li data-i18n="price.m.19">50 server pronunciations</li>
                 <li data-i18n="price.m.16">In the call 24/7</li>
+                <li data-i18n="price.m.23">Live voice transcription</li>
                 <li data-i18n="price.m.11">Word Chain game</li>
               </ul>
               <p class="price-card__note note--s3" data-i18n="price.pro.note">€37.99/year (save ~20%) · buy on Ko-fi</p>
@@ -558,6 +561,7 @@
                     <tr role="row"><th scope="row" role="rowheader" data-i18n="price.m.8">Full admin kit</th><td role="cell" class="has">✓</td><td role="cell" class="has">✓</td><td role="cell" class="has">✓</td></tr>
                     <!-- Bloco B — extras pagos: iguais no Plus e no Premium. -->
                     <tr role="row" class="group-b"><th scope="row" role="rowheader" data-i18n="price.m.21">Kokoro neural engine</th><td role="cell" class="has-not">—</td><td role="cell" class="has">✓</td><td role="cell" class="has">✓</td></tr>
+                    <tr role="row"><th scope="row" role="rowheader" data-i18n="price.m.22">Google HD voices</th><td role="cell" class="has-not">—</td><td role="cell" class="has">✓</td><td role="cell" class="has">✓</td></tr>
                     <tr role="row"><th scope="row" role="rowheader" data-i18n="price.m.9">All 8 voice effects (deep, demon, radio…)</th><td role="cell" class="has-not">—</td><td role="cell" class="has">✓</td><td role="cell" class="has">✓</td></tr>
                     <tr role="row"><th scope="row" role="rowheader" data-i18n="price.m.11">Word Chain game</th><td role="cell" class="has-not">—</td><td role="cell" class="has">✓</td><td role="cell" class="has">✓</td></tr>
                     <tr role="row"><th scope="row" role="rowheader" data-i18n="price.m.12">Wordle game</th><td role="cell" class="has-not">—</td><td role="cell" class="has">✓</td><td role="cell" class="has">✓</td></tr>
@@ -568,6 +572,7 @@
                     <tr role="row" class="group-c"><th scope="row" role="rowheader" data-i18n="price.m.17">Goes with you to any server</th><td role="cell" class="has-not">—</td><td role="cell" class="has">✓</td><td role="cell" class="has-not">—</td></tr>
                     <tr role="row"><th scope="row" role="rowheader" data-i18n="price.m.19">50 server pronunciations</th><td role="cell" class="has-not">—</td><td role="cell" class="has-not">—</td><td role="cell" class="has has--premium">✓</td></tr>
                     <tr role="row"><th scope="row" role="rowheader" data-i18n="price.m.16">In the call 24/7</th><td role="cell" class="has-not">—</td><td role="cell" class="has-not">—</td><td role="cell" class="has has--premium">✓</td></tr>
+                    <tr role="row"><th scope="row" role="rowheader" data-i18n="price.m.23">Live voice transcription</th><td role="cell" class="has-not">—</td><td role="cell" class="has-not">—</td><td role="cell" class="has has--premium">✓</td></tr>
                     <tr role="row"><th scope="row" role="rowheader" data-i18n="price.m.18">Works for everyone in the server</th><td role="cell" class="has-not">—</td><td role="cell" class="has-not">—</td><td role="cell" class="has has--premium">✓</td></tr>
                   </tbody>
                 </table>
@@ -635,7 +640,7 @@
       </div>
     </footer>
 
-    <script defer src="js/i18n-v38.js"></script>
-    <script defer src="js/main-v42.js"></script>
+    <script defer src="js/i18n-v39.js"></script>
+    <script defer src="js/main-v43.js"></script>
   </body>
 </html>

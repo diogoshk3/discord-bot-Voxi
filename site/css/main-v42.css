@@ -410,10 +410,11 @@ code { font-family: var(--f-mono); font-size: 0.9em; color: var(--aqua); }
 }
 
 .skip-link {
-  position: absolute; left: -999px; top: 8px; z-index: 200;
+  position: absolute; inset-inline-start: 12px; top: 8px; z-index: 200;
+  transform: translateY(-200%);
   background: var(--blurple); color: #fff; padding: 8px 16px; border-radius: 8px;
 }
-.skip-link:focus { left: 12px; }
+.skip-link:focus { transform: translateY(0); }
 
 /* Foco de teclado visível (a11y). Só para navegação por teclado — o :focus-visible
    não dispara em cliques de rato, por isso não polui a UI de quem usa ponteiro. */
@@ -449,7 +450,7 @@ code { font-family: var(--f-mono); font-size: 0.9em; color: var(--aqua); }
 /* O :not(.ppmodal) e a mesma historia outra vez: esta regra (0,3,1) e mais especifica que
    `.ppmodal` (0,1,0), por isso ganhava-lhe o `position: fixed` e punha o modal no fluxo da
    pagina — aparecia como uma caixa la em baixo em vez de cobrir o ecra. */
-body > *:not(.grain):not(.orbs):not(.nav):not(.ppmodal) { position: relative; z-index: 2; }
+body > *:not(.grain):not(.orbs):not(.nav):not(.ppmodal):not(.skip-link) { position: relative; z-index: 2; }
 
 /* ── equalizer mark ─────────────────────────────────────── */
 .eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 18px; }
@@ -577,7 +578,7 @@ body > *:not(.grain):not(.orbs):not(.nav):not(.ppmodal) { position: relative; z-
 .lang.is-open .lang__chev { transform: rotate(180deg); }
 
 .lang__panel {
-  position: absolute; top: calc(100% + 8px); right: 0; z-index: 120;
+  position: absolute; top: calc(100% + 8px); inset-inline-end: 0; z-index: 120;
   min-width: 208px; max-height: min(60vh, 420px); overflow-y: auto;
   margin: 0; padding: 6px; list-style: none;
   background: var(--glass-2); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
@@ -1777,7 +1778,7 @@ body.is-modal-open { overflow: hidden; }
   }
 }
 
-/* Every translation keeps the hero as two deliberate phrases. main-v42.js reduces the shared
+/* Every translation keeps the hero as two deliberate phrases. main-v43.js reduces the shared
    font size only when the real glyph width would exceed this line. */
 .hero__title span {
   white-space: nowrap;

@@ -40,7 +40,7 @@ Cada pasta de `src/` e a sua responsabilidade (o que está realmente no código)
 | `store/gcloudUsage.ts` | Contadores MENSAIS de chars do Google HD (tabela `gcloud_usage(scope,key,month,chars)`), persistentes: `getGcloudMonthlyChars`/`addGcloudMonthlyChars` (UPSERT atómico) + `monthKeyUTC` (mês 'YYYY-MM' UTC). Pools por `scope` = `user`/`pass`/`guild`/`global`. | `db` |
 | `store/guildConfig.ts` | Config por-guild (canal TTS, autoread, default_voice, max_chars, rate, enabled, role): get/set/reset com defaults. | `db` |
 | `store/blocklist.ts` | Blocklist de palavras por-guild: add/remove/get. | `db` |
-| `store/pronunciation.ts` | Dois dicionários: **PESSOAL** (`/pronunciation`, `pronunciation_user`) — global por-user, só as mensagens do próprio, cap 3 Free / 50 Premium; e **SERVIDOR** (`/serverpronunciation`, `pronunciation`, admin) — toda a guild, cap fixo 3. No pipeline aplica-se pessoal→servidor (o termo do user ganha). `addUser/ServerPronunciation` impõem o cap. | `db` |
+| `store/pronunciation.ts` | Dois dicionários: **PESSOAL** (`/pronunciation`, `pronunciation_user`) — global por-user, só as mensagens do próprio, cap 3 Free / 50 com Plus pessoal ou Premium da guild; e **SERVIDOR** (`/serverpronunciation`, `pronunciation`, admin) — toda a guild, cap 3 Free / 50 com Premium da guild. No pipeline aplica-se pessoal→servidor (o termo do user ganha). `addUser/ServerPronunciation` impõem o cap recebido pelo handler. | `db` |
 | `store/optout.ts` | Opt-out de auto-leitura por-utilizador: is/set/clear. | `db` |
 | `store/userAbbrev.ts` | Abreviaturas pessoais por-utilizador, **GLOBAIS** (chave = só `user_id`, seguem o utilizador entre servidores): get/add/remove, cap de **10** por utilizador (`USER_ABBREV_CAP`), tabela `user_abbreviation`. | `db` |
 | `store/guildConfig.ts` (locale) | Além dos campos acima, `guild_config.locale` (idioma da **interface**; default `'en'`). | `db`, `i18n` |
@@ -88,7 +88,7 @@ Cada pasta de `src/` e a sua responsabilidade (o que está realmente no código)
 | `commands/voiceConfigPanel.ts` | Lógica PURA do painel `/voice config` (dropdowns + botão Guardar; nada é gravado até Guardar, evita o Enter acidental de um comando com opções). `seedPanelState` (semeia do estado atual), `localesOf`/`voicesForLocale`/`needsVoiceRow` (agrupamento por língua), `paginateLocales` (24 línguas/página + sentinela "Mais" — o select do Discord só aceita 25), `SPEED_PRESETS` (velocidades válidas por construção), `validateSave` (gate gcloud→Premium). A cola discord.js (`handleVoiceConfig`) vive em `handlers/voice.ts` e é verificada ao vivo. | `voiceMap` (`modelDisplayName`) |
 | `commands/index.ts` | Definições dos slash commands (`commandDefs`) e `handleInteraction` (join, leave, tts, skip, **laugh**, **joke**, voice, config, stats, **help**, **setup**). Toda a UI passa por `t()`/`localeFor(deps, guildId)`. | tudo acima |
 | `commands/messageHandler.ts` | `handleMessage`: pipeline de auto-leitura/menção/reply em `messageCreate`. | store, textCleaning, moderation, prepareSpeech |
-| `commands/prepareSpeech.ts` | `prepareSpeech` (partilhado por `/tts` e leitura de canal): texto→`SynthRequest`. A deteção automática de língua foi **removida**: a voz é SEMPRE a **preferida** (user > guild > .env > amy), `singleVoice`, sem detetar a língua do texto nem partir por segmento. Aplica gírias embutidas + `/pronunciation` + restauro de acentos na língua da VOZ. Decora com o xsaid (prefixo "{nome} disse") e o sufixo de media, localizados na língua da voz. | `voiceMap`, `abbreviations`, `pronunciation`, `accents`, `spokenPhrases` |
+| `commands/prepareSpeech.ts` | `prepareSpeech` (partilhado por `/tts` e leitura de canal): texto→`SynthRequest`. A voz escolhida é fixa por defeito; a deteção automática está default OFF; opt-in via `/voice detection on`. Quando ligada, deteta a língua-base da mensagem e separa gíria inglesa conhecida para a voz inglesa. Aplica gírias embutidas + `/pronunciation` + restauro de acentos. Decora com o xsaid (prefixo "{nome} disse") e o sufixo de media, localizados na língua da voz. | `voiceMap`, `abbreviations`, `pronunciation`, `accents`, `spokenPhrases` |
 | `content/jokes.ts` | Catálogo de piadas curtas multilingue (35 línguas) + `JOKE_LANGUAGES` (autocomplete `idioma`), `jokeLangByKey`, `pickJoke(langKey, seed)` (puro/seeded). Usado pelo `/joke`. | — |
 | `content/pickupLines.ts` | Banco de pick-up lines (frases de engate) multilingue — REUTILIZA `JOKE_LANGUAGES` (35 línguas) + `pickLine(key, seed)` (puro/seeded, fallback EN). Usado pelo `/rizz`. | `content/jokes` |
 | `leaderboard/randomPost.ts` | `LeaderboardPoster` (F2): decide por ATIVIDADE (mensagens lidas + limiar + cooldown + sorteio; relógio/aleatoriedade injetáveis) quando postar o top de tagarelas no canal do `/setup`. `renderLeaderboard(rows, locale)` (puro) monta o texto (menções suprimidas). Estado em memória por-guild; instância no `BotDeps`. | `store/talkStats`, `i18n` |
@@ -238,19 +238,18 @@ constroem o `SynthRequest` diretamente (a língua é conhecida — a voz atual d
 
 ### Precedência de voz (`prepareSpeech` + `pickVoiceForLang`)
 
-A **voz é FIXA** (a deteção automática de língua foi removida — 2026-07). `prepareSpeech`
-usa **sempre** a voz preferida, `singleVoice`, sem olhar para a língua do texto:
+A deteção automática está **desligada por defeito**. Nesse estado, `prepareSpeech` usa a
+voz preferida, `singleVoice`, sem olhar para a língua do texto:
 
 1. **Voz preferida** — por precedência: voz guardada do utilizador (`user_voice`) →
    `guild default_voice` (se não-vazio) → `.env DEFAULT_VOICE` → `'en_US-amy-medium'`.
 2. Essa voz lê **tudo**, em qualquer língua (a pessoa soa sempre igual). O restauro de
    acentos usa a língua **da voz** (`accentLangOfModel`), não a do texto.
 
-Consequência (design): a voz que a pessoa escolhe é a que fala — nunca troca de locutor
-a meio. `pickVoiceForLang` mantém-se para o `MultiSegmentEngine`, que **está ligado por
-defeito** (`MULTILINGUAL_SEGMENTS` só desliga com o valor exato `false`) mas hoje é
-**inerte**: `prepareSpeech` marca `singleVoice`, por isso o motor delega sempre na voz-base
-sem detetar língua nem partir por segmento. A **velocidade** vem
+Com `/voice detection on`, o estado persistido por utilizador+guild faz `prepareSpeech`
+detetar a língua-base e escolher uma voz dessa língua; gíria inglesa conhecida pode formar
+segmentos ingleses separados. `pickVoiceForLang` e o `MultiSegmentEngine` executam esse
+caminho opt-in. A **velocidade** vem
 da voz guardada do utilizador, senão é **sempre** `defaultSpeed` (`DEFAULT_SPEED`); o
 `default_voice` da guild define apenas o modelo, nunca a velocidade.
 
@@ -268,11 +267,11 @@ da voz guardada do utilizador, senão é **sempre** `defaultSpeed` (`DEFAULT_SPE
   (o default seguro), em vez de crashar o arranque por um typo. Toda a app fala com a
   interface abstrata `TTSEngine`, por isso trocar de motor não toca no resto.
 
-- **(c) A voz é FIXA (deteção de língua removida, 2026-07).** `prepareSpeech` usa
-  **sempre** a voz **preferida** (user-voice > `guild default_voice` > `.env
-  DEFAULT_VOICE` > `'en_US-amy-medium'`) para tudo, `singleVoice`, sem detetar a língua do
-  texto. A pessoa soa sempre igual e nunca troca de locutor a meio. Ver "Precedência de
-  voz" acima. (O antigo toggle `/voice detection` e a memória de língua foram removidos.)
+- **(c) A voz é fixa por defeito; deteção é opt-in.** `prepareSpeech` usa a voz
+  **preferida** (user-voice > `guild default_voice` > `.env DEFAULT_VOICE` >
+  `'en_US-amy-medium'`) em `singleVoice` enquanto a deteção estiver OFF. O utilizador pode
+  ativar deteção por mensagem com `/voice detection on`; a opção persiste por guild+user e
+  pode trocar para a voz da língua detetada. Ver "Precedência de voz" acima.
 
 - **(d) Gating por canal e por role como checks standalone.** O trigger (canal de
   auto-leitura, menção, reply) e o gating por role são verificações separadas **após** o
@@ -417,9 +416,9 @@ Estes cinco pontos são requisitos de correção do `GuildVoicePlayer`, não oti
 
 ## Limitações conhecidas
 
-- **Self-host ainda não é beginner-friendly.** Não há ainda caminho hosted /
-  invite-and-go: o utilizador tem de instalar Node, dependências nativas, o binário do
-  Piper e os modelos. Está no roadmap (P7).
+- **Self-host não é beginner-friendly.** A instância pública tem um caminho
+  invite-and-go, mas operar uma instância própria exige Node, dependências nativas, o
+  binário do Piper e os modelos.
 - **Síntese real Piper/Neural depende de verificação ao vivo.** Os testes cobrem a
   seleção de motor e o pipeline; a geração real de WAV pelo Piper e a síntese do
   `NeuralEngine` (OpenAI) precisam de verificação ao vivo com o binário/credenciais.
@@ -427,10 +426,10 @@ Estes cinco pontos são requisitos de correção do `GuildVoicePlayer`, não oti
   `sha1(texto+modelo+velocidade)` não inclui o motor; se um motor e outro produzissem a
   mesma chave, poderiam servir áudio errado. Isto está mitigado por
   `withNamespace('piper'|'neural')`, que separa fisicamente as caches.
-- **A voz é fixa no caminho principal — não há troca por língua.** `prepareSpeech` usa
-  sempre a voz preferida do membro (ou o `default_voice` da guild) para qualquer língua,
-  `singleVoice`, sem detetar a língua do texto. A troca de voz por língua só sobrevive
-  atrás da flag experimental `MULTILINGUAL_SEGMENTS` (`detectSegments`).
+- **A deteção opt-in continua imperfeita.** Por defeito, `prepareSpeech` usa a voz preferida
+  do membro (ou o `default_voice` da guild), `singleVoice`, sem detetar a língua. Com
+  `/voice detection on`, a língua-base é detetada, mas texto curto ou ambíguo pode manter a
+  voz preferida e a mistura dentro da frase só separa gíria inglesa conhecida.
 - **Multi-segmento só separa com confiança texto multi-script.** `detectSegments` parte
   por run de script (Latin/Cyrillic/CJK/Arabic). Duas línguas do **mesmo script** na
   mesma frase (ex. inglês + francês, ambos Latin) não são separadas de forma fiável — o
@@ -446,6 +445,6 @@ Estes cinco pontos são requisitos de correção do `GuildVoicePlayer`, não oti
   expandidas de propósito: uma expansão errada é pior que nenhuma, e cada chave EN foi
   re-vetada contra palavras comuns das línguas latinas suportadas para não disparar por
   engano. Abreviaturas específicas de outra língua ficam a cargo do utilizador via
-  `/voice abbrev` (pessoais) ou do admin via `/config pronunciation` (por-guild).
+  `/voice abbrev` (pessoais) ou do admin via `/serverpronunciation` (por-guild).
 - **Mobile.** Limitação estrutural da plataforma Discord (clientes móveis não tocam o
   áudio de bots de voz de forma fiável); fora de âmbito.

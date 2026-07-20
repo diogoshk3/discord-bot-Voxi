@@ -44,8 +44,8 @@ export async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps
     }
     return;
   }
-  // NB: the old `pronunciation` group (SERVER dictionary) was removed in plan
-  // v4 — pronunciations are now personal only, via /pronunciation (handlers/personal.ts).
+  // The old `/config pronunciation` group was replaced by the dedicated admin command
+  // `/serverpronunciation`; personal entries use `/pronunciation` (handlers/personal.ts).
   const sub = i.options.getSubcommand();
   if (sub === 'tts-channel') {
     const ch = i.options.getChannel('channel', true);
