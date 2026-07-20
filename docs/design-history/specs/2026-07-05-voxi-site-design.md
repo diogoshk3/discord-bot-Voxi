@@ -1,8 +1,8 @@
 # Vozen — Site oficial · Plano de design & layout
 
-> **Estado:** plano aprovado para implementação (planeado com Fable 5; implementação: Opus)
+> **Estado:** plano aprovado para implementação em 2026-07-05.
 > **Referência de estilo:** https://quantum-bot.net/ (analisado 2026-07-05 via CSS/JS bundle — screenshots bloqueados pela política de Controlo de Aplicações do Windows)
-> **Skills a invocar na implementação (Opus):** `frontend-design:frontend-design` (obrigatória), e consultar `high-end-visual-design` + `ui-ux-pro-max` se disponíveis. Depois de construir: rever com os preview tools (o browser gstack está bloqueado nesta máquina).
+> **Implementação:** seguir o sistema visual descrito abaixo e rever o resultado nos browsers suportados.
 
 ---
 
@@ -22,7 +22,7 @@ Extraído do bundle CSS/JS real (Tailwind + React/Vite SPA):
 | i18n | Site multilingue (EN/PT/ES/FR/IT/DE) | ✅ EN + toggle PT (V1) |
 | Fontes | system-ui (fraco!) | ❌ NÃO herdar — ver §3 |
 
-**O que NÃO copiar:** o quantum usa fontes de sistema e indigo genérico. O Vozen precisa de identidade própria (regra da skill frontend-design: nada de "AI slop", tipografia com carácter).
+**O que NÃO copiar:** o quantum usa fontes de sistema e indigo genérico. O Vozen precisa de identidade própria, sem um aspeto visual genérico e com tipografia com carácter.
 
 ## 2. Conceito & identidade visual do Vozen
 
@@ -154,9 +154,9 @@ Fundo grad-brand suave + orbs; H2 “Give your server a voice.” + botão gigan
 - **A11y:** contraste AA no dark, `:focus-visible` claro, aria nos accordions/tabs, `prefers-reduced-motion`.
 - **Responsive:** breakpoints 1080/768/480. Hero empilha; marquee mantém; commands viram lista simples.
 
-## 6. Checklist de implementação (para o Opus)
+## 6. Checklist de implementação
 
-1. [ ] Invocar `frontend-design:frontend-design` antes de escrever código.
+1. [ ] Rever o conceito visual e os critérios de acessibilidade antes de escrever código.
 2. [ ] Criar `site/` com index.html + css/main.css + js/main.js + js/i18n.js.
 3. [ ] Tokens (§2) + fontes + grain + orbs.
 4. [ ] Navbar + hero com chat mock animado (a peça central — investir aqui).
@@ -166,7 +166,7 @@ Fundo grad-brand suave + orbs; H2 “Give your server a voice.” + botão gigan
 8. [ ] Commands tabs + FAQ accordion + CTA final + footer.
 9. [ ] i18n EN/PT + toggle + localStorage.
 10. [ ] `prefers-reduced-motion`, focus states, aria.
-11. [ ] Testar responsive (preview tools; gstack está bloqueado nesta máquina) + rever com os olhos do frontend-design.
+11. [ ] Testar o comportamento responsivo nos browsers suportados e fazer revisão visual.
 12. [ ] Commitar `site/` (não tocar em `.env` nem docs alheios).
 
 ## 7. Fora de âmbito (V2, não fazer agora)

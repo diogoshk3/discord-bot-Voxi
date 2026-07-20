@@ -108,7 +108,7 @@ blocked by the site itself.** `media-src 'self'` means a self-hosted `<video>` w
 precedent: the "Hear it" section already uses a self-hosted `<audio>` element
 (`site/index.html`, `#hearAudio`).
 
-This is also a project rule, not just a technical one. From `CLAUDE.md`:
+This is also a project rule, not just a technical one. From `CONTRIBUTING.md`:
 
 > **Website GDPR rule: no unnecessary third parties without prior consent.** The site is
 > self-contained: fonts are self-hosted, there are no analytics or tracking cookies, and CSP
@@ -151,8 +151,8 @@ So the video is needed in two forms:
   UTF-8 into mojibake). `npm run build:site` has a guard that fails the build if it happens.
 - Source, comments, docs, logs and test names are **English**. Only user-facing locale
   catalogs are multilingual.
-- **Never add `Co-Authored-By:` or any AI attribution to commits.** The Contributors list
-  must show real people only.
+- **Keep commit authorship limited to the human author.** The Contributors list must
+  show real people only.
 - Site JS has no unit harness — the acceptance test is the browser. There is also a
   source-assertion pattern in `tests/operationalHardening.test.ts` worth following.
 
@@ -173,8 +173,8 @@ Once an MP4 exists at `site/assets/activate-demo.mp4`:
 
 ## 8. Honest scoping
 
-**Nobody in this chain can screen-record.** An AI coding agent cannot capture a real Discord
-and Ko-fi session. A human has to record the raw footage. What can be automated: editing,
+**The raw session must be recorded manually.** Capture a real Discord and Ko-fi session.
+What can be automated: editing,
 captioning, compressing, generating a synthetic/animated version, and the site integration in
 §7.
 

@@ -1,6 +1,6 @@
 # Plano — Streak por servidor + Top 10 global na consola admin (plan 038)
 
-> Extensão do admin console (plan 037). Planeado com Fable 5 em 2026-07-18; execução pelo Opus.
+> Extensão do admin console (plan 037). Planeado em 2026-07-18.
 > Repos afetados: **Vozen-bot** (store + API) e **vozen-helper-bot/site** (`site/vozen.html`).
 
 ## Objetivo
@@ -64,7 +64,7 @@ Deliverable: tab Servidores com streak + cartão Top 10. Dep: F3.
 
 ### F5 — Deploy + verificação real + compliance
 Deliverable: em produção, documentado. Dep: F2–F4.
-- [ ] Commits (convenções: Vozen-bot **sem** Co-Authored-By; site com) + push; deploy VPS (`git pull` + build + restart do serviço do Vozen TTS) + publish do site (GitHub Pages).
+- [ ] Commits com autoria humana + push; deploy VPS (`git pull` + build + restart do serviço do Vozen TTS) + publish do site (GitHub Pages).
 - [ ] Verificar no painel real: streaks aparecem (seed ≥ 1 nos servidores ativos), Top 10 com avatares/nomes.
 - [ ] Adenda ao `docs/AUDIT-CONSOLE-037.md`: nova superfície (streak por guild = agregado sem dados pessoais; top10 global = SUM de contagens já armazenadas, owner-only, sem conteúdo de mensagens); confirmar/ajustar `PRIVACY.md` §1.2 numa linha se o texto atual não cobrir agregação cross-server.
 - [ ] Done: painel real ok + docs atualizados.

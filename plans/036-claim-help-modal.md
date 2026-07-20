@@ -1,7 +1,7 @@
 # Plano 036 — Modal "Não estás a conseguir?" (o Ref como chave de suporte)
 
-Escrito 2026-07-17, contra o commit `132605a`. Planeamento apenas (Fable 5) —
-execução pelo Opus por ordem explícita.
+Escrito 2026-07-17, contra o commit `132605a`. Planeamento apenas —
+execução por ordem explícita.
 
 ## Objetivo
 

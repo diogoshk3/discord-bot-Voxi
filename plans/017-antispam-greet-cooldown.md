@@ -1,6 +1,6 @@
 # Plan 017 — Anti-spam de leitura + cooldown da saudação
 
-> Gerado pelo skill **blueprint** em 2026-07-08 (pedido do Diogo). Baseline: suite
+> Planeado em 2026-07-08 (pedido do Diogo). Baseline: suite
 > 1360 verde, commit `0370f4b`. Executor: ler o plano inteiro antes de começar;
 > protocolo habitual (build → teste do plano → suite completa → commit só dos
 > ficheiros em escopo → restart).
@@ -105,7 +105,7 @@ Deliverable: com antispam ON, mensagens spam não chegam ao TTS.
 
 - [ ] Suite completa + `npm run build` + `npm run typecheck` + lint/format.
 - [ ] Doc-sync: `docs/ARCHITECTURE.md` (secção do pipeline de leitura + saudação),
-      `/help` (mencionar `/config antispam`), CLAUDE.md se necessário.
+      `/help` (mencionar `/config antispam`), CONTRIBUTING.md se necessário.
 - [ ] Atualizar `plans/README.md` (linha 017) + commit(s) por fase + restart do bot.
 - Done: bot em produção com as duas features; log de arranque limpo.
 

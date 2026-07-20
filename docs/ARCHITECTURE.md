@@ -3,7 +3,7 @@
 > Vozen — *type it, hear it.*
 
 Este documento descreve a arquitetura real do Vozen tal como está no código (`src/`).
-Para a spec de design original ver `docs/superpowers/specs/2026-06-30-tts-bot-design.md`;
+Para a spec de design original ver `docs/design-history/specs/2026-06-30-tts-bot-design.md`;
 quando este documento e a spec divergem, **este reflete o código** (a spec é histórica).
 
 ## Visão geral

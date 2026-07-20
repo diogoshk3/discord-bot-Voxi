@@ -4,10 +4,10 @@
 > compliance por feature** (requisito transversal). Cada feature será depois
 > destrinçada no seu próprio spec/plano (brainstorming → writing-plans) antes de
 > código; este documento é o plano **da vaga**: âmbito, ordem, portões e MVP.
-> Compliance ancorada em `docs/COMPLIANCE-DISCORD.md` + `CLAUDE.md` (§"Discord
+> Compliance ancorada em `docs/COMPLIANCE-DISCORD.md` + `CONTRIBUTING.md` (§"Discord
 > compliance is mandatory").
 >
-> Revisto por um segundo modelo (Fable 5) a 2026-07-13: 12 correções aplicadas —
+> Segunda revisão técnica concluída a 2026-07-13: 12 correções aplicadas —
 > as maiores: rescopar as Stats ao que o store realmente tem; tratar as mensagens
 > de transcrição do STT como dado persistido; o STT reutiliza as *peças* do
 > recorder, não o `recordUserSample` inteiro; spike com limiares numéricos.

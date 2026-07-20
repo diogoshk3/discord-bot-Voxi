@@ -69,7 +69,7 @@ jobs:
             # Online SQLite backup before migrations/tests/restart. The default target is
             # ../vozen-backups, outside the Git checkout; a failed backup aborts deployment.
             npm run backup:db
-            # The SAME gate as ci.yml (CLAUDE.md's canonical one): build + typecheck +
+            # The SAME gate as ci.yml (CONTRIBUTING.md's canonical one): build + typecheck +
             # lint + format:check + vitest. Running only build+vitest here let a push
             # that CI rejects (lint, formatting, or a test-file type error) still reach
             # `systemctl restart` — both workflows trigger independently on push, so the

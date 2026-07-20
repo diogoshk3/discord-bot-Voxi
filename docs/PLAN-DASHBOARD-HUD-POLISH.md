@@ -1,6 +1,6 @@
 # Plano — Polir a HUD do formulário do /dashboard
 
-> Planeado com Fable 5 a partir do screenshot do estado atual (lista plana de 11
+> Planeado a partir do screenshot do estado atual (lista plana de 11
 > linhas com checkboxes nativas). Estado: **aguarda aprovação do Diogo** — não
 > implementar antes disso.
 

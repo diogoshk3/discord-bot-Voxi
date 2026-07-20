@@ -138,11 +138,11 @@ Cache de áudio em ficheiro (`cache/<hash>.wav`); a chave é hash(texto_limpo + 
 ## 10. Localização do projeto
 
 Código em `bots-discord/tts-bot/` (separado das notas do Obsidian). Esta spec vive em
-`bots-discord/tts-bot/docs/superpowers/specs/`.
+`bots-discord/tts-bot/docs/design-history/specs/`.
 
 ## 11. Divisão de responsabilidades
 
-- **Claude (eu):** todo o código, testes unitários, scripts de registo de comandos, instruções de
+- **Implementação:** código, testes unitários, scripts de registo de comandos, instruções de
   download do Piper/modelos, README de setup. Corro os testes unitários aqui (em background/escondido,
   sem abrir terminais no main).
 - **Tu:** criar a app no Discord Developer Portal + token + ativar intents; instalar Node + dependências

@@ -8,7 +8,7 @@
 > **Estado**: planeado; **2.ª ronda de revisão técnica concluída em 2026-07-18**. Todos os factos
 > de código citados em §5 foram verificados nos ficheiros/linhas indicados nessa data; se o código
 > divergir na execução, o código manda e o executor corrige o ponto correspondente e regista-o.
-> **Execução**: agente futuro (Opus). **Repos**: Vozen-bot (store, API, site público `site/`) e
+> **Execução**: implementação futura. **Repos**: Vozen-bot (store, API, site público `site/`) e
 > vozen-helper-bot (consola admin `site/vozen.html`).
 >
 > **Objetivo**: quando um comprador Ko-fi pede ajuda de ativação, o sistema regista o pedido com

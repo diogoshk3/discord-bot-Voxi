@@ -1,6 +1,6 @@
 # Plano — Embelezar o Portal de Conta (account.html)
 
-> **Para o Codex.** Executa este plano fase a fase. É um redesign **visual only** — não mexas na lógica de login/OAuth/estado. Regras do projeto: comentários e mensagens de commit em Português; NUNCA editar conteúdo de ficheiros com PowerShell `Get-Content`/`Set-Content` (corrompe UTF-8 — usa ferramentas de edição); `npm run build:site` tem de passar (guarda anti-mojibake); não fazer `git add .`/`-A` (só caminhos explícitos); commit/push só quando o humano pedir.
+> **Notas de execução.** Executar este plano fase a fase. É um redesign **visual only** — não mexer na lógica de login/OAuth/estado. Regras do projeto: comentários e mensagens de commit em Português; NUNCA editar conteúdo de ficheiros com PowerShell `Get-Content`/`Set-Content` (corrompe UTF-8 — usar ferramentas de edição); `npm run build:site` tem de passar (guarda anti-mojibake); não fazer `git add .`/`-A` (só caminhos explícitos); commit/push só quando o humano pedir.
 
 ## Objetivo / Goal
 Elevar o portal de conta (`site/account.html` + painel `.premium-panel`/`.ppanel__*`) de "funcional" para "polido e premium", mantendo a estética glass/dark do site. Redesign **visual only** — a lógica de login/OAuth/estado NÃO muda.

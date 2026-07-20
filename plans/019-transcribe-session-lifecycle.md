@@ -145,7 +145,7 @@ module (`tests/transcribeGate.test.ts` is the closest exemplar; it and
 - Branch: work on `main` is NOT allowed for an executor — create `advisor/019-transcribe-lifecycle`.
 - Commit style: short Portuguese conventional-ish one-liners (see `git log`),
   e.g. `fix(stt): teardown da sessão ao sair da call + corrida no start`.
-  End the body with `Co-Authored-By:` per repo habit if amending isn't needed.
+  Keep the commit authorship limited to the human author.
 - Do NOT push unless the operator instructed it.
 
 ## Steps

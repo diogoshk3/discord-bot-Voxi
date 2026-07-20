@@ -152,5 +152,5 @@ Re-correr bench completo → tabela ANTES/DEPOIS em `BENCHMARKS.md`; atualizar `
 
 ## Ordem de execução
 
-Fase 0 + Fase 1 em paralelo (subagentes independentes; bot OFF nos checkpoints de edição) →
+Fase 0 + Fase 1 em paralelo (tarefas independentes; bot OFF nos checkpoints de edição) →
 Fase 2 (gated pelos números) → Fase 3 → Fase 4 → Fase 5.

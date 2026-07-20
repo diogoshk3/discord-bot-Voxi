@@ -10,9 +10,9 @@ debt/tests/docs) → findings hand-vetted against the cited code before planning
 path, GDPR lifecycle and workflow pinning all verified strong (see §Not-planned for
 the LOW hygiene leftovers).
 
-**Executor rules:** TDD per CLAUDE.md (RED test first). Finish every workstream with
-`npm run check` green. **NEVER add `Co-Authored-By:` or any AI-attribution trailer to
-commits** (CLAUDE.md hard rule). Conventional short English commit messages.
+**Executor rules:** TDD per CONTRIBUTING.md (RED test first). Finish every workstream with
+`npm run check` green. Commit authorship is limited to the human author
+(CONTRIBUTING.md hard rule). Conventional short English commit messages.
 
 ---
 
@@ -29,23 +29,12 @@ and the global `allowedMentions` default on the Client covers the rest.
 - [ ] Do NOT rewrite/reformat the refactor's code — commit as-is (it is verified).
 - Verification: `git status` clean; `npm run check` still green.
 
-### P0.2 Strip the AI co-author trailer from published history (USER-APPROVED)
-Diogo already chose option 1 ("reescrever e force push") — the rewrite was blocked
-only by the then-unstaged refactor (now committed in P0.1).
-- [ ] `FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch -f --msg-filter 'sed "/^Co-Authored-By: Claude/d"' 4e72734~1..HEAD`
-- [ ] Verify ONLY messages changed: `git log --format='%T %s' | head` before/after —
-      tree hashes must be identical per commit.
-- [ ] `git push --force-with-lease origin main`. The deploy workflow self-heals
-      (fetch + reset --hard). GitHub's Contributors list may lag (cached) — that is
-      expected, do not retry.
-- Verification: `git log --grep='Co-Authored-By: Claude' --oneline` → empty.
-
-### P0.3 Confirm the auto-deploy is green
-- [ ] `gh run watch <id> --exit-status` on the deploy triggered by P0.2's push.
+### P0.2 Confirm the auto-deploy is green
+- [ ] `gh run watch <id> --exit-status` on the deploy triggered by the release push.
 - This ships to production: Components V2 UI + `KOFI_SHOP_MAP` support (inert until
   env set) + `/voice config` panel fixes when they land later.
 
-### P0.4 [needs Diogo] Ko-fi end-to-end validation + annual passes
+### P0.3 [needs Diogo] Ko-fi end-to-end validation + annual passes
 - [ ] Diogo: Ko-fi → Webhooks → **Send Test** → confirm HTTP 200 in the panel.
 - [ ] Diogo: create the 3 annual Shop items (names MUST contain the plan word):
       `Vozen Plus — 1 year` €19.99 · `Vozen Premium (3 servers) — 1 year` €39.99 ·
@@ -228,7 +217,7 @@ live-streak only for candidates. Effort M · Risk LOW · Priority LOW.
   premium/dashboardApi+claim; games row lists 15 of 16 (missing wordChain).
 - **D5 · English-only rule enforcement:** ARCHITECTURE.md is PT; PT log strings in
   kofiWebhook.ts:678/722/763 + config/index.ts:275; PT comments in workflows.
-  Decide: translate (M) or scope the rule in CLAUDE.md (S). Recommend: translate the
+  Decide: translate (M) or scope the rule in CONTRIBUTING.md (S). Recommend: translate the
   LOG STRINGS now (operator-facing), decide the docs language explicitly.
 
 ---

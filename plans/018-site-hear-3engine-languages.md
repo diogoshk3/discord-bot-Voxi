@@ -1,6 +1,6 @@
 # Plan 018 — Player "Hear it": 6 línguas audíveis nos 3 motores
 
-> Gerado pelo skill **blueprint** em 2026-07-08 (pedido do Diogo). Só toca no **site**
+> Planeado em 2026-07-08 (pedido do Diogo). Só toca no **site**
 > (nada no bot). Deploy via GitHub Pages (push a `main`).
 
 ## Objetivo

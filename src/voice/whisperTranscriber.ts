@@ -27,7 +27,7 @@ const READY_TIMEOUT_MS = 120_000;
  * own faster-whisper `base` model in RAM (hundreds of MB); unlike Kokoro
  * (a singleton shared by all guilds), the Whispers multiply WITH the sessions. Without a
  * cap, N Premium guilds transcribing at the same time = N copies of the model in RAM — on the VPS
- * (which already OOMs at ~3.3GB, see CLAUDE.md) that is enough to kill the WHOLE process (all
+ * (which already OOMs at ~3.3GB, see CONTRIBUTING.md) that is enough to kill the WHOLE process (all
  * guilds lose TTS, not only STT degrades). `docs/SPIKE-STT.md` already recommended "cap of 1
  * concurrent transcription"; this applies it at the PROCESS level — the cap-1 WITHIN a session
  * (serial stdin, see `pump()`/`onLine()` below) already existed but never crossed sessions.

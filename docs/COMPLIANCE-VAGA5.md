@@ -3,7 +3,7 @@
 > Deliverable da Fase 0 do `PLAN-VAGA5-FEATURES.md`. Mapeia cada feature nova aos
 > requisitos do Discord (Developer Policy + ToS) e às hard-rules do repo, com o
 > **portão** que tem de estar satisfeito ANTES do código de cada feature.
-> Ancorado em `docs/COMPLIANCE-DISCORD.md` (estado atual) e `CLAUDE.md`.
+> Ancorado em `docs/COMPLIANCE-DISCORD.md` (estado atual) e `CONTRIBUTING.md`.
 >
 > Numeração dos artigos como em `COMPLIANCE-DISCORD.md`: 1–3 (consentimento/opt-out),
 > 5–7 (sem DMs/contacto não solicitado), 15/20/21 (dados só para a função declarada,

@@ -22,7 +22,7 @@ There is no **global** cap. Each start does `new WhisperTranscriber(cmd)` +
 `prewarm()`, which spawns a **dedicated persistent Python process** loading its own
 faster-whisper `base` model (hundreds of MB). Unlike Kokoro (a shared singleton),
 Whisper transcribers multiply with sessions. N Premium guilds transcribing at once
-= N model copies in RAM; the VPS "OOMs at ~3.3 GB" (CLAUDE.md), so a handful of
+= N model copies in RAM; the VPS "OOMs at ~3.3 GB" (CONTRIBUTING.md), so a handful of
 concurrent sessions can OOM-kill the whole bot process, not just degrade STT. The
 Premium+ManageGuild gate limits *who* starts, not *how many* run at once — and the
 paid tier's concurrency grows with the tier. `docs/SPIKE-STT.md` even recommends a

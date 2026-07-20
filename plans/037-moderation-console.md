@@ -1,6 +1,6 @@
 # 037 — Vozen Painel (no site do Vozen Helper)
 
-> Planeado 2026-07-17 (Fable 5), revisto após correção do Diogo: a consola NÃO vai para
+> Planeado 2026-07-17, revisto após correção do Diogo: a consola NÃO vai para
 > vozen.org — vai para o site do painel do Helper. Estado: **AGUARDA APROVAÇÃO — não
 > executar sem "executa".**
 

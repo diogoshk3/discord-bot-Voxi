@@ -131,7 +131,7 @@ full suite is the primary gate (**1349** at plan-015 DONE); CI runs
 - `src/config/index.ts` — `kokoroCmd`, `kokoroLangs`, `kokoroChunkConcurrency`.
 - Tests: `tests/kokoroEngine.test.ts` (new), extend `tests/factory.test.ts` and
   the userVoice/voice-command tests as needed.
-- Docs: `.env.example`, `CLAUDE.md`, `docs/ARCHITECTURE.md`.
+- Docs: `.env.example`, `CONTRIBUTING.md`, `docs/ARCHITECTURE.md`.
 
 ### Out (do NOT touch)
 
@@ -215,7 +215,7 @@ full suite is the primary gate (**1349** at plan-015 DONE); CI runs
       casts to include `'kokoro'`, the label ternary (`… : engine === 'kokoro' ?
   'Kokoro' : …`), and persistence. (Optional nicety: in the confirmation copy,
       note Kokoro covers ~8 languages and falls back to Google otherwise.)
-- [ ] `.env.example` (KOKORO_* vars), `CLAUDE.md` (optional Kokoro sidecar note,
+- [ ] `.env.example` (KOKORO_* vars), `CONTRIBUTING.md` (optional Kokoro sidecar note,
       parallel to the clone one), `docs/ARCHITECTURE.md` (per-user engine now
       google/piper/kokoro).
 - **Done**: `/voice set engine` lists Kokoro; docs updated; `.env.example` vars
@@ -239,7 +239,7 @@ full suite is the primary gate (**1349** at plan-015 DONE); CI runs
   `feat(tts): Kokoro como motor opt-in no /voice (gTTS continua o default) (plano 016)`.
 - Stage ONLY in-scope files by explicit path (never `git add -A`). Do NOT touch
   `.env`, `docs/RESEARCH-TTS-BOT-VS-VOXI.md`, or untracked `docs/*`.
-- Commits end with `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
+- Commits contain only the human author's authorship.
 - No push/PR unless told.
 
 ## Test plan

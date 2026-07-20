@@ -1,6 +1,6 @@
 # Plano — Setup da loja Ko-fi do Vozen (versão mínima: 1 membership, 3 tiers)
 
-Escrito por Fable 5 a 2026-07-11, revisto após verificação na documentação oficial do
+Escrito a 2026-07-11 e revisto após verificação na documentação oficial do
 Ko-fi (2026-07-11). Execução: **maioritariamente do Diogo** (o painel Ko-fi é dele); o
 bot/site já estão prontos. Este plano diz exatamente o que criar, com que NOMES (o
 webhook lê o nome!) e como validar.

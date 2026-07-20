@@ -1,6 +1,6 @@
 # Plano — Discord ID escondido, revela no hover, clica para copiar
 
-> **Para o Codex.** Feature pequena e visual, no painel de conta. Regras do projeto: comentários e commits em Português; NUNCA editar conteúdo com PowerShell `Get-Content`/`Set-Content` (corrompe UTF-8 — usa ferramentas de edição); `npm run build:site` tem de passar (guarda anti-mojibake); só caminhos explícitos no `git add`; commit/push só quando o humano pedir; não tocar em `.env`/bot/VPS.
+> **Notas de execução.** Feature pequena e visual, no painel de conta. Regras do projeto: comentários e commits em Português; NUNCA editar conteúdo com PowerShell `Get-Content`/`Set-Content` (corrompe UTF-8 — usar ferramentas de edição); `npm run build:site` tem de passar (guarda anti-mojibake); só caminhos explícitos no `git add`; commit/push só quando o humano pedir; não tocar em `.env`/bot/VPS.
 
 ## Objetivo / Goal
 No painel de conta (estado logado), o **Discord ID** passa a estar **escondido por defeito** (mascarado). Quando o utilizador põe o **rato por cima (sem clicar)**, o ID **revela-se**. Existe um **sinal de "copiar" bonito** que indica que pode copiar; ao **clicar**, copia o ID para a área de transferência e mostra confirmação "Copiado!".

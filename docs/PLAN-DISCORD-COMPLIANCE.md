@@ -31,7 +31,7 @@ como regra permanente do projeto (toda a feature futura nasce conforme).
 ## Scope
 
 ### In
-As 6 lacunas identificadas (fases abaixo) + regra permanente no CLAUDE.md.
+As 6 lacunas identificadas (fases abaixo) + regra permanente no CONTRIBUTING.md.
 
 ### Out
 - SDK Social (não aplicável).
@@ -95,8 +95,8 @@ Done: runbook de incidentes commitado; encriptação da BD em defer deliberado.
 
 ### Fase 6 — Regra permanente + gates futuros
 Deliverable: conformidade fixada no processo do projeto.
-- [ ] Secção "Conformidade Discord" no CLAUDE.md do repo (regras que TODA a feature futura
-      respeita — ver lista no próprio CLAUDE.md). **[já feito neste planeamento]**
+- [ ] Secção "Conformidade Discord" no CONTRIBUTING.md do repo (regras que TODA a feature futura
+      respeita — ver lista no próprio CONTRIBUTING.md). **[já feito neste planeamento]**
 - [ ] `docs/COMPLIANCE-DISCORD.md`: mapa requisito→estado→evidência (a tabela desta auditoria),
       com os 2 gates futuros: (a) ~75 servidores → verificação + review da intent Message
       Content ANTES de crescer; (b) app verificada → recheck do requisito de monetização.

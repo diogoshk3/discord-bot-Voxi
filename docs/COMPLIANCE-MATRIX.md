@@ -13,12 +13,12 @@
 
 | # | Requirement | Status | Evidence |
 | - | ----------- | ------ | -------- |
-| 1.1 | API data used ONLY for the declared functionality; no profiling, no sale, no undisclosed sharing | ✅ | Data flows disclosed in `PRIVACY.md`; no analytics/ad SDKs; `CLAUDE.md` hard rule. Disclosed engines (Google/OpenAI) are the only third parties, and only for synthesis. |
+| 1.1 | API data used ONLY for the declared functionality; no profiling, no sale, no undisclosed sharing | ✅ | Data flows disclosed in `PRIVACY.md`; no analytics/ad SDKs; `CONTRIBUTING.md` hard rule. Disclosed engines (Google/OpenAI) are the only third parties, and only for synthesis. |
 | 1.2 | No AI training on message content | ✅ | No training pipeline exists; message text is transient (not stored in a table). Official Google Cloud TTS / OpenAI API used under their no-training API terms (see §8, §9). |
 | 1.3 | Privileged intents minimised + justified before verification (100-guild gate) | ✅ | Intents: `Guilds`, `GuildVoiceStates`, `GuildMessages`, `MessageContent` (`src/bot/client.ts:31-34`). Only **MessageContent** is privileged; `GuildMembers` is **not** requested. See `docs/COMPLIANCE-DISCORD.md §4`. |
 | 1.4 | Consent-first for anything acting on/about a user (recording) | ✅ | STT (`/transcribe`): per-speaker consent gate (`transcriptionSession.ts` `hasConsent`), un-deafen only during a session, audio never persisted. |
 | 1.5 | Every stored user datum disclosed AND has a deletion/retention path | ✅ | `PRIVACY.md` discloses every datum, including `talk_usage` counters by language and engine shown in the operator console. `/privacy erase` removes user-scoped `talk_usage` and other erasable personal data; the server purge removes server-scoped rows. Active entitlements and minimum payment/activation-consent records may be retained only for disclosed accounting, fraud, dispute, and legal purposes. |
-| 1.6 | No unsolicited DMs; no contacting users outside Discord with API data | ✅ | No DM-send code path; `CLAUDE.md` hard rule. Support is pull-only (support server link). |
+| 1.6 | No unsolicited DMs; no contacting users outside Discord with API data | ✅ | No DM-send code path; `CONTRIBUTING.md` hard rule. Support is pull-only (support server link). |
 | 1.7 | Default-safe output (no mass mentions/ban-risk) | ✅ | Client default `allowedMentions: { parse: [] }` (`client.ts:39`); opt-in per call site only. |
 | 1.8 | Paid features support Discord Premium Apps with price parity (≤ other channels) where available | ⚠️ | Entitlement sync shipped (`premium/entitlements*`), price-parity copy on site. **Operator action:** create SKUs in the Developer Portal post-verification and set `PREMIUM_*_SKU_ID` (external, not code). |
 | 1.9 | Report/appeal channel for users | ✅ | Support server linked in `/help`, site, `TERMS.md`. |

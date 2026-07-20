@@ -4,7 +4,7 @@
 > text edit — do not rewrite surrounding prose. Run the verification greps.
 > Update this plan's row in `plans/README.md` when done.
 >
-> **Drift check (run first)**: `git diff --stat 965b15b..HEAD -- PRIVACY.md README.md docs/ARCHITECTURE.md package.json CLAUDE.md`
+> **Drift check (run first)**: `git diff --stat 965b15b..HEAD -- PRIVACY.md README.md docs/ARCHITECTURE.md package.json CONTRIBUTING.md`
 > On any change, compare against "Current state" before editing.
 
 ## Status
@@ -23,7 +23,7 @@ a compliance document names a data-deletion command that doesn't exist, the
 public README recommends the exact production command the maintainer's hard
 rule bans, and ARCHITECTURE.md describes removed behavior and a stale CI. Plus
 there is no single command to reproduce CI's five gates locally, so a
-contributor following CLAUDE.md runs 2 of 5 and gets a red pipeline on
+contributor following CONTRIBUTING.md runs 2 of 5 and gets a red pipeline on
 auto-deploy-to-main. All are small, high-certainty fixes.
 
 ## Current state (exact strings to change)
@@ -38,7 +38,7 @@ auto-deploy-to-main. All are small, high-certainty fixes.
 
 2. **`README.md:165`** — recommends the banned production path:
    `For a production build: ``npm run build`` and then ``npm start`` (or ``node dist/index.js``).`
-   CLAUDE.md (Commands) states: "Production: `npm run start:prod` — NEVER plain
+   CONTRIBUTING.md (Commands) states: "Production: `npm run start:prod` — NEVER plain
    `npm start` in production" (it skips the supervisor's single-instance lock,
    preheat, auto-restart, logs — `scripts/start-prod.mjs`).
 
@@ -56,7 +56,7 @@ auto-deploy-to-main. All are small, high-certainty fixes.
    also fail `package.json` `engines: ">=22.12.0"`.
 
 5. **`package.json` scripts** — no aggregate `check`. CI (`ci.yml:29-33`) runs
-   five gates; `CLAUDE.md`'s closing line mentions only two
+   five gates; `CONTRIBUTING.md`'s closing line mentions only two
    (`npx vitest run + npm run typecheck`).
 
 Conventions: docs in this repo mix EN (README, PRIVACY, ARCHITECTURE) — match
@@ -73,7 +73,7 @@ the surrounding language of each file. Do not reflow unrelated lines.
 ## Scope
 
 **In scope**: `PRIVACY.md`, `README.md`, `docs/ARCHITECTURE.md`,
-`package.json` (scripts only), `CLAUDE.md` (one line).
+`package.json` (scripts only), `CONTRIBUTING.md` (one line).
 **Out of scope**: any source under `src/`; the CI workflow file; the site.
 
 ## Git workflow
@@ -128,7 +128,7 @@ In `package.json` `scripts`, add:
 ```json
 "check": "npm run build && npm run typecheck && npm run lint && npm run format:check && vitest run"
 ```
-Then update `CLAUDE.md`'s closing verification line to reference `npm run check`
+Then update `CONTRIBUTING.md`'s closing verification line to reference `npm run check`
 as the single command that reproduces CI (keep the mention of the individual
 commands if present).
 

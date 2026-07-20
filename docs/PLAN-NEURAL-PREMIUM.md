@@ -1,9 +1,9 @@
 # Plano — Motor Google Cloud TTS (Standard) como perk Premium (upgrade #2)
 
-Escrito por Fable 5 a 2026-07-11. **Decisão do Diogo (2026-07-11): o motor pago é o
+Escrito a 2026-07-11. **Decisão do Diogo (2026-07-11): o motor pago é o
 Google Cloud TTS tier STANDARD** — substitui a ideia original OpenAI (este ficheiro
 foi reescrito; o `NeuralEngine` OpenAI existente fica como está, dormente).
-Execução: Opus, após "executa" do Diogo.
+Execução após "executa" do Diogo.
 
 ## Objetivo
 

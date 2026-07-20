@@ -1,12 +1,12 @@
-# Plano: corrigir regressões do redesign Premium (Codex 683d78b)
+# Plano: corrigir regressões do redesign Premium (commit 683d78b)
 
-> Planeado com Fable 5 · execução pelo Opus. Estado de partida: redesign do Codex
+> Planeado em 2026-07-12. Estado de partida: redesign atual
 > **já live** (faixa Free + 2 cartões pagos + tabela `plan-table`, main-v23.css,
 > i18n-v20.js). Este plano corrige regressões SEM desfazer a estrutura nova.
 
 ## Objetivo
 
-Manter o redesign do Codex (que é bom) mas repor o que se perdeu: os 8 pontos
+Manter o redesign atual mas repor o que se perdeu: os 8 pontos
 órfãos voltam a aparecer (tabela passa a ser mesmo "completa"), o ✗ vermelho
 substitui o traço "—" na tabela, e os emojis 🎁/💎 voltam onde faltam.
 
@@ -33,7 +33,7 @@ substitui o traço "—" na tabela, e os emojis 🎁/💎 voltam onde faltam.
 - prettier + build:site + commit + deploy + verificação live.
 
 ### Out
-- Qualquer mudança à ESTRUTURA do Codex (cartões de destaques, faixa Free,
+- Qualquer mudança à ESTRUTURA atual (cartões de destaques, faixa Free,
   toolbar, tabela) — mantém-se.
 - Alterações i18n (`tools/i18n-src/*`, build-i18n.mjs, i18n-v20.js) — nada muda.
 - Código do bot (`src/**`) — nada muda; sem restart do VPS.
@@ -83,7 +83,7 @@ Deliverable: tudo live em vozen.org e verificado.
 - [ ] `npm run build:site` (guarda anti-mojibake) — sem erros.
 - [ ] Commit único, paths explícitos (NUNCA `git add .`; não tocar em
       docs/RESEARCH-TTS-BOT-VS-VOXI.md nem docs/*.md untracked de outras sessões),
-      mensagem em PT com `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
+      mensagem convencional em PT, sem trailers de coautoria.
 - [ ] Push → esperar pages.yml (gh run list em background) — só site, sem deploy-bot.
 - [ ] Verificação live (curl):
       main-v24.css 200 e v23 404 · 20 linhas `price.m.` na tabela ·
@@ -91,7 +91,7 @@ Deliverable: tudo live em vozen.org e verificado.
       2×🎁 e 1×💎 no HTML live.
 - Done: checklist de curl toda verde.
 
-## UI Blueprint (escala: acessório — o design system do Codex mantém-se)
+## UI Blueprint (escala: acessório — o design system atual mantém-se)
 
 - **Direção visual**: a existente (dark glass, aqua/âmbar, Unbounded+Outfit) — sem mudanças.
 - **Tokens usados**: `--aqua` (✓ base), `--amber` (✓ premium via `has--premium`),

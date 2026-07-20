@@ -1,5 +1,5 @@
 // Japanese (ja) interface translation. Same key set as the other locales (mirrors
-// es.ts). AI-generated to the same bar as the Fase B set — a native review is welcome.
+// es.ts). Prepared to the same bar as the Fase B set — a native review is welcome.
 // Placeholders {param}, markdown, emoji, command names and \n are preserved verbatim.
 export default {
   'error.generic': '問題が発生しました。もう一度お試しください。',

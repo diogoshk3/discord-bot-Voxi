@@ -1,6 +1,6 @@
 # Plano — Mega-auditoria e melhoria total do Vozen (bot TTS)
 
-> Planeado com Fable 5 (2026-07-15). Execução: Opus. O bot está EM PRODUÇÃO.
+> Planeado em 2026-07-15. O bot está EM PRODUÇÃO.
 >
 > **FASE 0 CONCLUÍDA (2026-07-15).** A árvore suja (146 mod + 22 untracked) era trabalho
 > anterior COERENTE por commitar (tradução PT→EN, kofi, entitlements, voice, testes),
@@ -25,7 +25,7 @@ loop de verificação que só termina quando uma ronda completa não encontra pr
 
 ### In
 - Estabilização da working tree (triage + commits dos 167 ficheiros).
-- Reconciliação do ciclo /improve anterior (`plans/`).
+- Reconciliação do ciclo de auditoria anterior (`plans/`).
 - Auditoria profunda multi-agente (deep): correção, segurança, performance, testes,
   tech debt, dependências, DX, docs.
 - Tradução PT→EN de comentários/logs/docs de dev nos ~106 ficheiros em falta.
@@ -70,7 +70,7 @@ esforço, risco. Dep.: Fase 0 (auditar árvore suja é inútil).
   performance, test coverage, tech debt, dependências/migrações, DX, docs.
 - [ ] Atenção especial: voice-clones (consentimento/dados), webhooks (vote/Ko-fi),
   premium/entitlements, sharding, supervisor, cache de áudio, jogos.
-- [ ] Vetar CADA finding contra o código real (subagentes exageram); rejeitados ficam
+- [ ] Vetar CADA finding contra o código real; rejeitados ficam
   registados para não reaparecerem.
 - **Done:** tabela final vetada, ordenada por leverage; zero findings sem evidência.
 
@@ -98,7 +98,7 @@ Deliverable: todos os findings aceites implementados. Dep.: Fases 2 e 3.
 ### Fase 5 — Compliance (Discord · UE · EUA · Ko-fi)
 Deliverable: matriz política → requisito → evidência no repo. Dep.: Fase 4 (auditar
 compliance do código final, não do intermédio).
-- [ ] Discord Developer ToS/Policy: recheck contra as hard rules do CLAUDE.md
+- [ ] Discord Developer ToS/Policy: recheck contra as hard rules do CONTRIBUTING.md
   (dados só para a função declarada, consent-first, sem DMs não solicitadas,
   price parity, gate das 100 guilds).
 - [ ] RGPD/UE: voice-clones (consentimento explícito + revogação + retenção),
@@ -146,5 +146,5 @@ Fim da **Fase 2**: árvore limpa, baseline verde e tabela de findings vetada —
 daí o dono já vê exatamente o que existe para corrigir e pode repriorizar. Tudo o que
 se segue é execução com critérios fechados.
 
-**Próxima ação concreta: (com o Opus) Fase 0 — `git diff --stat` dos 167 ficheiros e
+**Próxima ação concreta: Fase 0 — `git diff --stat` dos 167 ficheiros e
 triage em lotes lógicos para commit/revert.**

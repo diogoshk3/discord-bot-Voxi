@@ -91,7 +91,7 @@ violações ativas. Plano completo em `docs/PLAN-DISCORD-COMPLIANCE.md`. Deltas 
   (Discord IDs, prefs, hashes de email) — cifrá-la via SQLCipher é o passo mais arriscado do
   plano e fica em **defer deliberado** (spike + backup + aprovação numa sessão dedicada). O
   disco do VPS não é cifrado ao nível do volume (ext4 puro, verificado).
-- **Regra permanente (NOVO).** `CLAUDE.md` tem uma secção "Discord compliance is mandatory"
+- **Regra permanente (NOVO).** `CONTRIBUTING.md` tem uma secção "Discord compliance is mandatory"
   que toda a feature futura respeita.
 - **Portal (pendente do Diogo):** preencher Privacy/ToS URL; confirmar elegibilidade de
   Premium Apps no separador Monetization (COMPL·1) — desbloqueia a decisão de monetização.

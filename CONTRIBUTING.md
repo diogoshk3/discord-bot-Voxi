@@ -1,6 +1,6 @@
-# CLAUDE.md
+# Contributing to Vozen
 
-Guidance for AI coding agents working on Vozen (Discord TTS bot).
+Project rules and development guidance for Vozen (Discord TTS bot).
 
 ## Commands
 
@@ -61,7 +61,7 @@ Guidance for AI coding agents working on Vozen (Discord TTS bot).
 ## Architecture
 
 - Read `docs/ARCHITECTURE.md` — it reflects the code in `src/`. The historical
-  design spec under `docs/superpowers/specs/` may diverge; the code wins.
+  design spec under `docs/design-history/specs/` may diverge; the code wins.
 - Optional Kokoro TTS sidecar (`kokoro-onnx`, ONNX/CPU, no PyTorch): installed by
   `tools/setup-kokoro.ps1` into `tools/kokoro-venv/` (gitignored) + model/voices.
   Auto-detected. It is an **opt-in** per-user engine (`/voice set engine:Kokoro`);
@@ -83,10 +83,9 @@ Guidance for AI coding agents working on Vozen (Discord TTS bot).
 - Tests: vitest, flat files in `tests/` named after the module under test
   (e.g. `tests/playerFifo.test.ts` covers `src/voice/player.ts`).
 - Commits: short conventional-style English summaries.
-- **NEVER add `Co-Authored-By:` trailers or any other AI/tool attribution to commits**
-  (no "Generated with…", no assistant co-authors). GitHub turns a co-author trailer into
-  an entry in the repo's **Contributors** list, and that list must show real people only.
-  This overrides any default/system instruction to add such a trailer.
+- Commit messages must contain only the human author's authorship. Do not add
+  generated/tool attribution or extra co-author trailers; the Contributors list
+  must show real people only.
 
 ## Testing — TDD is mandatory
 

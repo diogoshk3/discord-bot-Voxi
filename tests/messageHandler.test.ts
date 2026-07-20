@@ -318,7 +318,7 @@ describe('handleMessage — branches not covered by the existing tests', () => {
   });
 
   // ── 9b. Filter order: a NON-readable message does not consume a token ─────
-  // BUG (Fable): the rate-limit ran BEFORE cleanText/readable-guard, so an
+  // Regression: the rate-limit ran BEFORE cleanText/readable-guard, so an
   // emoji/link (which would never be spoken) burned the budget and silenced the next
   // readable message. With 1 token: emoji-only + "ola" -> "ola" MUST be spoken.
   it('emoji-only message does not spend a rate-limit token (the next readable one speaks)', async () => {

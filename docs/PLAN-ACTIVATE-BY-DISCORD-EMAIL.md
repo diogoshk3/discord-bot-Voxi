@@ -1,7 +1,7 @@
 # Plano 040 — Ativação por email verificado do Discord
 
-> Planeado com Fable 5 em 2026-07-19 e revisto tecnicamente no mesmo dia (factos verificados no
-> código nessa data); execução pelo Codex. Repo: **Vozen-bot** (backend + site público). Substitui o plano 039
+> Planeado e revisto tecnicamente em 2026-07-19 (factos verificados no código nessa data).
+> Repo: **Vozen-bot** (backend + site público). Substitui o plano 039
 > (`PLAN-CLAIM-HELP-AUTOMATCH.md`, arquivado) — decisão do dono em 2026-07-19.
 >
 > **Estado em 2026-07-19:** implementação F1–F5 concluída, com suite automatizada e build local

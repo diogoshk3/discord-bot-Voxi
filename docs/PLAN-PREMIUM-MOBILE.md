@@ -1,6 +1,6 @@
 # Plano: secção Premium bonita em mobile (375-430px)
 
-> Planeado com Fable 5 · execução pelo Opus. Estado de partida: commit 1702512
+> Planeado em 2026-07-12. Estado de partida: commit 1702512
 > live (faixa Free + 2 cartões pagos + tabela de 20 linhas, main-v25.css).
 > O Diogo não gostou do resultado no telemóvel.
 
@@ -95,7 +95,7 @@ Deliverable: live em vozen.org, verificado em mobile.
 - [ ] `git mv site/css/main-v25.css site/css/main-v26.css` + refs nos 4 HTML
       (index, account, privacy, terms).
 - [ ] prettier + `npm run build:site` limpos.
-- [ ] Commit único (paths explícitos, PT, Co-Authored-By Opus), push, esperar
+- [ ] Commit único (paths explícitos, PT, autoria humana), push, esperar
       pages.yml em background.
 - [ ] Verificação live: v26 200 / v25 404; regra sticky presente no CSS live.
 - [ ] Verificação visual: browser pane em https://vozen.org, resize 375×812,
