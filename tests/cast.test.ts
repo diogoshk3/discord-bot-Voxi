@@ -222,6 +222,9 @@ describe('/cast handler', () => {
     expect(spoken.length).toBeGreaterThan(0);
     expect(spoken.join(' ')).toMatch(/is/i);
     expect(edits.length).toBeGreaterThan(0);
+    // The panel is edited after each selection. The selected theme must stay
+    // selected in the rebuilt menu instead of falling back to its placeholder.
+    expect(edits.join(' ')).toMatch(/"value":"pokemon"[^}]*"default":true/);
     db.close();
   });
 });

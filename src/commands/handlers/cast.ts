@@ -80,7 +80,13 @@ function panelRows(
   const theme = new StringSelectMenuBuilder()
     .setCustomId(`cast:theme:${interactionId}`)
     .setPlaceholder('Choose a theme')
-    .addOptions(CAST_THEMES.map((item) => ({ label: item.label, value: item.key })).slice(0, 25));
+    .addOptions(
+      CAST_THEMES.map((item) => ({
+        label: item.label,
+        value: item.key,
+        default: item.key === themeKey,
+      })).slice(0, 25),
+    );
   const languageSelect = new StringSelectMenuBuilder()
     .setCustomId(`cast:language:${interactionId}`)
     .setPlaceholder('Choose a language')
