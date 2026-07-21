@@ -84,13 +84,15 @@ describe('site localization contract', () => {
     const pages = ['site/index.html', 'site/account.html', 'site/dashboard.html'];
     for (const pagePath of pages) {
       const page = source(pagePath);
-      expect(page, pagePath).toContain('js/i18n-v39.js');
+      expect(page, pagePath).toContain('js/i18n-v40.js');
       expect(page, pagePath).toContain('js/main-v43.js');
+      expect(page, pagePath).not.toContain('js/i18n-v39.js');
       expect(page, pagePath).not.toContain('js/i18n-v38.js');
       expect(page, pagePath).not.toContain('js/main-v42.js');
     }
     expect(source('site/dashboard.html')).toContain('js/dashboard-v6.js');
     expect(source('site/dashboard.html')).not.toContain('js/dashboard-v5.js');
+    expect(existsSync(resolve(process.cwd(), 'site/js/i18n-v39.js'))).toBe(false);
     expect(existsSync(resolve(process.cwd(), 'site/js/i18n-v38.js'))).toBe(false);
     expect(existsSync(resolve(process.cwd(), 'site/js/main-v42.js'))).toBe(false);
     expect(existsSync(resolve(process.cwd(), 'site/js/dashboard-v5.js'))).toBe(false);
@@ -144,7 +146,7 @@ describe('site localization contract', () => {
     const generator = source('tools/build-i18n.mjs');
     const pkg = JSON.parse(source('package.json')) as { scripts: Record<string, string> };
     expect(generator).toContain("process.argv.includes('--check')");
-    expect(generator).toContain('site/js/i18n-v39.js is out of date');
+    expect(generator).toContain('site/js/i18n-v40.js is out of date');
     expect(pkg.scripts['build:i18n']).toBe('node tools/build-i18n.mjs');
     expect(pkg.scripts['check:i18n']).toBe('node tools/build-i18n.mjs --check');
     expect(pkg.scripts['check:site']).toContain('tests/siteI18n.test.ts');

@@ -116,7 +116,7 @@ describe('site acquisition and trust contracts', () => {
   it('documents /cast publicly without exposing bot-only theme names', () => {
     const siteFiles = [
       'site/index.html',
-      'site/js/i18n-v39.js',
+      'site/js/i18n-v40.js',
       ...['en', 'pt', 'fr', 'es', 'de', 'tr', 'ar', 'zh', 'ru', 'ko'].map(
         (lang) => `tools/i18n-src/${lang}.json`,
       ),
