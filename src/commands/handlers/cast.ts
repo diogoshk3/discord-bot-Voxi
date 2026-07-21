@@ -9,7 +9,7 @@ import { getVoiceConnection } from '@discordjs/voice';
 import type { BotDeps } from '../../bot/deps';
 import { getLimiter, getPlayer } from '../../bot/deps';
 import { getGuildConfig } from '../../store/guildConfig';
-import { getUserVoice } from '../../store/userVoice';
+import { getUserVoice, type UserEngine } from '../../store/userVoice';
 import { resolveUserEngine } from '../../tts/resolveEngine';
 import {
   CAST_LANGUAGE_CHOICES,
@@ -25,6 +25,17 @@ import { t } from '../../i18n/index';
 
 const CAST_WAIT_MS = 120_000;
 const CAST_MAX_MEMBERS = 25;
+
+const CAST_ENGINE_CHOICES = [
+  { name: 'Google', value: 'google' },
+  { name: 'Piper', value: 'piper' },
+  { name: 'Kokoro', value: 'kokoro' },
+] as const;
+type CastEngine = (typeof CAST_ENGINE_CHOICES)[number]['value'];
+
+function castEngineFromStored(engine: UserEngine | null | undefined): CastEngine {
+  return engine === 'piper' || engine === 'kokoro' ? engine : 'google';
+}
 
 type VoiceMember = {
   id: string;
@@ -57,12 +68,15 @@ function voiceMembers(i: ChatInputCommandInteraction, channelId: string): VoiceM
   return channel?.members ? Array.from(channel.members.values()) : [];
 }
 
-function panelContent(themeKey: string | null, language: string): string {
+function panelContent(themeKey: string | null, language: string, engine: CastEngine): string {
   const theme = themeKey ? CAST_THEMES.find((item) => item.key === themeKey)?.label : null;
+  const engineName =
+    CAST_ENGINE_CHOICES.find((choice) => choice.value === engine)?.name ?? 'Google';
   const lines = [
     '🎭 **Create a cast for your voice call**',
     `Theme: ${theme ?? 'choose a theme'}`,
     `Language: ${CAST_LANGUAGE_CHOICES.find((choice) => choice.value === language)?.name ?? 'English'}`,
+    `Engine: ${engineName}`,
   ];
   if (themeKey === 'pokemon') {
     lines.push(
@@ -76,6 +90,7 @@ function panelRows(
   interactionId: string,
   themeKey: string | null,
   language: string,
+  engine: CastEngine,
 ): ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder>[] {
   const theme = new StringSelectMenuBuilder()
     .setCustomId(`cast:theme:${interactionId}`)
@@ -97,6 +112,16 @@ function panelRows(
         default: choice.value === language,
       })),
     );
+  const engineSelect = new StringSelectMenuBuilder()
+    .setCustomId(`cast:engine:${interactionId}`)
+    .setPlaceholder('Choose a voice engine')
+    .addOptions(
+      CAST_ENGINE_CHOICES.map((choice) => ({
+        label: choice.name,
+        value: choice.value,
+        default: choice.value === engine,
+      })),
+    );
   const reveal = new ButtonBuilder()
     .setCustomId(`cast:reveal:${interactionId}`)
     .setLabel('Reveal cast')
@@ -109,6 +134,7 @@ function panelRows(
   return [
     new ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder>().addComponents(theme),
     new ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder>().addComponents(languageSelect),
+    new ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder>().addComponents(engineSelect),
     new ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder>().addComponents(reveal, cancel),
   ];
 }
@@ -133,7 +159,7 @@ function publicCastText(
   return output.join('\n');
 }
 
-/** `/cast` — an ephemeral two-menu setup followed by a public text + voice result. */
+/** `/cast` — an ephemeral three-menu setup followed by a public text + voice result. */
 export async function handleCast(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
   const locale = localeForUser(deps, i);
   if (!i.guildId) {
@@ -150,10 +176,12 @@ export async function handleCast(i: ChatInputCommandInteraction, deps: BotDeps):
 
   let themeKey: string | null = null;
   let language = 'en';
+  const storedVoice = getUserVoice(deps.db, i.guildId, i.user.id);
+  let engine = castEngineFromStored(storedVoice?.engine);
   await i.reply(
-    replyCard(panelContent(themeKey, language), {
+    replyCard(panelContent(themeKey, language, engine), {
       ephemeral: true,
-      rows: panelRows(i.id, themeKey, language),
+      rows: panelRows(i.id, themeKey, language, engine),
     }),
   );
 
@@ -192,11 +220,17 @@ export async function handleCast(i: ChatInputCommandInteraction, deps: BotDeps):
           language = selected;
         }
       }
+      if (component.customId === `cast:engine:${i.id}`) {
+        const selected = component.values[0];
+        if (selected && CAST_ENGINE_CHOICES.some((choice) => choice.value === selected)) {
+          engine = selected as CastEngine;
+        }
+      }
       await component.deferUpdate();
       await i
         .editReply(
-          editCard(panelContent(themeKey, language), {
-            rows: panelRows(i.id, themeKey, language),
+          editCard(panelContent(themeKey, language, engine), {
+            rows: panelRows(i.id, themeKey, language, engine),
           }),
         )
         .catch(() => {});
@@ -250,7 +284,6 @@ export async function handleCast(i: ChatInputCommandInteraction, deps: BotDeps):
     }),
   );
 
-  const stored = getUserVoice(deps.db, i.guildId, i.user.id);
   const prefix = `${language}_`;
   const model =
     deps.availableModels.find((available) => available.startsWith(prefix)) ||
@@ -259,13 +292,7 @@ export async function handleCast(i: ChatInputCommandInteraction, deps: BotDeps):
     'en_US-amy-medium';
   const speech = buildCastSpeech(assignments, language);
   const chunks = chunkCastSpeech(speech);
-  const resolvedEngine = resolveUserEngine(
-    deps.db,
-    i.guildId,
-    i.user.id,
-    stored?.engine,
-    Date.now(),
-  );
+  const resolvedEngine = resolveUserEngine(deps.db, i.guildId, i.user.id, engine, Date.now());
   let spoken = false;
   for (const chunk of chunks) {
     const queued = await player.say({
