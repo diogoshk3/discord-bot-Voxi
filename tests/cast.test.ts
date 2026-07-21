@@ -126,7 +126,9 @@ describe('/cast handler', () => {
     const db = initDb(':memory:');
     const publicReplies: string[] = [];
     const edits: string[] = [];
-    const say = async (request: { text: string }) => {
+    const sayRequests: Array<{ text: string; engine?: string }> = [];
+    const say = async (request: { text: string; engine?: string }) => {
+      sayRequests.push(request);
       spoken.push(request.text);
       return true;
     };
@@ -147,6 +149,13 @@ describe('/cast handler', () => {
       {
         customId: 'cast:language:cast-1',
         values: ['en'],
+        isButton: () => false,
+        isStringSelectMenu: () => true,
+        deferUpdate: async () => {},
+      },
+      {
+        customId: 'cast:engine:cast-1',
+        values: ['piper'],
         isButton: () => false,
         isStringSelectMenu: () => true,
         deferUpdate: async () => {},
@@ -221,10 +230,15 @@ describe('/cast handler', () => {
     expect(publicReplies.join(' ')).toMatch(/Pikachu|Charmander|Squirtle|is/i);
     expect(spoken.length).toBeGreaterThan(0);
     expect(spoken.join(' ')).toMatch(/is/i);
+    expect(sayRequests[0]?.engine).toBe('piper');
     expect(edits.length).toBeGreaterThan(0);
     // The panel is edited after each selection. The selected theme must stay
     // selected in the rebuilt menu instead of falling back to its placeholder.
     expect(edits.join(' ')).toMatch(/"value":"pokemon"[^}]*"default":true/);
+    expect(edits.join(' ')).toMatch(/"custom_id":"cast:engine:cast-1"/);
+    expect(edits.join(' ')).toContain('"label":"Google"');
+    expect(edits.join(' ')).toContain('"label":"Kokoro"');
+    expect(edits.join(' ')).toMatch(/"value":"piper"[^}]*"default":true/);
     db.close();
   });
 });
