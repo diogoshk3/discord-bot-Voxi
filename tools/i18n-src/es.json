@@ -313,7 +313,7 @@
       ["/leave", "Sale del canal de voz"],
       ["/tts", "Lee un texto en voz alta"],
       ["/skip", "Salta el audio actual"],
-      ["/shutup", "Silencia a Vozen al instante (vacía la cola)"],
+      ["/shut-up", "Silencia a Vozen al instante (vacía la cola)"],
       ["/setup", "Configuración guiada en un paso"],
       ["/invite", "Consigue el enlace de invitación"],
       ["/vote", "Vota por Vozen en top.gg"],
@@ -326,7 +326,7 @@
       ["/voice preview", "Escucha una muestra de voz"],
       ["/voice effect", "Robot, eco, demonio… efectos de voz"],
       ["/voice nickname", "Cómo te llama Vozen en voz alta"],
-      ["/voice optout", "Deja de que te lean automáticamente"],
+      ["/voice opt-out", "Deja de que te lean automáticamente"],
       ["/pronunciation", "Enseña a Vozen a decir una palabra (solo tuya)"]
     ],
     "fun": [
@@ -335,10 +335,10 @@
       ["/game stats", "Tus puntos, victorias y rango"],
       ["/joke", "Un chiste corto en cualquier idioma"],
       ["/laugh", "Vozen se ríe con tu voz"],
-      ["/8ball", "Pregunta a la bola 8 mágica, en voz alta"],
+      ["/8-ball", "Pregunta a la bola 8 mágica, en voz alta"],
       ["/fact · /fortune · /wyr", "Curiosidades, fortunas y dilemas"],
       ["/birthday set", "Vozen canta en tu cumpleaños"],
-      ["/topspeakers", "Quién habla más + rachas"],
+      ["/top-speakers", "Quién habla más + rachas"],
       ["/randomizer", "Vozen elige una opción al azar y la dice"],
       ["/cast", "Asigna un papel temático al azar a todos en tu llamada y escucha los resultados"]
     ],
@@ -346,9 +346,9 @@
       ["/config greet", "Saluda a quien entra en la llamada"],
       ["/config language", "Define el idioma de la interfaz"],
       ["/config default-voice", "Define la voz predeterminada del servidor"],
-      ["/config autoread", "Activa o desactiva la lectura automática"],
-      ["/config blockword", "Gestiona la lista de bloqueo"],
-      ["/serverpronunciation", "Pronunciaciones para todo el servidor (admin, 3 · 50 con Premium)"]
+      ["/config auto-read", "Activa o desactiva la lectura automática"],
+      ["/config block-word", "Gestiona la lista de bloqueo"],
+      ["/server-pronunciation", "Pronunciaciones para todo el servidor (admin, 3 · 50 con Premium)"]
     ]
   },
   "faq": [

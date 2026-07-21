@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { filterPronunciationChoices } from '../src/commands/index';
 
-// Autocomplete for /pronunciation remove (and /serverpronunciation remove): instead of the
+// Autocomplete for /pronunciation remove (and /server-pronunciation remove): instead of the
 // user TYPING the term from memory, the picker lists the SAVED pronunciations.
 // name = "term → how it's said" (readable); value = the raw term (what the handler deletes).
 

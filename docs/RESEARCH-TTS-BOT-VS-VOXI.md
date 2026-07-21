@@ -50,7 +50,7 @@ grátis deles (gTTS/eSpeak).
 | **msg_length em segundos** | Cap por DURAÇÃO de áudio, não só por caracteres |
 | **Stage channels + audience_ignore** | Suporte a palcos; ignora a audiência |
 | **text-in-voice** | Ler o chat de texto embutido nos canais de voz |
-| **/uptime, /ping, /botstats públicos** | Transparência/confiança (o nosso /stats é admin-only) |
+| **/uptime, /ping, /bot-stats públicos** | Transparência/confiança (o nosso /stats é admin-only) |
 | **Tradução (DeepL)** | Traduz antes de falar — é a feature premium deles |
 | **Mensagens encaminhadas** | Deteta forward e anuncia "forwarded a message" |
 
@@ -111,7 +111,7 @@ E as queixas de abril 2026 (lentidão, não entra na call, offline) confirmam qu
 7. **autojoin** por guild
 8. **Context menu "Speak"** (+ "Speak as")
 9. **botignore toggle** (ler webhooks/bots)
-10. **/botstats + /uptime públicos** (transparência)
+10. **/bot-stats + /uptime públicos** (transparência)
 11. **Motor híbrido Kokoro+Piper** (qualidade grátis ainda mais acima do premium deles nas 8 línguas Kokoro)
 12. **Tradução grátis** (a feature premium DELES, de graça — avaliar endpoint/custo)
 13. **Stage channels** + text-in-voice

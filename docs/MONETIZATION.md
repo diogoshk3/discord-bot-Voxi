@@ -24,8 +24,8 @@ bot (~75 servers) + team-owned app. Until then: **Ko-fi / Patreon + `/redeem` co
 - **Voices:** all 38 current voices (Google + Piper), speed control, `/voice preview`.
 - **Personalization:** spoken nickname, the 5 personas (pirate, uwu, Yoda, cowboy,
   medieval), 10 personal abbreviations.
-- **Fun:** `/joke`, `/laugh`, `/8ball`, `/fortune`, `/fact`, `/wyr`, birthday shout-outs,
-  `/topspeakers`.
+- **Fun:** `/joke`, `/laugh`, `/8-ball`, `/fortune`, `/fact`, `/wyr`, birthday shout-outs,
+  `/top-speakers`.
 - **Games:** **all 13 minigames + leaderboard — 100% free, always.** These drive invites
   and engagement; paywalling them would kill growth.
   - **Leaderboard: weekly reset is FREE too** (decided). Premium only adds *automatic

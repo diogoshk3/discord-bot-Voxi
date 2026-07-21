@@ -47,10 +47,10 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
     .addStringOption((o) => o.setName('text').setDescription('What to read').setRequired(true))
     .toJSON(),
   new SlashCommandBuilder().setName('skip').setDescription('Skip the current audio').toJSON(),
-  // /shutup — silences Vozen NOW: clears the whole queue and stops what's playing (without leaving
+  // /shut-up — silences Vozen NOW: clears the whole queue and stops what's playing (without leaving
   // the call). /skip only skips the current message; this clears everything.
   new SlashCommandBuilder()
-    .setName('shutup')
+    .setName('shut-up')
     .setDescription('Make Vozen stop talking now (clears the whole queue)')
     .toJSON(),
   // /laugh — per-user fun (like /tts): Vozen laughs in the user's CURRENT voice.
@@ -108,7 +108,7 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
   // Fun micro-commands (spoken in voice + public response). Work without being
   // in a call (text only); if Vozen is in the call, it also speaks.
   new SlashCommandBuilder()
-    .setName('8ball')
+    .setName('8-ball')
     .setDescription('Ask the magic 8-ball a yes/no question')
     .addStringOption((o) =>
       o
@@ -173,15 +173,15 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
         .setDescription('Permanently delete all your personal data (asks you to confirm first)'),
     )
     .toJSON(),
-  // /topspeakers — who had the most messages read by Vozen + consecutive-day streaks.
+  // /top-speakers — who had the most messages read by Vozen + consecutive-day streaks.
   new SlashCommandBuilder()
-    .setName('topspeakers')
+    .setName('top-speakers')
     .setDescription('See who Vozen has read the most — and daily streaks')
     .toJSON(),
-  // /serverstats — aggregated server statistics (Premium perk; free sees a teaser).
+  // /server-stats — aggregated server statistics (Premium perk; free sees a teaser).
   // Public (anyone can see); the Premium gate is in the handler, not in the command.
   new SlashCommandBuilder()
-    .setName('serverstats')
+    .setName('server-stats')
     .setDescription('Server stats: messages, top talkers and games (💎 Premium, free preview)')
     .toJSON(),
   // /premium — status/showcase + manage pass licences (info/activate/deactivate).
@@ -272,10 +272,10 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
         ),
     )
     .addSubcommand((s) =>
-      s.setName('optout').setDescription('Stop being read automatically in the auto-read channel'),
+      s.setName('opt-out').setDescription('Stop being read automatically in the auto-read channel'),
     )
     .addSubcommand((s) =>
-      s.setName('optin').setDescription('Be read automatically again in the auto-read channel'),
+      s.setName('opt-in').setDescription('Be read automatically again in the auto-read channel'),
     )
     .addSubcommand((s) =>
       s
@@ -332,7 +332,7 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
     )
     .addSubcommand((s) =>
       s
-        .setName('autoread')
+        .setName('auto-read')
         .setDescription('Turn auto-read on/off')
         .addBooleanOption((o) => o.setName('active').setDescription('on/off').setRequired(true)),
     )
@@ -381,13 +381,13 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
     )
     .addSubcommand((s) =>
       s
-        .setName('xsaid')
+        .setName('x-said')
         .setDescription('Announce who spoke before each message ("{name} said …")')
         .addBooleanOption((o) => o.setName('active').setDescription('on/off').setRequired(true)),
     )
     .addSubcommand((s) =>
       s
-        .setName('autojoin')
+        .setName('auto-join')
         .setDescription(
           'Vozen joins your voice channel automatically when you type in the TTS channel',
         )
@@ -417,7 +417,7 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
     )
     .addSubcommand((s) =>
       s
-        .setName('antispam')
+        .setName('anti-spam')
         .setDescription(
           "Don't read spammed messages (mass word repetition or the same big message) (off by default)",
         )
@@ -495,7 +495,7 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
     )
     .addSubcommandGroup((g) =>
       g
-        .setName('blockword')
+        .setName('block-word')
         .setDescription('Manage the blocklist')
         .addSubcommand((s) =>
           s
@@ -539,7 +539,7 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
     .setDescription('How long Vozen has been online')
     .toJSON(),
   new SlashCommandBuilder()
-    .setName('botstats')
+    .setName('bot-stats')
     .setDescription('Public Vozen stats: servers, voice sessions, uptime')
     .toJSON(),
   // /game — group minigames. PUBLIC (no admin gate): anyone starts a
@@ -615,10 +615,10 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
     )
     .addSubcommand((s) => s.setName('list').setDescription('List your personal pronunciations'))
     .toJSON(),
-  // /serverpronunciation — SERVER pronunciation dictionary (admin): applies to
+  // /server-pronunciation — SERVER pronunciation dictionary (admin): applies to
   // EVERYONE's messages. Limit 3 Free / 50 Premium. `add` without options opens a modal.
   new SlashCommandBuilder()
-    .setName('serverpronunciation')
+    .setName('server-pronunciation')
     .setDescription('Server-wide pronunciations for everyone (admin, 3 · 50 with Premium)')
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addSubcommand((s) =>
@@ -671,7 +671,7 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
   // Context-menu (right-click a message -> Apps -> Speak): reads that message out
   // loud with the voice of whoever clicked. Complements /tts without typing anything.
   new ContextMenuCommandBuilder().setName('Speak').setType(ApplicationCommandType.Message).toJSON(),
-  // /redeem — PUBLIC: redeems a gift code (generated by the owner with /gencode).
+  // /redeem — PUBLIC: redeems a gift code (generated by the owner with /generate-code).
   // Grants Plus or a Premium pass to the redeemer's account (not to a server), so
   // it is DM-capable. Single-use; see store/premiumCode.ts.
   new SlashCommandBuilder()
@@ -685,7 +685,7 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
 
 // Commands usable in DM: they only return TEXT and don't depend on guild/voice/store.
 // (/redeem too: grants to the redeemer's ACCOUNT, not to a server.)
-const DM_CAPABLE_COMMANDS = new Set(['invite', 'vote', 'help', 'uptime', 'botstats', 'redeem']);
+const DM_CAPABLE_COMMANDS = new Set(['invite', 'vote', 'help', 'uptime', 'bot-stats', 'redeem']);
 
 // All OTHER commands depend on a guild (voice session, config and per-guild
 // store). By default Discord shows global commands in DM too, where
@@ -705,7 +705,7 @@ export const commandDefs: RESTPostAPIApplicationCommandsJSONBody[] = commandDefs
 // see them in the picker — 1st layer of defense. The 2nd is the owner gate in the handler.
 export const ownerCommandDefs: RESTPostAPIApplicationCommandsJSONBody[] = [
   new SlashCommandBuilder()
-    .setName('vozengrant')
+    .setName('vozen-grant')
     .setDescription('Owner only — grant Vozen Premium/Plus to a user')
     .addUserOption((o) => o.setName('user').setDescription('User to grant to').setRequired(true))
     .addStringOption((o) =>
@@ -733,11 +733,11 @@ export const ownerCommandDefs: RESTPostAPIApplicationCommandsJSONBody[] = [
         .setMaxValue(50),
     )
     .toJSON(),
-  // /gencode — OWNER-ONLY: generates gift code(s) the owner gives to whoever they want. Same
-  // defense in depth as /vozengrant (only registered in OWNER_GUILD_ID + owner gate
+  // /generate-code — OWNER-ONLY: generates gift code(s) the owner gives to whoever they want. Same
+  // defense in depth as /vozen-grant (only registered in OWNER_GUILD_ID + owner gate
   // in the handler). Redeemed with /redeem (public). `plan` chooses Plus vs Premium pass.
   new SlashCommandBuilder()
-    .setName('gencode')
+    .setName('generate-code')
     .setDescription('Owner only — generate Vozen gift code(s)')
     .addStringOption((o) =>
       o
@@ -772,7 +772,7 @@ export const ownerCommandDefs: RESTPostAPIApplicationCommandsJSONBody[] = [
     )
     .addIntegerOption((o) =>
       o
-        .setName('expires_days')
+        .setName('expires-days')
         .setDescription('Optional: code expires after this many days')
         .setMinValue(1)
         .setMaxValue(3650),

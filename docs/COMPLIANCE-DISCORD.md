@@ -13,7 +13,7 @@
 | 15/20/21 — usar Dados da API só para a função declarada; não minerar; não treinar IA com conteúdo de mensagens | ✅ Texto processado em memória para TTS, **nunca persistido**; sem scraping; sem treino de IA. |
 | 16–19 — não perfilar, não vender, não partilhar com data brokers/ads | ✅ Só IDs numéricos + preferências; nada vendido/partilhado; sem analytics/trackers. |
 | 5–7 — não contactar utilizadores sem permissão; sem DMs/anúncios não solicitados | ✅ O bot **nunca envia DMs**; todas as mensagens são respostas funcionais em canais. |
-| 1–3 — não modificar contas sem permissão; respeitar opt-out/remoção | ✅ `/voice optout` respeitado; bot `selfDeaf`; kill-switch e remoção por admins. |
+| 1–3 — não modificar contas sem permissão; respeitar opt-out/remoção | ✅ `/voice opt-out` respeitado; bot `selfDeaf`; kill-switch e remoção por admins. |
 | 4, 8, 10–13 — sem credenciais, atividades ilegais, conteúdo violento/adulto, impersonação, manipulação de engajamento | ✅ Jogos limpos; wordlists com profanidade filtrada; sem NSFW. |
 | 9 — não dirigido a menores de 13 | ✅ Idade mínima 13+ declarada nos Termos e na Privacidade (Fase 1). |
 | Denúncia/suporte + disponibilidade | ✅ Servidor de suporte no `/help`, na Privacidade e nos Termos (Fase 1). |

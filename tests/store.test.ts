@@ -417,7 +417,7 @@ describe('store', () => {
     });
   });
 
-  describe('server pronunciation (/serverpronunciation, cap 3)', () => {
+  describe('server pronunciation (/server-pronunciation, cap 3)', () => {
     it('adds, sorts by term, and isolates per guild', () => {
       expect(getServerPronunciations(db, G)).toEqual([]);
       expect(addServerPronunciation(db, G, 'zz', 'ultimo', SERVER_PRON_LIMIT)).toBe('ok');

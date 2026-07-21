@@ -92,7 +92,7 @@ export default {
   'voice.detection.off':
     '✅ Automatische taaldetectie staat UIT: je ene vaste stem leest alles voor, zodat je altijd hetzelfde klinkt.',
   'voice.optout':
-    'Je wordt niet meer automatisch voorgelezen. Gebruik /voice optin om het weer aan te zetten.',
+    'Je wordt niet meer automatisch voorgelezen. Gebruik /voice opt-in om het weer aan te zetten.',
   'voice.optin': 'Je wordt weer automatisch voorgelezen.',
   'voice.nickname.set': '✅ Vozen noemt je nu hardop **{name}**.',
   'voice.nickname.cleared': '✅ Uitgesproken bijnaam gewist — Vozen gebruikt je servernaam.',
@@ -226,7 +226,7 @@ export default {
   'config.channelWrongType': 'Kies een tekstkanaal (geen spraakkanaal of categorie).',
   'config.channelNoAccess': 'Ik kan {channel} niet zien — controleer daar mijn rechten.',
   'config.channelSet':
-    'Kanaal voor automatisch voorlezen ingesteld op {channel}. Volgende: zorg dat automatisch voorlezen aanstaat met `/config autoread active:true`.',
+    'Kanaal voor automatisch voorlezen ingesteld op {channel}. Volgende: zorg dat automatisch voorlezen aanstaat met `/config auto-read active:true`.',
   'config.autoreadOn': 'Automatisch voorlezen staat nu **aan**.',
   'config.autoreadOff': 'Automatisch voorlezen staat nu **uit**.',
   'config.maxCharsRange': 'De waarde voor max. tekens moet tussen 1 en 2000 liggen.',
@@ -238,7 +238,7 @@ export default {
   'config.enabledOn': 'TTS staat nu **aan** voor deze server.',
   'config.enabledOff': 'TTS staat nu **uit** voor deze server.',
   'config.xsaidOn':
-    'Vozen kondigt nu **wie sprak** aan vóór elk bericht (bijv. "Alex zei hoi"). Zet uit met `/config xsaid active:false`.',
+    'Vozen kondigt nu **wie sprak** aan vóór elk bericht (bijv. "Alex zei hoi"). Zet uit met `/config x-said active:false`.',
   'config.xsaidOff':
     'Vozen kondigt **niet langer** aan wie sprak — het leest alleen het bericht voor.',
   'config.autojoinOn':
@@ -261,7 +261,7 @@ export default {
   'config.streaksOn':
     '✅ Reeksmeldingen **aan** — Vozen toont een 🔥 dagreeks-bericht de eerste keer dat iemand elke dag spreekt.',
   'config.streaksOff':
-    'Reeksmeldingen **uit** — Vozen houdt reeksen nog steeds bij (zie `/topspeakers`) maar zegt er niets over.',
+    'Reeksmeldingen **uit** — Vozen houdt reeksen nog steeds bij (zie `/top-speakers`) maar zegt er niets over.',
   'config.soundboardOn': 'Soundboard **aan** — iedereen kan clips afspelen met `/sound`.',
   'config.soundboardOff': 'Soundboard **uit** — `/sound` is uitgeschakeld op deze server.',
   'config.votePromosLabel': 'Meldingen over top.gg-beloning + Vozen Support',
@@ -366,13 +366,13 @@ export default {
     '• /join — ik sluit me aan bij je spraakkanaal\n• /leave — ik verlaat het spraakkanaal\n• /tts <tekst> — ik lees tekst hardop voor · bijv. /tts Hallo allemaal!\n• /skip — sla over wat ik nu voorlees',
   'help.groupVoice': 'Jouw stem',
   'help.groupVoiceBody':
-    '• /voice set <model> — kies je stem · bijv. /voice set en_US-amy-medium\n• /voice list — bekijk de beschikbare stemmen\n• /voice preview — hoor een voorbeeld van je stem\n• /voice reset — ga terug naar de standaardstem\n• /voice optout · /voice optin — zet automatisch voorlezen voor jou uit / aan\n• /voice abbrev add|remove|list — persoonlijke slang, op jouw manier voorgelezen (max. 10)',
+    '• /voice set <model> — kies je stem · bijv. /voice set en_US-amy-medium\n• /voice list — bekijk de beschikbare stemmen\n• /voice preview — hoor een voorbeeld van je stem\n• /voice reset — ga terug naar de standaardstem\n• /voice opt-out · /voice opt-in — zet automatisch voorlezen voor jou uit / aan\n• /voice abbrev add|remove|list — persoonlijke slang, op jouw manier voorgelezen (max. 10)',
   'help.groupFun': 'Plezier',
   'help.groupFunBody':
     '• /joke — ik vertel een korte grap (kies een taal + optioneel gelach) · bijv. /joke English\n• /laugh — ik lach hardop in je huidige stem',
   'help.groupAdmin': 'Serverbeheer (vereist Server beheren)',
   'help.groupAdminBody':
-    '• /setup — begeleide configuratie in één stap · gebruik dit eerst\n• /config — autoread, tts-channel, language, default-voice, blockword, pronunciation,\n  rate-limit, role, max-chars, enabled · bijv. /config tts-channel #algemeen\n• /stats — botstatistieken',
+    '• /setup — begeleide configuratie in één stap · gebruik dit eerst\n• /config — auto-read, tts-channel, language, default-voice, block-word, pronunciation,\n  rate-limit, role, max-chars, enabled · bijv. /config tts-channel #algemeen\n• /stats — botstatistieken',
   'help.groupMore': 'Meer',
   'help.groupMoreBody':
     '• /invite — voeg Vozen toe aan een andere server\n• /vote — stem op Vozen op top.gg\n• /help — toon deze help',
@@ -605,12 +605,12 @@ export default {
   'pron.modalTerm': 'Het woord (zoals mensen het typen)',
   'pron.modalSay': 'Hoe Vozen het moet zeggen',
   'spron.listHeader': '🗣️ **Serveruitspraken** ({count}/{limit}) — gelden voor iedereen:',
-  'spron.listEmpty': 'Nog geen — voeg er een toe met `/serverpronunciation add`.',
+  'spron.listEmpty': 'Nog geen — voeg er een toe met `/server-pronunciation add`.',
   'spron.set': '✅ Opgeslagen voor de hele server! “{term}” → “{replacement}”.',
   'spron.removed': '🗑️ “{term}” verwijderd van de server.',
   'spron.notFound': 'De server heeft geen uitspraak voor “{term}”.',
   'spron.limitHit':
-    '🔒 De server heeft zijn limiet van **{limit}** uitspraken bereikt. Verwijder er een met `/serverpronunciation remove`.',
+    '🔒 De server heeft zijn limiet van **{limit}** uitspraken bereikt. Verwijder er een met `/server-pronunciation remove`.',
   'spron.modalTitle': 'Serveruitspraak',
   'spron.modalSay': 'Hoe Vozen het voor iedereen zegt',
   'rand.selectPrompt': '🎲 **Randomizer** — uit hoeveel opties wil je dat ik kies?',

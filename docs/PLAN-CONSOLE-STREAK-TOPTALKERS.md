@@ -24,7 +24,7 @@ Na tab **Servidores** da consola admin (owner-only):
 - Compliance: `guild_talk_streak` no `GUILD_PURGE_TABLES` (rot-guard) + adenda ao `AUDIT-CONSOLE-037.md`; verificar se `PRIVACY.md` §1.2 cobre o agregado cross-server (se não, uma linha).
 
 ### Out
-- Streak de servidor visível a membros (comandos públicos, /topspeakers) — é privada do dono.
+- Streak de servidor visível a membros (comandos públicos, /top-speakers) — é privada do dono.
 - Histórico por-dia / gráficos; notificações de streak; backfill perfeito (não existe histórico diário).
 - Qualquer mudança à streak de utilizador existente.
 - Tab Helper do painel.

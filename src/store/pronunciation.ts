@@ -6,7 +6,7 @@ import { cached, invalidate } from './cache';
 // Two pronunciation dictionaries:
 //  • PERSONAL (/pronunciation, pronunciation_user table): only affects the author's
 //    own messages; global (follows the user); limit 3 Free / 50 Premium.
-//  • SERVER (/serverpronunciation, pronunciation table): affects the WHOLE guild (admin);
+//  • SERVER (/server-pronunciation, pronunciation table): affects the WHOLE guild (admin);
 //    limit 3 Free / 50 with the guild Premium. In the pipeline the PERSONAL one is applied
 //    first (the user's term wins) and then the server one.
 
@@ -19,7 +19,7 @@ export const SERVER_PRON_LIMIT_PREMIUM = 50;
 
 export type AddPronResult = 'ok' | 'limit';
 
-// ── SERVER dictionary (/serverpronunciation, admin) ──────────────────────────────
+// ── SERVER dictionary (/server-pronunciation, admin) ──────────────────────────────
 
 export function getServerPronunciations(
   db: Database.Database,

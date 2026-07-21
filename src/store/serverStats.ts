@@ -1,6 +1,6 @@
 // src/store/serverStats.ts
 //
-// Aggregation of SERVER STATISTICS (Premium perk /serverstats). Compliance: ONLY aggregates
+// Aggregation of SERVER STATISTICS (Premium perk /server-stats). Compliance: ONLY aggregates
 // data the bot ALREADY stores (talk_stats + game_score) — no new collection; "top-talkers"
 // is per-user data already disclosed and already erasable via /privacy erase. See
 // docs/COMPLIANCE-VAGA5.md · Stats. PURE/deterministic (given db + now); reuses

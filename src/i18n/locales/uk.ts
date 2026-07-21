@@ -91,7 +91,7 @@ export default {
   'voice.detection.off':
     '✅ Автоматичне визначення мови ВИМКНЕНО: усе читає ваш єдиний фіксований голос, тож ви завжди звучите однаково.',
   'voice.optout':
-    'Вас більше не будуть читати автоматично. Виконайте /voice optin, щоб увімкнути знову.',
+    'Вас більше не будуть читати автоматично. Виконайте /voice opt-in, щоб увімкнути знову.',
   'voice.optin': 'Вас знову будуть читати автоматично.',
   'voice.nickname.set': '✅ Тепер Vozen називатиме вас **{name}** вголос.',
   'voice.nickname.cleared':
@@ -225,7 +225,7 @@ export default {
   'config.channelWrongType': 'Оберіть текстовий канал (не голосовий канал і не категорію).',
   'config.channelNoAccess': 'Я не бачу {channel} — перевірте мої дозволи там.',
   'config.channelSet':
-    'Канал автозачитування встановлено на {channel}. Далі: переконайтеся, що автозачитування ввімкнено за допомогою `/config autoread active:true`.',
+    'Канал автозачитування встановлено на {channel}. Далі: переконайтеся, що автозачитування ввімкнено за допомогою `/config auto-read active:true`.',
   'config.autoreadOn': 'Автозачитування тепер **увімкнено**.',
   'config.autoreadOff': 'Автозачитування тепер **вимкнено**.',
   'config.maxCharsRange': 'Значення макс. символів має бути від 1 до 2000.',
@@ -237,7 +237,7 @@ export default {
   'config.enabledOn': 'TTS тепер **увімкнено** для цього сервера.',
   'config.enabledOff': 'TTS тепер **вимкнено** для цього сервера.',
   'config.xsaidOn':
-    'Тепер Vozen оголошуватиме, **хто говорив**, перед кожним повідомленням (напр. «Alex сказав привіт»). Вимкніть за допомогою `/config xsaid active:false`.',
+    'Тепер Vozen оголошуватиме, **хто говорив**, перед кожним повідомленням (напр. «Alex сказав привіт»). Вимкніть за допомогою `/config x-said active:false`.',
   'config.xsaidOff':
     'Vozen **більше не** оголошуватиме, хто говорив — він читає лише повідомлення.',
   'config.autojoinOn':
@@ -261,7 +261,7 @@ export default {
   'config.streaksOn':
     '✅ Сповіщення про серії **увімкнено** — Vozen показує повідомлення про денну серію 🔥 щоразу, коли кожна людина вперше говорить за день.',
   'config.streaksOff':
-    'Сповіщення про серії **вимкнено** — Vozen усе одно рахує серії (див. `/topspeakers`), але не оголошує їх.',
+    'Сповіщення про серії **вимкнено** — Vozen усе одно рахує серії (див. `/top-speakers`), але не оголошує їх.',
   'config.soundboardOn':
     'Саундборд **увімкнено** — будь-хто може відтворювати кліпи за допомогою `/sound`.',
   'config.soundboardOff': 'Саундборд **вимкнено** — `/sound` вимкнено на цьому сервері.',
@@ -365,13 +365,13 @@ export default {
     '• /join — я приєднуюся до вашого голосового каналу\n• /leave — я виходжу з голосового каналу\n• /tts <текст> — я зачитую текст вголос · напр. /tts Всім привіт!\n• /skip — пропустити те, що я зараз зачитую',
   'help.groupVoice': 'Ваш голос',
   'help.groupVoiceBody':
-    '• /voice set <model> — оберіть свій голос · напр. /voice set en_US-amy-medium\n• /voice list — перегляньте доступні голоси\n• /voice preview — послухайте зразок свого голосу\n• /voice reset — повернутися до типового голосу\n• /voice optout · /voice optin — вимкнути / увімкнути автозачитування для вас\n• /voice abbrev add|remove|list — особистий сленг, читається по-вашому (до 10)',
+    '• /voice set <model> — оберіть свій голос · напр. /voice set en_US-amy-medium\n• /voice list — перегляньте доступні голоси\n• /voice preview — послухайте зразок свого голосу\n• /voice reset — повернутися до типового голосу\n• /voice opt-out · /voice opt-in — вимкнути / увімкнути автозачитування для вас\n• /voice abbrev add|remove|list — особистий сленг, читається по-вашому (до 10)',
   'help.groupFun': 'Розваги',
   'help.groupFunBody':
     "• /joke — я розповідаю короткий жарт (оберіть мову + необов'язковий сміх) · напр. /joke English\n• /laugh — я сміюся вголос вашим поточним голосом",
   'help.groupAdmin': 'Адмін сервера (потрібне Керування сервером)',
   'help.groupAdminBody':
-    '• /setup — покрокове налаштування в один крок · виконайте це першим\n• /config — autoread, tts-channel, language, default-voice, blockword, pronunciation,\n  rate-limit, role, max-chars, enabled · напр. /config tts-channel #general\n• /stats — статистика бота',
+    '• /setup — покрокове налаштування в один крок · виконайте це першим\n• /config — auto-read, tts-channel, language, default-voice, block-word, pronunciation,\n  rate-limit, role, max-chars, enabled · напр. /config tts-channel #general\n• /stats — статистика бота',
   'help.groupMore': 'Більше',
   'help.groupMoreBody':
     '• /invite — додати Vozen на інший сервер\n• /vote — проголосувати за Vozen на top.gg\n• /help — показати цю довідку',
@@ -601,12 +601,12 @@ export default {
   'pron.modalTerm': 'Слово (як його пишуть)',
   'pron.modalSay': 'Як Vozen має його казати',
   'spron.listHeader': '🗣️ **Вимови сервера** ({count}/{limit}) — застосовуються до всіх:',
-  'spron.listEmpty': 'Ще жодної — додайте за допомогою `/serverpronunciation add`.',
+  'spron.listEmpty': 'Ще жодної — додайте за допомогою `/server-pronunciation add`.',
   'spron.set': '✅ Збережено для всього сервера! «{term}» → «{replacement}».',
   'spron.removed': '🗑️ «{term}» видалено із сервера.',
   'spron.notFound': 'На сервері немає вимови для «{term}».',
   'spron.limitHit':
-    '🔒 Сервер досяг свого ліміту в **{limit}** вимов. Видаліть одну за допомогою `/serverpronunciation remove`.',
+    '🔒 Сервер досяг свого ліміту в **{limit}** вимов. Видаліть одну за допомогою `/server-pronunciation remove`.',
   'spron.modalTitle': 'Вимова сервера',
   'spron.modalSay': 'Як Vozen казатиме це для всіх',
   'rand.selectPrompt': '🎲 **Рандомайзер** — з-поміж скількох варіантів мені обирати?',

@@ -313,7 +313,7 @@
       ["/leave", "Quitter le salon vocal"],
       ["/tts", "Lire un texte à voix haute"],
       ["/skip", "Passer l'audio en cours"],
-      ["/shutup", "Faire taire Vozen immédiatement (vide la file)"],
+      ["/shut-up", "Faire taire Vozen immédiatement (vide la file)"],
       ["/setup", "Configuration guidée en une étape"],
       ["/invite", "Obtenir le lien d'invitation"],
       ["/vote", "Voter pour Vozen sur top.gg"],
@@ -326,7 +326,7 @@
       ["/voice preview", "Écouter un échantillon de voix"],
       ["/voice effect", "Robot, écho, démon… effets de voix"],
       ["/voice nickname", "Comment Vozen vous appelle à voix haute"],
-      ["/voice optout", "Ne plus être lu automatiquement"],
+      ["/voice opt-out", "Ne plus être lu automatiquement"],
       ["/pronunciation", "Apprends à Vozen à prononcer un mot (perso)"]
     ],
     "fun": [
@@ -335,10 +335,10 @@
       ["/game stats", "Vos points, victoires et rang"],
       ["/joke", "Une petite blague dans n'importe quelle langue"],
       ["/laugh", "Vozen rit avec votre voix"],
-      ["/8ball", "Interrogez la boule magique, à voix haute"],
+      ["/8-ball", "Interrogez la boule magique, à voix haute"],
       ["/fact · /fortune · /wyr", "Anecdotes, prédictions et dilemmes"],
       ["/birthday set", "Vozen chante le jour de votre anniversaire"],
-      ["/topspeakers", "Qui parle le plus + séries en cours"],
+      ["/top-speakers", "Qui parle le plus + séries en cours"],
       ["/randomizer", "Vozen tire une option au sort et la dit"],
       [
         "/cast",
@@ -349,9 +349,9 @@
       ["/config greet", "Accueillir ceux qui rejoignent l'appel"],
       ["/config language", "Définir la langue de l'interface"],
       ["/config default-voice", "Définir la voix par défaut du serveur"],
-      ["/config autoread", "Activer/désactiver la lecture auto"],
-      ["/config blockword", "Gérer la liste de blocage"],
-      ["/serverpronunciation", "Prononciations pour tout le serveur (admin, 3 · 50 avec Premium)"]
+      ["/config auto-read", "Activer/désactiver la lecture auto"],
+      ["/config block-word", "Gérer la liste de blocage"],
+      ["/server-pronunciation", "Prononciations pour tout le serveur (admin, 3 · 50 avec Premium)"]
     ]
   },
   "faq": [

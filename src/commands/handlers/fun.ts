@@ -1,4 +1,4 @@
-// src/commands/handlers/fun.ts — fun handlers: /laugh, /joke, /rizz, micro-fun (/8ball,/fortune,/fact,/wyr) and /birthday extracted from index.ts (plan 015).
+// src/commands/handlers/fun.ts — fun handlers: /laugh, /joke, /rizz, micro-fun (/8-ball,/fortune,/fact,/wyr) and /birthday extracted from index.ts (plan 015).
 import { join } from 'node:path';
 import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 import type { BotDeps } from '../../bot/deps';
@@ -341,7 +341,7 @@ export async function handleSound(i: ChatInputCommandInteraction, deps: BotDeps)
 type MicroFunKind = '8ball' | 'fortune' | 'fact' | 'wyr';
 
 /**
- * Fun micro-commands (/8ball, /fortune, /fact, /wyr): pick a phrase from the bank
+ * Fun micro-commands (/8-ball, /fortune, /fact, /wyr): pick a phrase from the bank
  * in the user's UI LANGUAGE (EN/PT) and respond PUBLICLY in text; if Vozen
  * is in the call, it also SPEAKS it (voice of the phrase's language, user's engine). Unlike
  * /joke, they work OUTSIDE a call (text anyway). The speech is best-effort and

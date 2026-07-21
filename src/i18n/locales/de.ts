@@ -45,7 +45,7 @@ export default {
   'voice.reset':
     '✅ Deine Stimme ist wieder auf den Standard zurückgesetzt. Wähle jederzeit eine andere mit `/voice list` und `/voice set`.',
   'voice.optout':
-    'Du wirst nicht mehr automatisch vorgelesen. Führe /voice optin aus, um es wieder zu aktivieren.',
+    'Du wirst nicht mehr automatisch vorgelesen. Führe /voice opt-in aus, um es wieder zu aktivieren.',
   'voice.optin': 'Du wirst wieder automatisch vorgelesen.',
   'voice.notInVoice': 'Ich bin noch in keinem Sprachkanal — führe zuerst /join aus.',
   'voice.previewPlaying': 'Spiele eine Hörprobe ab…',
@@ -77,7 +77,7 @@ export default {
   'config.channelNoAccess':
     'Ich kann {channel} nicht sehen — bitte überprüfe dort meine Berechtigungen.',
   'config.channelSet':
-    'Kanal für automatisches Vorlesen auf {channel} gesetzt. Als Nächstes: stelle sicher, dass das automatische Vorlesen mit `/config autoread active:true` aktiviert ist.',
+    'Kanal für automatisches Vorlesen auf {channel} gesetzt. Als Nächstes: stelle sicher, dass das automatische Vorlesen mit `/config auto-read active:true` aktiviert ist.',
   'config.autoreadOn': 'Automatisches Vorlesen ist jetzt **an**.',
   'config.autoreadOff': 'Automatisches Vorlesen ist jetzt **aus**.',
   'config.maxCharsRange': 'Der Wert für Max-Zeichen muss zwischen 1 und 2000 liegen.',
@@ -165,13 +165,13 @@ export default {
     '• /join — ich trete deinem Sprachkanal bei\n• /leave — ich verlasse den Sprachkanal\n• /tts <text> — ich lese Text laut vor · z. B. /tts Hallo zusammen!\n• /skip — überspringe, was ich gerade vorlese',
   'help.groupVoice': 'Deine Stimme',
   'help.groupVoiceBody':
-    '• /voice set <model> — wähle deine Stimme · z. B. /voice set en_US-amy-medium\n• /voice list — verfügbare Stimmen ansehen\n• /voice preview — eine Hörprobe deiner Stimme anhören\n• /voice reset — zur Standardstimme zurückkehren\n• /voice optout · /voice optin — automatisches Vorlesen für dich aus- / einschalten\n• /voice abbrev add|remove|list — persönlicher Slang, so vorgelesen wie du willst (bis zu 10)',
+    '• /voice set <model> — wähle deine Stimme · z. B. /voice set en_US-amy-medium\n• /voice list — verfügbare Stimmen ansehen\n• /voice preview — eine Hörprobe deiner Stimme anhören\n• /voice reset — zur Standardstimme zurückkehren\n• /voice opt-out · /voice opt-in — automatisches Vorlesen für dich aus- / einschalten\n• /voice abbrev add|remove|list — persönlicher Slang, so vorgelesen wie du willst (bis zu 10)',
   'help.groupFun': 'Spaß',
   'help.groupFunBody':
     '• /joke — ich erzähle einen kurzen Witz (wähle eine Sprache + optional Gelächter) · z. B. /joke English\n• /laugh — ich lache laut in deiner aktuellen Stimme',
   'help.groupAdmin': 'Server-Admin (braucht Server verwalten)',
   'help.groupAdminBody':
-    '• /setup — geführte Einrichtung in einem Schritt · führe dies zuerst aus\n• /config — autoread, tts-channel, language, default-voice, blockword, pronunciation,\n  rate-limit, role, max-chars, enabled · z. B. /config tts-channel #general\n• /stats — Bot-Statistiken',
+    '• /setup — geführte Einrichtung in einem Schritt · führe dies zuerst aus\n• /config — auto-read, tts-channel, language, default-voice, block-word, pronunciation,\n  rate-limit, role, max-chars, enabled · z. B. /config tts-channel #general\n• /stats — Bot-Statistiken',
   'help.groupMore': 'Mehr',
   'help.groupMoreBody':
     '• /invite — füge Vozen zu einem anderen Server hinzu\n• /vote — stimme für Vozen auf top.gg ab\n• /help — diese Hilfe anzeigen',
@@ -338,7 +338,7 @@ export default {
   'config.blockLimit':
     'Dieser Server hat bereits die maximale Anzahl von {max} blockierten Wörtern. Entferne eines, bevor du ein weiteres hinzufügst.',
   'config.xsaidOn':
-    'Vozen kündigt jetzt vor jeder Nachricht an, **wer gesprochen hat** (z. B. „Alex sagte hallo“). Schalte es mit `/config xsaid active:false` aus.',
+    'Vozen kündigt jetzt vor jeder Nachricht an, **wer gesprochen hat** (z. B. „Alex sagte hallo“). Schalte es mit `/config x-said active:false` aus.',
   'config.xsaidOff':
     'Vozen kündigt **nicht mehr** an, wer gesprochen hat — es liest nur die Nachricht.',
   'config.autojoinOn':
@@ -360,7 +360,7 @@ export default {
   'config.streaksOn':
     '✅ Streak-Hinweise **an** — Vozen zeigt eine 🔥 Tages-Streak-Nachricht, wenn jede Person zum ersten Mal am Tag spricht.',
   'config.streaksOff':
-    'Streak-Hinweise **aus** — Vozen zählt Streaks weiterhin (siehe `/topspeakers`), bleibt aber still darüber.',
+    'Streak-Hinweise **aus** — Vozen zählt Streaks weiterhin (siehe `/top-speakers`), bleibt aber still darüber.',
   'config.soundboardOn': 'Soundboard **an** — jeder kann mit `/sound` Clips abspielen.',
   'config.soundboardOff': 'Soundboard **aus** — `/sound` ist auf diesem Server deaktiviert.',
   'config.votePromosLabel': 'Hinweise zur top.gg-Belohnung + Vozen Support',
@@ -608,12 +608,12 @@ export default {
   'pron.modalTerm': 'Das Wort (wie man es tippt)',
   'pron.modalSay': 'Wie Vozen es sagen soll',
   'spron.listHeader': '🗣️ **Server-Aussprachen** ({count}/{limit}) — gelten für alle:',
-  'spron.listEmpty': 'Noch keine — füge eine mit `/serverpronunciation add` hinzu.',
+  'spron.listEmpty': 'Noch keine — füge eine mit `/server-pronunciation add` hinzu.',
   'spron.set': '✅ Für den ganzen Server gespeichert! „{term}“ → „{replacement}“.',
   'spron.removed': '🗑️ „{term}“ vom Server entfernt.',
   'spron.notFound': 'Der Server hat keine Aussprache für „{term}“.',
   'spron.limitHit':
-    '🔒 Der Server hat sein Limit von **{limit}** Aussprachen erreicht. Entferne eine mit `/serverpronunciation remove`.',
+    '🔒 Der Server hat sein Limit von **{limit}** Aussprachen erreicht. Entferne eine mit `/server-pronunciation remove`.',
   'spron.modalTitle': 'Server-Aussprache',
   'spron.modalSay': 'Wie Vozen es für alle sagt',
   'rand.selectPrompt': '🎲 **Randomizer** — aus wie vielen Optionen soll ich wählen?',

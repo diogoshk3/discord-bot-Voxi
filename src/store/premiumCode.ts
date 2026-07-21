@@ -1,10 +1,10 @@
 import type Database from 'better-sqlite3';
 
-// Gift codes: the owner generates them with /gencode (owner-only), the person redeems
+// Gift codes: the owner generates them with /generate-code (owner-only), the person redeems
 // with /redeem. SINGLE-USE — redemption is atomic (transaction + UPDATE ... WHERE
 // redeemed_by IS NULL) so two simultaneous redemptions don't spend the same code twice.
 // See the premium_code table in db.ts. The grant itself reuses grantUserPremium/
-// grantGuildPass (like Ko-fi and /vozengrant), with source 'code'.
+// grantGuildPass (like Ko-fi and /vozen-grant), with source 'code'.
 
 export type CodePlan = 'premium' | 'plus';
 

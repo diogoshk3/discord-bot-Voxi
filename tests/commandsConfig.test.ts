@@ -300,7 +300,7 @@ describe('/config role — set and clear', () => {
 
 // ── blockword add/remove ─────────────────────────────────────────────────────
 
-describe('/config blockword — empty-word validation', () => {
+describe('/config block-word — empty-word validation', () => {
   let db: Database.Database;
 
   beforeEach(() => {
@@ -312,7 +312,7 @@ describe('/config blockword — empty-word validation', () => {
 
   it('blockword add: rejects an empty string with a clear message', async () => {
     const i = makeConfigInteraction({
-      group: 'blockword',
+      group: 'block-word',
       sub: 'add',
       optionsMap: { word: '' },
     });
@@ -325,7 +325,7 @@ describe('/config blockword — empty-word validation', () => {
 
   it('blockword add: rejects a whitespace-only string (after trim)', async () => {
     const i = makeConfigInteraction({
-      group: 'blockword',
+      group: 'block-word',
       sub: 'add',
       optionsMap: { word: '   ' },
     });
@@ -338,7 +338,7 @@ describe('/config blockword — empty-word validation', () => {
 
   it('blockword add: accepts a valid word, stores it trimmed', async () => {
     const i = makeConfigInteraction({
-      group: 'blockword',
+      group: 'block-word',
       sub: 'add',
       optionsMap: { word: '  spam  ' },
     });
@@ -352,7 +352,7 @@ describe('/config blockword — empty-word validation', () => {
 
   it('blockword remove: rejects an empty string with a clear message', async () => {
     const i = makeConfigInteraction({
-      group: 'blockword',
+      group: 'block-word',
       sub: 'remove',
       optionsMap: { word: '' },
     });
@@ -368,7 +368,7 @@ describe('/config blockword — empty-word validation', () => {
     addBlockword(db, GUILD, 'spam');
 
     const i = makeConfigInteraction({
-      group: 'blockword',
+      group: 'block-word',
       sub: 'remove',
       optionsMap: { word: 'spam' },
     });

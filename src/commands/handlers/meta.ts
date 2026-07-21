@@ -1,4 +1,4 @@
-// src/commands/handlers/meta.ts — informational/growth handlers: /help, /invite, /vote, /uptime, /botstats, /topspeakers, /premium, /vozengrant (extracted from index.ts, plan 015).
+// src/commands/handlers/meta.ts — informational/growth handlers: /help, /invite, /vote, /uptime, /bot-stats, /top-speakers, /premium, /vozen-grant (extracted from index.ts, plan 015).
 import {
   ChatInputCommandInteraction,
   GuildMember,
@@ -41,7 +41,7 @@ import { voteUpsellLine } from '../voteUpsell';
 const SOURCE_URL = 'https://github.com/Rexy40407/discord-bot-Vozen';
 
 /**
- * /topspeakers — public ranking of who had the most messages READ by Vozen in this guild,
+ * /top-speakers — public ranking of who had the most messages READ by Vozen in this guild,
  * with each one's streak (consecutive days speaking). Same rendering as the game leaderboard
  * (<@id> + i18n lines). Empty -> a message inviting people to speak.
  */
@@ -71,7 +71,7 @@ export async function handleTopSpeakers(
 }
 
 /**
- * /serverstats — AGGREGATED server statistics. Premium perk: a Premium server (or a Plus
+ * /server-stats — AGGREGATED server statistics. Premium perk: a Premium server (or a Plus
  * user) sees everything (reads + streaks + games); free sees a TEASER (top-3 talkers +
  * upsell) to discover the perk. Only aggregates data that is ALREADY stored (talk_stats +
  * game_score) — no new collection; see docs/COMPLIANCE-VAGA5.md. The <@id> do NOT ping
@@ -346,7 +346,7 @@ async function handlePremiumDeactivate(
 }
 
 /**
- * /vozengrant — OWNER-ONLY. Grants a Premium pass (guild) or Plus (user) to someone,
+ * /vozen-grant — OWNER-ONLY. Grants a Premium pass (guild) or Plus (user) to someone,
  * for N days. Defense in depth: (1) the command is registered ONLY on OWNER_GUILD_ID, so
  * the public doesn't even see it; (2) HERE it refuses anyone not in deps.ownerIds — the REAL
  * owner resolved from Discord at startup, not spoofable via env; (3) response always ephemeral.
@@ -379,8 +379,8 @@ export async function handleVozenGrant(
 }
 
 /**
- * /gencode — OWNER-ONLY: generates gift code(s). Defense in depth same as
- * /vozengrant: (1) registered only on OWNER_GUILD_ID (invisible to the public); (2) real-owner
+ * /generate-code — OWNER-ONLY: generates gift code(s). Defense in depth same as
+ * /vozen-grant: (1) registered only on OWNER_GUILD_ID (invisible to the public); (2) real-owner
  * gate here; (3) ephemeral response. Each code is single-use; redeemed with /redeem.
  * `seats` only counts for premium (0 for plus). Regenerates on a PK collision (practically nil).
  */
@@ -394,7 +394,7 @@ export async function handleGenCode(i: ChatInputCommandInteraction, deps: BotDep
   const days = i.options.getInteger('days') ?? 30;
   const seats = plan === 'plus' ? 0 : (i.options.getInteger('seats') ?? 3);
   const amount = i.options.getInteger('amount') ?? 1;
-  const expiresDays = i.options.getInteger('expires_days');
+  const expiresDays = i.options.getInteger('expires-days');
   const now = Date.now();
   const expiresAt = expiresDays ? now + expiresDays * 86_400_000 : null;
   const codes: string[] = [];
@@ -471,7 +471,7 @@ export async function handleUptime(i: ChatInputCommandInteraction, deps: BotDeps
   await reply(i, t('uptime.text', locale, { uptime: formatDuration(process.uptime()) }));
 }
 
-/** /botstats — PUBLIC: trust numbers (servers, voice sessions, uptime). */
+/** /bot-stats — PUBLIC: trust numbers (servers, voice sessions, uptime). */
 export async function handleBotstats(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
   const locale = localeForUser(deps, i);
   const snap = metrics.snapshot();

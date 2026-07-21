@@ -43,7 +43,7 @@ export default {
   'voice.listEmpty': '(chưa cài giọng nào)',
   'voice.reset':
     '✅ Giọng của bạn đã trở về mặc định. Chọn giọng khác bất cứ lúc nào với `/voice list` và `/voice set`.',
-  'voice.optout': 'Bạn sẽ không còn được đọc tự động nữa. Chạy /voice optin để bật lại.',
+  'voice.optout': 'Bạn sẽ không còn được đọc tự động nữa. Chạy /voice opt-in để bật lại.',
   'voice.optin': 'Bạn sẽ lại được đọc tự động.',
   'voice.notInVoice': 'Tôi chưa ở trong kênh thoại nào — hãy chạy /join trước.',
   'voice.previewPlaying': 'Đang phát một đoạn mẫu…',
@@ -74,7 +74,7 @@ export default {
   'config.channelWrongType': 'Hãy chọn một kênh văn bản (không phải kênh thoại hay danh mục).',
   'config.channelNoAccess': 'Tôi không thấy {channel} — vui lòng kiểm tra quyền của tôi ở đó.',
   'config.channelSet':
-    'Đã đặt kênh tự động đọc thành {channel}. Tiếp theo: đảm bảo tự động đọc đã bật với `/config autoread active:true`.',
+    'Đã đặt kênh tự động đọc thành {channel}. Tiếp theo: đảm bảo tự động đọc đã bật với `/config auto-read active:true`.',
   'config.autoreadOn': 'Tự động đọc giờ đã **bật**.',
   'config.autoreadOff': 'Tự động đọc giờ đã **tắt**.',
   'config.maxCharsRange': 'Giá trị số ký tự tối đa phải nằm trong khoảng 1 đến 2000.',
@@ -161,13 +161,13 @@ export default {
     '• /join — Tôi vào kênh thoại của bạn\n• /leave — Tôi rời kênh thoại\n• /tts <text> — Tôi đọc to văn bản · ví dụ /tts Chào mọi người!\n• /skip — bỏ qua nội dung tôi đang đọc',
   'help.groupVoice': 'Giọng của bạn',
   'help.groupVoiceBody':
-    '• /voice set <model> — chọn giọng của bạn · ví dụ /voice set en_US-amy-medium\n• /voice list — xem các giọng có sẵn\n• /voice preview — nghe thử một đoạn mẫu giọng của bạn\n• /voice reset — trở về giọng mặc định\n• /voice optout · /voice optin — tắt / bật tự động đọc cho bạn\n• /voice abbrev add|remove|list — từ lóng cá nhân, đọc theo cách của bạn (tối đa 10)',
+    '• /voice set <model> — chọn giọng của bạn · ví dụ /voice set en_US-amy-medium\n• /voice list — xem các giọng có sẵn\n• /voice preview — nghe thử một đoạn mẫu giọng của bạn\n• /voice reset — trở về giọng mặc định\n• /voice opt-out · /voice opt-in — tắt / bật tự động đọc cho bạn\n• /voice abbrev add|remove|list — từ lóng cá nhân, đọc theo cách của bạn (tối đa 10)',
   'help.groupFun': 'Giải trí',
   'help.groupFunBody':
     '• /joke — Tôi kể một câu chuyện cười ngắn (chọn ngôn ngữ + tùy chọn tiếng cười) · ví dụ /joke English\n• /laugh — Tôi cười to bằng giọng hiện tại của bạn',
   'help.groupAdmin': 'Quản trị máy chủ (cần Quản lý máy chủ)',
   'help.groupAdminBody':
-    '• /setup — cấu hình một bước có hướng dẫn · chạy lệnh này trước\n• /config — autoread, tts-channel, language, default-voice, blockword, pronunciation,\n  rate-limit, role, max-chars, enabled · ví dụ /config tts-channel #general\n• /stats — thống kê bot',
+    '• /setup — cấu hình một bước có hướng dẫn · chạy lệnh này trước\n• /config — auto-read, tts-channel, language, default-voice, block-word, pronunciation,\n  rate-limit, role, max-chars, enabled · ví dụ /config tts-channel #general\n• /stats — thống kê bot',
   'help.groupMore': 'Thêm',
   'help.groupMoreBody':
     '• /invite — thêm Vozen vào máy chủ khác\n• /vote — bình chọn cho Vozen trên top.gg\n• /help — hiển thị trợ giúp này',
@@ -328,7 +328,7 @@ export default {
   'config.blockLimit':
     'Máy chủ này đã đạt tối đa {max} từ bị chặn. Hãy xóa bớt một từ trước khi thêm từ khác.',
   'config.xsaidOn':
-    'Vozen giờ sẽ thông báo **ai đã nói** trước mỗi tin nhắn (ví dụ "Alex đã nói xin chào"). Tắt với `/config xsaid active:false`.',
+    'Vozen giờ sẽ thông báo **ai đã nói** trước mỗi tin nhắn (ví dụ "Alex đã nói xin chào"). Tắt với `/config x-said active:false`.',
   'config.xsaidOff': 'Vozen sẽ **không còn** thông báo ai đã nói — chỉ đọc nội dung tin nhắn.',
   'config.autojoinOn':
     '✅ Tự động vào **bật** — Vozen sẽ vào kênh thoại của bạn khi bạn gõ trong kênh TTS.',
@@ -348,7 +348,7 @@ export default {
   'config.streaksOn':
     '✅ Thông báo chuỗi ngày **bật** — Vozen hiển thị thông báo chuỗi ngày 🔥 vào lần đầu mỗi người nói mỗi ngày.',
   'config.streaksOff':
-    'Thông báo chuỗi ngày **tắt** — Vozen vẫn theo dõi chuỗi ngày (xem `/topspeakers`) nhưng không thông báo.',
+    'Thông báo chuỗi ngày **tắt** — Vozen vẫn theo dõi chuỗi ngày (xem `/top-speakers`) nhưng không thông báo.',
   'config.soundboardOn': 'Bảng âm thanh **bật** — bất kỳ ai cũng có thể phát clip với `/sound`.',
   'config.soundboardOff': 'Bảng âm thanh **tắt** — `/sound` bị vô hiệu hóa trên máy chủ này.',
   'config.votePromosLabel': 'Thông báo phần thưởng top.gg + Vozen Support',
@@ -590,12 +590,12 @@ export default {
   'pron.modalTerm': 'Từ ngữ (theo cách mọi người gõ)',
   'pron.modalSay': 'Cách Vozen nên đọc nó',
   'spron.listHeader': '🗣️ **Cách phát âm của máy chủ** ({count}/{limit}) — áp dụng cho mọi người:',
-  'spron.listEmpty': 'Chưa có mục nào — thêm một mục với `/serverpronunciation add`.',
+  'spron.listEmpty': 'Chưa có mục nào — thêm một mục với `/server-pronunciation add`.',
   'spron.set': '✅ Đã lưu cho toàn máy chủ! “{term}” → “{replacement}”.',
   'spron.removed': '🗑️ Đã xóa “{term}” khỏi máy chủ.',
   'spron.notFound': 'Máy chủ không có cách phát âm nào cho “{term}”.',
   'spron.limitHit':
-    '🔒 Máy chủ đã đạt giới hạn **{limit}** cách phát âm. Hãy xóa một mục với `/serverpronunciation remove`.',
+    '🔒 Máy chủ đã đạt giới hạn **{limit}** cách phát âm. Hãy xóa một mục với `/server-pronunciation remove`.',
   'spron.modalTitle': 'Cách phát âm của máy chủ',
   'spron.modalSay': 'Cách Vozen đọc nó cho mọi người',
   'rand.selectPrompt': '🎲 **Trình chọn ngẫu nhiên** — bạn muốn tôi chọn trong bao nhiêu lựa chọn?',

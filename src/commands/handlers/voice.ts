@@ -346,11 +346,11 @@ export async function handleVoice(i: ChatInputCommandInteraction, deps: BotDeps)
     const active = i.options.getBoolean('active', true);
     setDetection(deps.db, i.guildId!, i.user.id, active);
     await reply(i, active ? t('voice.detection.on', locale) : t('voice.detection.off', locale));
-  } else if (sub === 'optout') {
+  } else if (sub === 'opt-out') {
     // Per-user (no admin gate): each person manages their own opt-out of auto-read.
     setOptOut(deps.db, i.guildId!, i.user.id);
     await reply(i, t('voice.optout', locale));
-  } else if (sub === 'optin') {
+  } else if (sub === 'opt-in') {
     setOptIn(deps.db, i.guildId!, i.user.id);
     await reply(i, t('voice.optin', locale));
   } else if (sub === 'nickname') {

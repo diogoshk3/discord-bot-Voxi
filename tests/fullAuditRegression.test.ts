@@ -85,7 +85,7 @@ describe('full product audit regressions', () => {
       );
       const adminCommands = data.commands.admin.map(([command]) => command);
       expect(adminCommands, `${lang}: command catalog`).not.toContain('/config pronunciation');
-      expect(adminCommands, `${lang}: command catalog`).toContain('/serverpronunciation');
+      expect(adminCommands, `${lang}: command catalog`).toContain('/server-pronunciation');
     }
   });
 

@@ -34,7 +34,7 @@ function makeGrantInteraction(opts: {
 }) {
   const replies: string[] = [];
   return {
-    commandName: 'vozengrant',
+    commandName: 'vozen-grant',
     guildId: 'g-owner',
     isRepliable: () => true,
     user: { id: opts.callerId },
@@ -54,7 +54,7 @@ function makeGrantInteraction(opts: {
   };
 }
 
-describe('/vozengrant — OWNER-ONLY (defesa em profundidade, camada 2)', () => {
+describe('/vozen-grant — OWNER-ONLY (defesa em profundidade, camada 2)', () => {
   let db: Database.Database;
   beforeEach(() => {
     db = initDb(':memory:');

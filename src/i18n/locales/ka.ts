@@ -43,7 +43,7 @@ export default {
   'voice.listEmpty': '(არცერთი დაინსტალირებული)',
   'voice.reset':
     '✅ თქვენი ხმა ნაგულისხმევზე დაბრუნდა. სხვა აირჩიეთ ნებისმიერ დროს `/voice list`-ითა და `/voice set`-ით.',
-  'voice.optout': 'ავტომატურად აღარ წაგიკითხავთ. ხელახლა ჩასართავად გაუშვით /voice optin.',
+  'voice.optout': 'ავტომატურად აღარ წაგიკითხავთ. ხელახლა ჩასართავად გაუშვით /voice opt-in.',
   'voice.optin': 'ისევ ავტომატურად წაგიკითხავთ.',
   'voice.notInVoice': 'ჯერ ხმოვან არხში არ ვარ — ჯერ გაუშვით /join.',
   'voice.previewPlaying': 'ვუკრავ ნიმუშს…',
@@ -74,7 +74,7 @@ export default {
   'config.channelWrongType': 'აირჩიეთ ტექსტური არხი (არა ხმოვანი არხი ან კატეგორია).',
   'config.channelNoAccess': 'ვერ ვხედავ {channel}-ს — გთხოვთ, შეამოწმოთ ჩემი ნებართვები იქ.',
   'config.channelSet':
-    'ავტოკითხვის არხად დაყენდა {channel}. შემდეგ: დარწმუნდით, რომ ავტოკითხვა ჩართულია `/config autoread active:true`-ით.',
+    'ავტოკითხვის არხად დაყენდა {channel}. შემდეგ: დარწმუნდით, რომ ავტოკითხვა ჩართულია `/config auto-read active:true`-ით.',
   'config.autoreadOn': 'ავტოკითხვა ახლა **ჩართულია**.',
   'config.autoreadOff': 'ავტოკითხვა ახლა **გამორთულია**.',
   'config.maxCharsRange': 'სიმბოლოების მაქსიმალური მნიშვნელობა უნდა იყოს 1-სა და 2000-ს შორის.',
@@ -161,13 +161,13 @@ export default {
     '• /join — ვუერთდები თქვენს ხმოვან არხს\n• /leave — ვტოვებ ხმოვან არხს\n• /tts <text> — ხმამაღლა ვკითხულობ ტექსტს · მაგ. /tts Hello everyone!\n• /skip — გამოვტოვებ იმას, რასაც ახლა ვკითხულობ',
   'help.groupVoice': 'თქვენი ხმა',
   'help.groupVoiceBody':
-    '• /voice set <model> — აირჩიეთ თქვენი ხმა · მაგ. /voice set en_US-amy-medium\n• /voice list — იხილეთ ხელმისაწვდომი ხმები\n• /voice preview — მოისმინეთ თქვენი ხმის ნიმუში\n• /voice reset — დაბრუნდით ნაგულისხმევ ხმაზე\n• /voice optout · /voice optin — ჩართეთ/გამორთეთ ავტოკითხვა თქვენთვის\n• /voice abbrev add|remove|list — პირადი ჟარგონი, წაკითხული თქვენებურად (10-მდე)',
+    '• /voice set <model> — აირჩიეთ თქვენი ხმა · მაგ. /voice set en_US-amy-medium\n• /voice list — იხილეთ ხელმისაწვდომი ხმები\n• /voice preview — მოისმინეთ თქვენი ხმის ნიმუში\n• /voice reset — დაბრუნდით ნაგულისხმევ ხმაზე\n• /voice opt-out · /voice opt-in — ჩართეთ/გამორთეთ ავტოკითხვა თქვენთვის\n• /voice abbrev add|remove|list — პირადი ჟარგონი, წაკითხული თქვენებურად (10-მდე)',
   'help.groupFun': 'გართობა',
   'help.groupFunBody':
     '• /joke — ვყვები მოკლე ხუმრობას (აირჩიეთ ენა + არასავალდებულო სიცილი) · მაგ. /joke English\n• /laugh — ხმამაღლა ვიცინი თქვენს ამჟამინდელ ხმაში',
   'help.groupAdmin': 'სერვერის ადმინი (საჭიროა სერვერის მართვა)',
   'help.groupAdminBody':
-    '• /setup — ხელმძღვანელობით ერთნაბიჯიანი კონფიგურაცია · ჯერ ეს გაუშვით\n• /config — autoread, tts-channel, language, default-voice, blockword, pronunciation,\n  rate-limit, role, max-chars, enabled · მაგ. /config tts-channel #general\n• /stats — ბოტის სტატისტიკა',
+    '• /setup — ხელმძღვანელობით ერთნაბიჯიანი კონფიგურაცია · ჯერ ეს გაუშვით\n• /config — auto-read, tts-channel, language, default-voice, block-word, pronunciation,\n  rate-limit, role, max-chars, enabled · მაგ. /config tts-channel #general\n• /stats — ბოტის სტატისტიკა',
   'help.groupMore': 'მეტი',
   'help.groupMoreBody':
     '• /invite — დაამატეთ ვოქსი სხვა სერვერზე\n• /vote — მიეცით ხმა ვოქსის top.gg-ზე\n• /help — აჩვენე ეს დახმარება',
@@ -329,7 +329,7 @@ export default {
   'config.blockLimit':
     'ამ სერვერს უკვე აქვს {max} დაბლოკილი სიტყვის მაქსიმუმი. ახლის დამატებამდე წაშალეთ ერთი.',
   'config.xsaidOn':
-    'ვოქსი ახლა თითოეული შეტყობინების წინ გამოაცხადებს, **ვინ ისაუბრა** (მაგ. "Alex-მა თქვა გამარჯობა"). გამორთეთ `/config xsaid active:false`-ით.',
+    'ვოქსი ახლა თითოეული შეტყობინების წინ გამოაცხადებს, **ვინ ისაუბრა** (მაგ. "Alex-მა თქვა გამარჯობა"). გამორთეთ `/config x-said active:false`-ით.',
   'config.xsaidOff': 'ვოქსი **აღარ** გამოაცხადებს, ვინ ისაუბრა — კითხულობს მხოლოდ შეტყობინებას.',
   'config.autojoinOn':
     '✅ ავტო-შესვლა **ჩართულია** — ვოქსი შემოვა თქვენს ხმოვან არხში, როცა TTS არხში დაწერთ.',
@@ -351,7 +351,7 @@ export default {
   'config.streaksOn':
     '✅ სერიის შეტყობინებები **ჩართულია** — ვოქსი აჩვენებს 🔥 დღიური სერიის შეტყობინებას, როცა თითოეული ადამიანი ყოველ დღეს პირველად ისაუბრებს.',
   'config.streaksOff':
-    'სერიის შეტყობინებები **გამორთულია** — ვოქსი კვლავ ითვლის სერიებს (იხილეთ `/topspeakers`), მაგრამ დუმს მათ შესახებ.',
+    'სერიის შეტყობინებები **გამორთულია** — ვოქსი კვლავ ითვლის სერიებს (იხილეთ `/top-speakers`), მაგრამ დუმს მათ შესახებ.',
   'config.soundboardOn':
     'საუნდბორდი **ჩართულია** — ნებისმიერს შეუძლია კლიპების ჩართვა `/sound`-ით.',
   'config.soundboardOff': 'საუნდბორდი **გამორთულია** — `/sound` ამ სერვერზე გათიშულია.',
@@ -596,12 +596,12 @@ export default {
   'pron.modalTerm': 'სიტყვა (როგორც წერენ)',
   'pron.modalSay': 'როგორ უნდა თქვას ვოქსიმ',
   'spron.listHeader': '🗣️ **სერვერის გამოთქმები** ({count}/{limit}) — ვრცელდება ყველაზე:',
-  'spron.listEmpty': 'ჯერ არცერთი — დაამატეთ `/serverpronunciation add`-ით.',
+  'spron.listEmpty': 'ჯერ არცერთი — დაამატეთ `/server-pronunciation add`-ით.',
   'spron.set': '✅ შენახულია მთელი სერვერისთვის! „{term}“ → „{replacement}“.',
   'spron.removed': '🗑️ „{term}“ წაიშალა სერვერიდან.',
   'spron.notFound': 'სერვერს არ აქვს გამოთქმა „{term}“-სთვის.',
   'spron.limitHit':
-    '🔒 სერვერმა მიაღწია **{limit}** გამოთქმის ლიმიტს. წაშალეთ ერთი `/serverpronunciation remove`-ით.',
+    '🔒 სერვერმა მიაღწია **{limit}** გამოთქმის ლიმიტს. წაშალეთ ერთი `/server-pronunciation remove`-ით.',
   'spron.modalTitle': 'სერვერის გამოთქმა',
   'spron.modalSay': 'როგორ ამბობს ვოქსი ამას ყველასთვის',
   'rand.selectPrompt': '🎲 **რანდომაიზერი** — რამდენ ვარიანტს შორის ავირჩიო?',

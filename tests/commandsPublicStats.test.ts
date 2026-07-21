@@ -25,7 +25,7 @@ function makeInteraction(commandName: string) {
       embeds?: { data?: { description?: string } }[];
       flags?: number;
     }) => {
-      // Records text OR the embed description (/botstats and /stats moved to embeds).
+      // Records text OR the embed description (/bot-stats and /stats moved to embeds).
       const fromEmbeds = (o.embeds ?? []).map((e) => e?.data?.description ?? '').join('\n');
       replies.push(messageText(o) || fromEmbeds);
     },
@@ -69,9 +69,9 @@ describe('/uptime — public', () => {
   });
 });
 
-describe('/botstats — public', () => {
+describe('/bot-stats — public', () => {
   it('shows the server and voice-session numbers', async () => {
-    const i = makeInteraction('botstats');
+    const i = makeInteraction('bot-stats');
     await handleInteraction(i as any, makeDeps(42, 3));
     const text = i.replies.join('\n');
     expect(text).toContain('42'); // servers
@@ -79,7 +79,7 @@ describe('/botstats — public', () => {
   });
 
   it('is top-level, NOT admin-only (unlike /stats)', () => {
-    const botstats = commandDefs.find((c) => c.name === 'botstats');
+    const botstats = commandDefs.find((c) => c.name === 'bot-stats');
     const stats = commandDefs.find((c) => c.name === 'stats');
     expect(botstats?.default_member_permissions ?? undefined).toBeUndefined();
     // /stats STAYS admin-only — the difference is intentional.

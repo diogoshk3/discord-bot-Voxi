@@ -170,7 +170,7 @@ export const catalog: Record<string, Entry> = {
     en: 'Nothing is playing right now.',
     pt: 'Não está nada a tocar de momento.',
   },
-  // /shutup — cala tudo já (esvazia a fila + pára o atual), fica na call.
+  // /shut-up — cala tudo já (esvazia a fila + pára o atual), fica na call.
   'shutup.notInVoice': {
     en: "I'm not in a voice channel yet — join one and run /join first.",
     pt: 'Ainda não estou num canal de voz — entra num e corre /join primeiro.',
@@ -308,8 +308,8 @@ export const catalog: Record<string, Entry> = {
     pt: '✅ Deteção automática de língua DESLIGADA: a tua voz fixa lê tudo, para soares sempre igual.',
   },
   'voice.optout': {
-    en: "You won't be read automatically anymore. Run /voice optin to turn it back on.",
-    pt: 'Ja nao seras lido automaticamente. Usa /voice optin para voltar.',
+    en: "You won't be read automatically anymore. Run /voice opt-in to turn it back on.",
+    pt: 'Ja nao seras lido automaticamente. Usa /voice opt-in para voltar.',
   },
   'voice.optin': {
     en: "You'll be read automatically again.",
@@ -422,7 +422,7 @@ export const catalog: Record<string, Entry> = {
     pt: '🔇 O soundboard está **desligado** neste servidor. Um admin pode ligá-lo com `/config soundboard`.',
   },
 
-  // ── Micro-comandos divertidos (/8ball, /fortune, /fact, /wyr) ──────────────
+  // ── Micro-comandos divertidos (/8-ball, /fortune, /fact, /wyr) ──────────────
   'fun.eightball': {
     en: '🎱 **{question}**\n> {answer}',
     pt: '🎱 **{question}**\n> {answer}',
@@ -462,7 +462,7 @@ export const catalog: Record<string, Entry> = {
     pt: 'Ainda não definiste um aniversário. Usa `/birthday set`.',
   },
 
-  // ── /topspeakers (tagarelas do servidor) ───────────────────────────────────
+  // ── /top-speakers (tagarelas do servidor) ───────────────────────────────────
   'topspeakers.title': {
     en: '🗣️ **Top speakers** — who I read the most on this server:',
     pt: '🗣️ **Tagarelas** — quem eu mais li neste servidor:',
@@ -476,7 +476,7 @@ export const catalog: Record<string, Entry> = {
     pt: '{rank}. <@{user}> — **{count}** mensagens · 🔥 streak de {streak} dias',
   },
 
-  // ── /serverstats (perk Premium; free vê um teaser) ────────────────────────
+  // ── /server-stats (perk Premium; free vê um teaser) ────────────────────────
   'serverstats.title': {
     en: '📊 **Server stats**',
     pt: '📊 **Estatísticas do servidor**',
@@ -626,7 +626,7 @@ export const catalog: Record<string, Entry> = {
     en: 'this server',
     pt: 'este servidor',
   },
-  // /vozengrant (owner-only)
+  // /vozen-grant (owner-only)
   'grant.denied': {
     en: '⛔ This command is for the bot owner only.',
     pt: '⛔ Este comando é só para o dono do bot.',
@@ -639,7 +639,7 @@ export const catalog: Record<string, Entry> = {
     en: '✅ Granted <@{user}> **Vozen Plus** for **{days}** days — expires {date}.',
     pt: '✅ Concedido a <@{user}> o **Vozen Plus** por **{days}** dias — termina {date}.',
   },
-  // ── /gencode (owner) + /redeem (público) — códigos de presente ─────────────
+  // ── /generate-code (owner) + /redeem (público) — códigos de presente ─────────────
   'gencode.done': {
     en: '✅ Generated **{count}** {plan} code(s), **{days}** days each. Share them privately:\n{list}',
     pt: '✅ Gerado(s) **{count}** código(s) {plan}, **{days}** dias cada. Partilha-os em privado:\n{list}',
@@ -752,10 +752,10 @@ export const catalog: Record<string, Entry> = {
     pt: 'Nao tenho acesso a {channel} — verifica as minhas permissoes.',
   },
   // Sucesso do /config tts-channel: confirma o canal e da o PROXIMO PASSO — garantir
-  // que a auto-leitura esta ligada (/config autoread on) para as mensagens serem lidas.
+  // que a auto-leitura esta ligada (/config auto-read on) para as mensagens serem lidas.
   'config.channelSet': {
-    en: 'Auto-read channel set to {channel}. Next: make sure auto-read is on with `/config autoread active:true`.',
-    pt: 'Canal de auto-leitura: {channel}. A seguir: confirma que a auto-leitura está ligada com `/config autoread ativo:true`.',
+    en: 'Auto-read channel set to {channel}. Next: make sure auto-read is on with `/config auto-read active:true`.',
+    pt: 'Canal de auto-leitura: {channel}. A seguir: confirma que a auto-leitura está ligada com `/config auto-read ativo:true`.',
   },
   'config.autoreadOn': {
     en: 'Auto-read is now **on**.',
@@ -798,8 +798,8 @@ export const catalog: Record<string, Entry> = {
     pt: 'TTS **desativado** neste servidor.',
   },
   'config.xsaidOn': {
-    en: 'Vozen will now announce **who spoke** before each message (e.g. "Alex said hi"). Turn off with `/config xsaid active:false`.',
-    pt: 'O Vozen vai anunciar **quem falou** antes de cada mensagem (ex.: "Alex disse olá"). Desliga com `/config xsaid active:false`.',
+    en: 'Vozen will now announce **who spoke** before each message (e.g. "Alex said hi"). Turn off with `/config x-said active:false`.',
+    pt: 'O Vozen vai anunciar **quem falou** antes de cada mensagem (ex.: "Alex disse olá"). Desliga com `/config x-said active:false`.',
   },
   'config.xsaidOff': {
     en: 'Vozen will **no longer** announce who spoke — it reads only the message.',
@@ -850,8 +850,8 @@ export const catalog: Record<string, Entry> = {
     pt: '✅ Avisos de streak **ligados** — o Vozen mostra a mensagem de streak 🔥 na primeira vez que cada pessoa fala em cada dia.',
   },
   'config.streaksOff': {
-    en: 'Streak notices **off** — Vozen still tracks streaks (see `/topspeakers`) but stays quiet about them.',
-    pt: 'Avisos de streak **desligados** — o Vozen continua a contar os streaks (vê `/topspeakers`) mas não os anuncia.',
+    en: 'Streak notices **off** — Vozen still tracks streaks (see `/top-speakers`) but stays quiet about them.',
+    pt: 'Avisos de streak **desligados** — o Vozen continua a contar os streaks (vê `/top-speakers`) mas não os anuncia.',
   },
   'config.soundboardOn': {
     en: 'Soundboard **on** — anyone can play clips with `/sound`.',
@@ -1140,7 +1140,7 @@ export const catalog: Record<string, Entry> = {
     pt: 'Essa mensagem não tem texto para ler em voz alta.',
   },
 
-  // ── /uptime · /botstats (públicos) ────────────────────────────────────────
+  // ── /uptime · /bot-stats (públicos) ────────────────────────────────────────
   'uptime.text': {
     en: '🟢 Vozen has been online for **{uptime}**.',
     pt: '🟢 O Vozen está online há **{uptime}**.',
@@ -1257,14 +1257,14 @@ export const catalog: Record<string, Entry> = {
       '• /voice preview — hear a sample of your voice\n' +
       '• /voice reset — go back to the default voice\n' +
       '• /voice effect <effect> — voice effect (robot, echo… 💎 more with Premium)\n' +
-      '• /voice optout · /voice optin — turn auto-read off / on for you',
+      '• /voice opt-out · /voice opt-in — turn auto-read off / on for you',
     pt:
       '• /voice set <model> — escolhe a tua voz · ex. /voice set pt_PT-tugao-medium\n' +
       '• /voice list — ve as vozes disponiveis\n' +
       '• /voice preview — ouve uma amostra da tua voz\n' +
       '• /voice reset — volta a voz por defeito\n' +
       '• /voice effect <efeito> — efeito de voz (robot, echo… 💎 mais com Premium)\n' +
-      '• /voice optout · /voice optin — desliga / liga a leitura automatica para ti',
+      '• /voice opt-out · /voice opt-in — desliga / liga a leitura automatica para ti',
   },
   'help.groupFun': {
     en: 'Fun',
@@ -1276,19 +1276,19 @@ export const catalog: Record<string, Entry> = {
       '• /rizz — I drop a pickup line (pick a language + optional rizz sound) · 💎 Premium\n' +
       '• /sound — I play a sound clip in the call · e.g. /sound name:airhorn (or /sound to list them)\n' +
       '• /laugh — I laugh out loud in your current voice\n' +
-      '• /8ball · /fortune · /fact · /wyr — I answer/read out loud (and in chat)\n' +
+      '• /8-ball · /fortune · /fact · /wyr — I answer/read out loud (and in chat)\n' +
       '• /birthday set — I wish you a happy birthday when you join on your day\n' +
-      '• /topspeakers — who I read the most + daily streaks\n' +
-      '• /serverstats — server stats: messages, top talkers, games · 💎 Premium (free preview)\n' +
+      '• /top-speakers — who I read the most + daily streaks\n' +
+      '• /server-stats — server stats: messages, top talkers, games · 💎 Premium (free preview)\n' +
       '• /game — play a minigame with the server (13 games!) · e.g. /game play, /game leaderboard',
     pt:
       '• /joke — conto uma piada curta (escolhe a lingua + risos opcionais) · ex. /joke Portuguese\n' +
       '• /rizz — mando uma cantada (escolhe a lingua + efeito rizz opcional) · 💎 Premium\n' +
       '• /sound — toco um clip de som na call · ex. /sound name:airhorn (ou /sound para os listar)\n' +
       '• /laugh — rio-me em voz alta na tua voz atual\n' +
-      '• /8ball · /fortune · /fact · /wyr — respondo/leio em voz alta (e no chat)\n' +
+      '• /8-ball · /fortune · /fact · /wyr — respondo/leio em voz alta (e no chat)\n' +
       '• /birthday set — digo-te parabens quando entrares na call no teu dia\n' +
-      '• /serverstats — estatísticas do servidor: mensagens, top tagarelas, jogos · 💎 Premium (pré-vê grátis)\n' +
+      '• /server-stats — estatísticas do servidor: mensagens, top tagarelas, jogos · 💎 Premium (pré-vê grátis)\n' +
       '• /game — joga um minijogo com o servidor (13 jogos!) · ex. /game play, /game leaderboard',
   },
   'help.groupAdmin': {
@@ -1298,14 +1298,14 @@ export const catalog: Record<string, Entry> = {
   'help.groupAdminBody': {
     en:
       '• /setup — guided one-step configuration · run this first\n' +
-      '• /config — autoread, tts-channel, language, default-voice, blockword, pronunciation,\n' +
-      '  rate-limit, role, max-chars, antispam, enabled · e.g. /config tts-channel #general\n' +
+      '• /config — auto-read, tts-channel, language, default-voice, block-word, pronunciation,\n' +
+      '  rate-limit, role, max-chars, anti-spam, enabled · e.g. /config tts-channel #general\n' +
       '• /transcribe — 🎙️ live speech-to-text of consenting speakers (Premium)\n' +
       '• /stats — bot statistics',
     pt:
       '• /setup — configuracao guiada num passo · corre isto primeiro\n' +
-      '• /config — autoread, tts-channel, language, default-voice, blockword, pronunciation,\n' +
-      '  rate-limit, role, max-chars, antispam, enabled · ex. /config tts-channel #geral\n' +
+      '• /config — auto-read, tts-channel, language, default-voice, block-word, pronunciation,\n' +
+      '  rate-limit, role, max-chars, anti-spam, enabled · ex. /config tts-channel #geral\n' +
       '• /transcribe — 🎙️ voz-para-texto ao vivo de quem consente (Premium)\n' +
       '• /stats — estatisticas do bot',
   },
@@ -2007,14 +2007,14 @@ export const catalog: Record<string, Entry> = {
   'pron.modalTerm': { en: 'The word (as people type it)', pt: 'A palavra (como se escreve)' },
   'pron.modalSay': { en: 'How Vozen should say it', pt: 'Como o Vozen a deve dizer' },
 
-  // ── /serverpronunciation (servidor, admin, cap 3) ──────────────────────────
+  // ── /server-pronunciation (servidor, admin, cap 3) ──────────────────────────
   'spron.listHeader': {
     en: '🗣️ **Server pronunciations** ({count}/{limit}) — apply to everyone:',
     pt: '🗣️ **Pronúncias do servidor** ({count}/{limit}) — aplicam-se a todos:',
   },
   'spron.listEmpty': {
-    en: 'None yet — add one with `/serverpronunciation add`.',
-    pt: 'Ainda nenhuma — adiciona com `/serverpronunciation add`.',
+    en: 'None yet — add one with `/server-pronunciation add`.',
+    pt: 'Ainda nenhuma — adiciona com `/server-pronunciation add`.',
   },
   'spron.set': {
     en: '✅ Saved for the whole server! “{term}” → “{replacement}”.',
@@ -2029,8 +2029,8 @@ export const catalog: Record<string, Entry> = {
     pt: 'O servidor não tem nenhuma pronúncia para “{term}”.',
   },
   'spron.limitHit': {
-    en: '🔒 The server reached its limit of **{limit}** pronunciations. Remove one with `/serverpronunciation remove`.',
-    pt: '🔒 O servidor atingiu o limite de **{limit}** pronúncias. Remove uma com `/serverpronunciation remove`.',
+    en: '🔒 The server reached its limit of **{limit}** pronunciations. Remove one with `/server-pronunciation remove`.',
+    pt: '🔒 O servidor atingiu o limite de **{limit}** pronúncias. Remove uma com `/server-pronunciation remove`.',
   },
   'spron.modalTitle': { en: 'Server pronunciation', pt: 'Pronúncia do servidor' },
   'spron.modalSay': {

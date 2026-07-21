@@ -1,4 +1,4 @@
-// src/moderation/countGate.ts — anti-spam gate for the /topspeakers message COUNT.
+// src/moderation/countGate.ts — anti-spam gate for the /top-speakers message COUNT.
 //
 // The leaderboard ranks by how many messages Vozen read for each person, so a burst of
 // spam would inflate the ranking. This gate decides whether a read message COUNTS toward
@@ -33,7 +33,7 @@ interface GateEntry {
 }
 
 /**
- * Per-(guild,user) gate deciding whether a read message counts toward /topspeakers.
+ * Per-(guild,user) gate deciding whether a read message counts toward /top-speakers.
  * Only messages that PASS update the state — a dropped (spam) message leaves the cooldown
  * and window anchored to the last legitimate message, so a flood cannot walk the window
  * forward. Mirrors DuplicateTracker: insertion-ordered Map, oldest-first eviction.

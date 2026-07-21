@@ -46,7 +46,7 @@ export default {
   'voice.reset':
     '✅ A hangod visszaállt az alapértelmezettre. Bármikor választhatsz másikat a `/voice list` és a `/voice set` paranccsal.',
   'voice.optout':
-    'Mostantól nem olvaslak fel automatikusan. Futtasd a /voice optin parancsot a visszakapcsoláshoz.',
+    'Mostantól nem olvaslak fel automatikusan. Futtasd a /voice opt-in parancsot a visszakapcsoláshoz.',
   'voice.optin': 'Mostantól újra automatikusan felolvaslak.',
   'voice.notInVoice': 'Még nem vagyok hangcsatornában — előbb futtasd a /join parancsot.',
   'voice.previewPlaying': 'Mintát játszok le…',
@@ -78,7 +78,7 @@ export default {
   'config.channelNoAccess':
     'Nem látom a(z) {channel} csatornát — kérlek, ellenőrizd az ottani jogosultságaimat.',
   'config.channelSet':
-    'Az automatikus felolvasás csatornája beállítva: {channel}. Következő: kapcsold be az automatikus felolvasást a `/config autoread active:true` paranccsal.',
+    'Az automatikus felolvasás csatornája beállítva: {channel}. Következő: kapcsold be az automatikus felolvasást a `/config auto-read active:true` paranccsal.',
   'config.autoreadOn': 'Az automatikus felolvasás mostantól **be** van kapcsolva.',
   'config.autoreadOff': 'Az automatikus felolvasás mostantól **ki** van kapcsolva.',
   'config.maxCharsRange': 'A maximális karakterszám értékének 1 és 2000 között kell lennie.',
@@ -168,13 +168,13 @@ export default {
     '• /join — belépek a hangcsatornádba\n• /leave — elhagyom a hangcsatornát\n• /tts <szöveg> — hangosan felolvasom a szöveget · pl. /tts Sziasztok!\n• /skip — kihagyja, amit éppen olvasok',
   'help.groupVoice': 'A hangod',
   'help.groupVoiceBody':
-    '• /voice set <model> — válaszd ki a hangod · pl. /voice set en_US-amy-medium\n• /voice list — az elérhető hangok megtekintése\n• /voice preview — minta meghallgatása a hangodból\n• /voice reset — vissza az alapértelmezett hanghoz\n• /voice optout · /voice optin — az automatikus felolvasás ki- / bekapcsolása neked\n• /voice abbrev add|remove|list — személyes szleng, a te módodon felolvasva (legfeljebb 10)',
+    '• /voice set <model> — válaszd ki a hangod · pl. /voice set en_US-amy-medium\n• /voice list — az elérhető hangok megtekintése\n• /voice preview — minta meghallgatása a hangodból\n• /voice reset — vissza az alapértelmezett hanghoz\n• /voice opt-out · /voice opt-in — az automatikus felolvasás ki- / bekapcsolása neked\n• /voice abbrev add|remove|list — személyes szleng, a te módodon felolvasva (legfeljebb 10)',
   'help.groupFun': 'Szórakozás',
   'help.groupFunBody':
     '• /joke — mesélek egy rövid viccet (válassz nyelvet + opcionális nevetést) · pl. /joke English\n• /laugh — hangosan nevetek a jelenlegi hangodon',
   'help.groupAdmin': 'Szerveradmin (Szerver kezelése jogosultság kell)',
   'help.groupAdminBody':
-    '• /setup — vezetett, egylépéses beállítás · ezt futtasd először\n• /config — autoread, tts-channel, language, default-voice, blockword, pronunciation,\n  rate-limit, role, max-chars, enabled · pl. /config tts-channel #general\n• /stats — botstatisztikák',
+    '• /setup — vezetett, egylépéses beállítás · ezt futtasd először\n• /config — auto-read, tts-channel, language, default-voice, block-word, pronunciation,\n  rate-limit, role, max-chars, enabled · pl. /config tts-channel #general\n• /stats — botstatisztikák',
   'help.groupMore': 'Továbbiak',
   'help.groupMoreBody':
     '• /invite — a Vozen hozzáadása egy másik szerverhez\n• /vote — szavazz a Vozenra a top.gg oldalon\n• /help — ennek a súgónak a megjelenítése',
@@ -340,7 +340,7 @@ export default {
   'config.blockLimit':
     'Ezen a szerveren már megvan a maximális {max} tiltott szó. Távolíts el egyet, mielőtt újat adnál hozzá.',
   'config.xsaidOn':
-    'A Vozen mostantól minden üzenet előtt bejelenti, **ki beszélt** (pl. "Alex azt mondta: szia"). Kikapcsolás: `/config xsaid active:false`.',
+    'A Vozen mostantól minden üzenet előtt bejelenti, **ki beszélt** (pl. "Alex azt mondta: szia"). Kikapcsolás: `/config x-said active:false`.',
   'config.xsaidOff': 'A Vozen **többé nem** jelenti be, ki beszélt — csak az üzenetet olvassa fel.',
   'config.autojoinOn':
     '✅ Automatikus csatlakozás **be** — a Vozen csatlakozik a hangcsatornádhoz, amikor a TTS-csatornába írsz.',
@@ -363,7 +363,7 @@ export default {
   'config.streaksOn':
     '✅ Sorozatértesítők **be** — a Vozen megjelenít egy 🔥 napi sorozat üzenetet, amikor egy-egy személy először szólal meg az adott napon.',
   'config.streaksOff':
-    'Sorozatértesítők **ki** — a Vozen továbbra is követi a sorozatokat (lásd `/topspeakers`), de nem jelzi őket.',
+    'Sorozatértesítők **ki** — a Vozen továbbra is követi a sorozatokat (lásd `/top-speakers`), de nem jelzi őket.',
   'config.soundboardOn': 'Hangtábla **be** — bárki lejátszhat klipeket a `/sound` paranccsal.',
   'config.soundboardOff': 'Hangtábla **ki** — a `/sound` le van tiltva ezen a szerveren.',
   'config.votePromosLabel': 'top.gg-jutalomértesítések + Vozen Support',
@@ -614,12 +614,12 @@ export default {
   'pron.modalTerm': 'A szó (ahogy leírják)',
   'pron.modalSay': 'Hogyan mondja ki a Vozen',
   'spron.listHeader': '🗣️ **Szerverkiejtések** ({count}/{limit}) — mindenkire vonatkoznak:',
-  'spron.listEmpty': 'Még egy sincs — adj hozzá egyet a `/serverpronunciation add` paranccsal.',
+  'spron.listEmpty': 'Még egy sincs — adj hozzá egyet a `/server-pronunciation add` paranccsal.',
   'spron.set': '✅ Mentve az egész szerverre! „{term}" → „{replacement}".',
   'spron.removed': '🗑️ „{term}" eltávolítva a szerverről.',
   'spron.notFound': 'A szervernek nincs kiejtése a(z) „{term}" szóhoz.',
   'spron.limitHit':
-    '🔒 A szerver elérte a(z) **{limit}** kiejtésből álló korlátját. Távolíts el egyet a `/serverpronunciation remove` paranccsal.',
+    '🔒 A szerver elérte a(z) **{limit}** kiejtésből álló korlátját. Távolíts el egyet a `/server-pronunciation remove` paranccsal.',
   'spron.modalTitle': 'Szerverkiejtés',
   'spron.modalSay': 'Hogyan mondja ki a Vozen mindenkinek',
   'rand.selectPrompt': '🎲 **Sorsoló** — hány lehetőség közül válasszak?',

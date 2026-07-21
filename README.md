@@ -42,7 +42,7 @@ voice channel, type in the text channel, and you're done.
 - **Stays in the call** — automatic reconnection; auto-leave when the channel empties.
 - **Games in voice** — `/game play` has 16 games: Wordle, Hangman, Guess the
   Language, Dictation, Reflexes, Word Chain and more.
-- **Fun commands** — `/joke`, `/laugh`, `/8ball`, `/fortune`, `/fact`, `/wyr`,
+- **Fun commands** — `/joke`, `/laugh`, `/8-ball`, `/fortune`, `/fact`, `/wyr`,
   `/randomizer`, `/sound`, `/birthday`.
 - **Moderation** — blocked words, per-user rate limit, character cap, role gating
   and per-channel control, all under `/config`.

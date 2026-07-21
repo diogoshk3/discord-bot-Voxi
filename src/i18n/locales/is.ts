@@ -88,7 +88,7 @@ export default {
   'voice.detection.off':
     '✅ Sjálfvirk tungumálagreining er SLÖKKT: ein föst rödd þín les allt, svo þú hljómar alltaf eins.',
   'voice.optout':
-    'Þú verður ekki lesinn sjálfkrafa lengur. Keyrðu /voice optin til að kveikja aftur á því.',
+    'Þú verður ekki lesinn sjálfkrafa lengur. Keyrðu /voice opt-in til að kveikja aftur á því.',
   'voice.optin': 'Þú verður lesinn sjálfkrafa aftur.',
   'voice.nickname.set': '✅ Vozen mun nú kalla þig **{name}** upphátt.',
   'voice.nickname.cleared': '✅ Talað gælunafn hreinsað — Vozen mun nota netþjónsnafnið þitt.',
@@ -220,7 +220,7 @@ export default {
   'config.channelWrongType': 'Veldu textarás (ekki talrás eða flokk).',
   'config.channelNoAccess': 'Ég sé ekki {channel} — athugaðu heimildir mínar þar.',
   'config.channelSet':
-    'Sjálflesin rás stillt á {channel}. Næst: gakktu úr skugga um að sjálflestur sé kveikur með `/config autoread active:true`.',
+    'Sjálflesin rás stillt á {channel}. Næst: gakktu úr skugga um að sjálflestur sé kveikur með `/config auto-read active:true`.',
   'config.autoreadOn': 'Sjálflestur er núna **kveiktur**.',
   'config.autoreadOff': 'Sjálflestur er núna **slökktur**.',
   'config.maxCharsRange': 'Hámarksfjöldi stafa verður að vera á milli 1 og 2000.',
@@ -232,7 +232,7 @@ export default {
   'config.enabledOn': 'TTS er núna **kveikt** fyrir þennan netþjón.',
   'config.enabledOff': 'TTS er núna **slökkt** fyrir þennan netþjón.',
   'config.xsaidOn':
-    'Vozen mun nú tilkynna **hver talaði** á undan hverjum skilaboðum (t.d. "Alex sagði hæ"). Slökktu með `/config xsaid active:false`.',
+    'Vozen mun nú tilkynna **hver talaði** á undan hverjum skilaboðum (t.d. "Alex sagði hæ"). Slökktu með `/config x-said active:false`.',
   'config.xsaidOff': 'Vozen mun **ekki lengur** tilkynna hver talaði — hann les aðeins skilaboðin.',
   'config.autojoinOn':
     '✅ Sjálf-innkoma **kveikt** — Vozen fer inn í talrásina þína þegar þú skrifar í TTS rásina.',
@@ -251,7 +251,7 @@ export default {
   'config.streaksOn':
     '✅ Runu-tilkynningar **kveikt** — Vozen sýnir 🔥 daga-runu skilaboð í fyrsta sinn sem hver manneskja talar hvern dag.',
   'config.streaksOff':
-    'Runu-tilkynningar **slökkt** — Vozen fylgist enn með runum (sjá `/topspeakers`) en þegir um þær.',
+    'Runu-tilkynningar **slökkt** — Vozen fylgist enn með runum (sjá `/top-speakers`) en þegir um þær.',
   'config.soundboardOn': 'Hljóðborð **kveikt** — hver sem er getur spilað klippur með `/sound`.',
   'config.soundboardOff': 'Hljóðborð **slökkt** — `/sound` er óvirkt á þessum netþjóni.',
   'config.votePromosLabel': 'Tilkynningar um top.gg-verðlaun + Vozen Support',
@@ -355,13 +355,13 @@ export default {
     '• /join — ég fer inn í talrásina þína\n• /leave — ég fer úr talrásinni\n• /tts <texti> — ég les texta upphátt · t.d. /tts Halló allir!\n• /skip — sleppa því sem ég er að lesa núna',
   'help.groupVoice': 'Röddin þín',
   'help.groupVoiceBody':
-    '• /voice set <model> — veldu röddina þína · t.d. /voice set en_US-amy-medium\n• /voice list — sjáðu tiltækar raddir\n• /voice preview — heyrðu sýnishorn af röddinni þinni\n• /voice reset — farðu aftur í sjálfgefnu röddina\n• /voice optout · /voice optin — slökkva / kveikja á sjálflestri fyrir þig\n• /voice abbrev add|remove|list — persónulegt slangur, lesið á þinn hátt (allt að 10)',
+    '• /voice set <model> — veldu röddina þína · t.d. /voice set en_US-amy-medium\n• /voice list — sjáðu tiltækar raddir\n• /voice preview — heyrðu sýnishorn af röddinni þinni\n• /voice reset — farðu aftur í sjálfgefnu röddina\n• /voice opt-out · /voice opt-in — slökkva / kveikja á sjálflestri fyrir þig\n• /voice abbrev add|remove|list — persónulegt slangur, lesið á þinn hátt (allt að 10)',
   'help.groupFun': 'Skemmtun',
   'help.groupFunBody':
     '• /joke — ég segi stuttan brandara (veldu tungumál + valfrjálsan hlátur) · t.d. /joke English\n• /laugh — ég hlæ upphátt í núverandi rödd þinni',
   'help.groupAdmin': 'Netþjónsstjórnun (þarf Stjórna netþjóni)',
   'help.groupAdminBody':
-    '• /setup — leiðsagt eins-skrefs uppsetning · keyrðu þetta fyrst\n• /config — autoread, tts-channel, language, default-voice, blockword, pronunciation,\n  rate-limit, role, max-chars, enabled · t.d. /config tts-channel #general\n• /stats — tölfræði botsins',
+    '• /setup — leiðsagt eins-skrefs uppsetning · keyrðu þetta fyrst\n• /config — auto-read, tts-channel, language, default-voice, block-word, pronunciation,\n  rate-limit, role, max-chars, enabled · t.d. /config tts-channel #general\n• /stats — tölfræði botsins',
   'help.groupMore': 'Meira',
   'help.groupMoreBody':
     '• /invite — bættu Vozen við annan netþjón\n• /vote — kjóstu Vozen á top.gg\n• /help — sýna þessa hjálp',
@@ -592,12 +592,12 @@ export default {
   'pron.modalTerm': 'Orðið (eins og fólk skrifar það)',
   'pron.modalSay': 'Hvernig Vozen ætti að segja það',
   'spron.listHeader': '🗣️ **Framburðir netþjóns** ({count}/{limit}) — gilda fyrir alla:',
-  'spron.listEmpty': 'Engir enn — bættu einum við með `/serverpronunciation add`.',
+  'spron.listEmpty': 'Engir enn — bættu einum við með `/server-pronunciation add`.',
   'spron.set': '✅ Vistað fyrir allan netþjóninn! “{term}” → “{replacement}”.',
   'spron.removed': '🗑️ Fjarlægði “{term}” af netþjóninum.',
   'spron.notFound': 'Netþjónninn hefur engan framburð fyrir “{term}”.',
   'spron.limitHit':
-    '🔒 Netþjónninn náði hámarki sínu af **{limit}** framburðum. Fjarlægðu einn með `/serverpronunciation remove`.',
+    '🔒 Netþjónninn náði hámarki sínu af **{limit}** framburðum. Fjarlægðu einn með `/server-pronunciation remove`.',
   'spron.modalTitle': 'Framburður netþjóns',
   'spron.modalSay': 'Hvernig Vozen segir það fyrir alla',
   'rand.selectPrompt': '🎲 **Randomizer** — úr hversu mörgum valkostum viltu að ég velji?',

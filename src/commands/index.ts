@@ -121,7 +121,7 @@ export function filterLocaleChoices(query: string): { name: string; value: strin
  * Beginner-friendly. Any other option -> [] (no suggestions).
  */
 /**
- * Choices for the `/pronunciation remove` (and `/serverpronunciation remove`)
+ * Choices for the `/pronunciation remove` (and `/server-pronunciation remove`)
  * autocomplete: lists the SAVED pronunciations instead of forcing the user to type the
  * term from memory. Matches by substring of the term OR the replacement (someone who
  * only remembers the "how it's said" also finds it). name = "term → replacement"
@@ -185,7 +185,7 @@ function computeAutocompleteChoices(
     const base = (i.locale || '').split('-')[0].toLowerCase() || 'en';
     return filterGameChoices(focused.value, base);
   }
-  // /pronunciation remove + /serverpronunciation remove: the `term` option lists the
+  // /pronunciation remove + /server-pronunciation remove: the `term` option lists the
   // ALREADY-SAVED pronunciations (personal or server) — pick instead of typing.
   if (focused.name === 'term') {
     if (i.commandName === 'pronunciation') {
@@ -256,7 +256,7 @@ export async function handleInteraction(
         return await handleTts(i, deps);
       case 'skip':
         return await handleSkip(i, deps);
-      case 'shutup':
+      case 'shut-up':
         return await handleShutup(i, deps);
       case 'laugh':
         return await handleLaugh(i, deps);
@@ -266,7 +266,7 @@ export async function handleInteraction(
         return await handleRizz(i, deps);
       case 'sound':
         return await handleSound(i, deps);
-      case '8ball':
+      case '8-ball':
         return await handleMicroFun(i, deps, '8ball');
       case 'fortune':
         return await handleMicroFun(i, deps, 'fortune');
@@ -278,15 +278,15 @@ export async function handleInteraction(
         return await handleMicroFun(i, deps, 'wyr');
       case 'birthday':
         return await handleBirthday(i, deps);
-      case 'topspeakers':
+      case 'top-speakers':
         return await handleTopSpeakers(i, deps);
-      case 'serverstats':
+      case 'server-stats':
         return await handleServerStats(i, deps);
       case 'premium':
         return await handlePremium(i, deps);
-      case 'vozengrant':
+      case 'vozen-grant':
         return await handleVozenGrant(i, deps);
-      case 'gencode':
+      case 'generate-code':
         return await handleGenCode(i, deps);
       case 'redeem':
         return await handleRedeem(i, deps);
@@ -304,7 +304,7 @@ export async function handleInteraction(
         return await handleStats(i, deps);
       case 'uptime':
         return await handleUptime(i, deps);
-      case 'botstats':
+      case 'bot-stats':
         return await handleBotstats(i, deps);
       case 'invite':
         return await handleInvite(i, deps);
@@ -314,7 +314,7 @@ export async function handleInteraction(
         return await handleHelp(i, deps);
       case 'pronunciation':
         return await handlePronunciation(i, deps);
-      case 'serverpronunciation':
+      case 'server-pronunciation':
         return await handleServerPronunciation(i, deps);
       case 'randomizer':
         return await handleRandomizer(i, deps);

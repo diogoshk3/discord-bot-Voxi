@@ -48,7 +48,7 @@ export function applyPronunciation(text: string, dict: PronunciationEntry[]): st
   for (const { re, replacement } of compiled) {
     // A replacer FUNCTION (not a string) to treat the replacement as LITERAL: a raw
     // string would make String.replace interpret $&, $1, $`, $', $$ as directives (the
-    // replacement is controlled by the admin via /serverpronunciation — e.g.: "R$"). The
+    // replacement is controlled by the admin via /server-pronunciation — e.g.: "R$"). The
     // sibling restoreAccents/expandAbbreviations already use function-replacers for this.
     out = out.replace(re, () => replacement);
   }

@@ -38,7 +38,7 @@ export default {
   'voice.listHeader': '可用的声音：',
   'voice.listEmpty': '（未安装任何声音）',
   'voice.reset': '✅ 你的声音已恢复为默认。随时可用 `/voice list` 和 `/voice set` 挑选其他声音。',
-  'voice.optout': '以后不会再自动朗读你的消息。运行 /voice optin 可重新开启。',
+  'voice.optout': '以后不会再自动朗读你的消息。运行 /voice opt-in 可重新开启。',
   'voice.optin': '以后会再次自动朗读你的消息。',
   'voice.notInVoice': '我还没在语音频道里——请先运行 /join。',
   'voice.previewPlaying': '正在播放示例…',
@@ -67,7 +67,7 @@ export default {
   'config.channelWrongType': '请选择一个文字频道（不能是语音频道或分类）。',
   'config.channelNoAccess': '我看不到 {channel}——请检查我在那里的权限。',
   'config.channelSet':
-    '自动朗读频道已设为 {channel}。下一步：用 `/config autoread active:true` 确保自动朗读已开启。',
+    '自动朗读频道已设为 {channel}。下一步：用 `/config auto-read active:true` 确保自动朗读已开启。',
   'config.autoreadOn': '自动朗读现已 **开启**。',
   'config.autoreadOff': '自动朗读现已 **关闭**。',
   'config.maxCharsRange': '最大字符数必须在 1 到 2000 之间。',
@@ -149,7 +149,7 @@ export default {
     '• /join——我加入你的语音频道\n• /leave——我离开语音频道\n• /tts <text>——我朗读文字 · 例如 /tts Hello everyone!\n• /skip——跳过我正在朗读的内容',
   'help.groupVoice': '你的声音',
   'help.groupVoiceBody':
-    '• /voice set <model>——选择你的声音 · 例如 /voice set en_US-amy-medium\n• /voice list——查看可用的声音\n• /voice preview——试听你的声音示例\n• /voice reset——恢复为默认声音\n• /voice optout · /voice optin——为你关闭 / 开启自动朗读\n• /voice abbrev add|remove|list——个人俚语，按你的方式朗读（最多 10 个）',
+    '• /voice set <model>——选择你的声音 · 例如 /voice set en_US-amy-medium\n• /voice list——查看可用的声音\n• /voice preview——试听你的声音示例\n• /voice reset——恢复为默认声音\n• /voice opt-out · /voice opt-in——为你关闭 / 开启自动朗读\n• /voice abbrev add|remove|list——个人俚语，按你的方式朗读（最多 10 个）',
   'help.groupFun': '趣味',
   'help.groupFunBody':
     '• /joke——我讲个短笑话（选择语言 + 可选笑声） · 例如 /joke English\n• /laugh——我用你当前的声音大笑',
@@ -302,7 +302,7 @@ export default {
   'redeem.expired': '❌ 该兑换码已过期。',
   'config.blockLimit': '本服务器已达到 {max} 个屏蔽词的上限。请先移除一个再添加。',
   'config.xsaidOn':
-    'Vozen 现在会在每条消息前播报 **是谁说的**（例如「Alex 说 hi」）。用 `/config xsaid active:false` 关闭。',
+    'Vozen 现在会在每条消息前播报 **是谁说的**（例如「Alex 说 hi」）。用 `/config x-said active:false` 关闭。',
   'config.xsaidOff': 'Vozen **不再** 播报是谁说的——它只朗读消息内容。',
   'config.autojoinOn': '✅ 自动加入 **已开启**——当你在 TTS 频道打字时，Vozen 会加入你的语音频道。',
   'config.autojoinOff': '自动加入 **已关闭**——用 `/join` 把 Vozen 带入语音。',
@@ -319,7 +319,7 @@ export default {
   'config.streaksOn':
     '✅ 连续记录提醒 **已开启**——每个人每天第一次发言时，Vozen 会显示一条 🔥 连续天数消息。',
   'config.streaksOff':
-    '连续记录提醒 **已关闭**——Vozen 仍会记录连续记录（见 `/topspeakers`），但不会主动提示。',
+    '连续记录提醒 **已关闭**——Vozen 仍会记录连续记录（见 `/top-speakers`），但不会主动提示。',
   'config.soundboardOn': '音效板 **已开启**——任何人都可以用 `/sound` 播放片段。',
   'config.soundboardOff': '音效板 **已关闭**——本服务器已禁用 `/sound`。',
   'config.votePromosLabel': 'top.gg 奖励通知 + Vozen Support',
@@ -541,12 +541,12 @@ export default {
   'pron.modalTerm': '词语（人们输入时的样子）',
   'pron.modalSay': 'Vozen 应该怎么念它',
   'spron.listHeader': '🗣️ **服务器发音**（{count}/{limit}）——对所有人生效：',
-  'spron.listEmpty': '还没有——用 `/serverpronunciation add` 添加一个。',
+  'spron.listEmpty': '还没有——用 `/server-pronunciation add` 添加一个。',
   'spron.set': '✅ 已为整个服务器保存！“{term}” → “{replacement}”。',
   'spron.removed': '🗑️ 已从服务器移除“{term}”。',
   'spron.notFound': '服务器没有为“{term}”设置发音。',
   'spron.limitHit':
-    '🔒 服务器已达到 **{limit}** 个发音的上限。用 `/serverpronunciation remove` 移除一个。',
+    '🔒 服务器已达到 **{limit}** 个发音的上限。用 `/server-pronunciation remove` 移除一个。',
   'spron.modalTitle': '服务器发音',
   'spron.modalSay': 'Vozen 为所有人怎么念它',
   'rand.selectPrompt': '🎲 **随机器**——你想让我从多少个选项中挑选？',

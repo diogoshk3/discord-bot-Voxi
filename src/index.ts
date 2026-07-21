@@ -602,7 +602,7 @@ async function main(): Promise<void> {
     } catch (err) {
       log.error('[index] 24/7 rejoin failed (ignored)', err);
     }
-    // OWNER-ONLY commands (/vozengrant): resolves the REAL owner(s) via the application
+    // OWNER-ONLY commands (/vozen-grant): resolves the REAL owner(s) via the application
     // (User or Team members) + OWNER_ID, and registers the command ONLY in the control guild
     // (guild command => invisible to the public). deps.ownerIds is the source of truth for the gate.
     void (async () => {
@@ -619,14 +619,14 @@ async function main(): Promise<void> {
           }
         }
         deps.ownerIds = ids;
-        log.info(`[owner] resolved ${ids.size} owner(s) for /vozengrant.`);
+        log.info(`[owner] resolved ${ids.size} owner(s) for /vozen-grant.`);
         if (config.ownerGuildId) {
           await registerOwnerCommands(config.token, config.clientId, config.ownerGuildId);
         } else {
-          log.info('[owner] OWNER_GUILD_ID is not set; /vozengrant will not be registered.');
+          log.info('[owner] OWNER_GUILD_ID is not set; /vozen-grant will not be registered.');
         }
       } catch (err) {
-        log.error('[owner] failed to resolve owners or register /vozengrant (ignored)', err);
+        log.error('[owner] failed to resolve owners or register /vozen-grant (ignored)', err);
       }
     })();
   });

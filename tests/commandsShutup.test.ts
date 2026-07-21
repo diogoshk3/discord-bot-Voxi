@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { messageText } from './messagePayload';
 
-// Mock minimo de @discordjs/voice — nao e usado no caminho do /shutup (o player e
+// Mock minimo de @discordjs/voice — nao e usado no caminho do /shut-up (o player e
 // injectado nas deps), mas o import de index.ts precisa de resolver.
 vi.mock('@discordjs/voice', () => ({
   joinVoiceChannel: () => ({}),
@@ -22,7 +22,7 @@ function makeDeps(player?: unknown): BotDeps {
 function makeShutupInteraction() {
   const replies: string[] = [];
   return {
-    commandName: 'shutup',
+    commandName: 'shut-up',
     guildId: GUILD,
     replies,
     replied: false,
@@ -34,7 +34,7 @@ function makeShutupInteraction() {
   };
 }
 
-describe('/shutup — cala tudo, distingue "nada a tocar" de "calei"', () => {
+describe('/shut-up — cala tudo, distingue "nada a tocar" de "calei"', () => {
   it('sem player -> shutup.notInVoice, nunca chama silence()', async () => {
     const i = makeShutupInteraction();
 

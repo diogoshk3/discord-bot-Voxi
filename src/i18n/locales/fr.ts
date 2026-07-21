@@ -94,7 +94,7 @@ export default {
   'voice.detection.off':
     '✅ La détection automatique de la langue est DÉSACTIVÉE : votre voix fixe unique lit tout, pour que vous sonniez toujours pareil.',
   'voice.optout':
-    'Vous ne serez plus lu automatiquement. Lancez /voice optin pour réactiver la fonction.',
+    'Vous ne serez plus lu automatiquement. Lancez /voice opt-in pour réactiver la fonction.',
   'voice.optin': 'Vous serez à nouveau lu automatiquement.',
   'voice.nickname.set': '✅ Vozen vous appellera désormais **{name}** à voix haute.',
   'voice.nickname.cleared': '✅ Surnom prononcé effacé — Vozen utilisera votre nom sur le serveur.',
@@ -228,7 +228,7 @@ export default {
   'config.channelWrongType': 'Choisissez un salon textuel (pas un salon vocal ni une catégorie).',
   'config.channelNoAccess': 'Je ne vois pas {channel} — veuillez vérifier mes permissions là-bas.',
   'config.channelSet':
-    'Salon de lecture automatique défini sur {channel}. Ensuite : assurez-vous que la lecture automatique est activée avec `/config autoread active:true`.',
+    'Salon de lecture automatique défini sur {channel}. Ensuite : assurez-vous que la lecture automatique est activée avec `/config auto-read active:true`.',
   'config.autoreadOn': 'La lecture automatique est maintenant **activée**.',
   'config.autoreadOff': 'La lecture automatique est maintenant **désactivée**.',
   'config.maxCharsRange':
@@ -241,7 +241,7 @@ export default {
   'config.enabledOn': 'La synthèse vocale est maintenant **activée** pour ce serveur.',
   'config.enabledOff': 'La synthèse vocale est maintenant **désactivée** pour ce serveur.',
   'config.xsaidOn':
-    'Vozen annoncera désormais **qui a parlé** avant chaque message (par ex. « Alex a dit salut »). Désactivez avec `/config xsaid active:false`.',
+    'Vozen annoncera désormais **qui a parlé** avant chaque message (par ex. « Alex a dit salut »). Désactivez avec `/config x-said active:false`.',
   'config.xsaidOff': "Vozen **n'annoncera plus** qui a parlé — il ne lit que le message.",
   'config.autojoinOn':
     '✅ Connexion automatique **activée** — Vozen rejoindra votre salon vocal quand vous écrirez dans le salon de synthèse vocale.',
@@ -265,7 +265,7 @@ export default {
   'config.streaksOn':
     '✅ Avis de série **activés** — Vozen affiche un message de série 🔥 la première fois que chaque personne parle chaque jour.',
   'config.streaksOff':
-    'Avis de série **désactivés** — Vozen continue de suivre les séries (voir `/topspeakers`) mais reste discret à leur sujet.',
+    'Avis de série **désactivés** — Vozen continue de suivre les séries (voir `/top-speakers`) mais reste discret à leur sujet.',
   'config.soundboardOn':
     "Soundboard **activé** — n'importe qui peut jouer des clips avec `/sound`.",
   'config.soundboardOff': 'Soundboard **désactivé** — `/sound` est désactivé sur ce serveur.',
@@ -371,13 +371,13 @@ export default {
     '• /join — je rejoins votre salon vocal\n• /leave — je quitte le salon vocal\n• /tts <texte> — je lis le texte à voix haute · ex. /tts Bonjour tout le monde !\n• /skip — passer ce que je suis en train de lire',
   'help.groupVoice': 'Votre voix',
   'help.groupVoiceBody':
-    "• /voice set <model> — choisissez votre voix · ex. /voice set en_US-amy-medium\n• /voice list — voir les voix disponibles\n• /voice preview — écouter un échantillon de votre voix\n• /voice reset — revenir à la voix par défaut\n• /voice optout · /voice optin — désactiver / activer la lecture automatique pour vous\n• /voice abbrev add|remove|list — argot personnel, lu à votre façon (jusqu'à 10)",
+    "• /voice set <model> — choisissez votre voix · ex. /voice set en_US-amy-medium\n• /voice list — voir les voix disponibles\n• /voice preview — écouter un échantillon de votre voix\n• /voice reset — revenir à la voix par défaut\n• /voice opt-out · /voice opt-in — désactiver / activer la lecture automatique pour vous\n• /voice abbrev add|remove|list — argot personnel, lu à votre façon (jusqu'à 10)",
   'help.groupFun': 'Divertissement',
   'help.groupFunBody':
     '• /joke — je raconte une courte blague (choisissez une langue + rire facultatif) · ex. /joke English\n• /laugh — je ris à voix haute dans votre voix actuelle',
   'help.groupAdmin': 'Admin du serveur (nécessite Gérer le serveur)',
   'help.groupAdminBody':
-    '• /setup — configuration guidée en une étape · lancez ceci en premier\n• /config — autoread, tts-channel, language, default-voice, blockword, pronunciation,\n  rate-limit, role, max-chars, enabled · ex. /config tts-channel #general\n• /stats — statistiques du bot',
+    '• /setup — configuration guidée en une étape · lancez ceci en premier\n• /config — auto-read, tts-channel, language, default-voice, block-word, pronunciation,\n  rate-limit, role, max-chars, enabled · ex. /config tts-channel #general\n• /stats — statistiques du bot',
   'help.groupMore': 'Plus',
   'help.groupMoreBody':
     '• /invite — ajouter Vozen à un autre serveur\n• /vote — voter pour Vozen sur top.gg\n• /help — afficher cette aide',
@@ -613,12 +613,12 @@ export default {
   'pron.modalSay': 'Comment Vozen doit le dire',
   'spron.listHeader':
     "🗣️ **Prononciations du serveur** ({count}/{limit}) — s'appliquent à tout le monde :",
-  'spron.listEmpty': "Aucune pour l'instant — ajoutez-en une avec `/serverpronunciation add`.",
+  'spron.listEmpty': "Aucune pour l'instant — ajoutez-en une avec `/server-pronunciation add`.",
   'spron.set': '✅ Enregistré pour tout le serveur ! « {term} » → « {replacement} ».',
   'spron.removed': '🗑️ « {term} » supprimé du serveur.',
   'spron.notFound': "Le serveur n'a aucune prononciation pour « {term} ».",
   'spron.limitHit':
-    '🔒 Le serveur a atteint sa limite de **{limit}** prononciations. Supprimez-en une avec `/serverpronunciation remove`.',
+    '🔒 Le serveur a atteint sa limite de **{limit}** prononciations. Supprimez-en une avec `/server-pronunciation remove`.',
   'spron.modalTitle': 'Prononciation du serveur',
   'spron.modalSay': 'Comment Vozen la dit pour tout le monde',
   'rand.selectPrompt':

@@ -118,11 +118,11 @@ describe('/help — in-app command discovery', () => {
     expect(text.toLowerCase()).toMatch(/report|reportar/);
   });
 
-  it('reflects the /voice subcommands (set, list, preview, optout, optin)', async () => {
+  it('reflects the /voice subcommands (set, list, preview, opt-out, opt-in)', async () => {
     const i = makeHelpInteraction();
     await handleInteraction(i as any, makeDeps());
     const text = i.replies.join('\n');
-    for (const sub of ['set', 'list', 'reset', 'preview', 'optout', 'optin']) {
+    for (const sub of ['set', 'list', 'reset', 'preview', 'opt-out', 'opt-in']) {
       expect(text).toContain(sub);
     }
   });

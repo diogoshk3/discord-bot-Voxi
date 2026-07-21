@@ -91,7 +91,7 @@ export default {
   'voice.detection.off':
     '✅ La detecció automàtica de llengua està DESACTIVADA: la teva única veu fixa ho llegeix tot, així sones sempre igual.',
   'voice.optout':
-    "Ja no se't llegirà automàticament. Executa /voice optin per tornar-ho a activar.",
+    "Ja no se't llegirà automàticament. Executa /voice opt-in per tornar-ho a activar.",
   'voice.optin': "Se't tornarà a llegir automàticament.",
   'voice.nickname.set': '✅ En Vozen ara et dirà **{name}** en veu alta.',
   'voice.nickname.cleared':
@@ -227,7 +227,7 @@ export default {
   'config.channelWrongType': 'Tria un canal de text (no un canal de veu ni una categoria).',
   'config.channelNoAccess': 'No puc veure {channel}. Comprova els meus permisos allà.',
   'config.channelSet':
-    "Canal de lectura automàtica establert a {channel}. Ara: assegura't que la lectura automàtica estigui activada amb `/config autoread active:true`.",
+    "Canal de lectura automàtica establert a {channel}. Ara: assegura't que la lectura automàtica estigui activada amb `/config auto-read active:true`.",
   'config.autoreadOn': 'La lectura automàtica ara està **activada**.',
   'config.autoreadOff': 'La lectura automàtica ara està **desactivada**.',
   'config.maxCharsRange': "El valor de màxim de caràcters ha d'estar entre 1 i 2000.",
@@ -239,7 +239,7 @@ export default {
   'config.enabledOn': 'El TTS ara està **activat** per a aquest servidor.',
   'config.enabledOff': 'El TTS ara està **desactivat** per a aquest servidor.',
   'config.xsaidOn':
-    'En Vozen ara anunciarà **qui ha parlat** abans de cada missatge (p. ex. "L\'Alex ha dit hola"). Desactiva-ho amb `/config xsaid active:false`.',
+    'En Vozen ara anunciarà **qui ha parlat** abans de cada missatge (p. ex. "L\'Alex ha dit hola"). Desactiva-ho amb `/config x-said active:false`.',
   'config.xsaidOff': 'En Vozen **ja no** anunciarà qui ha parlat: només llegeix el missatge.',
   'config.autojoinOn':
     '✅ Entrada automàtica **activada**: en Vozen entrarà al teu canal de veu quan escriguis al canal de TTS.',
@@ -261,7 +261,7 @@ export default {
   'config.streaksOn':
     '✅ Avisos de ratxa **activats**: en Vozen mostra un missatge de ratxa de dies 🔥 la primera vegada que cada persona parla cada dia.',
   'config.streaksOff':
-    'Avisos de ratxa **desactivats**: en Vozen continua comptant les ratxes (mira `/topspeakers`) però no en diu res.',
+    'Avisos de ratxa **desactivats**: en Vozen continua comptant les ratxes (mira `/top-speakers`) però no en diu res.',
   'config.soundboardOn':
     'Taula de sons **activada**: qualsevol persona pot reproduir clips amb `/sound`.',
   'config.soundboardOff':
@@ -367,13 +367,13 @@ export default {
     '• /join — entro al teu canal de veu\n• /leave — surto del canal de veu\n• /tts <text> — llegeixo el text en veu alta · p. ex. /tts Hola a tothom!\n• /skip — omet el que estigui llegint ara mateix',
   'help.groupVoice': 'La teva veu',
   'help.groupVoiceBody':
-    '• /voice set <model> — tria la teva veu · p. ex. /voice set en_US-amy-medium\n• /voice list — mira les veus disponibles\n• /voice preview — escolta una mostra de la teva veu\n• /voice reset — torna a la veu predeterminada\n• /voice optout · /voice optin — activa/desactiva la lectura automàtica per a tu\n• /voice abbrev add|remove|list — argot personal, llegit a la teva manera (fins a 10)',
+    '• /voice set <model> — tria la teva veu · p. ex. /voice set en_US-amy-medium\n• /voice list — mira les veus disponibles\n• /voice preview — escolta una mostra de la teva veu\n• /voice reset — torna a la veu predeterminada\n• /voice opt-out · /voice opt-in — activa/desactiva la lectura automàtica per a tu\n• /voice abbrev add|remove|list — argot personal, llegit a la teva manera (fins a 10)',
   'help.groupFun': 'Diversió',
   'help.groupFunBody':
     '• /joke — explico un acudit curt (tria una llengua + rialla opcional) · p. ex. /joke English\n• /laugh — ric en veu alta amb la teva veu actual',
   'help.groupAdmin': 'Administració del servidor (cal Gestionar el servidor)',
   'help.groupAdminBody':
-    '• /setup — configuració guiada en un pas · executa-ho primer\n• /config — autoread, tts-channel, language, default-voice, blockword, pronunciation,\n  rate-limit, role, max-chars, enabled · p. ex. /config tts-channel #general\n• /stats — estadístiques del bot',
+    '• /setup — configuració guiada en un pas · executa-ho primer\n• /config — auto-read, tts-channel, language, default-voice, block-word, pronunciation,\n  rate-limit, role, max-chars, enabled · p. ex. /config tts-channel #general\n• /stats — estadístiques del bot',
   'help.groupMore': 'Més',
   'help.groupMoreBody':
     '• /invite — afegeix en Vozen a un altre servidor\n• /vote — vota en Vozen a top.gg\n• /help — mostra aquesta ajuda',
@@ -609,12 +609,12 @@ export default {
   'pron.modalTerm': "La paraula (tal com s'escriu)",
   'pron.modalSay': 'Com ho hauria de dir en Vozen',
   'spron.listHeader': "🗣️ **Pronunciacions del servidor** ({count}/{limit}) — s'apliquen a tothom:",
-  'spron.listEmpty': 'Encara cap: afegeix-ne una amb `/serverpronunciation add`.',
+  'spron.listEmpty': 'Encara cap: afegeix-ne una amb `/server-pronunciation add`.',
   'spron.set': '✅ Desada per a tot el servidor! “{term}” → “{replacement}”.',
   'spron.removed': '🗑️ “{term}” eliminada del servidor.',
   'spron.notFound': 'El servidor no té cap pronunciació per a “{term}”.',
   'spron.limitHit':
-    "🔒 El servidor ha arribat al seu límit de **{limit}** pronunciacions. Elimina'n una amb `/serverpronunciation remove`.",
+    "🔒 El servidor ha arribat al seu límit de **{limit}** pronunciacions. Elimina'n una amb `/server-pronunciation remove`.",
   'spron.modalTitle': 'Pronunciació del servidor',
   'spron.modalSay': 'Com ho diu en Vozen per a tothom',
   'rand.selectPrompt': '🎲 **Randomizer** — entre quantes opcions vols que triï?',

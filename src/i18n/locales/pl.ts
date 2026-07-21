@@ -91,7 +91,7 @@ export default {
   'voice.detection.off':
     '✅ Automatyczne wykrywanie języka WYŁĄCZONE: twój jeden stały głos czyta wszystko, więc zawsze brzmisz tak samo.',
   'voice.optout':
-    'Nie będziesz już automatycznie czytany. Uruchom /voice optin, aby włączyć to z powrotem.',
+    'Nie będziesz już automatycznie czytany. Uruchom /voice opt-in, aby włączyć to z powrotem.',
   'voice.optin': 'Znowu będziesz czytany automatycznie.',
   'voice.nickname.set': '✅ Vozen będzie teraz nazywał cię **{name}** na głos.',
   'voice.nickname.cleared':
@@ -223,7 +223,7 @@ export default {
   'config.channelWrongType': 'Wybierz kanał tekstowy (nie kanał głosowy ani kategorię).',
   'config.channelNoAccess': 'Nie widzę kanału {channel} — sprawdź moje uprawnienia tam.',
   'config.channelSet':
-    'Kanał automatycznego czytania ustawiony na {channel}. Następnie: upewnij się, że automatyczne czytanie jest włączone za pomocą `/config autoread active:true`.',
+    'Kanał automatycznego czytania ustawiony na {channel}. Następnie: upewnij się, że automatyczne czytanie jest włączone za pomocą `/config auto-read active:true`.',
   'config.autoreadOn': 'Automatyczne czytanie jest teraz **włączone**.',
   'config.autoreadOff': 'Automatyczne czytanie jest teraz **wyłączone**.',
   'config.maxCharsRange': 'Wartość maks. znaków musi mieścić się w przedziale od 1 do 2000.',
@@ -235,7 +235,7 @@ export default {
   'config.enabledOn': 'TTS jest teraz **włączone** na tym serwerze.',
   'config.enabledOff': 'TTS jest teraz **wyłączone** na tym serwerze.',
   'config.xsaidOn':
-    'Vozen będzie teraz ogłaszał, **kto mówił** przed każdą wiadomością (np. „Alex powiedział cześć”). Wyłącz poleceniem `/config xsaid active:false`.',
+    'Vozen będzie teraz ogłaszał, **kto mówił** przed każdą wiadomością (np. „Alex powiedział cześć”). Wyłącz poleceniem `/config x-said active:false`.',
   'config.xsaidOff': 'Vozen **już nie** będzie ogłaszał, kto mówił — czyta tylko wiadomość.',
   'config.autojoinOn':
     '✅ Auto-dołączanie **włączone** — Vozen dołączy do twojego kanału głosowego, gdy napiszesz na kanale TTS.',
@@ -259,7 +259,7 @@ export default {
   'config.streaksOn':
     '✅ Powiadomienia o seriach **włączone** — Vozen pokazuje wiadomość o serii 🔥 przy pierwszej wypowiedzi każdej osoby każdego dnia.',
   'config.streaksOff':
-    'Powiadomienia o seriach **wyłączone** — Vozen nadal śledzi serie (zobacz `/topspeakers`), ale o nich milczy.',
+    'Powiadomienia o seriach **wyłączone** — Vozen nadal śledzi serie (zobacz `/top-speakers`), ale o nich milczy.',
   'config.soundboardOn':
     'Tablica dźwięków **włączona** — każdy może odtwarzać klipy poleceniem `/sound`.',
   'config.soundboardOff':
@@ -366,13 +366,13 @@ export default {
     '• /join — dołączam do twojego kanału głosowego\n• /leave — opuszczam kanał głosowy\n• /tts <tekst> — czytam tekst na głos · np. /tts Cześć wszystkim!\n• /skip — pomiń to, co teraz czytam',
   'help.groupVoice': 'Twój głos',
   'help.groupVoiceBody':
-    '• /voice set <model> — wybierz swój głos · np. /voice set en_US-amy-medium\n• /voice list — zobacz dostępne głosy\n• /voice preview — usłysz próbkę swojego głosu\n• /voice reset — wróć do domyślnego głosu\n• /voice optout · /voice optin — wyłącz / włącz automatyczne czytanie dla siebie\n• /voice abbrev add|remove|list — osobisty slang, czytany po twojemu (do 10)',
+    '• /voice set <model> — wybierz swój głos · np. /voice set en_US-amy-medium\n• /voice list — zobacz dostępne głosy\n• /voice preview — usłysz próbkę swojego głosu\n• /voice reset — wróć do domyślnego głosu\n• /voice opt-out · /voice opt-in — wyłącz / włącz automatyczne czytanie dla siebie\n• /voice abbrev add|remove|list — osobisty slang, czytany po twojemu (do 10)',
   'help.groupFun': 'Rozrywka',
   'help.groupFunBody':
     '• /joke — opowiadam krótki żart (wybierz język + opcjonalny śmiech) · np. /joke English\n• /laugh — śmieję się na głos twoim aktualnym głosem',
   'help.groupAdmin': 'Administracja serwera (wymaga Zarządzania serwerem)',
   'help.groupAdminBody':
-    '• /setup — prowadzona konfiguracja w jednym kroku · uruchom to najpierw\n• /config — autoread, tts-channel, language, default-voice, blockword, pronunciation,\n  rate-limit, role, max-chars, enabled · np. /config tts-channel #general\n• /stats — statystyki bota',
+    '• /setup — prowadzona konfiguracja w jednym kroku · uruchom to najpierw\n• /config — auto-read, tts-channel, language, default-voice, block-word, pronunciation,\n  rate-limit, role, max-chars, enabled · np. /config tts-channel #general\n• /stats — statystyki bota',
   'help.groupMore': 'Więcej',
   'help.groupMoreBody':
     '• /invite — dodaj Vozen do innego serwera\n• /vote — zagłosuj na Vozen na top.gg\n• /help — pokaż tę pomoc',
@@ -604,12 +604,12 @@ export default {
   'pron.modalTerm': 'Słowo (tak jak się je pisze)',
   'pron.modalSay': 'Jak Vozen ma je wymawiać',
   'spron.listHeader': '🗣️ **Wymowy serwera** ({count}/{limit}) — obowiązują wszystkich:',
-  'spron.listEmpty': 'Jeszcze żadnych — dodaj poleceniem `/serverpronunciation add`.',
+  'spron.listEmpty': 'Jeszcze żadnych — dodaj poleceniem `/server-pronunciation add`.',
   'spron.set': '✅ Zapisano dla całego serwera! „{term}” → „{replacement}”.',
   'spron.removed': '🗑️ Usunięto „{term}” z serwera.',
   'spron.notFound': 'Serwer nie ma wymowy dla „{term}”.',
   'spron.limitHit':
-    '🔒 Serwer osiągnął limit **{limit}** wymów. Usuń jedną poleceniem `/serverpronunciation remove`.',
+    '🔒 Serwer osiągnął limit **{limit}** wymów. Usuń jedną poleceniem `/server-pronunciation remove`.',
   'spron.modalTitle': 'Wymowa serwera',
   'spron.modalSay': 'Jak Vozen wymawia to dla wszystkich',
   'rand.selectPrompt': '🎲 **Randomizer** — spośród ilu opcji mam wybierać?',

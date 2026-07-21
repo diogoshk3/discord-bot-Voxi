@@ -91,7 +91,7 @@ export default {
   'voice.detection.off':
     '✅ Η αυτόματη ανίχνευση γλώσσας είναι ΑΝΕΝΕΡΓΗ: η μία σταθερή φωνή σου διαβάζει τα πάντα, ώστε να ακούγεσαι πάντα ίδιος.',
   'voice.optout':
-    'Δεν θα σε διαβάζω πια αυτόματα. Τρέξε /voice optin για να το ενεργοποιήσεις ξανά.',
+    'Δεν θα σε διαβάζω πια αυτόματα. Τρέξε /voice opt-in για να το ενεργοποιήσεις ξανά.',
   'voice.optin': 'Θα σε διαβάζω ξανά αυτόματα.',
   'voice.nickname.set': '✅ Το Vozen θα σε αποκαλεί τώρα **{name}** δυνατά.',
   'voice.nickname.cleared':
@@ -228,7 +228,7 @@ export default {
   'config.channelWrongType': 'Διάλεξε ένα κανάλι κειμένου (όχι φωνητικό κανάλι ή κατηγορία).',
   'config.channelNoAccess': 'Δεν βλέπω το {channel} — έλεγξε τα δικαιώματά μου εκεί.',
   'config.channelSet':
-    'Το κανάλι αυτόματης ανάγνωσης ορίστηκε στο {channel}. Επόμενο: βεβαιώσου ότι η αυτόματη ανάγνωση είναι ενεργή με `/config autoread active:true`.',
+    'Το κανάλι αυτόματης ανάγνωσης ορίστηκε στο {channel}. Επόμενο: βεβαιώσου ότι η αυτόματη ανάγνωση είναι ενεργή με `/config auto-read active:true`.',
   'config.autoreadOn': 'Η αυτόματη ανάγνωση είναι τώρα **ενεργή**.',
   'config.autoreadOff': 'Η αυτόματη ανάγνωση είναι τώρα **ανενεργή**.',
   'config.maxCharsRange': 'Η τιμή μέγιστων χαρακτήρων πρέπει να είναι μεταξύ 1 και 2000.',
@@ -240,7 +240,7 @@ export default {
   'config.enabledOn': 'Το TTS είναι τώρα **ενεργό** για αυτόν τον διακομιστή.',
   'config.enabledOff': 'Το TTS είναι τώρα **ανενεργό** για αυτόν τον διακομιστή.',
   'config.xsaidOn':
-    'Το Vozen θα ανακοινώνει τώρα **ποιος μίλησε** πριν από κάθε μήνυμα (π.χ. «Ο Alex είπε γεια»). Απενεργοποίησέ το με `/config xsaid active:false`.',
+    'Το Vozen θα ανακοινώνει τώρα **ποιος μίλησε** πριν από κάθε μήνυμα (π.χ. «Ο Alex είπε γεια»). Απενεργοποίησέ το με `/config x-said active:false`.',
   'config.xsaidOff': 'Το Vozen **δεν θα ανακοινώνει πια** ποιος μίλησε — διαβάζει μόνο το μήνυμα.',
   'config.autojoinOn':
     '✅ Αυτόματη είσοδος **ενεργή** — το Vozen θα μπαίνει στο φωνητικό σου κανάλι όταν γράφεις στο κανάλι TTS.',
@@ -263,7 +263,7 @@ export default {
   'config.streaksOn':
     '✅ Ειδοποιήσεις σερί **ενεργές** — το Vozen δείχνει ένα μήνυμα σερί 🔥 την πρώτη φορά που μιλάει κάθε άτομο κάθε μέρα.',
   'config.streaksOff':
-    'Ειδοποιήσεις σερί **ανενεργές** — το Vozen συνεχίζει να μετράει τα σερί (δες `/topspeakers`) αλλά μένει σιωπηλό για αυτά.',
+    'Ειδοποιήσεις σερί **ανενεργές** — το Vozen συνεχίζει να μετράει τα σερί (δες `/top-speakers`) αλλά μένει σιωπηλό για αυτά.',
   'config.soundboardOn': 'Soundboard **ενεργό** — οποιοσδήποτε μπορεί να παίζει κλιπ με `/sound`.',
   'config.soundboardOff':
     'Soundboard **ανενεργό** — το `/sound` είναι απενεργοποιημένο σε αυτόν τον διακομιστή.',
@@ -369,13 +369,13 @@ export default {
     '• /join — μπαίνω στο φωνητικό σου κανάλι\n• /leave — φεύγω από το φωνητικό κανάλι\n• /tts <text> — διαβάζω κείμενο δυνατά · π.χ. /tts Γεια σε όλους!\n• /skip — παρακάμπτω ό,τι διαβάζω αυτή τη στιγμή',
   'help.groupVoice': 'Η φωνή σου',
   'help.groupVoiceBody':
-    '• /voice set <model> — διάλεξε τη φωνή σου · π.χ. /voice set en_US-amy-medium\n• /voice list — δες τις διαθέσιμες φωνές\n• /voice preview — άκουσε ένα δείγμα της φωνής σου\n• /voice reset — επίστρεψε στην προεπιλεγμένη φωνή\n• /voice optout · /voice optin — απενεργοποίησε / ενεργοποίησε την αυτόματη ανάγνωση για σένα\n• /voice abbrev add|remove|list — προσωπική αργκό, διαβασμένη με τον τρόπο σου (έως 10)',
+    '• /voice set <model> — διάλεξε τη φωνή σου · π.χ. /voice set en_US-amy-medium\n• /voice list — δες τις διαθέσιμες φωνές\n• /voice preview — άκουσε ένα δείγμα της φωνής σου\n• /voice reset — επίστρεψε στην προεπιλεγμένη φωνή\n• /voice opt-out · /voice opt-in — απενεργοποίησε / ενεργοποίησε την αυτόματη ανάγνωση για σένα\n• /voice abbrev add|remove|list — προσωπική αργκό, διαβασμένη με τον τρόπο σου (έως 10)',
   'help.groupFun': 'Διασκέδαση',
   'help.groupFunBody':
     '• /joke — λέω ένα σύντομο αστείο (διάλεξε γλώσσα + προαιρετικά γέλιο) · π.χ. /joke English\n• /laugh — γελάω δυνατά με την τρέχουσα φωνή σου',
   'help.groupAdmin': 'Διαχείριση διακομιστή (χρειάζεται Διαχείριση διακομιστή)',
   'help.groupAdminBody':
-    '• /setup — καθοδηγούμενη ρύθμιση σε ένα βήμα · τρέξε το πρώτο\n• /config — autoread, tts-channel, language, default-voice, blockword, pronunciation,\n  rate-limit, role, max-chars, enabled · π.χ. /config tts-channel #general\n• /stats — στατιστικά bot',
+    '• /setup — καθοδηγούμενη ρύθμιση σε ένα βήμα · τρέξε το πρώτο\n• /config — auto-read, tts-channel, language, default-voice, block-word, pronunciation,\n  rate-limit, role, max-chars, enabled · π.χ. /config tts-channel #general\n• /stats — στατιστικά bot',
   'help.groupMore': 'Περισσότερα',
   'help.groupMoreBody':
     '• /invite — πρόσθεσε το Vozen σε άλλον διακομιστή\n• /vote — ψήφισε το Vozen στο top.gg\n• /help — δείξε αυτή τη βοήθεια',
@@ -606,12 +606,12 @@ export default {
   'pron.modalTerm': 'Η λέξη (όπως τη γράφουν)',
   'pron.modalSay': 'Πώς πρέπει να την λέει το Vozen',
   'spron.listHeader': '🗣️ **Προφορές διακομιστή** ({count}/{limit}) — ισχύουν για όλους:',
-  'spron.listEmpty': 'Καμία ακόμη — πρόσθεσε μία με `/serverpronunciation add`.',
+  'spron.listEmpty': 'Καμία ακόμη — πρόσθεσε μία με `/server-pronunciation add`.',
   'spron.set': '✅ Αποθηκεύτηκε για όλο τον διακομιστή! “{term}” → “{replacement}”.',
   'spron.removed': '🗑️ Αφαιρέθηκε το “{term}” από τον διακομιστή.',
   'spron.notFound': 'Ο διακομιστής δεν έχει προφορά για το “{term}”.',
   'spron.limitHit':
-    '🔒 Ο διακομιστής έφτασε το όριό του των **{limit}** προφορών. Αφαίρεσε μία με `/serverpronunciation remove`.',
+    '🔒 Ο διακομιστής έφτασε το όριό του των **{limit}** προφορών. Αφαίρεσε μία με `/server-pronunciation remove`.',
   'spron.modalTitle': 'Προφορά διακομιστή',
   'spron.modalSay': 'Πώς την λέει το Vozen για όλους',
   'rand.selectPrompt': '🎲 **Randomizer** — ανάμεσα σε πόσες επιλογές θες να διαλέξω;',

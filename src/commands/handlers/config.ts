@@ -25,7 +25,7 @@ export async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps
     return;
   }
   const group = i.options.getSubcommandGroup(false);
-  if (group === 'blockword') {
+  if (group === 'block-word') {
     const sub = i.options.getSubcommand();
     const word = i.options.getString('word', true).trim();
     if (!word) {
@@ -45,7 +45,7 @@ export async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps
     return;
   }
   // The old `/config pronunciation` group was replaced by the dedicated admin command
-  // `/serverpronunciation`; personal entries use `/pronunciation` (handlers/personal.ts).
+  // `/server-pronunciation`; personal entries use `/pronunciation` (handlers/personal.ts).
   const sub = i.options.getSubcommand();
   if (sub === 'tts-channel') {
     const ch = i.options.getChannel('channel', true);
@@ -63,7 +63,7 @@ export async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps
     }
     setGuildConfig(deps.db, i.guildId!, { ttsChannelId: ch.id });
     await reply(i, t('config.channelSet', locale, { channel: `<#${ch.id}>` }));
-  } else if (sub === 'autoread') {
+  } else if (sub === 'auto-read') {
     const on = i.options.getBoolean('active', true);
     setGuildConfig(deps.db, i.guildId!, { autoread: on });
     await reply(i, on ? t('config.autoreadOn', locale) : t('config.autoreadOff', locale));
@@ -98,12 +98,12 @@ export async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps
     const on = i.options.getBoolean('active', true);
     setGuildConfig(deps.db, i.guildId!, { enabled: on });
     await reply(i, on ? t('config.enabledOn', locale) : t('config.enabledOff', locale));
-  } else if (sub === 'xsaid') {
+  } else if (sub === 'x-said') {
     // "{name} said" announcement before each message (who spoke). ON by default.
     const on = i.options.getBoolean('active', true);
     setGuildConfig(deps.db, i.guildId!, { xsaid: on });
     await reply(i, on ? t('config.xsaidOn', locale) : t('config.xsaidOff', locale));
-  } else if (sub === 'autojoin') {
+  } else if (sub === 'auto-join') {
     // The bot joins the author's call on its own when a message arrives. OFF by default.
     const on = i.options.getBoolean('active', true);
     setGuildConfig(deps.db, i.guildId!, { autojoin: on });
@@ -125,7 +125,7 @@ export async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps
     const on = i.options.getBoolean('active', true);
     setGuildConfig(deps.db, i.guildId!, { textInVoice: on });
     await reply(i, on ? t('config.textInVoiceOn', locale) : t('config.textInVoiceOff', locale));
-  } else if (sub === 'antispam') {
+  } else if (sub === 'anti-spam') {
     // Do not read spammed messages (massive repetition / same large msg repeated).
     // OFF by default (opt-in).
     const on = i.options.getBoolean('active', true);

@@ -24,7 +24,7 @@ describe('applyPronunciation', () => {
     expect(applyPronunciation('eggs e ovos', dict)).toBe('eggs e ovos');
   });
 
-  // Bug-hunt 2026-07: the replacement (controlled by the admin via /serverpronunciation)
+  // Bug-hunt 2026-07: the replacement (controlled by the admin via /server-pronunciation)
   // was passed RAW as the 2nd arg of String.replace, which interprets $&, $1, $`, $', $$
   // as directives. A replacement with '$' produced wrong audio (e.g. "R$" -> inserts
   // the matched term). It must be LITERAL (the siblings restoreAccents/expandAbbreviations

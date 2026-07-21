@@ -44,7 +44,7 @@ export default {
   'voice.reset':
     '✅ Tvůj hlas je zpět na výchozím. Kdykoliv si vyber jiný pomocí `/voice list` a `/voice set`.',
   'voice.optout':
-    'Už tě nebudu předčítat automaticky. Spusť /voice optin, když to chceš zase zapnout.',
+    'Už tě nebudu předčítat automaticky. Spusť /voice opt-in, když to chceš zase zapnout.',
   'voice.optin': 'Budeš zase předčítán automaticky.',
   'voice.detection.on':
     '✅ Automatická detekce jazyka je ZAPNUTÁ: každá zpráva se čte hlasem podle rozpoznaného jazyka (mluvčí se může měnit). Vypni ji pomocí `/voice detection active:false`.',
@@ -79,7 +79,7 @@ export default {
   'config.channelWrongType': 'Vyber textový kanál (ne hlasový kanál ani kategorii).',
   'config.channelNoAccess': 'Nevidím {channel} — zkontroluj prosím moje oprávnění tam.',
   'config.channelSet':
-    'Kanál pro automatické předčítání nastaven na {channel}. Dále: ujisti se, že je automatické předčítání zapnuté pomocí `/config autoread active:true`.',
+    'Kanál pro automatické předčítání nastaven na {channel}. Dále: ujisti se, že je automatické předčítání zapnuté pomocí `/config auto-read active:true`.',
   'config.autoreadOn': 'Automatické předčítání je nyní **zapnuté**.',
   'config.autoreadOff': 'Automatické předčítání je nyní **vypnuté**.',
   'config.maxCharsRange': 'Hodnota max znaků musí být mezi 1 a 2000.',
@@ -167,13 +167,13 @@ export default {
     '• /join — připojím se k tvému hlasovému kanálu\n• /leave — opustím hlasový kanál\n• /tts <text> — přečtu text nahlas · např. /tts Ahoj všichni!\n• /skip — přeskočí, co právě čtu',
   'help.groupVoice': 'Tvůj hlas',
   'help.groupVoiceBody':
-    '• /voice set <model> — vyber si hlas · např. /voice set en_US-amy-medium\n• /voice list — zobrazí dostupné hlasy\n• /voice preview — poslechni si ukázku svého hlasu\n• /voice reset — vrať se k výchozímu hlasu\n• /voice optout · /voice optin — vypni / zapni automatické předčítání pro tebe\n• /voice abbrev add|remove|list — osobní slang, čtený po tvém (až 10)',
+    '• /voice set <model> — vyber si hlas · např. /voice set en_US-amy-medium\n• /voice list — zobrazí dostupné hlasy\n• /voice preview — poslechni si ukázku svého hlasu\n• /voice reset — vrať se k výchozímu hlasu\n• /voice opt-out · /voice opt-in — vypni / zapni automatické předčítání pro tebe\n• /voice abbrev add|remove|list — osobní slang, čtený po tvém (až 10)',
   'help.groupFun': 'Zábava',
   'help.groupFunBody':
     '• /joke — řeknu krátký vtip (vyber jazyk + volitelný smích) · např. /joke English\n• /laugh — zasměju se nahlas tvým aktuálním hlasem',
   'help.groupAdmin': 'Správa serveru (vyžaduje Spravovat server)',
   'help.groupAdminBody':
-    '• /setup — vedená jednokroková konfigurace · spusť to jako první\n• /config — autoread, tts-channel, language, default-voice, blockword, pronunciation,\n  rate-limit, role, max-chars, enabled · např. /config tts-channel #general\n• /stats — statistiky bota',
+    '• /setup — vedená jednokroková konfigurace · spusť to jako první\n• /config — auto-read, tts-channel, language, default-voice, block-word, pronunciation,\n  rate-limit, role, max-chars, enabled · např. /config tts-channel #general\n• /stats — statistiky bota',
   'help.groupMore': 'Více',
   'help.groupMoreBody':
     '• /invite — přidej Vozen na jiný server\n• /vote — hlasuj pro Vozen na top.gg\n• /help — zobrazí tuto nápovědu',
@@ -330,7 +330,7 @@ export default {
   'config.blockLimit':
     'Tento server už má maximum {max} zablokovaných slov. Než přidáš další, jedno odeber.',
   'config.xsaidOn':
-    'Vozen teď před každou zprávou oznámí, **kdo mluvil** (např. „Alex řekl ahoj“). Vypni pomocí `/config xsaid active:false`.',
+    'Vozen teď před každou zprávou oznámí, **kdo mluvil** (např. „Alex řekl ahoj“). Vypni pomocí `/config x-said active:false`.',
   'config.xsaidOff': 'Vozen **už nebude** oznamovat, kdo mluvil — přečte jen zprávu.',
   'config.autojoinOn':
     '✅ Automatické připojení **zapnuto** — Vozen se připojí k tvému hlasovému kanálu, když napíšeš do TTS kanálu.',
@@ -351,7 +351,7 @@ export default {
   'config.streaksOn':
     '✅ Oznámení sérií **zapnutá** — Vozen ukáže zprávu se sérií 🔥 při prvním promluvení každého člověka za den.',
   'config.streaksOff':
-    'Oznámení sérií **vypnutá** — Vozen série stále počítá (viz `/topspeakers`), ale mlčí o nich.',
+    'Oznámení sérií **vypnutá** — Vozen série stále počítá (viz `/top-speakers`), ale mlčí o nich.',
   'config.soundboardOn': 'Soundboard **zapnutý** — kdokoliv může přehrávat klipy pomocí `/sound`.',
   'config.soundboardOff': 'Soundboard **vypnutý** — `/sound` je na tomto serveru zakázaný.',
   'config.votePromosLabel': 'Oznámení o odměně top.gg + Vozen Support',
@@ -589,12 +589,12 @@ export default {
   'pron.modalTerm': 'Slovo (jak ho lidé píší)',
   'pron.modalSay': 'Jak to má Vozen říct',
   'spron.listHeader': '🗣️ **Výslovnosti serveru** ({count}/{limit}) — platí pro všechny:',
-  'spron.listEmpty': 'Zatím žádné — přidej jednu pomocí `/serverpronunciation add`.',
+  'spron.listEmpty': 'Zatím žádné — přidej jednu pomocí `/server-pronunciation add`.',
   'spron.set': '✅ Uloženo pro celý server! „{term}“ → „{replacement}“.',
   'spron.removed': '🗑️ „{term}“ odstraněno ze serveru.',
   'spron.notFound': 'Server nemá žádnou výslovnost pro „{term}“.',
   'spron.limitHit':
-    '🔒 Server dosáhl svého limitu **{limit}** výslovností. Odeber jednu pomocí `/serverpronunciation remove`.',
+    '🔒 Server dosáhl svého limitu **{limit}** výslovností. Odeber jednu pomocí `/server-pronunciation remove`.',
   'spron.modalTitle': 'Výslovnost serveru',
   'spron.modalSay': 'Jak to Vozen říká pro všechny',
   'rand.selectPrompt': '🎲 **Randomizer** — z kolika možností mám vybírat?',

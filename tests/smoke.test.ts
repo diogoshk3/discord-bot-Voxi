@@ -161,7 +161,7 @@ describe('smoke: boot without a token (assembles real deps without connecting to
 
   // Bug-hunt 2026-07: guild-dependent commands (voice/config/store) must NOT be
   // invocable in DMs (there guildId is null -> SqliteError guild_id NOT NULL / misleading
-  // responses). The text-only commands (invite/vote/help/uptime/botstats) STAY
+  // responses). The text-only commands (invite/vote/help/uptime/bot-stats) STAY
   // available in DMs. InteractionContextType.Guild === 0.
   // Regression (duplicates seen in Discord): UNIQUE command names in the set.
   // NB: the real duplicate was global+per-guild (double registration), but this test
@@ -173,7 +173,7 @@ describe('smoke: boot without a token (assembles real deps without connecting to
 
   it('guild commands are restricted to the Guild context; the public ones are not', () => {
     // /redeem is also DM-capable: it grants to the redeemer's ACCOUNT, not to a guild.
-    const DM_CAPABLE = new Set(['invite', 'vote', 'help', 'uptime', 'botstats', 'redeem']);
+    const DM_CAPABLE = new Set(['invite', 'vote', 'help', 'uptime', 'bot-stats', 'redeem']);
     for (const def of commandDefs) {
       const contexts = (def as { contexts?: number[] }).contexts;
       if (DM_CAPABLE.has(def.name)) {

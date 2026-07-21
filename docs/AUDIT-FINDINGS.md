@@ -68,7 +68,7 @@ dominante em volume — **~349/364 ficheiros com prosa PT** (o pedido "tudo em i
   `palavra`→`word`).
 - DOC-3: `/voice abbrev` documentado (PRIVACY.md:22, ARCHITECTURE.md:121/441, i18n:726) mas
   **não existe** → feature unreachable. Decidir: implementar ou remover das docs+i18n+schema.
-- DOC-4: ARCHITECTURE.md:441 cita `/config pronunciation` (removido → `/serverpronunciation`).
+- DOC-4: ARCHITECTURE.md:441 cita `/config pronunciation` (removido → `/server-pronunciation`).
 
 ## Operacional (segurança — não é código)
 

@@ -175,7 +175,7 @@ Run this checklist with the bot running (`npm run dev`) and you in a test Discor
 ### 3.5 Auto-read
 
 - [ ] `/join` again.
-- [ ] Configure the auto-read channel: `/config tts-channel channel:#general` and `/config autoread active:true`.
+- [ ] Configure the auto-read channel: `/config tts-channel channel:#general` and `/config auto-read active:true`.
 - [ ] Type a normal sentence in that channel (no command). Expected: the bot reads the sentence out loud.
 - [ ] Type a sentence in another **non**-configured channel. Expected: the bot does **not** read it.
 
@@ -212,9 +212,9 @@ With auto-read on, type each of these and confirm the behavior you hear:
 
 ### 3.10 Moderation
 
-- [ ] Add a blockword: `/config blockword add word:badword`.
+- [ ] Add a blockword: `/config block-word add word:badword`.
 - [ ] Type a sentence containing that word (or do `/tts text:badword`). Expected: it is **not** synthesized (filtered before TTS, both in auto-read and `/tts`).
-- [ ] `/config blockword remove word:badword` → the sentence is read again.
+- [ ] `/config block-word remove word:badword` → the sentence is read again.
 - [ ] Send messages very fast (more than `RATE_PER_MIN` in a minute). Expected: past the limit, the extras are ignored/warned (per-user rate-limit).
 
 ### 3.11 Cache

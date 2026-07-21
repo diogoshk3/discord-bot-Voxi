@@ -90,7 +90,7 @@ export default {
   'voice.detection.off':
     '✅ Automaattinen kielentunnistus on POIS PÄÄLTÄ: yksi kiinteä äänesi lukee kaiken, joten kuulostat aina samalta.',
   'voice.optout':
-    'Sinua ei enää lueta automaattisesti. Suorita /voice optin ottaaksesi sen taas käyttöön.',
+    'Sinua ei enää lueta automaattisesti. Suorita /voice opt-in ottaaksesi sen taas käyttöön.',
   'voice.optin': 'Sinut luetaan taas automaattisesti.',
   'voice.nickname.set': '✅ Vozen kutsuu sinua nyt ääneen nimellä **{name}**.',
   'voice.nickname.cleared': '✅ Puhuttu lempinimi poistettu — Vozen käyttää palvelinnimeäsi.',
@@ -220,7 +220,7 @@ export default {
   'config.channelWrongType': 'Valitse tekstikanava (ei puhekanava tai kategoria).',
   'config.channelNoAccess': 'En näe kanavaa {channel} — tarkista oikeuteni siellä.',
   'config.channelSet':
-    'Automaattisen lukemisen kanavaksi asetettu {channel}. Seuraavaksi: varmista että automaattinen lukeminen on päällä komennolla `/config autoread active:true`.',
+    'Automaattisen lukemisen kanavaksi asetettu {channel}. Seuraavaksi: varmista että automaattinen lukeminen on päällä komennolla `/config auto-read active:true`.',
   'config.autoreadOn': 'Automaattinen lukeminen on nyt **päällä**.',
   'config.autoreadOff': 'Automaattinen lukeminen on nyt **pois päältä**.',
   'config.maxCharsRange': 'Merkkien enimmäismäärän on oltava välillä 1 ja 2000.',
@@ -232,7 +232,7 @@ export default {
   'config.enabledOn': 'TTS on nyt **päällä** tällä palvelimella.',
   'config.enabledOff': 'TTS on nyt **pois päältä** tällä palvelimella.',
   'config.xsaidOn':
-    'Vozen ilmoittaa nyt **kuka puhui** ennen jokaista viestiä (esim. "Alex sanoi hei"). Poista käytöstä komennolla `/config xsaid active:false`.',
+    'Vozen ilmoittaa nyt **kuka puhui** ennen jokaista viestiä (esim. "Alex sanoi hei"). Poista käytöstä komennolla `/config x-said active:false`.',
   'config.xsaidOff': 'Vozen **ei enää** ilmoita kuka puhui — se lukee vain viestin.',
   'config.autojoinOn':
     '✅ Automaattinen liittyminen **päällä** — Vozen liittyy puhekanavallesi, kun kirjoitat TTS-kanavalle.',
@@ -253,7 +253,7 @@ export default {
   'config.streaksOn':
     '✅ Putki-ilmoitukset **päällä** — Vozen näyttää 🔥 päiväputkiviestin ensimmäisen kerran, kun kukin henkilö puhuu joka päivä.',
   'config.streaksOff':
-    'Putki-ilmoitukset **pois päältä** — Vozen seuraa putkia edelleen (katso `/topspeakers`) mutta pysyy niistä hiljaa.',
+    'Putki-ilmoitukset **pois päältä** — Vozen seuraa putkia edelleen (katso `/top-speakers`) mutta pysyy niistä hiljaa.',
   'config.soundboardOn':
     'Soundboard **päällä** — kuka tahansa voi toistaa klippejä komennolla `/sound`.',
   'config.soundboardOff':
@@ -358,13 +358,13 @@ export default {
     '• /join — liityn puhekanavallesi\n• /leave — poistun puhekanavalta\n• /tts <teksti> — luen tekstin ääneen · esim. /tts Hei kaikki!\n• /skip — ohita se, mitä luen juuri nyt',
   'help.groupVoice': 'Oma äänesi',
   'help.groupVoiceBody':
-    '• /voice set <model> — valitse äänesi · esim. /voice set en_US-amy-medium\n• /voice list — katso saatavilla olevat äänet\n• /voice preview — kuule näyte äänestäsi\n• /voice reset — palaa oletusääneen\n• /voice optout · /voice optin — poista/ota automaattinen lukeminen käyttöön itsellesi\n• /voice abbrev add|remove|list — henkilökohtainen slangi, luettuna sinun tyylilläsi (enintään 10)',
+    '• /voice set <model> — valitse äänesi · esim. /voice set en_US-amy-medium\n• /voice list — katso saatavilla olevat äänet\n• /voice preview — kuule näyte äänestäsi\n• /voice reset — palaa oletusääneen\n• /voice opt-out · /voice opt-in — poista/ota automaattinen lukeminen käyttöön itsellesi\n• /voice abbrev add|remove|list — henkilökohtainen slangi, luettuna sinun tyylilläsi (enintään 10)',
   'help.groupFun': 'Hauskaa',
   'help.groupFunBody':
     '• /joke — kerron lyhyen vitsin (valitse kieli + valinnainen nauru) · esim. /joke English\n• /laugh — nauran ääneen nykyisellä äänelläsi',
   'help.groupAdmin': 'Palvelimen ylläpito (vaatii Hallitse palvelinta)',
   'help.groupAdminBody':
-    '• /setup — ohjattu yhden vaiheen määritys · suorita tämä ensin\n• /config — autoread, tts-channel, language, default-voice, blockword, pronunciation,\n  rate-limit, role, max-chars, enabled · esim. /config tts-channel #general\n• /stats — botin tilastot',
+    '• /setup — ohjattu yhden vaiheen määritys · suorita tämä ensin\n• /config — auto-read, tts-channel, language, default-voice, block-word, pronunciation,\n  rate-limit, role, max-chars, enabled · esim. /config tts-channel #general\n• /stats — botin tilastot',
   'help.groupMore': 'Lisää',
   'help.groupMoreBody':
     '• /invite — lisää Vozen toiselle palvelimelle\n• /vote — äänestä Vozena top.gg-sivustolla\n• /help — näytä tämä ohje',
@@ -600,12 +600,12 @@ export default {
   'pron.modalTerm': 'Sana (kuten ihmiset kirjoittavat sen)',
   'pron.modalSay': 'Miten Vozenin tulisi sanoa se',
   'spron.listHeader': '🗣️ **Palvelimen ääntämykset** ({count}/{limit}) — koskevat kaikkia:',
-  'spron.listEmpty': 'Ei vielä yhtään — lisää yksi komennolla `/serverpronunciation add`.',
+  'spron.listEmpty': 'Ei vielä yhtään — lisää yksi komennolla `/server-pronunciation add`.',
   'spron.set': '✅ Tallennettu koko palvelimelle! “{term}” → “{replacement}”.',
   'spron.removed': '🗑️ Poistettu “{term}” palvelimelta.',
   'spron.notFound': 'Palvelimella ei ole ääntämystä termille “{term}”.',
   'spron.limitHit':
-    '🔒 Palvelin saavutti rajansa **{limit}** ääntämystä. Poista yksi komennolla `/serverpronunciation remove`.',
+    '🔒 Palvelin saavutti rajansa **{limit}** ääntämystä. Poista yksi komennolla `/server-pronunciation remove`.',
   'spron.modalTitle': 'Palvelimen ääntämys',
   'spron.modalSay': 'Miten Vozen sanoo sen kaikille',
   'rand.selectPrompt': '🎲 **Randomizer** — kuinka monesta vaihtoehdosta haluat minun valitsevan?',

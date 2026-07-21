@@ -90,7 +90,7 @@ export default {
     '✅ Utambuzi otomatiki wa lugha UMEWASHWA: kila ujumbe unasomwa kwa sauti ya lugha yake iliyotambuliwa (mzungumzaji anaweza kubadilika). Uzime kwa `/voice detection active:false`.',
   'voice.detection.off':
     '✅ Utambuzi otomatiki wa lugha UMEZIMWA: sauti yako moja isiyobadilika inasoma kila kitu, ili usikike vivyo hivyo daima.',
-  'voice.optout': 'Hutasomewa kiotomatiki tena. Endesha /voice optin ili kuiwasha tena.',
+  'voice.optout': 'Hutasomewa kiotomatiki tena. Endesha /voice opt-in ili kuiwasha tena.',
   'voice.optin': 'Utasomewa kiotomatiki tena.',
   'voice.nickname.set': '✅ Vozen sasa atakuita **{name}** kwa sauti.',
   'voice.nickname.cleared':
@@ -222,7 +222,7 @@ export default {
   'config.channelWrongType': 'Chagua kituo cha maandishi (si kituo cha sauti wala kategoria).',
   'config.channelNoAccess': 'Siwezi kuona {channel} — tafadhali angalia ruhusa zangu hapo.',
   'config.channelSet':
-    'Kituo cha kusoma kiotomatiki kimewekwa kuwa {channel}. Ifuatayo: hakikisha kusoma kiotomatiki kumewashwa kwa `/config autoread active:true`.',
+    'Kituo cha kusoma kiotomatiki kimewekwa kuwa {channel}. Ifuatayo: hakikisha kusoma kiotomatiki kumewashwa kwa `/config auto-read active:true`.',
   'config.autoreadOn': 'Kusoma kiotomatiki sasa **kumewashwa**.',
   'config.autoreadOff': 'Kusoma kiotomatiki sasa **kumezimwa**.',
   'config.maxCharsRange': 'Thamani ya herufi za juu lazima iwe kati ya 1 na 2000.',
@@ -234,7 +234,7 @@ export default {
   'config.enabledOn': 'TTS sasa **imewashwa** kwa seva hii.',
   'config.enabledOff': 'TTS sasa **imezimwa** kwa seva hii.',
   'config.xsaidOn':
-    'Vozen sasa atatangaza **nani alizungumza** kabla ya kila ujumbe (mf. "Alex alisema salamu"). Zima kwa `/config xsaid active:false`.',
+    'Vozen sasa atatangaza **nani alizungumza** kabla ya kila ujumbe (mf. "Alex alisema salamu"). Zima kwa `/config x-said active:false`.',
   'config.xsaidOff': 'Vozen **hatatangaza tena** nani alizungumza — atasoma ujumbe pekee.',
   'config.autojoinOn':
     '✅ Kujiunga kiotomatiki **kumewashwa** — Vozen atajiunga na kituo chako cha sauti unapoandika kwenye kituo cha TTS.',
@@ -257,7 +257,7 @@ export default {
   'config.streaksOn':
     '✅ Arifa za mfululizo **zimewashwa** — Vozen huonyesha ujumbe wa mfululizo wa siku 🔥 mara ya kwanza kila mtu anapozungumza kila siku.',
   'config.streaksOff':
-    'Arifa za mfululizo **zimezimwa** — Vozen bado hufuatilia mifululizo (angalia `/topspeakers`) lakini hukaa kimya kuihusu.',
+    'Arifa za mfululizo **zimezimwa** — Vozen bado hufuatilia mifululizo (angalia `/top-speakers`) lakini hukaa kimya kuihusu.',
   'config.soundboardOn':
     'Ubao wa sauti **umewashwa** — yeyote anaweza kucheza vipande kwa `/sound`.',
   'config.soundboardOff': 'Ubao wa sauti **umezimwa** — `/sound` imelemazwa kwenye seva hii.',
@@ -363,13 +363,13 @@ export default {
     '• /join — Ninajiunga na kituo chako cha sauti\n• /leave — Ninaondoka kwenye kituo cha sauti\n• /tts <maandishi> — Ninasoma maandishi kwa sauti · mf. /tts Habari kila mtu!\n• /skip — ruka chochote ninachosoma sasa hivi',
   'help.groupVoice': 'Sauti yako',
   'help.groupVoiceBody':
-    '• /voice set <model> — chagua sauti yako · mf. /voice set en_US-amy-medium\n• /voice list — angalia sauti zinazopatikana\n• /voice preview — sikia sampuli ya sauti yako\n• /voice reset — rudi kwenye sauti chaguo-msingi\n• /voice optout · /voice optin — zima / washa kusoma kiotomatiki kwako\n• /voice abbrev add|remove|list — misimu binafsi, isomwe kwa njia yako (hadi 10)',
+    '• /voice set <model> — chagua sauti yako · mf. /voice set en_US-amy-medium\n• /voice list — angalia sauti zinazopatikana\n• /voice preview — sikia sampuli ya sauti yako\n• /voice reset — rudi kwenye sauti chaguo-msingi\n• /voice opt-out · /voice opt-in — zima / washa kusoma kiotomatiki kwako\n• /voice abbrev add|remove|list — misimu binafsi, isomwe kwa njia yako (hadi 10)',
   'help.groupFun': 'Furaha',
   'help.groupFunBody':
     '• /joke — Ninasimulia utani mfupi (chagua lugha + kicheko cha hiari) · mf. /joke English\n• /laugh — Ninacheka kwa sauti kwa sauti yako ya sasa',
   'help.groupAdmin': 'Msimamizi wa seva (unahitaji Kusimamia Seva)',
   'help.groupAdminBody':
-    '• /setup — usanidi ulioongozwa wa hatua moja · endesha hii kwanza\n• /config — autoread, tts-channel, language, default-voice, blockword, pronunciation,\n  rate-limit, role, max-chars, enabled · mf. /config tts-channel #general\n• /stats — takwimu za boti',
+    '• /setup — usanidi ulioongozwa wa hatua moja · endesha hii kwanza\n• /config — auto-read, tts-channel, language, default-voice, block-word, pronunciation,\n  rate-limit, role, max-chars, enabled · mf. /config tts-channel #general\n• /stats — takwimu za boti',
   'help.groupMore': 'Zaidi',
   'help.groupMoreBody':
     '• /invite — ongeza Vozen kwenye seva nyingine\n• /vote — piga kura kwa Vozen kwenye top.gg\n• /help — onyesha usaidizi huu',
@@ -602,12 +602,12 @@ export default {
   'pron.modalTerm': 'Neno (kama watu wanavyoliandika)',
   'pron.modalSay': 'Jinsi Vozen anavyopaswa kulisema',
   'spron.listHeader': '🗣️ **Matamshi ya seva** ({count}/{limit}) — yanawahusu wote:',
-  'spron.listEmpty': 'Bado hakuna — ongeza moja kwa `/serverpronunciation add`.',
+  'spron.listEmpty': 'Bado hakuna — ongeza moja kwa `/server-pronunciation add`.',
   'spron.set': '✅ Imehifadhiwa kwa seva nzima! “{term}” → “{replacement}”.',
   'spron.removed': '🗑️ “{term}” imeondolewa kutoka seva.',
   'spron.notFound': 'Seva haina matamshi ya “{term}”.',
   'spron.limitHit':
-    '🔒 Seva imefikia kikomo chake cha matamshi **{limit}**. Ondoa moja kwa `/serverpronunciation remove`.',
+    '🔒 Seva imefikia kikomo chake cha matamshi **{limit}**. Ondoa moja kwa `/server-pronunciation remove`.',
   'spron.modalTitle': 'Matamshi ya seva',
   'spron.modalSay': 'Jinsi Vozen anavyoyasema kwa wote',
   'rand.selectPrompt': '🎲 **Randomizer** — unataka nichague kati ya machaguo mangapi?',

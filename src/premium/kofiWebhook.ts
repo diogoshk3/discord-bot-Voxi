@@ -104,7 +104,7 @@ const API_SECURITY_HEADERS: Readonly<Record<string, string>> = {
 
 /**
  * Applies a Ko-fi grant to the store (extends/accumulates, never reduces). Without an associated
- * Discord ID it returns null (the caller logs it for a manual grant with /vozengrant).
+ * Discord ID it returns null (the caller logs it for a manual grant with /vozen-grant).
  */
 export function applyKofiGrant(
   db: Database.Database,

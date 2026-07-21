@@ -4,7 +4,7 @@ import { VOTE_REWARD_MS } from './voteReward';
 // Vozen Premium / Plus: EXPIRY-based subscriptions (unix ms). No row or expired =>
 // Free. Paid features (Kokoro/Google HD, full effects, etc.) check isGuildPremium/
 // isUserPremium. Purchases arrive via the
-// Ko-fi webhook (source 'kofi'); the owner can also grant by hand with /vozengrant (source 'manual').
+// Ko-fi webhook (source 'kofi'); the owner can also grant by hand with /vozen-grant (source 'manual').
 
 export type PremiumKind = 'guild' | 'user';
 

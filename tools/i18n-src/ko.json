@@ -313,7 +313,7 @@
       ["/leave", "음성 채널에서 나가기"],
       ["/tts", "텍스트를 소리 내어 읽기"],
       ["/skip", "현재 오디오 건너뛰기"],
-      ["/shutup", "지금 바로 Vozen 조용히 시키기 (대기열 비우기)"],
+      ["/shut-up", "지금 바로 Vozen 조용히 시키기 (대기열 비우기)"],
       ["/setup", "단계별 원스텝 설정"],
       ["/invite", "초대 링크 받기"],
       ["/vote", "top.gg에서 Vozen에 투표"],
@@ -326,7 +326,7 @@
       ["/voice preview", "음성 샘플 들어보기"],
       ["/voice effect", "로봇, 에코, 악마… 음성 효과"],
       ["/voice nickname", "Vozen이 나를 부르는 방식"],
-      ["/voice optout", "자동 읽기 대상에서 제외"],
+      ["/voice opt-out", "자동 읽기 대상에서 제외"],
       ["/pronunciation", "Vozen에게 단어 발음을 가르치기 (나에게만 적용)"]
     ],
     "fun": [
@@ -335,10 +335,10 @@
       ["/game stats", "나의 점수, 승리, 순위"],
       ["/joke", "어떤 언어로든 짧은 농담"],
       ["/laugh", "Vozen이 당신의 목소리로 웃습니다"],
-      ["/8ball", "매직 8볼에게 소리 내어 질문하기"],
+      ["/8-ball", "매직 8볼에게 소리 내어 질문하기"],
       ["/fact · /fortune · /wyr", "재미있는 사실, 운세, 딜레마"],
       ["/birthday set", "생일에 Vozen이 노래해줍니다"],
-      ["/topspeakers", "가장 많이 말한 사람 + 연속 기록"],
+      ["/top-speakers", "가장 많이 말한 사람 + 연속 기록"],
       ["/randomizer", "Vozen이 무작위로 하나를 골라 말해줍니다"],
       ["/cast", "음성 통화의 모든 사람에게 테마 역할을 무작위로 배정하고 결과를 들려줍니다"]
     ],
@@ -346,9 +346,9 @@
       ["/config greet", "통화에 참여하는 사람 인사하기"],
       ["/config language", "인터페이스 언어 설정"],
       ["/config default-voice", "서버 기본 음성 설정"],
-      ["/config autoread", "자동 읽기 켜기/끄기"],
-      ["/config blockword", "차단 목록 관리"],
-      ["/serverpronunciation", "서버 전체 발음 (관리자, 3개 · Premium은 50개)"]
+      ["/config auto-read", "자동 읽기 켜기/끄기"],
+      ["/config block-word", "차단 목록 관리"],
+      ["/server-pronunciation", "서버 전체 발음 (관리자, 3개 · Premium은 50개)"]
     ]
   },
   "faq": [

@@ -309,7 +309,7 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     )
       return;
 
-    // Server-wide word personalization is handled by /serverpronunciation (applied
+    // Server-wide word personalization is handled by /server-pronunciation (applied
     // inside prepareSpeech). The cleaned text passes through as-is as the base.
     const personal = cleaned;
 

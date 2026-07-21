@@ -39,7 +39,7 @@ function makeGenCode(opts: {
 }) {
   const replies: string[] = [];
   return {
-    commandName: 'gencode',
+    commandName: 'generate-code',
     guildId: 'g-owner',
     isRepliable: () => true,
     user: { id: opts.callerId },
@@ -83,7 +83,7 @@ function makeRedeem(opts: { callerId: string; code: string }) {
   };
 }
 
-describe('/gencode — OWNER-ONLY', () => {
+describe('/generate-code — OWNER-ONLY', () => {
   let db: Database.Database;
   beforeEach(() => {
     db = initDb(':memory:');

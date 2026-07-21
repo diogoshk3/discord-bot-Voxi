@@ -90,7 +90,7 @@ export default {
     '✅ Rilevamento automatico della lingua ATTIVO: ogni messaggio viene letto con una voce della lingua rilevata (chi parla può cambiare). Disattivalo con `/voice detection active:false`.',
   'voice.detection.off':
     '✅ Rilevamento automatico della lingua DISATTIVO: la tua unica voce fissa legge tutto, così suoni sempre uguale.',
-  'voice.optout': 'Non verrai più letto automaticamente. Esegui /voice optin per riattivarlo.',
+  'voice.optout': 'Non verrai più letto automaticamente. Esegui /voice opt-in per riattivarlo.',
   'voice.optin': 'Verrai di nuovo letto automaticamente.',
   'voice.nickname.set': '✅ Vozen ora ti chiamerà **{name}** ad alta voce.',
   'voice.nickname.cleared':
@@ -224,7 +224,7 @@ export default {
   'config.channelWrongType': 'Scegli un canale testuale (non un canale vocale né una categoria).',
   'config.channelNoAccess': 'Non riesco a vedere {channel} — controlla i miei permessi lì.',
   'config.channelSet':
-    'Canale di lettura automatica impostato su {channel}. Ora: assicurati che la lettura automatica sia attiva con `/config autoread active:true`.',
+    'Canale di lettura automatica impostato su {channel}. Ora: assicurati che la lettura automatica sia attiva con `/config auto-read active:true`.',
   'config.autoreadOn': 'La lettura automatica è ora **attiva**.',
   'config.autoreadOff': 'La lettura automatica è ora **disattivata**.',
   'config.maxCharsRange': 'Il valore di caratteri massimi deve essere tra 1 e 2000.',
@@ -236,7 +236,7 @@ export default {
   'config.enabledOn': 'Il TTS è ora **attivo** per questo server.',
   'config.enabledOff': 'Il TTS è ora **disattivato** per questo server.',
   'config.xsaidOn':
-    'Vozen ora annuncerà **chi ha parlato** prima di ogni messaggio (es. "Alex ha detto ciao"). Disattivalo con `/config xsaid active:false`.',
+    'Vozen ora annuncerà **chi ha parlato** prima di ogni messaggio (es. "Alex ha detto ciao"). Disattivalo con `/config x-said active:false`.',
   'config.xsaidOff': 'Vozen **non** annuncerà più chi ha parlato — legge solo il messaggio.',
   'config.autojoinOn':
     '✅ Auto-ingresso **attivo** — Vozen entrerà nel tuo canale vocale quando scrivi nel canale TTS.',
@@ -258,7 +258,7 @@ export default {
   'config.streaksOn':
     '✅ Avvisi delle serie **attivi** — Vozen mostra un messaggio serie 🔥 la prima volta che ogni persona parla ogni giorno.',
   'config.streaksOff':
-    'Avvisi delle serie **disattivati** — Vozen continua a contare le serie (vedi `/topspeakers`) ma non le annuncia.',
+    'Avvisi delle serie **disattivati** — Vozen continua a contare le serie (vedi `/top-speakers`) ma non le annuncia.',
   'config.soundboardOn': 'Soundboard **attiva** — chiunque può riprodurre clip con `/sound`.',
   'config.soundboardOff': 'Soundboard **disattivata** — `/sound` è disabilitato su questo server.',
   'config.votePromosLabel': 'Avvisi premio top.gg + Vozen Support',
@@ -363,13 +363,13 @@ export default {
     '• /join — entro nel tuo canale vocale\n• /leave — lascio il canale vocale\n• /tts <testo> — leggo il testo ad alta voce · es. /tts Ciao a tutti!\n• /skip — salta ciò che sto leggendo in questo momento',
   'help.groupVoice': 'La tua voce',
   'help.groupVoiceBody':
-    '• /voice set <model> — scegli la tua voce · es. /voice set en_US-amy-medium\n• /voice list — vedi le voci disponibili\n• /voice preview — ascolta un campione della tua voce\n• /voice reset — torna alla voce predefinita\n• /voice optout · /voice optin — disattiva / attiva la lettura automatica per te\n• /voice abbrev add|remove|list — slang personale, letto a modo tuo (fino a 10)',
+    '• /voice set <model> — scegli la tua voce · es. /voice set en_US-amy-medium\n• /voice list — vedi le voci disponibili\n• /voice preview — ascolta un campione della tua voce\n• /voice reset — torna alla voce predefinita\n• /voice opt-out · /voice opt-in — disattiva / attiva la lettura automatica per te\n• /voice abbrev add|remove|list — slang personale, letto a modo tuo (fino a 10)',
   'help.groupFun': 'Divertimento',
   'help.groupFunBody':
     '• /joke — racconto una barzelletta breve (scegli una lingua + risata facoltativa) · es. /joke English\n• /laugh — rido ad alta voce nella tua voce attuale',
   'help.groupAdmin': 'Amministrazione server (serve Gestisci server)',
   'help.groupAdminBody':
-    '• /setup — configurazione guidata in un passaggio · esegui prima questo\n• /config — autoread, tts-channel, language, default-voice, blockword, pronunciation,\n  rate-limit, role, max-chars, enabled · es. /config tts-channel #generale\n• /stats — statistiche del bot',
+    '• /setup — configurazione guidata in un passaggio · esegui prima questo\n• /config — auto-read, tts-channel, language, default-voice, block-word, pronunciation,\n  rate-limit, role, max-chars, enabled · es. /config tts-channel #generale\n• /stats — statistiche del bot',
   'help.groupMore': 'Altro',
   'help.groupMoreBody':
     '• /invite — aggiungi Vozen a un altro server\n• /vote — vota Vozen su top.gg\n• /help — mostra questo aiuto',
@@ -602,12 +602,12 @@ export default {
   'pron.modalTerm': 'La parola (come la si scrive)',
   'pron.modalSay': 'Come Vozen dovrebbe dirla',
   'spron.listHeader': '🗣️ **Pronunce del server** ({count}/{limit}) — valgono per tutti:',
-  'spron.listEmpty': 'Ancora nessuna — aggiungine una con `/serverpronunciation add`.',
+  'spron.listEmpty': 'Ancora nessuna — aggiungine una con `/server-pronunciation add`.',
   'spron.set': "✅ Salvato per l'intero server! “{term}” → “{replacement}”.",
   'spron.removed': '🗑️ “{term}” rimosso dal server.',
   'spron.notFound': 'Il server non ha nessuna pronuncia per “{term}”.',
   'spron.limitHit':
-    '🔒 Il server ha raggiunto il limite di **{limit}** pronunce. Rimuovine una con `/serverpronunciation remove`.',
+    '🔒 Il server ha raggiunto il limite di **{limit}** pronunce. Rimuovine una con `/server-pronunciation remove`.',
   'spron.modalTitle': 'Pronuncia del server',
   'spron.modalSay': 'Come Vozen la dice per tutti',
   'rand.selectPrompt': '🎲 **Randomizer** — tra quante opzioni vuoi che scelga?',

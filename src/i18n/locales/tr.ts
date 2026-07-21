@@ -92,7 +92,7 @@ export default {
   'voice.detection.off':
     '✅ Otomatik dil algılama KAPALI: tek sabit sesin her şeyi okur, böylece hep aynı sesle konuşursun.',
   'voice.optout':
-    'Artık otomatik olarak okunmayacaksın. Tekrar açmak için /voice optin komutunu çalıştır.',
+    'Artık otomatik olarak okunmayacaksın. Tekrar açmak için /voice opt-in komutunu çalıştır.',
   'voice.optin': 'Artık tekrar otomatik olarak okunacaksın.',
   'voice.nickname.set': '✅ Vozen artık sana sesli olarak **{name}** diye seslenecek.',
   'voice.nickname.cleared': '✅ Sesli takma ad temizlendi — Vozen sunucu adını kullanacak.',
@@ -225,7 +225,7 @@ export default {
   'config.channelNoAccess':
     '{channel} kanalını göremiyorum — lütfen oradaki izinlerimi kontrol et.',
   'config.channelSet':
-    'Otomatik okuma kanalı {channel} olarak ayarlandı. Sıradaki: `/config autoread active:true` ile otomatik okumanın açık olduğundan emin ol.',
+    'Otomatik okuma kanalı {channel} olarak ayarlandı. Sıradaki: `/config auto-read active:true` ile otomatik okumanın açık olduğundan emin ol.',
   'config.autoreadOn': 'Otomatik okuma artık **açık**.',
   'config.autoreadOff': 'Otomatik okuma artık **kapalı**.',
   'config.maxCharsRange': 'Maksimum karakter değeri 1 ile 2000 arasında olmalı.',
@@ -237,7 +237,7 @@ export default {
   'config.enabledOn': 'TTS bu sunucu için artık **açık**.',
   'config.enabledOff': 'TTS bu sunucu için artık **kapalı**.',
   'config.xsaidOn':
-    'Vozen artık her mesajdan önce **kimin konuştuğunu** duyuracak (örn. "Alex merhaba dedi"). Kapatmak için `/config xsaid active:false` kullan.',
+    'Vozen artık her mesajdan önce **kimin konuştuğunu** duyuracak (örn. "Alex merhaba dedi"). Kapatmak için `/config x-said active:false` kullan.',
   'config.xsaidOff': 'Vozen kimin konuştuğunu **artık** duyurmayacak — yalnızca mesajı okur.',
   'config.autojoinOn':
     '✅ Otomatik katılma **açık** — TTS kanalına yazdığında Vozen senin ses kanalına katılır.',
@@ -259,7 +259,7 @@ export default {
   'config.streaksOn':
     '✅ Seri bildirimleri **açık** — Vozen, her kişi her gün ilk konuştuğunda bir 🔥 günlük seri mesajı gösterir.',
   'config.streaksOff':
-    "Seri bildirimleri **kapalı** — Vozen serileri yine de takip eder (`/topspeakers`'e bak) ama bunları duyurmaz.",
+    "Seri bildirimleri **kapalı** — Vozen serileri yine de takip eder (`/top-speakers`'e bak) ama bunları duyurmaz.",
   'config.soundboardOn': 'Ses panosu **açık** — herkes `/sound` ile klip çalabilir.',
   'config.soundboardOff': 'Ses panosu **kapalı** — `/sound` bu sunucuda devre dışı.',
   'config.votePromosLabel': 'top.gg ödül bildirimleri + Vozen Support',
@@ -363,13 +363,13 @@ export default {
     '• /join — ses kanalına katılırım\n• /leave — ses kanalından ayrılırım\n• /tts <metin> — metni sesli okurum · örn. /tts Herkese merhaba!\n• /skip — şu anda okuduğum şeyi atla',
   'help.groupVoice': 'Senin sesin',
   'help.groupVoiceBody':
-    '• /voice set <model> — sesini seç · örn. /voice set en_US-amy-medium\n• /voice list — mevcut sesleri gör\n• /voice preview — sesinin bir örneğini dinle\n• /voice reset — varsayılan sese geri dön\n• /voice optout · /voice optin — senin için otomatik okumayı kapat / aç\n• /voice abbrev add|remove|list — kişisel argo, senin istediğin gibi okunsun (en fazla 10)',
+    '• /voice set <model> — sesini seç · örn. /voice set en_US-amy-medium\n• /voice list — mevcut sesleri gör\n• /voice preview — sesinin bir örneğini dinle\n• /voice reset — varsayılan sese geri dön\n• /voice opt-out · /voice opt-in — senin için otomatik okumayı kapat / aç\n• /voice abbrev add|remove|list — kişisel argo, senin istediğin gibi okunsun (en fazla 10)',
   'help.groupFun': 'Eğlence',
   'help.groupFunBody':
     '• /joke — kısa bir espri yaparım (bir dil + isteğe bağlı kahkaha seç) · örn. /joke English\n• /laugh — mevcut sesinle kahkaha atarım',
   'help.groupAdmin': 'Sunucu yöneticisi (Sunucuyu Yönet gerekir)',
   'help.groupAdminBody':
-    '• /setup — rehberli tek adımlı yapılandırma · önce bunu çalıştır\n• /config — autoread, tts-channel, language, default-voice, blockword, pronunciation,\n  rate-limit, role, max-chars, enabled · örn. /config tts-channel #genel\n• /stats — bot istatistikleri',
+    '• /setup — rehberli tek adımlı yapılandırma · önce bunu çalıştır\n• /config — auto-read, tts-channel, language, default-voice, block-word, pronunciation,\n  rate-limit, role, max-chars, enabled · örn. /config tts-channel #genel\n• /stats — bot istatistikleri',
   'help.groupMore': 'Daha fazla',
   'help.groupMoreBody':
     "• /invite — Vozen'yi başka bir sunucuya ekle\n• /vote — top.gg'de Vozen'ye oy ver\n• /help — bu yardımı göster",
@@ -598,12 +598,12 @@ export default {
   'pron.modalTerm': 'Kelime (yazıldığı gibi)',
   'pron.modalSay': "Vozen'in nasıl söylemesi gerektiği",
   'spron.listHeader': '🗣️ **Sunucu telaffuzları** ({count}/{limit}) — herkese uygulanır:',
-  'spron.listEmpty': 'Henüz yok — `/serverpronunciation add` ile bir tane ekle.',
+  'spron.listEmpty': 'Henüz yok — `/server-pronunciation add` ile bir tane ekle.',
   'spron.set': '✅ Tüm sunucu için kaydedildi! “{term}” → “{replacement}”.',
   'spron.removed': '🗑️ “{term}” sunucudan kaldırıldı.',
   'spron.notFound': 'Sunucunun “{term}” için bir telaffuzu yok.',
   'spron.limitHit':
-    '🔒 Sunucu **{limit}** telaffuz sınırına ulaştı. `/serverpronunciation remove` ile birini kaldır.',
+    '🔒 Sunucu **{limit}** telaffuz sınırına ulaştı. `/server-pronunciation remove` ile birini kaldır.',
   'spron.modalTitle': 'Sunucu telaffuzu',
   'spron.modalSay': "Vozen'in bunu herkes için nasıl söyleyeceği",
   'rand.selectPrompt': '🎲 **Rastgele Seçici** — kaç seçenek arasından seçmemi istersin?',

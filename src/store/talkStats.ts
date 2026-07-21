@@ -2,7 +2,7 @@ import type Database from 'better-sqlite3';
 
 // "Server chatterboxes": counts how many messages from each person Vozen has READ (auto-read)
 // per-(guild,user) and a STREAK of consecutive days with at least one message read. Feeds
-// /topspeakers. The streak is based on the server's LOCAL day (key 'YYYY-MM-DD').
+// /top-speakers. The streak is based on the server's LOCAL day (key 'YYYY-MM-DD').
 
 export interface TalkRow {
   userId: string;

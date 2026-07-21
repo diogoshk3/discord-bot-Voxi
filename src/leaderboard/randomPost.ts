@@ -1,6 +1,6 @@
 // src/leaderboard/randomPost.ts — automatic leaderboard that "shows up every now and then".
 //
-// From time to time, Vozen posts the top chatters (the same as /topspeakers) in the /setup
+// From time to time, Vozen posts the top chatters (the same as /top-speakers) in the /setup
 // channel. It's triggered by ACTIVITY (messages read), NOT by a timer — this way it never
 // posts in dead channels and the tests are deterministic (injectable clock + randomness).
 // In-memory per-guild state (reset on restart is acceptable; the message threshold avoids
@@ -65,7 +65,7 @@ export class LeaderboardPoster {
 
 /**
  * Renders the automatic leaderboard (title + top lines) to send in the channel. PURE.
- * Reuses the SAME line as /topspeakers (topspeakers.line). The caller sends with mentions
+ * Reuses the SAME line as /top-speakers (topspeakers.line). The caller sends with mentions
  * SUPPRESSED (empty allowedMentions) — it's an unsolicited post, it shouldn't ping.
  */
 export function renderLeaderboard(rows: TalkRow[], locale: string): string {

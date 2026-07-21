@@ -9,7 +9,7 @@ import {
 const G = 'g1';
 const U = 'u1';
 
-describe('CountGate — anti-spam gate for the /topspeakers COUNT (not for reading)', () => {
+describe('CountGate — anti-spam gate for the /top-speakers COUNT (not for reading)', () => {
   it('the FIRST message of a (guild,user) always counts', () => {
     const gate = new CountGate();
     expect(gate.shouldCount(G, U, 'ola', 1000)).toBe(true);

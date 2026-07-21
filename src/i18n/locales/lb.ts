@@ -44,7 +44,7 @@ export default {
   'voice.reset':
     '✅ Deng Stëmm ass zréck op der Standardstëmm. Wiel jidderzäit eng aner mat `/voice list` an `/voice set`.',
   'voice.optout':
-    'Du gëss net méi automatesch virgelies. Laf /voice optin, fir et rëm unzemaachen.',
+    'Du gëss net méi automatesch virgelies. Laf /voice opt-in, fir et rëm unzemaachen.',
   'voice.optin': 'Du gëss rëm automatesch virgelies.',
   'voice.notInVoice': "Ech sinn nach net an engem Sproochkanal — laf fir d'éischt /join.",
   'voice.previewPlaying': 'Spillt e Beispill of…',
@@ -76,7 +76,7 @@ export default {
   'config.channelNoAccess':
     'Ech kann {channel} net gesinn — kuck w.e.g. meng Berechtegungen do no.',
   'config.channelSet':
-    "Automatesche Virliesekanal op {channel} gesat. Nächst: vergewëssere dech, datt d'Automatescht Virliesen un ass mat `/config autoread active:true`.",
+    "Automatesche Virliesekanal op {channel} gesat. Nächst: vergewëssere dech, datt d'Automatescht Virliesen un ass mat `/config auto-read active:true`.",
   'config.autoreadOn': 'Automatescht Virliesen ass elo **un**.',
   'config.autoreadOff': 'Automatescht Virliesen ass elo **aus**.',
   'config.maxCharsRange': 'De Wäert fir max. Zeechen muss tëscht 1 an 2000 leien.',
@@ -164,13 +164,13 @@ export default {
     '• /join — ech trieden an däi Sproochkanal bäi\n• /leave — ech verloossen de Sproochkanal\n• /tts <text> — ech liesen Text haart vir · z.B. /tts Salut alleguer!\n• /skip — iwwersprang dat, wat ech grad virliesen',
   'help.groupVoice': 'Deng Stëmm',
   'help.groupVoiceBody':
-    "• /voice set <model> — wiel deng Stëmm · z.B. /voice set en_US-amy-medium\n• /voice list — kuck déi verfügbar Stëmmen\n• /voice preview — héier e Beispill vun denger Stëmm\n• /voice reset — zréck op d'Standardstëmm\n• /voice optout · /voice optin — automatescht Virliesen fir dech aus- / uschalten\n• /voice abbrev add|remove|list — perséinleche Slang, op deng Manéier virgelies (bis zu 10)",
+    "• /voice set <model> — wiel deng Stëmm · z.B. /voice set en_US-amy-medium\n• /voice list — kuck déi verfügbar Stëmmen\n• /voice preview — héier e Beispill vun denger Stëmm\n• /voice reset — zréck op d'Standardstëmm\n• /voice opt-out · /voice opt-in — automatescht Virliesen fir dech aus- / uschalten\n• /voice abbrev add|remove|list — perséinleche Slang, op deng Manéier virgelies (bis zu 10)",
   'help.groupFun': 'Spaass',
   'help.groupFunBody':
     '• /joke — ech erzielen e kuerze Witz (wiel eng Sprooch + optional Laachen) · z.B. /joke English\n• /laugh — ech laachen haart an denger aktueller Stëmm',
   'help.groupAdmin': 'Server-Admin (brauch Server verwalten)',
   'help.groupAdminBody':
-    "• /setup — gefouert Ee-Schrëtt-Konfiguratioun · laf dat fir d'éischt\n• /config — autoread, tts-channel, language, default-voice, blockword, pronunciation,\n  rate-limit, role, max-chars, enabled · z.B. /config tts-channel #general\n• /stats — Bot-Statistiken",
+    "• /setup — gefouert Ee-Schrëtt-Konfiguratioun · laf dat fir d'éischt\n• /config — auto-read, tts-channel, language, default-voice, block-word, pronunciation,\n  rate-limit, role, max-chars, enabled · z.B. /config tts-channel #general\n• /stats — Bot-Statistiken",
   'help.groupMore': 'Méi',
   'help.groupMoreBody':
     '• /invite — füg de Vozen op en anere Server bäi\n• /vote — stëmm fir de Vozen op top.gg\n• /help — weis dës Hëllef',
@@ -336,7 +336,7 @@ export default {
   'config.blockLimit':
     "Dëse Server huet scho d'Maximum vu {max} gespaarte Wierder. Läsch een, ier s du en aneren bäifüügs.",
   'config.xsaidOn':
-    'De Vozen wäert elo **wien geschwat huet** virun all Message ukënnegen (z.B. "Alex huet hallo gesot"). Maach aus mat `/config xsaid active:false`.',
+    'De Vozen wäert elo **wien geschwat huet** virun all Message ukënnegen (z.B. "Alex huet hallo gesot"). Maach aus mat `/config x-said active:false`.',
   'config.xsaidOff':
     'De Vozen wäert **net méi** ukënnegen, wien geschwat huet — en liest nëmmen de Message.',
   'config.autojoinOn':
@@ -359,7 +359,7 @@ export default {
   'config.streaksOn':
     '✅ Streak-Meldungen **un** — de Vozen weist eng 🔥 Deeg-Streak-Message dat éischt Mol, wann all Persoun all Dag schwätzt.',
   'config.streaksOff':
-    "Streak-Meldungen **aus** — de Vozen verfollegt d'Streaks weider (kuck `/topspeakers`), awer bleift roueg doriwwer.",
+    "Streak-Meldungen **aus** — de Vozen verfollegt d'Streaks weider (kuck `/top-speakers`), awer bleift roueg doriwwer.",
   'config.soundboardOn': 'Soundboard **un** — jidderee kann Clipsen mat `/sound` spillen.',
   'config.soundboardOff': 'Soundboard **aus** — `/sound` ass op dësem Server deaktivéiert.',
   'config.votePromosLabel': 'top.gg-Belounungshinweiser + Vozen Support',
@@ -609,12 +609,12 @@ export default {
   'pron.modalTerm': "D'Wuert (wéi d'Leit et schreiwen)",
   'pron.modalSay': 'Wéi de Vozen et soll soen',
   'spron.listHeader': '🗣️ **Server-Aussproochen** ({count}/{limit}) — gëllen fir jidderee:',
-  'spron.listEmpty': 'Nach keng — füg eng bäi mat `/serverpronunciation add`.',
+  'spron.listEmpty': 'Nach keng — füg eng bäi mat `/server-pronunciation add`.',
   'spron.set': '✅ Fir de ganze Server gespäichert! “{term}” → “{replacement}”.',
   'spron.removed': '🗑️ “{term}” vum Server ewechgeholl.',
   'spron.notFound': 'De Server huet keng Aussprooch fir “{term}”.',
   'spron.limitHit':
-    '🔒 De Server huet seng Limitt vu **{limit}** Aussproochen erreecht. Läsch eng mat `/serverpronunciation remove`.',
+    '🔒 De Server huet seng Limitt vu **{limit}** Aussproochen erreecht. Läsch eng mat `/server-pronunciation remove`.',
   'spron.modalTitle': 'Server-Aussprooch',
   'spron.modalSay': 'Wéi de Vozen et fir jidderee seet',
   'rand.selectPrompt': '🎲 **Randomizer** — tëscht wéi vill Optiounen soll ech wielen?',

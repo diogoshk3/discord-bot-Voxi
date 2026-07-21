@@ -40,7 +40,7 @@ export default {
   'voice.listEmpty': '(لا يوجد أي صوت مثبّت)',
   'voice.reset':
     '✅ عاد صوتك إلى الافتراضي. اختر صوتاً آخر في أي وقت عبر `/voice list` و`/voice set`.',
-  'voice.optout': 'لن تتم قراءتك تلقائياً بعد الآن. شغّل /voice optin لإعادة تفعيلها.',
+  'voice.optout': 'لن تتم قراءتك تلقائياً بعد الآن. شغّل /voice opt-in لإعادة تفعيلها.',
   'voice.optin': 'ستتم قراءتك تلقائياً مجدداً.',
   'voice.notInVoice': 'لست في قناة صوتية بعد — شغّل /join أولاً.',
   'voice.previewPlaying': 'جارٍ تشغيل عيّنة…',
@@ -71,7 +71,7 @@ export default {
   'config.channelWrongType': 'اختر قناة نصية (وليست قناة صوتية أو فئة).',
   'config.channelNoAccess': 'لا أستطيع رؤية {channel} — يرجى التحقق من صلاحياتي هناك.',
   'config.channelSet':
-    'تم تعيين قناة القراءة التلقائية إلى {channel}. التالي: تأكد من تفعيل القراءة التلقائية عبر `/config autoread active:true`.',
+    'تم تعيين قناة القراءة التلقائية إلى {channel}. التالي: تأكد من تفعيل القراءة التلقائية عبر `/config auto-read active:true`.',
   'config.autoreadOn': 'القراءة التلقائية الآن **مفعّلة**.',
   'config.autoreadOff': 'القراءة التلقائية الآن **معطّلة**.',
   'config.maxCharsRange': 'يجب أن تكون قيمة الحد الأقصى للأحرف بين 1 و2000.',
@@ -154,7 +154,7 @@ export default {
     '• /join — أنضم إلى قناتك الصوتية\n• /leave — أغادر القناة الصوتية\n• /tts <text> — أقرأ النص بصوت عالٍ · مثال /tts Hello everyone!\n• /skip — تخطّي ما أقرأه الآن',
   'help.groupVoice': 'صوتك',
   'help.groupVoiceBody':
-    '• /voice set <model> — اختر صوتك · مثال /voice set en_US-amy-medium\n• /voice list — اعرض الأصوات المتاحة\n• /voice preview — استمع إلى عيّنة من صوتك\n• /voice reset — العودة إلى الصوت الافتراضي\n• /voice optout · /voice optin — إيقاف / تشغيل القراءة التلقائية لك\n• /voice abbrev add|remove|list — اختصارات شخصية، تُقرأ على طريقتك (حتى 10)',
+    '• /voice set <model> — اختر صوتك · مثال /voice set en_US-amy-medium\n• /voice list — اعرض الأصوات المتاحة\n• /voice preview — استمع إلى عيّنة من صوتك\n• /voice reset — العودة إلى الصوت الافتراضي\n• /voice opt-out · /voice opt-in — إيقاف / تشغيل القراءة التلقائية لك\n• /voice abbrev add|remove|list — اختصارات شخصية، تُقرأ على طريقتك (حتى 10)',
   'help.groupFun': 'مرح',
   'help.groupFunBody':
     '• /joke — أروي نكتة قصيرة (اختر لغة + ضحك اختياري) · مثال /joke English\n• /laugh — أضحك بصوت عالٍ بصوتك الحالي',
@@ -315,7 +315,7 @@ export default {
   'config.blockLimit':
     'هذا الخادم لديه بالفعل الحد الأقصى وهو {max} كلمة محظورة. أزل واحدة قبل إضافة أخرى.',
   'config.xsaidOn':
-    'سيعلن Vozen الآن **من تحدث** قبل كل رسالة (مثلاً "قال Alex مرحباً"). عطّله عبر `/config xsaid active:false`.',
+    'سيعلن Vozen الآن **من تحدث** قبل كل رسالة (مثلاً "قال Alex مرحباً"). عطّله عبر `/config x-said active:false`.',
   'config.xsaidOff': '**لن يعلن** Vozen بعد الآن من تحدث — يقرأ الرسالة فقط.',
   'config.autojoinOn':
     '✅ الانضمام التلقائي **مفعّل** — سينضم Vozen إلى قناتك الصوتية عندما تكتب في قناة TTS.',
@@ -335,7 +335,7 @@ export default {
   'config.streaksOn':
     '✅ إشعارات السلاسل **مفعّلة** — يعرض Vozen رسالة سلسلة يومية 🔥 أول مرة يتحدث فيها كل شخص كل يوم.',
   'config.streaksOff':
-    'إشعارات السلاسل **معطّلة** — لا يزال Vozen يتتبع السلاسل (راجع `/topspeakers`) لكنه يبقى صامتاً بشأنها.',
+    'إشعارات السلاسل **معطّلة** — لا يزال Vozen يتتبع السلاسل (راجع `/top-speakers`) لكنه يبقى صامتاً بشأنها.',
   'config.soundboardOn': 'لوحة الأصوات **مفعّلة** — يمكن لأي شخص تشغيل المقاطع عبر `/sound`.',
   'config.soundboardOff': 'لوحة الأصوات **معطّلة** — الأمر `/sound` معطّل على هذا الخادم.',
   'config.votePromosLabel': 'إشعارات مكافأة top.gg + Vozen Support',
@@ -566,12 +566,12 @@ export default {
   'pron.modalTerm': 'الكلمة (كما يكتبها الناس)',
   'pron.modalSay': 'كيف ينبغي لـVozen أن ينطقها',
   'spron.listHeader': '🗣️ **نطوقات الخادم** ({count}/{limit}) — تُطبّق على الجميع:',
-  'spron.listEmpty': 'لا شيء بعد — أضف واحداً عبر `/serverpronunciation add`.',
+  'spron.listEmpty': 'لا شيء بعد — أضف واحداً عبر `/server-pronunciation add`.',
   'spron.set': '✅ حُفظ للخادم بأكمله! “{term}” → “{replacement}”.',
   'spron.removed': '🗑️ أُزيل “{term}” من الخادم.',
   'spron.notFound': 'الخادم ليس لديه نطق لـ“{term}”.',
   'spron.limitHit':
-    '🔒 بلغ الخادم حدّه وهو **{limit}** نطق. أزل واحداً عبر `/serverpronunciation remove`.',
+    '🔒 بلغ الخادم حدّه وهو **{limit}** نطق. أزل واحداً عبر `/server-pronunciation remove`.',
   'spron.modalTitle': 'نطق الخادم',
   'spron.modalSay': 'كيف ينطقها Vozen للجميع',
   'rand.selectPrompt': '🎲 **أداة العشوائية** — من بين كم خيار تريدني أن أختار؟',

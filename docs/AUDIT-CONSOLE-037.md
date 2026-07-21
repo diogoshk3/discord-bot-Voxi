@@ -30,12 +30,12 @@ text, or body is read or exposed anywhere in this surface.**
   bot (grant/revoke entitlements, see where the bot is used). No profiling, no ad
   targeting, no sale, no sharing with third parties.
 - **No message content:** the console handles message *counts* for the disclosed
-  `/topspeakers` feature, never content. Content restrictions do not apply to this
+  `/top-speakers` feature, never content. Content restrictions do not apply to this
   aggregate metadata.
 - **Access control:** single-owner gate (Discord OAuth identity == `OWNER_ID`) + a
   server-only HMAC session; the public page shows nothing without it.
 - **No new exposure to members' peers:** the top-speaker list is already public
-  in-server via the `/topspeakers` command; the console shows the operator nothing
+  in-server via the `/top-speakers` command; the console shows the operator nothing
   a member cannot already see for their own server.
 
 ### EU GDPR — ✅ PASS (one transparency nit, closed in this change)
@@ -53,7 +53,7 @@ text, or body is read or exposed anywhere in this surface.**
 - **Rights:** access/erase already served by `/privacy erase` (PRIVACY.md §3),
   which explicitly lists `talk_stats`.
 - **Nit → fixed:** PRIVACY.md disclosed the *collection* of `talk_stats` and the
-  `/topspeakers` feature, but not that the **operator** can view aggregate stats +
+  `/top-speakers` feature, but not that the **operator** can view aggregate stats +
   top speakers across servers via an admin console. Added as a transparency note
   (PRIVACY.md §1.2) — no new data, just naming the access path.
 
@@ -76,7 +76,7 @@ fails closed; the tracked data is disclosed, deletable, and time-limited.
 
 The console is compliant. It introduces **no new data collection and no new
 third-party disclosure** — it is an owner-only view over counts (not content) that
-are already disclosed, already public in-server via `/topspeakers`, already deletable
+are already disclosed, already public in-server via `/top-speakers`, already deletable
 via `/privacy erase`, and already auto-purged 30 days after the bot leaves. The only
 gap was a documentation one, closed by the PRIVACY.md §1.2 note.
 
@@ -91,7 +91,7 @@ Two owner-only additions to the Servers tab; verdict unchanged (**compliant**).
 
 - **GDPR / Discord ToS:** unchanged posture. Counts, never content; owner-only
   (same `authorize()` gate); the global list is the same "chatterboxes" data already
-  public via `/topspeakers`, only summed across the operator's own servers. Username
+  public via `/top-speakers`, only summed across the operator's own servers. Username
   and avatar are the person's **public** Discord profile, shown to the operator only,
   fetched live and not stored (a 10-min in-memory cache, no DB write).
 - **Retention / erasure:** `guild_talk_streak` is registered in `GUILD_PURGE_TABLES`

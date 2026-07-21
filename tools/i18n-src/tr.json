@@ -313,7 +313,7 @@
       ["/leave", "Ses kanalından ayrıl"],
       ["/tts", "Bir metni yüksek sesle oku"],
       ["/skip", "Mevcut sesi atla"],
-      ["/shutup", "Vozen'i hemen sustur (kuyruğu temizler)"],
+      ["/shut-up", "Vozen'i hemen sustur (kuyruğu temizler)"],
       ["/setup", "Tek adımlı rehberli kurulum"],
       ["/invite", "Davet bağlantısını al"],
       ["/vote", "top.gg'de Vozen'e oy ver"],
@@ -326,7 +326,7 @@
       ["/voice preview", "Bir ses örneği dinle"],
       ["/voice effect", "Robot, yankı, iblis… ses efektleri"],
       ["/voice nickname", "Vozen sana yüksek sesle nasıl seslenir"],
-      ["/voice optout", "Otomatik okunmayı durdur"],
+      ["/voice opt-out", "Otomatik okunmayı durdur"],
       ["/pronunciation", "Vozen'e bir kelimeyi nasıl söyleyeceğini öğret (sana özel)"]
     ],
     "fun": [
@@ -335,10 +335,10 @@
       ["/game stats", "Puanların, galibiyetlerin ve sıralaman"],
       ["/joke", "Herhangi bir dilde kısa bir şaka"],
       ["/laugh", "Vozen senin sesinle güler"],
-      ["/8ball", "Sihirli 8 topa sor, yüksek sesle"],
+      ["/8-ball", "Sihirli 8 topa sor, yüksek sesle"],
       ["/fact · /fortune · /wyr", "Eğlenceli bilgiler, kehanetler ve ikilemler"],
       ["/birthday set", "Vozen doğum gününde şarkı söyler"],
-      ["/topspeakers", "En çok konuşan kim + seriler"],
+      ["/top-speakers", "En çok konuşan kim + seriler"],
       ["/randomizer", "Vozen rastgele bir seçenek seçip söyler"],
       ["/cast", "Sesli kanaldaki herkese rastgele temalı bir rol ata ve sonuçları dinle"]
     ],
@@ -346,9 +346,9 @@
       ["/config greet", "Aramaya katılanları selamla"],
       ["/config language", "Arayüz dilini ayarla"],
       ["/config default-voice", "Sunucunun varsayılan sesini ayarla"],
-      ["/config autoread", "Otomatik okumayı aç/kapat"],
-      ["/config blockword", "Engel listesini yönet"],
-      ["/serverpronunciation", "Tüm sunucu için telaffuzlar (yönetici, 3 · Premium ile 50)"]
+      ["/config auto-read", "Otomatik okumayı aç/kapat"],
+      ["/config block-word", "Engel listesini yönet"],
+      ["/server-pronunciation", "Tüm sunucu için telaffuzlar (yönetici, 3 · Premium ile 50)"]
     ]
   },
   "faq": [

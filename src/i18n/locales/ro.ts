@@ -90,7 +90,7 @@ export default {
     '✅ Detectarea automată a limbii este PORNITĂ: fiecare mesaj este citit într-o voce pentru limba detectată (vorbitorul se poate schimba). Oprește-o cu `/voice detection active:false`.',
   'voice.detection.off':
     '✅ Detectarea automată a limbii este OPRITĂ: unica ta voce fixă citește tot, așa că suni mereu la fel.',
-  'voice.optout': 'Nu vei mai fi citit automat. Rulează /voice optin ca să reactivezi.',
+  'voice.optout': 'Nu vei mai fi citit automat. Rulează /voice opt-in ca să reactivezi.',
   'voice.optin': 'Vei fi din nou citit automat.',
   'voice.nickname.set': '✅ Vozen te va striga de acum **{name}** cu voce tare.',
   'voice.nickname.cleared':
@@ -228,7 +228,7 @@ export default {
   'config.channelWrongType': 'Alege un canal text (nu un canal de voce sau o categorie).',
   'config.channelNoAccess': 'Nu pot vedea {channel} — te rog verifică permisiunile mele acolo.',
   'config.channelSet':
-    'Canalul de citire automată setat la {channel}. Mai departe: asigură-te că citirea automată e activă cu `/config autoread active:true`.',
+    'Canalul de citire automată setat la {channel}. Mai departe: asigură-te că citirea automată e activă cu `/config auto-read active:true`.',
   'config.autoreadOn': 'Citirea automată este acum **activă**.',
   'config.autoreadOff': 'Citirea automată este acum **oprită**.',
   'config.maxCharsRange':
@@ -241,7 +241,7 @@ export default {
   'config.enabledOn': 'TTS este acum **activ** pentru acest server.',
   'config.enabledOff': 'TTS este acum **oprit** pentru acest server.',
   'config.xsaidOn':
-    'Vozen va anunța de acum **cine a vorbit** înainte de fiecare mesaj (ex.: „Alex a spus salut”). Oprește cu `/config xsaid active:false`.',
+    'Vozen va anunța de acum **cine a vorbit** înainte de fiecare mesaj (ex.: „Alex a spus salut”). Oprește cu `/config x-said active:false`.',
   'config.xsaidOff': 'Vozen **nu va mai** anunța cine a vorbit — citește doar mesajul.',
   'config.autojoinOn':
     '✅ Auto-intrare **activă** — Vozen intră în canalul tău de voce când scrii în canalul TTS.',
@@ -262,7 +262,7 @@ export default {
   'config.streaksOn':
     '✅ Anunțuri de serie **active** — Vozen afișează un mesaj de serie 🔥 prima dată când fiecare persoană vorbește în fiecare zi.',
   'config.streaksOff':
-    'Anunțuri de serie **oprite** — Vozen tot urmărește seriile (vezi `/topspeakers`), dar nu le anunță.',
+    'Anunțuri de serie **oprite** — Vozen tot urmărește seriile (vezi `/top-speakers`), dar nu le anunță.',
   'config.soundboardOn': 'Soundboard **activ** — oricine poate reda clipuri cu `/sound`.',
   'config.soundboardOff': 'Soundboard **oprit** — `/sound` este dezactivat pe acest server.',
   'config.votePromosLabel': 'Notificări despre recompensa top.gg + Vozen Support',
@@ -367,13 +367,13 @@ export default {
     '• /join — intru în canalul tău de voce\n• /leave — ies din canalul de voce\n• /tts <text> — citesc textul cu voce tare · ex. /tts Salut tuturor!\n• /skip — sar peste ce citesc acum',
   'help.groupVoice': 'Vocea ta',
   'help.groupVoiceBody':
-    '• /voice set <model> — alege-ți vocea · ex. /voice set en_US-amy-medium\n• /voice list — vezi vocile disponibile\n• /voice preview — ascultă o mostră a vocii tale\n• /voice reset — revino la vocea implicită\n• /voice optout · /voice optin — dezactivează / activează citirea automată pentru tine\n• /voice abbrev add|remove|list — argou personal, citit cum vrei tu (până la 10)',
+    '• /voice set <model> — alege-ți vocea · ex. /voice set en_US-amy-medium\n• /voice list — vezi vocile disponibile\n• /voice preview — ascultă o mostră a vocii tale\n• /voice reset — revino la vocea implicită\n• /voice opt-out · /voice opt-in — dezactivează / activează citirea automată pentru tine\n• /voice abbrev add|remove|list — argou personal, citit cum vrei tu (până la 10)',
   'help.groupFun': 'Distracție',
   'help.groupFunBody':
     '• /joke — spun o glumă scurtă (alege o limbă + râs opțional) · ex. /joke English\n• /laugh — râd cu voce tare în vocea ta curentă',
   'help.groupAdmin': 'Administrare server (necesită Gestionare server)',
   'help.groupAdminBody':
-    '• /setup — configurare ghidată într-un singur pas · rulează asta prima dată\n• /config — autoread, tts-channel, language, default-voice, blockword, pronunciation,\n  rate-limit, role, max-chars, enabled · ex. /config tts-channel #general\n• /stats — statisticile botului',
+    '• /setup — configurare ghidată într-un singur pas · rulează asta prima dată\n• /config — auto-read, tts-channel, language, default-voice, block-word, pronunciation,\n  rate-limit, role, max-chars, enabled · ex. /config tts-channel #general\n• /stats — statisticile botului',
   'help.groupMore': 'Mai multe',
   'help.groupMoreBody':
     '• /invite — adaugă Vozen pe un alt server\n• /vote — votează Vozen pe top.gg\n• /help — arată acest ajutor',
@@ -605,12 +605,12 @@ export default {
   'pron.modalTerm': 'Cuvântul (așa cum îl scriu oamenii)',
   'pron.modalSay': 'Cum ar trebui să-l spună Vozen',
   'spron.listHeader': '🗣️ **Pronunții server** ({count}/{limit}) — se aplică tuturor:',
-  'spron.listEmpty': 'Încă niciuna — adaugă una cu `/serverpronunciation add`.',
+  'spron.listEmpty': 'Încă niciuna — adaugă una cu `/server-pronunciation add`.',
   'spron.set': '✅ Salvat pentru tot serverul! „{term}” → „{replacement}”.',
   'spron.removed': '🗑️ Am eliminat „{term}” din server.',
   'spron.notFound': 'Serverul nu are nicio pronunție pentru „{term}”.',
   'spron.limitHit':
-    '🔒 Serverul a atins limita de **{limit}** pronunții. Elimină una cu `/serverpronunciation remove`.',
+    '🔒 Serverul a atins limita de **{limit}** pronunții. Elimină una cu `/server-pronunciation remove`.',
   'spron.modalTitle': 'Pronunție de server',
   'spron.modalSay': 'Cum o spune Vozen pentru toți',
   'rand.selectPrompt': '🎲 **Randomizer** — dintre câte opțiuni vrei să aleg?',

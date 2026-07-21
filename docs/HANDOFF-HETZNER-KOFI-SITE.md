@@ -437,10 +437,10 @@ Nao e obrigatorio se o dono decidiu deixar assim, mas e recomendado.
 Logs atuais:
 
 ```text
-[owner] OWNER_GUILD_ID não definido — /vozengrant não é registado.
+[owner] OWNER_GUILD_ID não definido — /vozen-grant não é registado.
 ```
 
-Se for necessario usar `/vozengrant`, configurar no `.env`:
+Se for necessario usar `/vozen-grant`, configurar no `.env`:
 
 ```env
 OWNER_GUILD_ID=<guild id>

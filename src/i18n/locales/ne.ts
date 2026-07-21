@@ -88,7 +88,7 @@ export default {
     '✅ स्वचालित भाषा पहिचान सक्रिय छ: प्रत्येक सन्देश त्यसको पहिचान गरिएको भाषाको स्वरमा पढिन्छ (बोल्ने स्वर फेरिन सक्छ)। `/voice detection active:false` ले बन्द गर्नुहोस्।',
   'voice.detection.off':
     '✅ स्वचालित भाषा पहिचान बन्द छ: तपाईंको एउटै निश्चित स्वरले सबै पढ्छ, त्यसैले तपाईं सधैं उही सुनिनुहुन्छ।',
-  'voice.optout': 'अब तपाईंको सन्देश स्वतः पढिने छैन। फेरि सुरु गर्न /voice optin चलाउनुहोस्।',
+  'voice.optout': 'अब तपाईंको सन्देश स्वतः पढिने छैन। फेरि सुरु गर्न /voice opt-in चलाउनुहोस्।',
   'voice.optin': 'तपाईंको सन्देश अब फेरि स्वतः पढिनेछ।',
   'voice.nickname.set': '✅ Vozen ले अब तपाईंलाई ठूलो स्वरमा **{name}** भनेर बोलाउनेछ।',
   'voice.nickname.cleared': '✅ बोलिने उपनाम हटाइयो — Vozen ले तपाईंको सर्भर नाम प्रयोग गर्नेछ।',
@@ -220,7 +220,7 @@ export default {
   'config.channelNoAccess':
     'मैले {channel} देख्न सक्दिनँ — कृपया त्यहाँ मेरा अनुमतिहरू जाँच्नुहोस्।',
   'config.channelSet':
-    'स्वतः-पढ्ने च्यानल {channel} मा सेट भयो। अर्को: `/config autoread active:true` ले स्वतः-पढ्ने सक्रिय छ भन्ने पक्का गर्नुहोस्।',
+    'स्वतः-पढ्ने च्यानल {channel} मा सेट भयो। अर्को: `/config auto-read active:true` ले स्वतः-पढ्ने सक्रिय छ भन्ने पक्का गर्नुहोस्।',
   'config.autoreadOn': 'स्वतः-पढ्ने अब **सक्रिय** छ।',
   'config.autoreadOff': 'स्वतः-पढ्ने अब **निष्क्रिय** छ।',
   'config.maxCharsRange': 'अधिकतम-अक्षर मान १ र २००० बीचमा हुनुपर्छ।',
@@ -232,7 +232,7 @@ export default {
   'config.enabledOn': 'यस सर्भरका लागि TTS अब **सक्रिय** छ।',
   'config.enabledOff': 'यस सर्भरका लागि TTS अब **निष्क्रिय** छ।',
   'config.xsaidOn':
-    'Vozen ले अब प्रत्येक सन्देशअघि **कसले भन्यो** भनेर घोषणा गर्नेछ (जस्तै "Alex said hi")। `/config xsaid active:false` ले बन्द गर्नुहोस्।',
+    'Vozen ले अब प्रत्येक सन्देशअघि **कसले भन्यो** भनेर घोषणा गर्नेछ (जस्तै "Alex said hi")। `/config x-said active:false` ले बन्द गर्नुहोस्।',
   'config.xsaidOff': 'Vozen ले अब **कसले भन्यो भनेर घोषणा गर्दैन** — यसले सन्देश मात्र पढ्छ।',
   'config.autojoinOn':
     '✅ स्वतः-जोडिने **सक्रिय** — तपाईं TTS च्यानलमा टाइप गर्दा Vozen तपाईंको भ्वाइस च्यानलमा जोडिनेछ।',
@@ -253,7 +253,7 @@ export default {
   'config.streaksOn':
     '✅ स्ट्रिक सूचना **सक्रिय** — प्रत्येक व्यक्ति हरेक दिन पहिलो पटक बोल्दा Vozen ले 🔥 दिन-स्ट्रिक सन्देश देखाउँछ।',
   'config.streaksOff':
-    'स्ट्रिक सूचना **निष्क्रिय** — Vozen ले स्ट्रिक अझै ट्र्याक गर्छ (`/topspeakers` हेर्नुहोस्) तर तिनका बारेमा चुपचाप रहन्छ।',
+    'स्ट्रिक सूचना **निष्क्रिय** — Vozen ले स्ट्रिक अझै ट्र्याक गर्छ (`/top-speakers` हेर्नुहोस्) तर तिनका बारेमा चुपचाप रहन्छ।',
   'config.soundboardOn': 'साउन्डबोर्ड **सक्रिय** — जो कोहीले `/sound` ले क्लिप बजाउन सक्छन्।',
   'config.soundboardOff': 'साउन्डबोर्ड **निष्क्रिय** — यस सर्भरमा `/sound` असक्षम छ।',
   'config.votePromosLabel': 'top.gg पुरस्कार सूचनाहरू + Vozen Support',
@@ -357,13 +357,13 @@ export default {
     '• /join — म तपाईंको भ्वाइस च्यानलमा जोडिन्छु\n• /leave — म भ्वाइस च्यानल छोड्छु\n• /tts <text> — म पाठ ठूलो स्वरमा पढ्छु · जस्तै /tts Hello everyone!\n• /skip — म अहिले पढिरहेको जुनसुकै कुरा छोड्छु',
   'help.groupVoice': 'तपाईंको स्वर',
   'help.groupVoiceBody':
-    '• /voice set <model> — आफ्नो स्वर छान्नुहोस् · जस्तै /voice set en_US-amy-medium\n• /voice list — उपलब्ध स्वरहरू हेर्नुहोस्\n• /voice preview — आफ्नो स्वरको नमुना सुन्नुहोस्\n• /voice reset — पूर्वनिर्धारित स्वरमा फर्कनुहोस्\n• /voice optout · /voice optin — तपाईंका लागि स्वतः-पढ्ने निष्क्रिय / सक्रिय गर्नुहोस्\n• /voice abbrev add|remove|list — व्यक्तिगत बोलचाल, आफ्नै तरिकाले पढ्ने (बढीमा १०)',
+    '• /voice set <model> — आफ्नो स्वर छान्नुहोस् · जस्तै /voice set en_US-amy-medium\n• /voice list — उपलब्ध स्वरहरू हेर्नुहोस्\n• /voice preview — आफ्नो स्वरको नमुना सुन्नुहोस्\n• /voice reset — पूर्वनिर्धारित स्वरमा फर्कनुहोस्\n• /voice opt-out · /voice opt-in — तपाईंका लागि स्वतः-पढ्ने निष्क्रिय / सक्रिय गर्नुहोस्\n• /voice abbrev add|remove|list — व्यक्तिगत बोलचाल, आफ्नै तरिकाले पढ्ने (बढीमा १०)',
   'help.groupFun': 'रमाइलो',
   'help.groupFunBody':
     '• /joke — म छोटो ठट्टा सुनाउँछु (भाषा + वैकल्पिक हाँसो छान्नुहोस्) · जस्तै /joke English\n• /laugh — म तपाईंको वर्तमान स्वरमा ठूलो स्वरले हाँस्छु',
   'help.groupAdmin': 'सर्भर एडमिन (Manage Server चाहिन्छ)',
   'help.groupAdminBody':
-    '• /setup — निर्देशित एक-चरण कन्फिगरेसन · यो पहिले चलाउनुहोस्\n• /config — autoread, tts-channel, language, default-voice, blockword, pronunciation,\n  rate-limit, role, max-chars, enabled · जस्तै /config tts-channel #general\n• /stats — बोट तथ्याङ्क',
+    '• /setup — निर्देशित एक-चरण कन्फिगरेसन · यो पहिले चलाउनुहोस्\n• /config — auto-read, tts-channel, language, default-voice, block-word, pronunciation,\n  rate-limit, role, max-chars, enabled · जस्तै /config tts-channel #general\n• /stats — बोट तथ्याङ्क',
   'help.groupMore': 'थप',
   'help.groupMoreBody':
     '• /invite — Vozen लाई अर्को सर्भरमा थप्नुहोस्\n• /vote — top.gg मा Vozen लाई मत दिनुहोस्\n• /help — यो सहयोग देखाउनुहोस्',
@@ -592,12 +592,12 @@ export default {
   'pron.modalTerm': 'शब्द (मानिसले जसरी टाइप गर्छन्)',
   'pron.modalSay': 'Vozen ले यसलाई कसरी भन्नुपर्छ',
   'spron.listHeader': '🗣️ **सर्भर उच्चारणहरू** ({count}/{limit}) — सबैलाई लागू हुन्छ:',
-  'spron.listEmpty': 'अझै कुनै छैन — `/serverpronunciation add` ले एउटा थप्नुहोस्।',
+  'spron.listEmpty': 'अझै कुनै छैन — `/server-pronunciation add` ले एउटा थप्नुहोस्।',
   'spron.set': '✅ सिंगो सर्भरका लागि सुरक्षित भयो! “{term}” → “{replacement}”।',
   'spron.removed': '🗑️ सर्भरबाट “{term}” हटाइयो।',
   'spron.notFound': 'सर्भरसँग “{term}” का लागि कुनै उच्चारण छैन।',
   'spron.limitHit':
-    '🔒 सर्भर **{limit}** उच्चारणको आफ्नो सीमामा पुग्यो। `/serverpronunciation remove` ले एउटा हटाउनुहोस्।',
+    '🔒 सर्भर **{limit}** उच्चारणको आफ्नो सीमामा पुग्यो। `/server-pronunciation remove` ले एउटा हटाउनुहोस्।',
   'spron.modalTitle': 'सर्भर उच्चारण',
   'spron.modalSay': 'Vozen ले सबैका लागि यसलाई कसरी भन्छ',
   'rand.selectPrompt': '🎲 **Randomizer** — मैले कतिवटा विकल्पबाट छानूँ?',

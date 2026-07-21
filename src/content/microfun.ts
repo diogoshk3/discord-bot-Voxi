@@ -1,5 +1,5 @@
 /**
- * Bancos de conteúdo dos micro-comandos divertidos falados: /8ball, /fortune, /fact,
+ * Bancos de conteúdo dos micro-comandos divertidos falados: /8-ball, /fortune, /fact,
  * /wyr. Cada banco tem versão EN e PT (as mesmas línguas da UI); o chamador escolhe pela
  * língua do utilizador e fala na voz dessa língua (como o /joke). Curto e SFW para o TTS
  * renderizar limpo. As funções pick* são PURAS/DETERMINÍSTICAS (bank[seed % len]); em

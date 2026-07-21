@@ -89,7 +89,7 @@ export default {
     '✅ Automātiskā valodas noteikšana ir IESLĒGTA: katra ziņa tiek nolasīta noteiktās valodas balsī (runātājs var mainīties). Izslēdz ar `/voice detection active:false`.',
   'voice.detection.off':
     '✅ Automātiskā valodas noteikšana ir IZSLĒGTA: viena tava fiksētā balss nolasa visu, tāpēc tu vienmēr skanēsi vienādi.',
-  'voice.optout': 'Tevi vairs automātiski nelasīs. Palaid /voice optin, lai to atkal ieslēgtu.',
+  'voice.optout': 'Tevi vairs automātiski nelasīs. Palaid /voice opt-in, lai to atkal ieslēgtu.',
   'voice.optin': 'Tevi atkal lasīs automātiski.',
   'voice.nickname.set': '✅ Vozen tagad tevi skaļi sauks par **{name}**.',
   'voice.nickname.cleared': '✅ Izrunātā iesauka noņemta — Vozen izmantos tavu servera vārdu.',
@@ -221,7 +221,7 @@ export default {
   'config.channelWrongType': 'Izvēlies teksta kanālu (nevis balss kanālu vai kategoriju).',
   'config.channelNoAccess': 'Es neredzu {channel} — lūdzu, pārbaudi manas atļaujas tur.',
   'config.channelSet':
-    'Automātiskās lasīšanas kanāls iestatīts uz {channel}. Tālāk: pārliecinies, ka automātiskā lasīšana ir ieslēgta ar `/config autoread active:true`.',
+    'Automātiskās lasīšanas kanāls iestatīts uz {channel}. Tālāk: pārliecinies, ka automātiskā lasīšana ir ieslēgta ar `/config auto-read active:true`.',
   'config.autoreadOn': 'Automātiskā lasīšana tagad ir **ieslēgta**.',
   'config.autoreadOff': 'Automātiskā lasīšana tagad ir **izslēgta**.',
   'config.maxCharsRange': 'Maksimālo rakstzīmju vērtībai jābūt no 1 līdz 2000.',
@@ -233,7 +233,7 @@ export default {
   'config.enabledOn': 'TTS šim serverim tagad ir **ieslēgts**.',
   'config.enabledOff': 'TTS šim serverim tagad ir **izslēgts**.',
   'config.xsaidOn':
-    'Vozen tagad pirms katras ziņas paziņos, **kurš runāja** (piem., "Alex teica sveiki"). Izslēdz ar `/config xsaid active:false`.',
+    'Vozen tagad pirms katras ziņas paziņos, **kurš runāja** (piem., "Alex teica sveiki"). Izslēdz ar `/config x-said active:false`.',
   'config.xsaidOff': 'Vozen **vairs** nepaziņos, kurš runāja — tas nolasa tikai ziņu.',
   'config.autojoinOn':
     '✅ Automātiskā pievienošanās **ieslēgta** — Vozen pievienosies tavam balss kanālam, kad rakstīsi TTS kanālā.',
@@ -254,7 +254,7 @@ export default {
   'config.streaksOn':
     '✅ Sēriju paziņojumi **ieslēgti** — Vozen parāda 🔥 dienu sērijas ziņu, kad katrs cilvēks pirmoreiz runā katru dienu.',
   'config.streaksOff':
-    'Sēriju paziņojumi **izslēgti** — Vozen joprojām skaita sērijas (skati `/topspeakers`), bet par tām klusē.',
+    'Sēriju paziņojumi **izslēgti** — Vozen joprojām skaita sērijas (skati `/top-speakers`), bet par tām klusē.',
   'config.soundboardOn': 'Skaņu panelis **ieslēgts** — ikviens var atskaņot klipus ar `/sound`.',
   'config.soundboardOff': 'Skaņu panelis **izslēgts** — `/sound` šajā serverī ir atspējots.',
   'config.votePromosLabel': 'top.gg balvas paziņojumi + Vozen Support',
@@ -357,13 +357,13 @@ export default {
     '• /join — es pievienojos tavam balss kanālam\n• /leave — es pametu balss kanālu\n• /tts <teksts> — es nolasu tekstu skaļi · piem., /tts Sveiki visiem!\n• /skip — izlaist to, ko šobrīd lasu',
   'help.groupVoice': 'Tava balss',
   'help.groupVoiceBody':
-    '• /voice set <model> — izvēlies savu balsi · piem., /voice set en_US-amy-medium\n• /voice list — skati pieejamās balsis\n• /voice preview — noklausies savas balss paraugu\n• /voice reset — atgriezies pie noklusējuma balss\n• /voice optout · /voice optin — izslēdz / ieslēdz automātisko lasīšanu sev\n• /voice abbrev add|remove|list — personīgais slengs, lasīts pa tavam (līdz 10)',
+    '• /voice set <model> — izvēlies savu balsi · piem., /voice set en_US-amy-medium\n• /voice list — skati pieejamās balsis\n• /voice preview — noklausies savas balss paraugu\n• /voice reset — atgriezies pie noklusējuma balss\n• /voice opt-out · /voice opt-in — izslēdz / ieslēdz automātisko lasīšanu sev\n• /voice abbrev add|remove|list — personīgais slengs, lasīts pa tavam (līdz 10)',
   'help.groupFun': 'Izklaide',
   'help.groupFunBody':
     '• /joke — es pastāstu īsu joku (izvēlies valodu + neobligāti smieklus) · piem., /joke English\n• /laugh — es skaļi iesmejos tavā pašreizējā balsī',
   'help.groupAdmin': 'Servera administrēšana (nepieciešams Pārvaldīt serveri)',
   'help.groupAdminBody':
-    '• /setup — vadīta viena soļa konfigurācija · palaid šo vispirms\n• /config — autoread, tts-channel, language, default-voice, blockword, pronunciation,\n  rate-limit, role, max-chars, enabled · piem., /config tts-channel #general\n• /stats — bota statistika',
+    '• /setup — vadīta viena soļa konfigurācija · palaid šo vispirms\n• /config — auto-read, tts-channel, language, default-voice, block-word, pronunciation,\n  rate-limit, role, max-chars, enabled · piem., /config tts-channel #general\n• /stats — bota statistika',
   'help.groupMore': 'Vēl',
   'help.groupMoreBody':
     '• /invite — pievieno Vozen citam serverim\n• /vote — nobalso par Vozen vietnē top.gg\n• /help — parādīt šo palīdzību',
@@ -594,12 +594,12 @@ export default {
   'pron.modalTerm': 'Vārds (kā cilvēki to raksta)',
   'pron.modalSay': 'Kā Vozen tas jāizrunā',
   'spron.listHeader': '🗣️ **Servera izrunas** ({count}/{limit}) — attiecas uz visiem:',
-  'spron.listEmpty': 'Vēl nav nevienas — pievieno ar `/serverpronunciation add`.',
+  'spron.listEmpty': 'Vēl nav nevienas — pievieno ar `/server-pronunciation add`.',
   'spron.set': '✅ Saglabāts visam serverim! “{term}” → “{replacement}”.',
   'spron.removed': '🗑️ “{term}” noņemts no servera.',
   'spron.notFound': 'Serverim nav izrunas vārdam “{term}”.',
   'spron.limitHit':
-    '🔒 Serveris sasniedza savu **{limit}** izrunu limitu. Noņem kādu ar `/serverpronunciation remove`.',
+    '🔒 Serveris sasniedza savu **{limit}** izrunu limitu. Noņem kādu ar `/server-pronunciation remove`.',
   'spron.modalTitle': 'Servera izruna',
   'spron.modalSay': 'Kā Vozen to izrunā visiem',
   'rand.selectPrompt': '🎲 **Nejaušinātājs** — no cik iespējām lai es izvēlos?',

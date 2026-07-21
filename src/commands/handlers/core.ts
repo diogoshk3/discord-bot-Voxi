@@ -1,4 +1,4 @@
-// src/commands/handlers/core.ts — join/leave/tts/skip/shutup handlers + "Speak" context menu (extracted from index.ts, plan 015).
+// src/commands/handlers/core.ts — join/leave/tts/skip/shut-up handlers + "Speak" context menu (extracted from index.ts, plan 015).
 import {
   ChatInputCommandInteraction,
   MessageContextMenuCommandInteraction,
@@ -300,7 +300,7 @@ export async function handleSkip(i: ChatInputCommandInteraction, deps: BotDeps):
   await reply(i, t('skip.skipped', locale));
 }
 
-/** /shutup — silences Vozen now: clears the queue and stops what's playing (stays in the call). */
+/** /shut-up — silences Vozen now: clears the queue and stops what's playing (stays in the call). */
 export async function handleShutup(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
   const locale = localeForUser(deps, i);
   const player = getPlayer(deps, i.guildId!);

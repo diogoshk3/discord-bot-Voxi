@@ -44,7 +44,7 @@ export default {
   'voice.reset':
     "✅ Mae dy lais yn ôl i'r rhagosodiad. Dewisa un arall unrhyw bryd gyda `/voice list` a `/voice set`.",
   'voice.optout':
-    "Ni fyddi'n cael dy ddarllen yn awtomatig mwyach. Rheda /voice optin i'w droi yn ôl ymlaen.",
+    "Ni fyddi'n cael dy ddarllen yn awtomatig mwyach. Rheda /voice opt-in i'w droi yn ôl ymlaen.",
   'voice.optin': "Byddi'n cael dy ddarllen yn awtomatig eto.",
   'voice.notInVoice': 'Dydw i ddim mewn sianel lais eto — rheda /join yn gyntaf.',
   'voice.previewPlaying': 'Yn chwarae sampl…',
@@ -76,7 +76,7 @@ export default {
   'config.channelNoAccess':
     "Alla i ddim gweld {channel} — gwiria fy nghaniatadau yno os gweli'n dda.",
   'config.channelSet':
-    "Sianel darllen awtomatig wedi'i gosod i {channel}. Nesaf: gwna'n siŵr fod darllen awtomatig ymlaen gyda `/config autoread active:true`.",
+    "Sianel darllen awtomatig wedi'i gosod i {channel}. Nesaf: gwna'n siŵr fod darllen awtomatig ymlaen gyda `/config auto-read active:true`.",
   'config.autoreadOn': 'Mae darllen awtomatig nawr **ymlaen**.',
   'config.autoreadOff': 'Mae darllen awtomatig nawr **i ffwrdd**.',
   'config.maxCharsRange': "Rhaid i'r gwerth uchafswm-nodau fod rhwng 1 a 2000.",
@@ -164,13 +164,13 @@ export default {
     "• /join — dw i'n ymuno â'th sianel lais\n• /leave — dw i'n gadael y sianel lais\n• /tts <testun> — dw i'n darllen testun yn uchel · e.e. /tts Helo bawb!\n• /skip — hepgor beth bynnag dw i'n ei ddarllen nawr",
   'help.groupVoice': 'Dy lais',
   'help.groupVoiceBody':
-    "• /voice set <model> — dewisa dy lais · e.e. /voice set en_US-amy-medium\n• /voice list — gweld y lleisiau sydd ar gael\n• /voice preview — clywed sampl o'th lais\n• /voice reset — mynd yn ôl i'r llais rhagosodedig\n• /voice optout · /voice optin — troi darllen awtomatig i ffwrdd / ymlaen i ti\n• /voice abbrev add|remove|list — slang personol, wedi'i ddarllen dy ffordd (hyd at 10)",
+    "• /voice set <model> — dewisa dy lais · e.e. /voice set en_US-amy-medium\n• /voice list — gweld y lleisiau sydd ar gael\n• /voice preview — clywed sampl o'th lais\n• /voice reset — mynd yn ôl i'r llais rhagosodedig\n• /voice opt-out · /voice opt-in — troi darllen awtomatig i ffwrdd / ymlaen i ti\n• /voice abbrev add|remove|list — slang personol, wedi'i ddarllen dy ffordd (hyd at 10)",
   'help.groupFun': 'Hwyl',
   'help.groupFunBody':
     "• /joke — dw i'n dweud jôc fer (dewisa iaith + chwerthin dewisol) · e.e. /joke English\n• /laugh — dw i'n chwerthin yn uchel yn dy lais presennol",
   'help.groupAdmin': "Gweinyddwr y gweinydd (angen Rheoli'r Gweinydd)",
   'help.groupAdminBody':
-    "• /setup — cyfluniad tywysedig un cam · rheda hwn yn gyntaf\n• /config — autoread, tts-channel, language, default-voice, blockword, pronunciation,\n  rate-limit, role, max-chars, enabled · e.e. /config tts-channel #general\n• /stats — ystadegau'r bot",
+    "• /setup — cyfluniad tywysedig un cam · rheda hwn yn gyntaf\n• /config — auto-read, tts-channel, language, default-voice, block-word, pronunciation,\n  rate-limit, role, max-chars, enabled · e.e. /config tts-channel #general\n• /stats — ystadegau'r bot",
   'help.groupMore': 'Rhagor',
   'help.groupMoreBody':
     '• /invite — ychwanega Vozen at weinydd arall\n• /vote — pleidleisia dros Vozen ar top.gg\n• /help — dangos y cymorth hwn',
@@ -338,7 +338,7 @@ export default {
   'config.blockLimit':
     "Mae gan y gweinydd hwn eisoes yr uchafswm o {max} gair wedi'u rhwystro. Tynna un cyn ychwanegu un arall.",
   'config.xsaidOn':
-    'Bydd Vozen nawr yn cyhoeddi **pwy siaradodd** cyn pob neges (e.e. "Dywedodd Alex helo"). Diffodda gyda `/config xsaid active:false`.',
+    'Bydd Vozen nawr yn cyhoeddi **pwy siaradodd** cyn pob neges (e.e. "Dywedodd Alex helo"). Diffodda gyda `/config x-said active:false`.',
   'config.xsaidOff':
     "**Ni fydd** Vozen yn cyhoeddi pwy siaradodd mwyach — mae'n darllen y neges yn unig.",
   'config.autojoinOn':
@@ -363,7 +363,7 @@ export default {
   'config.streaksOn':
     '✅ Hysbysiadau rhediad **ymlaen** — mae Vozen yn dangos neges rhediad diwrnod 🔥 y tro cyntaf mae pob person yn siarad bob dydd.',
   'config.streaksOff':
-    "Hysbysiadau rhediad **i ffwrdd** — mae Vozen yn dal i olrhain rhediadau (gwela `/topspeakers`) ond yn cadw'n dawel amdanyn nhw.",
+    "Hysbysiadau rhediad **i ffwrdd** — mae Vozen yn dal i olrhain rhediadau (gwela `/top-speakers`) ond yn cadw'n dawel amdanyn nhw.",
   'config.soundboardOn': 'Bwrdd sain **ymlaen** — gall unrhyw un chwarae clipiau gyda `/sound`.',
   'config.soundboardOff':
     "Bwrdd sain **i ffwrdd** — mae `/sound` wedi'i analluogi ar y gweinydd hwn.",
@@ -611,12 +611,12 @@ export default {
   'pron.modalTerm': 'Y gair (fel mae pobl yn ei deipio)',
   'pron.modalSay': 'Sut y dylai Vozen ei ddweud',
   'spron.listHeader': "🗣️ **Ynganiadau'r gweinydd** ({count}/{limit}) — yn berthnasol i bawb:",
-  'spron.listEmpty': 'Dim un eto — ychwanega un gyda `/serverpronunciation add`.',
+  'spron.listEmpty': 'Dim un eto — ychwanega un gyda `/server-pronunciation add`.',
   'spron.set': "✅ Wedi'i gadw ar gyfer y gweinydd cyfan! “{term}” → “{replacement}”.",
   'spron.removed': "🗑️ Tynnwyd “{term}” o'r gweinydd.",
   'spron.notFound': 'Does gan y gweinydd ddim ynganiad ar gyfer “{term}”.',
   'spron.limitHit':
-    '🔒 Cyrhaeddodd y gweinydd ei derfyn o **{limit}** ynganiad. Tynna un gyda `/serverpronunciation remove`.',
+    '🔒 Cyrhaeddodd y gweinydd ei derfyn o **{limit}** ynganiad. Tynna un gyda `/server-pronunciation remove`.',
   'spron.modalTitle': 'Ynganiad y gweinydd',
   'spron.modalSay': 'Sut mae Vozen yn ei ddweud i bawb',
   'rand.selectPrompt': '🎲 **Randomizer** — o faint o opsiynau rwyt ti eisiau i mi ddewis?',

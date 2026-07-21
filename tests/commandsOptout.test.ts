@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { messageText } from './messagePayload';
 
-// Mock minimo de @discordjs/voice — nao e usado no /voice optout/optin, mas o import resolve-o.
+// Mock minimo de @discordjs/voice — nao e usado no /voice opt-out/optin, mas o import resolve-o.
 vi.mock('@discordjs/voice', () => ({
   joinVoiceChannel: () => ({}),
   getVoiceConnection: () => undefined,
@@ -48,7 +48,7 @@ function makeVoiceInteraction(sub: string) {
   };
 }
 
-describe('/voice optout / optin — opt-out por utilizador (sem gate de admin)', () => {
+describe('/voice opt-out / optin — opt-out por utilizador (sem gate de admin)', () => {
   let db: Database.Database;
 
   beforeEach(() => {
@@ -59,16 +59,16 @@ describe('/voice optout / optin — opt-out por utilizador (sem gate de admin)',
   });
 
   it('optout marca o utilizador como opted-out e responde claramente', async () => {
-    const i = makeVoiceInteraction('optout');
+    const i = makeVoiceInteraction('opt-out');
     await handleInteraction(i as any, makeDeps(db));
     expect(isOptedOut(db, GUILD, USER)).toBe(true);
     // Migrado PT->EN: "You won't be read automatically anymore. …"
-    expect(i.replies.some((r) => /automatically|optin/i.test(r))).toBe(true);
+    expect(i.replies.some((r) => /automatically|opt-in/i.test(r))).toBe(true);
   });
 
   it('optin limpa o opt-out e responde claramente', async () => {
     setOptOut(db, GUILD, USER);
-    const i = makeVoiceInteraction('optin');
+    const i = makeVoiceInteraction('opt-in');
     await handleInteraction(i as any, makeDeps(db));
     expect(isOptedOut(db, GUILD, USER)).toBe(false);
     // Migrado PT->EN: "You'll be read automatically again."
@@ -76,9 +76,9 @@ describe('/voice optout / optin — opt-out por utilizador (sem gate de admin)',
   });
 
   it('optout depois optin: o estado persiste corretamente entre comandos', async () => {
-    await handleInteraction(makeVoiceInteraction('optout') as any, makeDeps(db));
+    await handleInteraction(makeVoiceInteraction('opt-out') as any, makeDeps(db));
     expect(isOptedOut(db, GUILD, USER)).toBe(true);
-    await handleInteraction(makeVoiceInteraction('optin') as any, makeDeps(db));
+    await handleInteraction(makeVoiceInteraction('opt-in') as any, makeDeps(db));
     expect(isOptedOut(db, GUILD, USER)).toBe(false);
   });
 });

@@ -16,7 +16,7 @@
 
 - **Fase 0 — ✅ metade local feita:** checklist de compliance em `docs/COMPLIANCE-VAGA5.md`. Spike STT (VPS) só bloqueia a Fase 4.
 - **Fase 1 — Soundboard: ✅ DEPLOYED** (deploy VPS success; inclui o toggle admin `/config soundboard`). **MVP alcançado e no ar.**
-- **Fase 2 — Stats de servidor: ✅ code-complete + verde** (`/serverstats`: gate Premium OU Plus + teaser free top-3; agrega talk_stats + game_score, sem recolha nova). Falta: funil no site (matriz de preços i18n×10) — marketing, não-crítico.
+- **Fase 2 — Stats de servidor: ✅ code-complete + verde** (`/server-stats`: gate Premium OU Plus + teaser free top-3; agrega talk_stats + game_score, sem recolha nova). Falta: funil no site (matriz de preços i18n×10) — marketing, não-crítico.
 - **Fase 3 — Dashboard web: ✅ COMPLETA** (a fazer deploy do site).
   - Backend: `dashboardApi.ts` (autz MANAGE_GUILD/ADMIN + bot-presente; escrita whitelisted via setter) + rotas `/api/dashboard/*` (CORS+rate-limit+Bearer); 18 testes. **Deployed.**
   - Frontend: `site/dashboard.html` + `dashboard-v1.js` (login OAuth `identify guilds` via **redirect /account reutilizado** — sem passo no portal; bounce `returnTo` no `main.js`→v27), seletor de servidor, form de 11 campos (9 toggles + maxChars + ratePerMin), guardar. Verificado no browser (en+pt, sem erros de CSP).
@@ -73,7 +73,7 @@ Done: `/sound <nome>` reproduz áudio numa call real; teste cobre o registo + o 
 - [ ] Curar clips iniciais em `assets/sfx/` com **proveniência registada** (`assets/sfx/LICENSES.md`: fonte + licença por clip; preferir CC0 — CC-BY exige atribuição e o repo é AGPL público).
 
 ### Fase 2 — Stats de servidor (D)  ·  *perk Premium barato*
-Deliverable: `/serverstats` (Premium) com **o que o store realmente tem**: mensagens lidas
+Deliverable: `/server-stats` (Premium) com **o que o store realmente tem**: mensagens lidas
 + streaks (`talkStats`), top-tagarelas (`getTopSpeakers`), pontos/vitórias dos jogos
 (`game_score`). **Nada de "minutos falados" nem "línguas"** — o `talkStats` guarda contagens
 de mensagens (não durações) e a deteção de língua foi removida (2026-07); prometer isso

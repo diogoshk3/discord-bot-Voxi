@@ -159,7 +159,7 @@ async function applyAddPronunciation(
   await send(t('pron.set', locale, { term, replacement }));
 }
 
-// ── /serverpronunciation (admin, cap 3 Free / 50 Premium, for the whole guild) ──────────
+// ── /server-pronunciation (admin, cap 3 Free / 50 Premium, for the whole guild) ──────────
 
 /** SERVER pronunciation limit: 50 with the guild Premium, 3 otherwise. */
 function serverPronLimit(deps: BotDeps, guildId: string): number {

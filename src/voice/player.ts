@@ -117,7 +117,7 @@ export class GuildVoicePlayer {
 
   /**
    * "Shut up now": empties the WHOLE queue and stops what is playing, but STAYS in the call
-   * (unlike destroy(), which leaves). /shutup uses this. After stop(), the
+   * (unlike destroy(), which leaves). /shut-up uses this. After stop(), the
    * player emits Idle -> playNext() finds the queue empty -> goes to rest. Handles the
    * same synthesis window as skip(): if the real AudioPlayer is still Idle (the speech
    * is being synthesized), stop() is a no-op, so we mark pendingSkip for the

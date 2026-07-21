@@ -44,7 +44,7 @@ export default {
   'voice.reset':
     '✅ صدای تو به حالت پیش‌فرض بازگشت. هر وقت خواستی با `/voice list` و `/voice set` یکی دیگر انتخاب کن.',
   'voice.optout':
-    'دیگر به‌طور خودکار خوانده نمی‌شوی. برای روشن کردن دوباره /voice optin را اجرا کن.',
+    'دیگر به‌طور خودکار خوانده نمی‌شوی. برای روشن کردن دوباره /voice opt-in را اجرا کن.',
   'voice.optin': 'دوباره به‌طور خودکار خوانده می‌شوی.',
   'voice.detection.on':
     '✅ تشخیص خودکار زبان روشن است: هر پیام با صدایی متناسب با زبانِ تشخیص‌داده‌شده‌اش خوانده می‌شود (ممکن است گوینده تغییر کند). با `/voice detection active:false` خاموشش کن.',
@@ -78,7 +78,7 @@ export default {
   'config.channelWrongType': 'یک کانال متنی انتخاب کن (نه کانال صوتی یا دسته‌بندی).',
   'config.channelNoAccess': 'نمی‌توانم {channel} را ببینم — لطفاً مجوزهای من را آنجا بررسی کن.',
   'config.channelSet':
-    'کانال خواندن خودکار روی {channel} تنظیم شد. بعدی: با `/config autoread active:true` مطمئن شو که خواندن خودکار روشن است.',
+    'کانال خواندن خودکار روی {channel} تنظیم شد. بعدی: با `/config auto-read active:true` مطمئن شو که خواندن خودکار روشن است.',
   'config.autoreadOn': 'خواندن خودکار حالا **روشن** است.',
   'config.autoreadOff': 'خواندن خودکار حالا **خاموش** است.',
   'config.maxCharsRange': 'مقدار حداکثر نویسه باید بین 1 و 2000 باشد.',
@@ -164,7 +164,7 @@ export default {
     '• /join — به کانال صوتی تو می‌پیوندم\n• /leave — از کانال صوتی خارج می‌شوم\n• /tts <text> — متن را با صدای بلند می‌خوانم · مثلاً /tts Hello everyone!\n• /skip — از چیزی که همین حالا می‌خوانم رد شو',
   'help.groupVoice': 'صدای تو',
   'help.groupVoiceBody':
-    '• /voice set <model> — صدایت را انتخاب کن · مثلاً /voice set en_US-amy-medium\n• /voice list — صداهای موجود را ببین\n• /voice preview — یک نمونه از صدایت را بشنو\n• /voice reset — به صدای پیش‌فرض بازگرد\n• /voice optout · /voice optin — خواندن خودکار را برای خودت خاموش / روشن کن\n• /voice abbrev add|remove|list — اصطلاح شخصی، به سبک خودت خوانده شود (تا ۱۰ تا)',
+    '• /voice set <model> — صدایت را انتخاب کن · مثلاً /voice set en_US-amy-medium\n• /voice list — صداهای موجود را ببین\n• /voice preview — یک نمونه از صدایت را بشنو\n• /voice reset — به صدای پیش‌فرض بازگرد\n• /voice opt-out · /voice opt-in — خواندن خودکار را برای خودت خاموش / روشن کن\n• /voice abbrev add|remove|list — اصطلاح شخصی، به سبک خودت خوانده شود (تا ۱۰ تا)',
   'help.groupFun': 'سرگرمی',
   'help.groupFunBody':
     '• /joke — یک جوک کوتاه می‌گویم (یک زبان + خندهٔ اختیاری انتخاب کن) · مثلاً /joke English\n• /laugh — با صدای فعلی تو با صدای بلند می‌خندم',
@@ -226,7 +226,7 @@ export default {
   'privacy.eraseCancelled': 'لغو شد — چیزی پاک نشد.',
   'privacy.eraseDone': '✅ انجام شد. همهٔ داده‌های شخصی‌ات برای همیشه پاک شد.',
 
-  // ── /shutup ──
+  // ── /shut-up ──
   'shutup.notInVoice': 'هنوز در کانال صوتی نیستم — اول وارد یکی شو و /join را اجرا کن.',
   'shutup.nothing': 'الان چیزی در حال پخش نیست.',
   'shutup.done': '🤐 باشه، ساکت می‌شوم — همهٔ صف را پاک کردم.',
@@ -277,13 +277,13 @@ export default {
   'birthday.show': '🎂 تاریخ تولد تو روی **{day}/{month}** تنظیم شده است.',
   'birthday.none': 'هنوز تاریخ تولدی تنظیم نکرده‌ای. از `/birthday set` استفاده کن.',
 
-  // ── /topspeakers ──
+  // ── /top-speakers ──
   'topspeakers.title':
     '🗣️ **پرگوترین‌ها** — کسانی که در این سرور بیشترین پیام‌هایشان را خوانده‌ام:',
   'topspeakers.empty': 'هنوز پیام کسی را نخوانده‌ام. با `/setup` یک کانال خواندن راه‌اندازی کن!',
   'topspeakers.line': '{rank}. <@{user}> — **{count}** پیام · 🔥 زنجیرهٔ {streak} روزه',
 
-  // ── /serverstats ──
+  // ── /server-stats ──
   'serverstats.title': '📊 **آمار سرور**',
   'serverstats.empty':
     'هنوز آماری نیست — اینجا نه پیامی خوانده‌ام و نه بازی‌ای اجرا کرده‌ام. با `/setup` راه‌اندازی کن!',
@@ -352,7 +352,7 @@ export default {
   'config.blockLimit':
     'این سرور از پیش حداکثرِ {max} کلمهٔ مسدود را دارد. قبل از افزودن یکی دیگر، یکی را حذف کن.',
   'config.xsaidOn':
-    'ووکسی از این پس قبل از هر پیام **گویندهٔ آن** را اعلام می‌کند (مثلاً «Alex گفت سلام»). با `/config xsaid active:false` خاموشش کن.',
+    'ووکسی از این پس قبل از هر پیام **گویندهٔ آن** را اعلام می‌کند (مثلاً «Alex گفت سلام»). با `/config x-said active:false` خاموشش کن.',
   'config.xsaidOff': 'ووکسی **دیگر** گویندهٔ پیام را اعلام نمی‌کند — فقط خودِ پیام را می‌خواند.',
   'config.autojoinOn':
     '✅ پیوستن خودکار **روشن** — وقتی در کانال TTS بنویسی، ووکسی به کانال صوتی‌ات می‌پیوندد.',
@@ -372,7 +372,7 @@ export default {
   'config.streaksOn':
     '✅ اعلان زنجیره **روشن** — ووکسی اولین باری که هر کس هر روز صحبت می‌کند، پیام زنجیرهٔ 🔥 روزانه را نشان می‌دهد.',
   'config.streaksOff':
-    'اعلان زنجیره **خاموش** — ووکسی همچنان زنجیره‌ها را می‌شمارد (به `/topspeakers` نگاه کن) اما دربارهٔ آن‌ها ساکت می‌ماند.',
+    'اعلان زنجیره **خاموش** — ووکسی همچنان زنجیره‌ها را می‌شمارد (به `/top-speakers` نگاه کن) اما دربارهٔ آن‌ها ساکت می‌ماند.',
   'config.soundboardOn': 'ساندبورد **روشن** — هرکسی می‌تواند با `/sound` کلیپ پخش کند.',
   'config.soundboardOff': 'ساندبورد **خاموش** — `/sound` در این سرور غیرفعال است.',
   'config.votePromosLabel': 'اعلان‌های پاداش top.gg + Vozen Support',
@@ -387,7 +387,7 @@ export default {
   'config.showSoundboard': 'ساندبورد (/sound): {value}',
   'config.showGreet': 'خوش‌آمد هنگام ورود: {value} ({language})',
 
-  // ── /stats · /speak · /uptime · /botstats ──
+  // ── /stats · /speak · /uptime · /bot-stats ──
   'stats.synthLatency': 'تأخیر سنتز: p50 {p50}ms / p95 {p95}ms ({count} نمونه)',
   'speak.emptyMessage': 'این پیام متنی برای خواندن با صدای بلند ندارد.',
   'uptime.text': '🟢 ووکسی به مدت **{uptime}** آنلاین بوده است.',
@@ -655,14 +655,14 @@ export default {
   'pron.modalTerm': 'کلمه (همان‌طور که نوشته می‌شود)',
   'pron.modalSay': 'ووکسی چطور آن را بگوید',
 
-  // ── /serverpronunciation ──
+  // ── /server-pronunciation ──
   'spron.listHeader': '🗣️ **تلفظ‌های سرور** ({count}/{limit}) — برای همه اعمال می‌شوند:',
-  'spron.listEmpty': 'هنوز هیچ‌کدام — با `/serverpronunciation add` یکی اضافه کن.',
+  'spron.listEmpty': 'هنوز هیچ‌کدام — با `/server-pronunciation add` یکی اضافه کن.',
   'spron.set': '✅ برای کل سرور ذخیره شد! «{term}» → «{replacement}».',
   'spron.removed': '🗑️ «{term}» از سرور حذف شد.',
   'spron.notFound': 'سرور برای «{term}» تلفظی ندارد.',
   'spron.limitHit':
-    '🔒 سرور به سقف **{limit}** تلفظ رسید. یکی را با `/serverpronunciation remove` حذف کن.',
+    '🔒 سرور به سقف **{limit}** تلفظ رسید. یکی را با `/server-pronunciation remove` حذف کن.',
   'spron.modalTitle': 'تلفظ سرور',
   'spron.modalSay': 'ووکسی چطور آن را برای همه بگوید',
 

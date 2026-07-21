@@ -5,7 +5,7 @@ import { bumpTalk } from '../src/store/talkStats';
 import { persistGameScores } from '../src/store/gameScore';
 import { buildServerStats } from '../src/store/serverStats';
 
-// Server stats aggregation (Premium perk /serverstats). ONLY aggregates data ALREADY
+// Server stats aggregation (Premium perk /server-stats). ONLY aggregates data ALREADY
 // stored (talk_stats + game_score) — no new collection. See docs/COMPLIANCE-VAGA5.md.
 const G = '222222222222222222';
 const A = 'aaa';

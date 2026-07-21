@@ -88,7 +88,7 @@ export default {
     '✅ Samodejno zaznavanje jezika je VKLOPLJENO: vsako sporočilo je prebrano z glasom za zaznani jezik (govorec se lahko spremeni). Izklopi z `/voice detection active:false`.',
   'voice.detection.off':
     '✅ Samodejno zaznavanje jezika je IZKLOPLJENO: tvoj en sam fiksni glas bere vse, tako da vedno zveniš enako.',
-  'voice.optout': 'Ne bom te več samodejno bral. Zaženi /voice optin, da to znova vklopiš.',
+  'voice.optout': 'Ne bom te več samodejno bral. Zaženi /voice opt-in, da to znova vklopiš.',
   'voice.optin': 'Znova te bom samodejno bral.',
   'voice.nickname.set': '✅ Vozen te bo odslej na glas klical **{name}**.',
   'voice.nickname.cleared':
@@ -221,7 +221,7 @@ export default {
   'config.channelWrongType': 'Izberi besedilni kanal (ne glasovnega kanala ali kategorije).',
   'config.channelNoAccess': 'Ne vidim {channel} — preveri moja dovoljenja tam.',
   'config.channelSet':
-    'Kanal za samodejno branje je nastavljen na {channel}. Naprej: poskrbi, da je samodejno branje vklopljeno z `/config autoread active:true`.',
+    'Kanal za samodejno branje je nastavljen na {channel}. Naprej: poskrbi, da je samodejno branje vklopljeno z `/config auto-read active:true`.',
   'config.autoreadOn': 'Samodejno branje je zdaj **vklopljeno**.',
   'config.autoreadOff': 'Samodejno branje je zdaj **izklopljeno**.',
   'config.maxCharsRange': 'Vrednost največjega števila znakov mora biti med 1 in 2000.',
@@ -233,7 +233,7 @@ export default {
   'config.enabledOn': 'TTS je zdaj **vklopljen** za ta strežnik.',
   'config.enabledOff': 'TTS je zdaj **izklopljen** za ta strežnik.',
   'config.xsaidOn':
-    'Vozen bo odslej pred vsakim sporočilom naznanil **kdo je govoril** (npr. "Alex je rekel živjo"). Izklopi z `/config xsaid active:false`.',
+    'Vozen bo odslej pred vsakim sporočilom naznanil **kdo je govoril** (npr. "Alex je rekel živjo"). Izklopi z `/config x-said active:false`.',
   'config.xsaidOff': 'Vozen **ne bo več** naznanjal, kdo je govoril — prebere samo sporočilo.',
   'config.autojoinOn':
     '✅ Samodejno pridruževanje **vklopljeno** — Vozen se pridruži tvojemu glasovnemu kanalu, ko pišeš v kanal TTS.',
@@ -255,7 +255,7 @@ export default {
   'config.streaksOn':
     '✅ Obvestila o nizu **vklopljena** — Vozen prikaže sporočilo o dnevnem nizu 🔥 ob prvem govoru vsake osebe vsak dan.',
   'config.streaksOff':
-    'Obvestila o nizu **izklopljena** — Vozen še vedno beleži nize (glej `/topspeakers`), a o njih molči.',
+    'Obvestila o nizu **izklopljena** — Vozen še vedno beleži nize (glej `/top-speakers`), a o njih molči.',
   'config.soundboardOn':
     'Zvočna plošča **vklopljena** — vsakdo lahko predvaja posnetke z `/sound`.',
   'config.soundboardOff':
@@ -362,13 +362,13 @@ export default {
     '• /join — pridružim se tvojemu glasovnemu kanalu\n• /leave — zapustim glasovni kanal\n• /tts <text> — preberem besedilo na glas · npr. /tts Hello everyone!\n• /skip — preskočim to, kar trenutno berem',
   'help.groupVoice': 'Tvoj glas',
   'help.groupVoiceBody':
-    '• /voice set <model> — izberi svoj glas · npr. /voice set en_US-amy-medium\n• /voice list — poglej razpoložljive glasove\n• /voice preview — poslušaj vzorec svojega glasu\n• /voice reset — vrni se na privzeti glas\n• /voice optout · /voice optin — izklopi / vklopi samodejno branje zase\n• /voice abbrev add|remove|list — osebni sleng, brano po tvoje (do 10)',
+    '• /voice set <model> — izberi svoj glas · npr. /voice set en_US-amy-medium\n• /voice list — poglej razpoložljive glasove\n• /voice preview — poslušaj vzorec svojega glasu\n• /voice reset — vrni se na privzeti glas\n• /voice opt-out · /voice opt-in — izklopi / vklopi samodejno branje zase\n• /voice abbrev add|remove|list — osebni sleng, brano po tvoje (do 10)',
   'help.groupFun': 'Zabava',
   'help.groupFunBody':
     '• /joke — povem kratko šalo (izberi jezik + izbirni smeh) · npr. /joke English\n• /laugh — glasno se smejem v tvojem trenutnem glasu',
   'help.groupAdmin': 'Skrbnik strežnika (potrebuje Upravljanje strežnika)',
   'help.groupAdminBody':
-    '• /setup — vodena nastavitev v enem koraku · to zaženi najprej\n• /config — autoread, tts-channel, language, default-voice, blockword, pronunciation,\n  rate-limit, role, max-chars, enabled · npr. /config tts-channel #general\n• /stats — statistika bota',
+    '• /setup — vodena nastavitev v enem koraku · to zaženi najprej\n• /config — auto-read, tts-channel, language, default-voice, block-word, pronunciation,\n  rate-limit, role, max-chars, enabled · npr. /config tts-channel #general\n• /stats — statistika bota',
   'help.groupMore': 'Več',
   'help.groupMoreBody':
     '• /invite — dodaj Vozenja na drug strežnik\n• /vote — glasuj za Vozenja na top.gg\n• /help — pokaži to pomoč',
@@ -596,12 +596,12 @@ export default {
   'pron.modalTerm': 'Beseda (kot jo ljudje napišejo)',
   'pron.modalSay': 'Kako naj jo Vozen izgovori',
   'spron.listHeader': '🗣️ **Izgovorjave strežnika** ({count}/{limit}) — veljajo za vse:',
-  'spron.listEmpty': 'Še nobene — dodaj eno z `/serverpronunciation add`.',
+  'spron.listEmpty': 'Še nobene — dodaj eno z `/server-pronunciation add`.',
   'spron.set': '✅ Shranjeno za celoten strežnik! “{term}” → “{replacement}”.',
   'spron.removed': '🗑️ “{term}” odstranjeno s strežnika.',
   'spron.notFound': 'Strežnik nima izgovorjave za “{term}”.',
   'spron.limitHit':
-    '🔒 Strežnik je dosegel omejitev **{limit}** izgovorjav. Eno odstrani z `/serverpronunciation remove`.',
+    '🔒 Strežnik je dosegel omejitev **{limit}** izgovorjav. Eno odstrani z `/server-pronunciation remove`.',
   'spron.modalTitle': 'Izgovorjava strežnika',
   'spron.modalSay': 'Kako jo Vozen izgovori za vse',
   'rand.selectPrompt': '🎲 **Naključni izbirnik** — izmed koliko možnosti naj izberem?',

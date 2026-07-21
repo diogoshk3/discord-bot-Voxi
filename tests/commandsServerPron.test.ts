@@ -33,7 +33,7 @@ function makeInteraction(opts: {
   const replies: string[] = [];
   const optionsMap = opts.optionsMap ?? {};
   return {
-    commandName: 'serverpronunciation',
+    commandName: 'server-pronunciation',
     guildId: GUILD,
     user: { id: 'admin-1' },
     replies,
@@ -58,7 +58,7 @@ function makeInteraction(opts: {
   };
 }
 
-describe('/serverpronunciation — admin, cap 3, para toda a guild', () => {
+describe('/server-pronunciation — admin, cap 3, para toda a guild', () => {
   let db: Database.Database;
   beforeEach(() => {
     db = initDb(':memory:');

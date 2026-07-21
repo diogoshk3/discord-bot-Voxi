@@ -89,7 +89,7 @@ export default {
   'voice.detection.off':
     '✅ Automatisk sprogregistrering er slået FRA: din ene faste stemme læser alt, så du altid lyder ens.',
   'voice.optout':
-    'Du bliver ikke længere læst automatisk. Kør /voice optin for at slå det til igen.',
+    'Du bliver ikke længere læst automatisk. Kør /voice opt-in for at slå det til igen.',
   'voice.optin': 'Du bliver læst automatisk igen.',
   'voice.nickname.set': '✅ Vozen vil nu kalde dig **{name}** højt.',
   'voice.nickname.cleared': '✅ Talt kaldenavn ryddet — Vozen bruger dit servernavn.',
@@ -219,7 +219,7 @@ export default {
   'config.channelWrongType': 'Vælg en tekstkanal (ikke en talekanal eller en kategori).',
   'config.channelNoAccess': 'Jeg kan ikke se {channel} — tjek venligst mine tilladelser der.',
   'config.channelSet':
-    'Automatisk oplæsningskanal sat til {channel}. Næste: sørg for at automatisk oplæsning er slået til med `/config autoread active:true`.',
+    'Automatisk oplæsningskanal sat til {channel}. Næste: sørg for at automatisk oplæsning er slået til med `/config auto-read active:true`.',
   'config.autoreadOn': 'Automatisk oplæsning er nu **slået til**.',
   'config.autoreadOff': 'Automatisk oplæsning er nu **slået fra**.',
   'config.maxCharsRange': 'Værdien for maks. tegn skal være mellem 1 og 2000.',
@@ -231,7 +231,7 @@ export default {
   'config.enabledOn': 'TTS er nu **slået til** for denne server.',
   'config.enabledOff': 'TTS er nu **slået fra** for denne server.',
   'config.xsaidOn':
-    'Vozen vil nu annoncere **hvem der talte** før hver besked (f.eks. "Alex sagde hej"). Slå fra med `/config xsaid active:false`.',
+    'Vozen vil nu annoncere **hvem der talte** før hver besked (f.eks. "Alex sagde hej"). Slå fra med `/config x-said active:false`.',
   'config.xsaidOff':
     'Vozen vil **ikke længere** annoncere, hvem der talte — den læser kun beskeden.',
   'config.autojoinOn':
@@ -252,7 +252,7 @@ export default {
   'config.streaksOn':
     '✅ Stime-beskeder **til** — Vozen viser en 🔥 dagsstime-besked, første gang hver person taler hver dag.',
   'config.streaksOff':
-    'Stime-beskeder **fra** — Vozen sporer stadig stimer (se `/topspeakers`), men holder mund om dem.',
+    'Stime-beskeder **fra** — Vozen sporer stadig stimer (se `/top-speakers`), men holder mund om dem.',
   'config.soundboardOn': 'Lydtavle **til** — alle kan afspille klip med `/sound`.',
   'config.soundboardOff': 'Lydtavle **fra** — `/sound` er deaktiveret på denne server.',
   'config.votePromosLabel': 'Notifikationer om top.gg-belønning + Vozen Support',
@@ -356,13 +356,13 @@ export default {
     '• /join — jeg går ind i din talekanal\n• /leave — jeg forlader talekanalen\n• /tts <tekst> — jeg læser tekst højt · f.eks. /tts Hej allesammen!\n• /skip — spring over det, jeg læser lige nu',
   'help.groupVoice': 'Din stemme',
   'help.groupVoiceBody':
-    '• /voice set <model> — vælg din stemme · f.eks. /voice set en_US-amy-medium\n• /voice list — se de tilgængelige stemmer\n• /voice preview — hør en prøve af din stemme\n• /voice reset — gå tilbage til standardstemmen\n• /voice optout · /voice optin — slå automatisk oplæsning fra / til for dig\n• /voice abbrev add|remove|list — personlig slang, læst på din måde (op til 10)',
+    '• /voice set <model> — vælg din stemme · f.eks. /voice set en_US-amy-medium\n• /voice list — se de tilgængelige stemmer\n• /voice preview — hør en prøve af din stemme\n• /voice reset — gå tilbage til standardstemmen\n• /voice opt-out · /voice opt-in — slå automatisk oplæsning fra / til for dig\n• /voice abbrev add|remove|list — personlig slang, læst på din måde (op til 10)',
   'help.groupFun': 'Sjov',
   'help.groupFunBody':
     '• /joke — jeg fortæller en kort vittighed (vælg et sprog + valgfri latter) · f.eks. /joke English\n• /laugh — jeg griner højt i din nuværende stemme',
   'help.groupAdmin': 'Serveradmin (kræver Administrer server)',
   'help.groupAdminBody':
-    '• /setup — guidet konfiguration i ét trin · kør denne først\n• /config — autoread, tts-channel, language, default-voice, blockword, pronunciation,\n  rate-limit, role, max-chars, enabled · f.eks. /config tts-channel #general\n• /stats — bot-statistik',
+    '• /setup — guidet konfiguration i ét trin · kør denne først\n• /config — auto-read, tts-channel, language, default-voice, block-word, pronunciation,\n  rate-limit, role, max-chars, enabled · f.eks. /config tts-channel #general\n• /stats — bot-statistik',
   'help.groupMore': 'Mere',
   'help.groupMoreBody':
     '• /invite — tilføj Vozen til en anden server\n• /vote — stem på Vozen på top.gg\n• /help — vis denne hjælp',
@@ -594,12 +594,12 @@ export default {
   'pron.modalTerm': 'Ordet (som folk skriver det)',
   'pron.modalSay': 'Hvordan Vozen skal sige det',
   'spron.listHeader': '🗣️ **Serverudtaler** ({count}/{limit}) — gælder for alle:',
-  'spron.listEmpty': 'Ingen endnu — tilføj en med `/serverpronunciation add`.',
+  'spron.listEmpty': 'Ingen endnu — tilføj en med `/server-pronunciation add`.',
   'spron.set': '✅ Gemt for hele serveren! “{term}” → “{replacement}”.',
   'spron.removed': '🗑️ Fjernede “{term}” fra serveren.',
   'spron.notFound': 'Serveren har ingen udtale for “{term}”.',
   'spron.limitHit':
-    '🔒 Serveren har nået sin grænse på **{limit}** udtaler. Fjern en med `/serverpronunciation remove`.',
+    '🔒 Serveren har nået sin grænse på **{limit}** udtaler. Fjern en med `/server-pronunciation remove`.',
   'spron.modalTitle': 'Serverudtale',
   'spron.modalSay': 'Hvordan Vozen siger det for alle',
   'rand.selectPrompt': '🎲 **Randomizer** — mellem hvor mange muligheder skal jeg vælge?',

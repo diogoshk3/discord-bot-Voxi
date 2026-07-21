@@ -16,7 +16,7 @@ export interface GuildConfig {
   // is P16.3.
   locale: string;
   // xsaid: announce "{name} said" before each read message (who spoke). ON
-  // by default (Diogo's decision); can be turned off with /config xsaid. The announcement is
+  // by default (Diogo's decision); can be turned off with /config x-said. The announcement is
   // localized in the voice language (spokenPhrases.said).
   xsaid: boolean;
   // autojoin: Vozen joins the author's voice channel by itself when a message arrives
@@ -45,7 +45,7 @@ export interface GuildConfig {
   stayInCall: boolean;
   // streakAnnounce: show the "🔥 Day N" notice on each person's FIRST read message of the day
   // (streak of consecutive days, TikTok style). ON by default; turned off with
-  // /config streaks. The streak itself is always computed (feeds /topspeakers).
+  // /config streaks. The streak itself is always computed (feeds /top-speakers).
   streakAnnounce: boolean;
   // soundboard: enables /sound (sound clips in the call). ON by default; an admin
   // can turn it off with /config soundboard. The per-user rate-limit already limits

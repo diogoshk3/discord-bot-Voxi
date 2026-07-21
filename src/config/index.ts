@@ -105,7 +105,7 @@ export interface AppConfig {
   // Ko-fi page where Premium/Plus is bought. Shown in /premium info and in the
   // "you have no pass" errors. Env KOFI_URL; default = generic page (the operator sets theirs).
   kofiUrl: string;
-  // OWNER-ONLY commands (/vozengrant): defense in depth. The command is registered ONLY
+  // OWNER-ONLY commands (/vozen-grant): defense in depth. The command is registered ONLY
   // in OWNER_GUILD_ID (guild command) — the public does not even see it. In addition the handler
   // checks the invoker against the REAL owner resolved via client.application (User/Team) at startup;
   // OWNER_ID is an explicit fallback. Without OWNER_GUILD_ID the command is not registered.
@@ -413,7 +413,7 @@ export function loadConfig(): AppConfig {
     premiumUserSkuId: strEnv('PREMIUM_USER_SKU_ID', '') || undefined,
     // Ko-fi page (Premium/Plus purchase). The operator sets KOFI_URL to theirs.
     kofiUrl: strEnv('KOFI_URL', 'https://ko-fi.com/'),
-    // Owner-only: control server (where /vozengrant is registered) + explicit owner.
+    // Owner-only: control server (where /vozen-grant is registered) + explicit owner.
     ownerGuildId: strEnv('OWNER_GUILD_ID', '') || undefined,
     ownerId: strEnv('OWNER_ID', '') || undefined,
     // Ko-fi webhook: no token => does not start. Local endpoint port.

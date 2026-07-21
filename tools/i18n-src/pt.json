@@ -313,7 +313,7 @@
       ["/leave", "Sai do canal de voz"],
       ["/tts", "Lê um texto em voz alta"],
       ["/skip", "Salta o áudio atual"],
-      ["/shutup", "Cala o Vozen já (esvazia a fila)"],
+      ["/shut-up", "Cala o Vozen já (esvazia a fila)"],
       ["/setup", "Configuração guiada num passo"],
       ["/invite", "Obtém o link de convite"],
       ["/vote", "Vota no Vozen no top.gg"],
@@ -326,7 +326,7 @@
       ["/voice preview", "Ouve uma amostra de voz"],
       ["/voice effect", "Robô, eco, demónio… efeitos de voz"],
       ["/voice nickname", "Como o Vozen te chama em voz alta"],
-      ["/voice optout", "Deixa de ser lido automaticamente"],
+      ["/voice opt-out", "Deixa de ser lido automaticamente"],
       ["/pronunciation", "Ensina o Vozen a dizer uma palavra (só tua)"]
     ],
     "fun": [
@@ -335,10 +335,10 @@
       ["/game stats", "Os teus pontos, vitórias e posição"],
       ["/joke", "Uma piada curta em qualquer língua"],
       ["/laugh", "O Vozen ri na tua voz"],
-      ["/8ball", "Pergunta à bola 8, em voz alta"],
+      ["/8-ball", "Pergunta à bola 8, em voz alta"],
       ["/fact · /fortune · /wyr", "Factos, sortes e dilemas falados"],
       ["/birthday set", "O Vozen dá-te os parabéns no teu dia"],
-      ["/topspeakers", "Quem mais fala + streaks"],
+      ["/top-speakers", "Quem mais fala + streaks"],
       ["/randomizer", "O Vozen escolhe uma opção ao acaso e di-la"],
       ["/cast", "Atribui um papel temático aleatório a todos na tua call e diz os resultados"]
     ],
@@ -346,9 +346,9 @@
       ["/config greet", "Saudar quem entra na call"],
       ["/config language", "Define a língua da interface"],
       ["/config default-voice", "Define a voz padrão do servidor"],
-      ["/config autoread", "Liga/desliga a leitura automática"],
-      ["/config blockword", "Gere a blocklist"],
-      ["/serverpronunciation", "Pronúncias para todo o servidor (admin, 3 · 50 com Premium)"]
+      ["/config auto-read", "Liga/desliga a leitura automática"],
+      ["/config block-word", "Gere a blocklist"],
+      ["/server-pronunciation", "Pronúncias para todo o servidor (admin, 3 · 50 com Premium)"]
     ]
   },
   "faq": [

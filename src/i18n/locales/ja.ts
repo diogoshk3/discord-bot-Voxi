@@ -47,7 +47,7 @@ export default {
   'voice.listEmpty': '（インストールされていません）',
   'voice.reset':
     '✅ あなたの声を既定に戻しました。いつでも `/voice list` と `/voice set` で別の声を選べます。',
-  'voice.optout': '今後は自動で読み上げません。/voice optin で再度有効にできます。',
+  'voice.optout': '今後は自動で読み上げません。/voice opt-in で再度有効にできます。',
   'voice.optin': '今後はまた自動で読み上げます。',
   'voice.notInVoice': 'まだボイスチャンネルにいません。先に /join を実行してください。',
   'voice.previewPlaying': 'サンプルを再生中…',
@@ -78,7 +78,7 @@ export default {
     'テキストチャンネルを選んでください（ボイスチャンネルやカテゴリーではなく）。',
   'config.channelNoAccess': '{channel} が見えません。そこでの権限を確認してください。',
   'config.channelSet':
-    '自動読み上げチャンネルを {channel} に設定しました。次に：`/config autoread active:true` で自動読み上げが有効になっていることを確認してください。',
+    '自動読み上げチャンネルを {channel} に設定しました。次に：`/config auto-read active:true` で自動読み上げが有効になっていることを確認してください。',
   'config.autoreadOn': '自動読み上げが**有効**になりました。',
   'config.autoreadOff': '自動読み上げが**無効**になりました。',
   'config.maxCharsRange': '最大文字数は 1 から 2000 の間で指定してください。',
@@ -164,13 +164,13 @@ export default {
     '• /join — あなたのボイスチャンネルに参加します\n• /leave — ボイスチャンネルから退出します\n• /tts <テキスト> — テキストを読み上げます · 例：/tts みんな、こんにちは！\n• /skip — 今読み上げているものをスキップします',
   'help.groupVoice': 'あなたの声',
   'help.groupVoiceBody':
-    '• /voice set <model> — 声を選びます · 例：/voice set en_US-amy-medium\n• /voice list — 利用できる声を見ます\n• /voice preview — 自分の声のサンプルを聞きます\n• /voice reset — 既定の声に戻します\n• /voice optout · /voice optin — 自分への自動読み上げを無効／有効にします\n• /voice abbrev add|remove|list — 個人の略語を自分好みの読み方で（最大10個）',
+    '• /voice set <model> — 声を選びます · 例：/voice set en_US-amy-medium\n• /voice list — 利用できる声を見ます\n• /voice preview — 自分の声のサンプルを聞きます\n• /voice reset — 既定の声に戻します\n• /voice opt-out · /voice opt-in — 自分への自動読み上げを無効／有効にします\n• /voice abbrev add|remove|list — 個人の略語を自分好みの読み方で（最大10個）',
   'help.groupFun': 'お楽しみ',
   'help.groupFunBody':
     '• /joke — 短いジョークを言います（言語＋任意の笑いを選択）· 例：/joke English\n• /laugh — 今の声で大笑いします',
   'help.groupAdmin': 'サーバー管理（サーバー管理権限が必要）',
   'help.groupAdminBody':
-    '• /setup — 1ステップのガイド付き設定 · 最初に実行してください\n• /config — autoread, tts-channel, language, default-voice, blockword, pronunciation,\n  rate-limit, role, max-chars, enabled · 例：/config tts-channel #general\n• /stats — ボットの統計',
+    '• /setup — 1ステップのガイド付き設定 · 最初に実行してください\n• /config — auto-read, tts-channel, language, default-voice, block-word, pronunciation,\n  rate-limit, role, max-chars, enabled · 例：/config tts-channel #general\n• /stats — ボットの統計',
   'help.groupMore': 'その他',
   'help.groupMoreBody':
     '• /invite — Vozen を別のサーバーに追加\n• /vote — top.gg で Vozen に投票\n• /help — このヘルプを表示',
@@ -335,7 +335,7 @@ export default {
   'config.blockLimit':
     'このサーバーはすでにブロック単語の上限（{max} 個）に達しています。追加する前にひとつ削除してください。',
   'config.xsaidOn':
-    'Vozen は今後、各メッセージの前に**誰が話したか**を読み上げます（例：「Alex がこんにちは」）。オフにするには `/config xsaid active:false` を使ってください。',
+    'Vozen は今後、各メッセージの前に**誰が話したか**を読み上げます（例：「Alex がこんにちは」）。オフにするには `/config x-said active:false` を使ってください。',
   'config.xsaidOff': 'Vozen は**今後**誰が話したかを読み上げません。メッセージのみを読み上げます。',
   'config.autojoinOn':
     '✅ 自動参加**オン** — TTS チャンネルに入力すると、Vozen があなたのボイスチャンネルに参加します。',
@@ -356,7 +356,7 @@ export default {
   'config.streaksOn':
     '✅ 継続記録の通知**オン** — Vozen は各人がその日に初めて話したときに 🔥 の連続記録メッセージを表示します。',
   'config.streaksOff':
-    '継続記録の通知**オフ** — Vozen は引き続き連続記録を集計しますが（`/topspeakers` を参照）、それを知らせません。',
+    '継続記録の通知**オフ** — Vozen は引き続き連続記録を集計しますが（`/top-speakers` を参照）、それを知らせません。',
   'config.soundboardOn': 'サウンドボード**オン** — 誰でも `/sound` でクリップを再生できます。',
   'config.soundboardOff': 'サウンドボード**オフ** — このサーバーでは `/sound` は無効です。',
   'config.votePromosLabel': 'top.gg報酬のお知らせ + Vozen Support',
@@ -603,12 +603,12 @@ export default {
   'pron.modalTerm': '単語（入力されるとおりに）',
   'pron.modalSay': 'Vozen がどう読むか',
   'spron.listHeader': '🗣️ **サーバーの発音** （{count}/{limit}） — 全員に適用：',
-  'spron.listEmpty': 'まだありません — `/serverpronunciation add` で追加してください。',
+  'spron.listEmpty': 'まだありません — `/server-pronunciation add` で追加してください。',
   'spron.set': '✅ サーバー全体に保存しました！ 「{term}」→「{replacement}」。',
   'spron.removed': '🗑️ サーバーから「{term}」を削除しました。',
   'spron.notFound': 'サーバーには「{term}」の発音がありません。',
   'spron.limitHit':
-    '🔒 サーバーは発音の上限（**{limit}** 件）に達しました。`/serverpronunciation remove` でひとつ削除してください。',
+    '🔒 サーバーは発音の上限（**{limit}** 件）に達しました。`/server-pronunciation remove` でひとつ削除してください。',
   'spron.modalTitle': 'サーバーの発音',
   'spron.modalSay': 'Vozen が全員に対してどう読むか',
   'rand.selectPrompt': '🎲 **ランダマイザー** — いくつの選択肢から選びましょうか？',

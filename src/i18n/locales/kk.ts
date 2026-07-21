@@ -45,7 +45,7 @@ export default {
   'voice.reset':
     '✅ Дауысыңыз әдепкіге қайтарылды. `/voice list` және `/voice set` арқылы кез келген уақытта басқасын таңдаңыз.',
   'voice.optout':
-    'Енді сізді автоматты түрде оқымаймын. Оны қайта қосу үшін /voice optin орындаңыз.',
+    'Енді сізді автоматты түрде оқымаймын. Оны қайта қосу үшін /voice opt-in орындаңыз.',
   'voice.optin': 'Сізді қайтадан автоматты түрде оқитын боламын.',
   'voice.notInVoice': 'Мен әлі дауыстық арнада емеспін — алдымен /join орындаңыз.',
   'voice.previewPlaying': 'Үлгі ойналуда…',
@@ -77,7 +77,7 @@ export default {
   'config.channelNoAccess':
     'Мен {channel} арнасын көре алмаймын — сол жердегі рұқсаттарымды тексеріңіз.',
   'config.channelSet':
-    'Автоматты оқу арнасы {channel} болып орнатылды. Келесі: `/config autoread active:true` арқылы автоматты оқу қосулы екеніне көз жеткізіңіз.',
+    'Автоматты оқу арнасы {channel} болып орнатылды. Келесі: `/config auto-read active:true` арқылы автоматты оқу қосулы екеніне көз жеткізіңіз.',
   'config.autoreadOn': 'Автоматты оқу енді **қосулы**.',
   'config.autoreadOff': 'Автоматты оқу енді **өшірулі**.',
   'config.maxCharsRange': 'Ең көп таңба мәні 1 мен 2000 аралығында болуы керек.',
@@ -164,13 +164,13 @@ export default {
     '• /join — мен сіздің дауыстық арнаңызға кіремін\n• /leave — мен дауыстық арнадан шығамын\n• /tts <text> — мен мәтінді дауыстап оқимын · мысалы /tts Сәлем, барлығына!\n• /skip — қазір оқып жатқанымды өткізіп жіберу',
   'help.groupVoice': 'Сіздің дауысыңыз',
   'help.groupVoiceBody':
-    '• /voice set <model> — дауысыңызды таңдаңыз · мысалы /voice set en_US-amy-medium\n• /voice list — қолжетімді дауыстарды көру\n• /voice preview — дауысыңыздың үлгісін тыңдау\n• /voice reset — әдепкі дауысқа қайту\n• /voice optout · /voice optin — сіз үшін автоматты оқуды өшіру / қосу\n• /voice abbrev add|remove|list — жеке сленг, өз бетінше оқылады (10-ға дейін)',
+    '• /voice set <model> — дауысыңызды таңдаңыз · мысалы /voice set en_US-amy-medium\n• /voice list — қолжетімді дауыстарды көру\n• /voice preview — дауысыңыздың үлгісін тыңдау\n• /voice reset — әдепкі дауысқа қайту\n• /voice opt-out · /voice opt-in — сіз үшін автоматты оқуды өшіру / қосу\n• /voice abbrev add|remove|list — жеке сленг, өз бетінше оқылады (10-ға дейін)',
   'help.groupFun': 'Көңіл көтеру',
   'help.groupFunBody':
     '• /joke — мен қысқа әзіл айтамын (тіл + қосымша күлкі таңдаңыз) · мысалы /joke English\n• /laugh — мен қазіргі дауысыңызбен дауыстап күлемін',
   'help.groupAdmin': 'Сервер әкімшісі (Manage Server қажет)',
   'help.groupAdminBody':
-    '• /setup — бір қадамдық басқарылатын баптау · алдымен осыны орындаңыз\n• /config — autoread, tts-channel, language, default-voice, blockword, pronunciation,\n  rate-limit, role, max-chars, enabled · мысалы /config tts-channel #general\n• /stats — бот статистикасы',
+    '• /setup — бір қадамдық басқарылатын баптау · алдымен осыны орындаңыз\n• /config — auto-read, tts-channel, language, default-voice, block-word, pronunciation,\n  rate-limit, role, max-chars, enabled · мысалы /config tts-channel #general\n• /stats — бот статистикасы',
   'help.groupMore': 'Тағы',
   'help.groupMoreBody':
     '• /invite — Vozen-ды басқа серверге қосу\n• /vote — top.gg-де Vozen үшін дауыс беру\n• /help — осы анықтаманы көрсету',
@@ -336,7 +336,7 @@ export default {
   'config.blockLimit':
     'Бұл серверде бұғатталған сөздердің ең көп саны {max} бұрыннан бар. Жаңасын қоспас бұрын біреуін жойыңыз.',
   'config.xsaidOn':
-    'Vozen енді әр хабарламаның алдында **кім сөйлегенін** хабарлайды (мысалы, "Alex сәлемдесті"). `/config xsaid active:false` арқылы өшіріңіз.',
+    'Vozen енді әр хабарламаның алдында **кім сөйлегенін** хабарлайды (мысалы, "Alex сәлемдесті"). `/config x-said active:false` арқылы өшіріңіз.',
   'config.xsaidOff': 'Vozen кім сөйлегенін **бұдан былай** хабарламайды — тек хабарламаны оқиды.',
   'config.autojoinOn':
     '✅ Автоматты кіру **қосулы** — TTS арнасына жазғаныңызда Vozen сіздің дауыстық арнаңызға кіреді.',
@@ -357,7 +357,7 @@ export default {
   'config.streaksOn':
     '✅ Серпін хабарламалары **қосулы** — Vozen әр адам күн сайын алғаш сөйлегенде 🔥 күндік серпін хабарламасын көрсетеді.',
   'config.streaksOff':
-    'Серпін хабарламалары **өшірулі** — Vozen серпіндерді әлі де есептейді (`/topspeakers` қараңыз), бірақ олар туралы үндемейді.',
+    'Серпін хабарламалары **өшірулі** — Vozen серпіндерді әлі де есептейді (`/top-speakers` қараңыз), бірақ олар туралы үндемейді.',
   'config.soundboardOn':
     'Дыбыс тақтасы **қосулы** — кез келген адам `/sound` арқылы клиптерді ойната алады.',
   'config.soundboardOff': 'Дыбыс тақтасы **өшірулі** — осы серверде `/sound` ажыратылған.',
@@ -603,12 +603,12 @@ export default {
   'pron.modalTerm': 'Сөз (адамдар қалай жазады)',
   'pron.modalSay': 'Vozen оны қалай айтуы керек',
   'spron.listHeader': '🗣️ **Сервер айтылымдары** ({count}/{limit}) — бәріне қолданылады:',
-  'spron.listEmpty': 'Әзірге ешқайсысы жоқ — `/serverpronunciation add` арқылы қосыңыз.',
+  'spron.listEmpty': 'Әзірге ешқайсысы жоқ — `/server-pronunciation add` арқылы қосыңыз.',
   'spron.set': '✅ Бүкіл сервер үшін сақталды! «{term}» → «{replacement}».',
   'spron.removed': '🗑️ «{term}» серверден жойылды.',
   'spron.notFound': 'Серверде «{term}» үшін айтылым жоқ.',
   'spron.limitHit':
-    '🔒 Сервер **{limit}** айтылым шегіне жетті. Біреуін `/serverpronunciation remove` арқылы жойыңыз.',
+    '🔒 Сервер **{limit}** айтылым шегіне жетті. Біреуін `/server-pronunciation remove` арқылы жойыңыз.',
   'spron.modalTitle': 'Сервер айтылымы',
   'spron.modalSay': 'Vozen оны бәріне қалай айтады',
   'rand.selectPrompt': '🎲 **Кездейсоқ таңдаушы** — қанша нұсқаның ішінен таңдағанымды қалайсыз?',

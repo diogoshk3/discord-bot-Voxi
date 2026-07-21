@@ -55,7 +55,7 @@ export interface BotDeps {
    */
   dupTracker?: DuplicateTracker;
   /**
-   * Anti-spam gate for the /topspeakers message COUNT (NOT for reading). Decides whether a
+   * Anti-spam gate for the /top-speakers message COUNT (NOT for reading). Decides whether a
    * read message counts toward the speaker stats — throttles bursts, drops repetitions and
    * caps per minute so a flood cannot inflate the leaderboard. ALWAYS injected in production;
    * optional so old tests that don't inject it count every read message (previous behavior).
@@ -69,7 +69,7 @@ export interface BotDeps {
   games?: GameManager;
   /**
    * IDs of the bot OWNER(S), resolved at ClientReady via client.application (User or Team
-   * members) + OWNER_ID. Source of truth for the /vozengrant gate (owner-only) — not
+   * members) + OWNER_ID. Source of truth for the /vozen-grant gate (owner-only) — not
    * spoofable via env. Empty/absent => no grant is authorized.
    */
   ownerIds?: Set<string>;

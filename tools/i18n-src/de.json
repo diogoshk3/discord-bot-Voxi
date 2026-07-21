@@ -313,7 +313,7 @@
       ["/leave", "Den Sprachkanal verlassen"],
       ["/tts", "Einen Text laut vorlesen"],
       ["/skip", "Das aktuelle Audio überspringen"],
-      ["/shutup", "Vozen sofort verstummen lassen (leert die Warteschlange)"],
+      ["/shut-up", "Vozen sofort verstummen lassen (leert die Warteschlange)"],
       ["/setup", "Geführtes Ein-Schritt-Setup"],
       ["/invite", "Den Einladungslink holen"],
       ["/vote", "Für Vozen auf top.gg abstimmen"],
@@ -326,7 +326,7 @@
       ["/voice preview", "Eine Stimmenprobe anhören"],
       ["/voice effect", "Roboter, Echo, Dämon … Stimmeneffekte"],
       ["/voice nickname", "Wie Vozen dich laut anspricht"],
-      ["/voice optout", "Nicht mehr automatisch vorgelesen werden"],
+      ["/voice opt-out", "Nicht mehr automatisch vorgelesen werden"],
       ["/pronunciation", "Bring Vozen bei, ein Wort auszusprechen (nur deins)"]
     ],
     "fun": [
@@ -335,10 +335,10 @@
       ["/game stats", "Deine Punkte, Siege & Rang"],
       ["/joke", "Ein kurzer Witz in jeder Sprache"],
       ["/laugh", "Vozen lacht in deiner Stimme"],
-      ["/8ball", "Frag die Magic 8-Ball, laut"],
+      ["/8-ball", "Frag die Magic 8-Ball, laut"],
       ["/fact · /fortune · /wyr", "Fun Facts, Wahrsagungen & Dilemmata"],
       ["/birthday set", "Vozen singt an deinem Geburtstag"],
-      ["/topspeakers", "Wer am meisten redet + Serien"],
+      ["/top-speakers", "Wer am meisten redet + Serien"],
       ["/randomizer", "Vozen wählt zufällig eine Option und sagt sie an"],
       [
         "/cast",
@@ -349,9 +349,9 @@
       ["/config greet", "Begrüße Leute, die dem Call beitreten"],
       ["/config language", "Die Oberflächensprache festlegen"],
       ["/config default-voice", "Die Standardstimme des Servers festlegen"],
-      ["/config autoread", "Auto-Vorlesen ein-/ausschalten"],
-      ["/config blockword", "Die Sperrliste verwalten"],
-      ["/serverpronunciation", "Aussprachen für den ganzen Server (Admin, 3 · 50 mit Premium)"]
+      ["/config auto-read", "Auto-Vorlesen ein-/ausschalten"],
+      ["/config block-word", "Die Sperrliste verwalten"],
+      ["/server-pronunciation", "Aussprachen für den ganzen Server (Admin, 3 · 50 mit Premium)"]
     ]
   },
   "faq": [
