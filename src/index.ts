@@ -42,6 +42,7 @@ import {
 import { createVoiceSession, becomeSpeakerIfStage } from './voice/session';
 import { listVoicePresence, forgetVoicePresence } from './store/voicePresence';
 import { planRejoin, type ChannelState } from './voice/rejoin';
+import { consumeDeployRejoinMarker } from './voice/deployRejoinMarker';
 import { loadBoardEmojis } from './games/boardEmojis';
 import { deleteChannelSafe } from './games/thread';
 import { getGuildConfig } from './store/guildConfig';
@@ -549,11 +550,11 @@ async function main(): Promise<void> {
     } catch (err) {
       log.error('[index] failed to start the gcloud_usage purge job (ignored)', err);
     }
-    // 24/7 in-call: restores the Premium servers to the channels they were in before the
-    // restart/deploy (the voice connections die on shutdown; the voice_presence rows
-    // survive). planRejoin (pure) decides what to restore vs forget;
-    // here we only resolve the real channel state and execute. Best-effort per guild.
+    // Startup voice restore has two policies: Premium 24/7 always restores, while an
+    // ordinary call restores only after the deployment workflow wrote its one-shot marker.
+    // A crash/manual restart has no marker, so Free calls do NOT unexpectedly rejoin.
     try {
+      const resumeAfterDeploy = consumeDeployRejoinMarker();
       const channelStateOf = (guildId: string, channelId: string): ChannelState => {
         const guild = client.guilds.cache.get(guildId);
         if (!guild) return 'gone'; // we are no longer in the guild
@@ -570,7 +571,8 @@ async function main(): Promise<void> {
       if (rows.length > 0) {
         const plan = planRejoin(rows, {
           stayInCall: (gid) =>
-            isGuildPremium(db, gid, Date.now()) && getGuildConfig(db, gid).stayInCall,
+            resumeAfterDeploy ||
+            (isGuildPremium(db, gid, Date.now()) && getGuildConfig(db, gid).stayInCall),
           channelState: channelStateOf,
         });
         for (const gid of plan.forget) forgetVoicePresence(db, gid);
@@ -588,7 +590,7 @@ async function main(): Promise<void> {
           }
         }
         log.info(
-          `[voice] 24/7: ${rejoined} servidor(es) Premium repostos, ${plan.forget.length} presença(s) limpa(s).`,
+          `[voice] startup rejoin (${resumeAfterDeploy ? 'deploy' : '24/7'}): ${rejoined} servidor(es) repostos, ${plan.forget.length} presença(s) limpa(s).`,
         );
       }
     } catch (err) {

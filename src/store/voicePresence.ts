@@ -1,9 +1,8 @@
 import type Database from 'better-sqlite3';
 
-// 24/7 in-call (Premium): persistence of the bot's voice channel per guild, to restore
-// it on startup (survives restarts/deploys). See the voice_presence table in db.ts and
-// the pure planning in src/voice/rejoin.ts. Only written for Premium servers (the gate
-// lives in createVoiceSession); these functions are the raw access to the table.
+// Voice-session persistence per guild. It supports Premium 24/7 and a one-shot recovery
+// after a successful deployment. Every live session writes its current channel; normal
+// exits delete it, while shutdown preserves it. See db.ts and src/voice/rejoin.ts.
 
 export interface VoicePresenceRow {
   guildId: string;

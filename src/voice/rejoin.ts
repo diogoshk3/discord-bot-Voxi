@@ -1,4 +1,4 @@
-// 24/7 in-call — PURE planning of the startup rejoin. Decides, from the persisted
+// Startup voice rejoin — PURE planning. Decides, from the persisted
 // presences (voice_presence), what to restore and what to forget, WITHOUT touching discord.js
 // or the DB (the predicates are injected). The real wiring (createVoiceSession + DELETE) lives
 // in ClientReady in index.ts; here only the policy, so it is testable.
@@ -15,7 +15,7 @@ import type { VoicePresenceRow } from '../store/voicePresence';
 export type ChannelState = 'ready' | 'no-perms' | 'gone';
 
 export interface RejoinPolicyDeps {
-  /** Should the guild stay 24/7 in the call NOW? (Premium AND the /config always-on toggle on.) */
+  /** Should this guild be restored on this startup? (24/7 Premium or one-shot deploy recovery.) */
   stayInCall: (guildId: string) => boolean;
   /** Current state of this guild's persisted channel. */
   channelState: (guildId: string, channelId: string) => ChannelState;
@@ -24,16 +24,16 @@ export interface RejoinPolicyDeps {
 export interface RejoinPlan {
   /** Guilds to restore into the call (createVoiceSession). */
   rejoin: VoicePresenceRow[];
-  /** Guilds whose row should be deleted (non-Premium or dead channel). */
+  /** Guilds whose row should be deleted (not eligible for this startup or dead channel). */
   forget: string[];
 }
 
 /**
  * Decides the startup rejoin. Rules, per persisted row:
- *  - non-Premium            -> forget (safety net: cleans up old Free rows).
- *  - Premium + 'gone' channel -> forget (the channel disappeared).
- *  - Premium + 'no-perms'   -> nothing (keeps the row; retries on the next startup).
- *  - Premium + 'ready'      -> restore.
+ *  - not eligible now       -> forget (safety net: cleans up stale rows).
+ *  - eligible + 'gone'      -> forget (the channel disappeared).
+ *  - eligible + 'no-perms'  -> nothing (keeps the row; retries on the next startup).
+ *  - eligible + 'ready'     -> restore.
  */
 export function planRejoin(rows: VoicePresenceRow[], deps: RejoinPolicyDeps): RejoinPlan {
   const rejoin: VoicePresenceRow[] = [];

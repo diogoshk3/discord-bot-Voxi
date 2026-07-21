@@ -14,8 +14,6 @@ import { ChannelType, type VoiceBasedChannel } from 'discord.js';
 import { GuildVoicePlayer } from './player';
 import type { BotDeps } from '../bot/deps';
 import { removePlayer } from '../bot/deps';
-import { isGuildPremium } from '../store/premium';
-import { getGuildConfig } from '../store/guildConfig';
 import { rememberVoicePresence } from '../store/voicePresence';
 import { log } from '../logging/logger';
 
@@ -65,19 +63,16 @@ export function createVoiceSession(
     getVoiceConnection(guildId)?.destroy();
   });
   deps.players.set(guildId, player);
-  // 24/7 in-call: only persists the channel when the guild is Premium AND turned on the
-  // toggle (/config always-on, default OFF) — so it is restored on startup (see rejoin.ts).
-  // Best-effort — NEVER blocks joining the call (and a deps without a db, as in tests,
-  // falls into the catch with no effect).
-  try {
-    if (
-      isGuildPremium(deps.db, guildId, Date.now()) &&
-      getGuildConfig(deps.db, guildId).stayInCall
-    ) {
+  // Persist the current call for two distinct startup policies: Premium 24/7 always
+  // restores it; a normal call restores it only after the one-shot deployment marker.
+  // Normal exits remove this row, while clean shutdown deliberately leaves it in place.
+  // Best-effort — NEVER blocks joining the call.
+  if (deps.db) {
+    try {
       rememberVoicePresence(deps.db, guildId, channelId, Date.now());
+    } catch (err) {
+      log.warn('[voice] failed to persist voice presence (ignored)', err);
     }
-  } catch (err) {
-    log.warn('[voice] failed to persist 24/7 presence (ignored)', err);
   }
   return player;
 }

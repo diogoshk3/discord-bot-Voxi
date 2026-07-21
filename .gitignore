@@ -22,6 +22,7 @@ tools/voices-v1.0.bin
 # Production logs and command-registration state
 logs/
 commands-state.json
+.vozen-rejoin-after-deploy
 
 # Regenerable runtime audio cache
 audio-cache/

@@ -10,6 +10,7 @@ import {
 import { commandDefs } from '../src/commands/definitions';
 import { handleInteraction } from '../src/commands/index';
 import { initDb } from '../src/store/db';
+import { resolveCastVoice } from '../src/commands/handlers/cast';
 
 describe('cast content', () => {
   it('contains the Pokémon selector plus safe non-franchise themes', () => {
@@ -80,6 +81,34 @@ describe('cast content', () => {
   });
 });
 
+describe('/cast voice resolution', () => {
+  it('uses the invoker’s compatible chosen Piper voice and speed', () => {
+    expect(
+      resolveCastVoice(
+        'en',
+        'piper',
+        ['en_US-amy-medium', 'en_GB-alan-medium'],
+        { model: 'en_GB-alan-medium', speed: 0.8, engine: 'piper' },
+        'en_US-amy-medium',
+        1,
+      ),
+    ).toEqual({ model: 'en_GB-alan-medium', speed: 0.8 });
+  });
+
+  it('does not make Piper pronounce a language with a synthetic or foreign fallback voice', () => {
+    expect(
+      resolveCastVoice(
+        'pt',
+        'piper',
+        ['en_US-amy-medium', 'pt_PT-google-medium'],
+        null,
+        'en_US-amy-medium',
+        1,
+      ),
+    ).toBeNull();
+  });
+});
+
 describe('/cast registration', () => {
   it('is registered as a top-level command with no required options', () => {
     const cast = commandDefs.find((command) => command.name === 'cast');
@@ -134,7 +163,7 @@ describe('/cast handler', () => {
     };
     const spoken: string[] = [];
     const voiceMembers = new Map([
-      ['u1', { id: 'u1', displayName: 'Diogo', user: { bot: false } }],
+      ['u1', { id: 'u1', displayName: '🔥Diogo🔥', user: { bot: false } }],
       ['u2', { id: 'u2', displayName: 'Rafa', user: { bot: false } }],
       ['bot-1', { id: 'bot-1', displayName: 'Vozen', user: { bot: true } }],
     ]);
@@ -181,7 +210,7 @@ describe('/cast handler', () => {
               'u1',
               {
                 id: 'u1',
-                displayName: 'Diogo',
+                displayName: '🔥Diogo🔥',
                 user: { bot: false },
                 voice: { channelId: 'voice-1' },
               },
@@ -230,6 +259,8 @@ describe('/cast handler', () => {
     expect(publicReplies.join(' ')).toMatch(/Pikachu|Charmander|Squirtle|is/i);
     expect(spoken.length).toBeGreaterThan(0);
     expect(spoken.join(' ')).toMatch(/is/i);
+    expect(spoken.join(' ')).toContain('Diogo');
+    expect(spoken.join(' ')).not.toContain('🔥');
     expect(sayRequests[0]?.engine).toBe('piper');
     expect(edits.length).toBeGreaterThan(0);
     // The panel is edited after each selection. The selected theme must stay

@@ -80,7 +80,8 @@ export function getPlayer(deps: BotDeps, guildId: string): GuildVoicePlayer | un
 }
 
 export function removePlayer(
-  deps: Pick<BotDeps, 'players' | 'aloneWatcher' | 'lastSpeaker' | 'games'>,
+  deps: Pick<BotDeps, 'players' | 'aloneWatcher' | 'lastSpeaker' | 'games'> &
+    Partial<Pick<BotDeps, 'db'>>,
   guildId: string,
 ): void {
   // Cancel the "alone" timer BEFORE anything else. This is the FUNNEL for all exits
@@ -100,6 +101,9 @@ export function removePlayer(
   stopTranscriptionForGuild(guildId);
   // Forget the last speaker: on returning to the call, xsaid announces who spoke again.
   deps.lastSpeaker?.delete(guildId);
+  // Planned deploy resume is only for calls that were live at shutdown. Any normal
+  // leave (manual, alone, lost connection, guild removal) must clear the saved channel.
+  if (deps.db) forgetVoicePresence(deps.db, guildId);
   const p = deps.players.get(guildId);
   if (p) {
     p.destroy();

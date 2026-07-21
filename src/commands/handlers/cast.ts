@@ -11,6 +11,7 @@ import { getLimiter, getPlayer } from '../../bot/deps';
 import { getGuildConfig } from '../../store/guildConfig';
 import { getUserVoice, type UserEngine } from '../../store/userVoice';
 import { resolveUserEngine } from '../../tts/resolveEngine';
+import { sanitizeSpeakerName } from '../../language/speakerName';
 import {
   CAST_LANGUAGE_CHOICES,
   CAST_THEMES,
@@ -32,6 +33,48 @@ const CAST_ENGINE_CHOICES = [
   { name: 'Kokoro', value: 'kokoro' },
 ] as const;
 type CastEngine = (typeof CAST_ENGINE_CHOICES)[number]['value'];
+
+type StoredVoice = ReturnType<typeof getUserVoice>;
+
+/** Synthetic Google-only entries look like Piper model ids, but have no local .onnx. */
+function isLocalPiperModel(model: string): boolean {
+  return !model.endsWith('-google-medium');
+}
+
+function isModelForLanguage(model: string, language: string): boolean {
+  return model.toLowerCase().startsWith(`${language.toLowerCase()}_`);
+}
+
+/**
+ * Resolves a voice for the selected cast language without silently falling back to an
+ * English Piper voice. A wrong-language Piper model makes names and roles sound worse
+ * than no voice at all. When the invoker has selected a compatible model with /voice,
+ * it wins over the alphabetical first model, just like regular speech does.
+ */
+export function resolveCastVoice(
+  language: string,
+  engine: CastEngine,
+  availableModels: readonly string[],
+  storedVoice: StoredVoice,
+  fallbackModel: string,
+  fallbackSpeed: number,
+): { model: string; speed: number } | null {
+  const compatible = availableModels.filter((model) => isModelForLanguage(model, language));
+  const candidates = engine === 'piper' ? compatible.filter(isLocalPiperModel) : compatible;
+  const preferred = storedVoice?.model;
+  const model =
+    (preferred && candidates.includes(preferred) ? preferred : undefined) ?? candidates[0];
+
+  // A Piper request must never use a synthetic Google model or a voice from another
+  // language. That path either failed or pronounced the whole cast with foreign phonemes.
+  if (!model && engine === 'piper') return null;
+
+  const resolved = model ?? fallbackModel;
+  return {
+    model: resolved,
+    speed: preferred === resolved ? (storedVoice?.speed ?? fallbackSpeed) : fallbackSpeed,
+  };
+}
 
 function castEngineFromStored(engine: UserEngine | null | undefined): CastEngine {
   return engine === 'piper' || engine === 'kokoro' ? engine : 'google';
@@ -267,15 +310,33 @@ export async function handleCast(i: ChatInputCommandInteraction, deps: BotDeps):
   }
 
   const cfg = getGuildConfig(deps.db, i.guildId);
+  const selectedTheme = themeKey;
+  if (!selectedTheme) return;
+  const assignments = assignCast(humans, selectedTheme);
+  const voice = resolveCastVoice(
+    language,
+    engine,
+    deps.availableModels,
+    storedVoice,
+    cfg.defaultVoice || deps.config.defaultVoice || 'en_US-amy-medium',
+    deps.config.defaultSpeed,
+  );
+  if (!voice) {
+    await i
+      .editReply(
+        editCard(
+          `Piper has no installed voice for ${CAST_LANGUAGE_CHOICES.find((choice) => choice.value === language)?.name ?? language}. Choose another engine or language, then run \`/cast\` again.`,
+          { tone: 'warning' },
+        ),
+      )
+      .catch(() => {});
+    return;
+  }
   const limiter = getLimiter(deps, i.guildId, cfg.ratePerMin);
   if (!limiter.allow(i.user.id, Date.now())) {
     await i.editReply(editCard(t('tts.tooFast', locale), { tone: 'warning' })).catch(() => {});
     return;
   }
-
-  const selectedTheme = themeKey;
-  if (!selectedTheme) return;
-  const assignments = assignCast(humans, selectedTheme);
   const text = publicCastText(selectedTheme, language, assignments);
   await i.followUp(
     replyCard(text, {
@@ -284,21 +345,21 @@ export async function handleCast(i: ChatInputCommandInteraction, deps: BotDeps):
     }),
   );
 
-  const prefix = `${language}_`;
-  const model =
-    deps.availableModels.find((available) => available.startsWith(prefix)) ||
-    cfg.defaultVoice ||
-    deps.config.defaultVoice ||
-    'en_US-amy-medium';
-  const speech = buildCastSpeech(assignments, language);
+  // Chat may show a decorative Discord name, but Piper must only receive words it
+  // can pronounce. Emoji-only names get a neutral fallback instead of garbled symbols.
+  const speechAssignments = assignments.map((assignment) => ({
+    ...assignment,
+    displayName: sanitizeSpeakerName(assignment.displayName) || 'player',
+  }));
+  const speech = buildCastSpeech(speechAssignments, language);
   const chunks = chunkCastSpeech(speech);
   const resolvedEngine = resolveUserEngine(deps.db, i.guildId, i.user.id, engine, Date.now());
   let spoken = false;
   for (const chunk of chunks) {
     const queued = await player.say({
       text: chunk,
-      model,
-      speed: deps.config.defaultSpeed,
+      model: voice.model,
+      speed: voice.speed,
       singleVoice: true,
       ...resolvedEngine,
     });

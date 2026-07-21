@@ -37,6 +37,8 @@ vi.mock('../src/voice/player', () => ({
 
 import { createVoiceSession, becomeSpeakerIfStage } from '../src/voice/session';
 import type { BotDeps } from '../src/bot/deps';
+import { initDb } from '../src/store/db';
+import { listVoicePresence } from '../src/store/voicePresence';
 
 function makeDeps(): BotDeps {
   return {
@@ -101,5 +103,23 @@ describe('createVoiceSession — identity-aware onIdle guard', () => {
     } as never;
     expect(() => becomeSpeakerIfStage(channel)).not.toThrow();
     expect(setSuppressed).not.toHaveBeenCalled();
+  });
+
+  it('(d) records every live call and clears it on a normal exit', () => {
+    const db = initDb(':memory:');
+    try {
+      const deps = { ...makeDeps(), db };
+      const player = createVoiceSession(deps, 'G', 'C', {} as never) as unknown as {
+        onIdle: () => void;
+      };
+
+      expect(listVoicePresence(db)).toHaveLength(1);
+      expect(listVoicePresence(db)[0]).toMatchObject({ guildId: 'G', channelId: 'C' });
+
+      player.onIdle();
+      expect(listVoicePresence(db)).toEqual([]);
+    } finally {
+      db.close();
+    }
   });
 });

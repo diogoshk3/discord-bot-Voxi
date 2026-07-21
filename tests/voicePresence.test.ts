@@ -8,7 +8,7 @@ import {
 } from '../src/store/voicePresence';
 import { planRejoin, type ChannelState } from '../src/voice/rejoin';
 
-describe('voice_presence — store (24/7 persistence)', () => {
+describe('voice_presence — store (voice-session persistence)', () => {
   let db: Database.Database;
   beforeEach(() => {
     db = initDb(':memory:');
@@ -66,7 +66,7 @@ describe('planRejoin — pure policy of the startup rejoin', () => {
     expect(plan.rejoin.map((r) => r.guildId)).toEqual(['PREM-READY']);
   });
 
-  it('non-Premium -> forgets (safety net)', () => {
+  it('not eligible for this startup -> forgets (safety net)', () => {
     expect(plan.forget).toContain('FREE');
   });
 

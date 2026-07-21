@@ -292,9 +292,9 @@ export function initDb(path: string): Database.Database {
       CREATE INDEX IF NOT EXISTS idx_kofi_activation_consent_confirmation
         ON kofi_activation_consent (confirmation_id);
 
-      -- Per-guild 24/7 voice presence. Stored on Premium joins and deleted by /leave or
-      -- guildDelete, but not by generic teardown or shutdown so it survives deployment.
-      -- ClientReady restores valid Premium rows and removes stale non-Premium rows.
+      -- Per-guild voice presence. Stored for every live session and deleted by normal
+      -- teardown or guildDelete, but not by shutdown so it survives a deployment.
+      -- ClientReady restores Premium 24/7 rows, plus one-shot deploy recovery rows.
       CREATE TABLE IF NOT EXISTS voice_presence (
         guild_id   TEXT PRIMARY KEY,
         channel_id TEXT NOT NULL,

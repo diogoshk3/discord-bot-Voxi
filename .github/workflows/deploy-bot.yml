@@ -78,6 +78,9 @@ jobs:
             # Persist only the two allow-listed vote secrets from GitHub Actions. The script
             # validates them, removes duplicate keys, writes atomically, and never logs values.
             node scripts/sync-deploy-env.mjs
+            # One-shot, 10-minute marker consumed by the NEW bot process. It allows calls
+            # active at this planned update to resume, but manual/crash restarts never create it.
+            touch .vozen-rejoin-after-deploy
             sudo -n systemctl restart vozen.service
             sleep 20
             systemctl is-active vozen.service
