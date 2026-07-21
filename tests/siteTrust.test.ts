@@ -113,6 +113,21 @@ describe('site acquisition and trust contracts', () => {
     );
   });
 
+  it('documents /cast publicly without exposing bot-only theme names', () => {
+    const siteFiles = [
+      'site/index.html',
+      'site/js/i18n-v39.js',
+      ...['en', 'pt', 'fr', 'es', 'de', 'tr', 'ar', 'zh', 'ru', 'ko'].map(
+        (lang) => `tools/i18n-src/${lang}.json`,
+      ),
+    ];
+    for (const path of siteFiles) {
+      const content = source(path);
+      expect(content, path).toContain('/cast');
+      expect(content.toLowerCase(), path).not.toMatch(/pok[eé]mon/);
+    }
+  });
+
   it('runs the parser-based English fallback verifier before building the site', () => {
     const pkg = JSON.parse(source('package.json')) as { scripts?: Record<string, string> };
 

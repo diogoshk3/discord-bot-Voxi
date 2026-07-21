@@ -79,6 +79,7 @@
     "cmd.voice": "Voz",
     "cmd.fun": "Diversão",
     "cmd.admin": "Admin",
+    "cmd.sub": "Usa /cast para atribuir um papel temático aleatório a todos na tua call e ouvir o resultado.",
     "price.eyebrow": "Preços",
     "price.title": "Essencial grátis. Premium justo.",
     "price.sub": "O núcleo com Piper continua grátis. O Premium desbloqueia Kokoro, Google HD e os extras que usam mais computação.",
@@ -338,7 +339,8 @@
       ["/fact · /fortune · /wyr", "Factos, sortes e dilemas falados"],
       ["/birthday set", "O Vozen dá-te os parabéns no teu dia"],
       ["/topspeakers", "Quem mais fala + streaks"],
-      ["/randomizer", "O Vozen escolhe uma opção ao acaso e di-la"]
+      ["/randomizer", "O Vozen escolhe uma opção ao acaso e di-la"],
+      ["/cast", "Atribui um papel temático aleatório a todos na tua call e diz os resultados"]
     ],
     "admin": [
       ["/config greet", "Saudar quem entra na call"],

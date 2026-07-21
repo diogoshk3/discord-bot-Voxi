@@ -79,6 +79,7 @@
     "cmd.voice": "Voice",
     "cmd.fun": "Fun",
     "cmd.admin": "Admin",
+    "cmd.sub": "Use /cast to assign a random theme role to everyone in your voice call and hear the result.",
     "price.eyebrow": "Pricing",
     "price.title": "Free core. Fair Premium.",
     "price.sub": "The Piper-powered core stays free. Premium unlocks Kokoro, Google HD and the extras that use more compute.",
@@ -338,7 +339,11 @@
       ["/fact · /fortune · /wyr", "Fun facts, fortunes & dilemmas"],
       ["/birthday set", "Vozen sings on your birthday"],
       ["/topspeakers", "Who talks the most + streaks"],
-      ["/randomizer", "Vozen picks one option at random and says it"]
+      ["/randomizer", "Vozen picks one option at random and says it"],
+      [
+        "/cast",
+        "Randomly assign a themed role to everyone in your voice call, then say the results"
+      ]
     ],
     "admin": [
       ["/config greet", "Greet people who join the call"],

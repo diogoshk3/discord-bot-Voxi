@@ -79,6 +79,7 @@
     "cmd.voice": "Stimme",
     "cmd.fun": "Spaß",
     "cmd.admin": "Admin",
+    "cmd.sub": "Mit /cast weist du allen in deinem Sprachkanal eine zufällige thematische Rolle zu und hörst das Ergebnis.",
     "price.eyebrow": "Preise",
     "price.title": "Kostenloser Kern. Faires Premium.",
     "price.sub": "Der Piper-basierte Kern bleibt kostenlos. Premium schaltet Kokoro, Google HD und rechenintensive Extras frei.",
@@ -338,7 +339,11 @@
       ["/fact · /fortune · /wyr", "Fun Facts, Wahrsagungen & Dilemmata"],
       ["/birthday set", "Vozen singt an deinem Geburtstag"],
       ["/topspeakers", "Wer am meisten redet + Serien"],
-      ["/randomizer", "Vozen wählt zufällig eine Option und sagt sie an"]
+      ["/randomizer", "Vozen wählt zufällig eine Option und sagt sie an"],
+      [
+        "/cast",
+        "Weise allen in deinem Sprachkanal eine zufällige thematische Rolle zu und höre die Ergebnisse"
+      ]
     ],
     "admin": [
       ["/config greet", "Begrüße Leute, die dem Call beitreten"],

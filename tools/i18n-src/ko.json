@@ -79,6 +79,7 @@
     "cmd.voice": "음성",
     "cmd.fun": "재미",
     "cmd.admin": "관리자",
+    "cmd.sub": "음성 통화의 모든 사람에게 테마 역할을 무작위로 배정하고 결과를 들으려면 /cast를 사용하세요.",
     "price.eyebrow": "요금제",
     "price.title": "무료 핵심 기능. 공정한 Premium.",
     "price.sub": "Piper 기반 핵심 기능은 계속 무료입니다. Premium은 Kokoro, Google HD와 더 많은 연산이 필요한 부가 기능을 잠금 해제합니다.",
@@ -338,7 +339,8 @@
       ["/fact · /fortune · /wyr", "재미있는 사실, 운세, 딜레마"],
       ["/birthday set", "생일에 Vozen이 노래해줍니다"],
       ["/topspeakers", "가장 많이 말한 사람 + 연속 기록"],
-      ["/randomizer", "Vozen이 무작위로 하나를 골라 말해줍니다"]
+      ["/randomizer", "Vozen이 무작위로 하나를 골라 말해줍니다"],
+      ["/cast", "음성 통화의 모든 사람에게 테마 역할을 무작위로 배정하고 결과를 들려줍니다"]
     ],
     "admin": [
       ["/config greet", "통화에 참여하는 사람 인사하기"],

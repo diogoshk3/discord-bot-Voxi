@@ -119,6 +119,12 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
     )
     .toJSON(),
   new SlashCommandBuilder().setName('fortune').setDescription('Vozen reads you a fortune').toJSON(),
+  // /cast — randomly assigns a theme entry to every human in Vozen's current voice call.
+  // The interactive panel keeps the command beginner-friendly: the language starts in English.
+  new SlashCommandBuilder()
+    .setName('cast')
+    .setDescription('Randomly cast everyone in your voice call')
+    .toJSON(),
   new SlashCommandBuilder()
     .setName('fact')
     .setDescription('Vozen tells you a random fun fact')

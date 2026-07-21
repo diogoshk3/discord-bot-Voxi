@@ -79,6 +79,7 @@
     "cmd.voice": "Voix",
     "cmd.fun": "Fun",
     "cmd.admin": "Admin",
+    "cmd.sub": "Utilisez /cast pour attribuer un rôle thématique aléatoire à chacun dans votre appel et écouter le résultat.",
     "price.eyebrow": "Tarifs",
     "price.title": "Cœur gratuit. Premium équitable.",
     "price.sub": "Le cœur propulsé par Piper reste gratuit. Premium débloque Kokoro, Google HD et les extras plus gourmands en calcul.",
@@ -338,7 +339,11 @@
       ["/fact · /fortune · /wyr", "Anecdotes, prédictions et dilemmes"],
       ["/birthday set", "Vozen chante le jour de votre anniversaire"],
       ["/topspeakers", "Qui parle le plus + séries en cours"],
-      ["/randomizer", "Vozen tire une option au sort et la dit"]
+      ["/randomizer", "Vozen tire une option au sort et la dit"],
+      [
+        "/cast",
+        "Attribuez un rôle thématique aléatoire à chacun dans votre appel, puis écoutez les résultats"
+      ]
     ],
     "admin": [
       ["/config greet", "Accueillir ceux qui rejoignent l'appel"],

@@ -79,6 +79,7 @@
     "cmd.voice": "Ses",
     "cmd.fun": "Eğlence",
     "cmd.admin": "Yönetici",
+    "cmd.sub": "Sesli kanaldaki herkese rastgele temalı bir rol atamak ve sonucu dinlemek için /cast kullan.",
     "price.eyebrow": "Fiyatlandırma",
     "price.title": "Ücretsiz temel sürüm. Adil Premium.",
     "price.sub": "Piper tabanlı çekirdek ücretsiz kalır. Premium; Kokoro, Google HD ve daha fazla işlem gücü kullanan ekstraları açar.",
@@ -338,7 +339,8 @@
       ["/fact · /fortune · /wyr", "Eğlenceli bilgiler, kehanetler ve ikilemler"],
       ["/birthday set", "Vozen doğum gününde şarkı söyler"],
       ["/topspeakers", "En çok konuşan kim + seriler"],
-      ["/randomizer", "Vozen rastgele bir seçenek seçip söyler"]
+      ["/randomizer", "Vozen rastgele bir seçenek seçip söyler"],
+      ["/cast", "Sesli kanaldaki herkese rastgele temalı bir rol ata ve sonuçları dinle"]
     ],
     "admin": [
       ["/config greet", "Aramaya katılanları selamla"],

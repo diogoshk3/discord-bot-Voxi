@@ -14,6 +14,7 @@ import { handleVoice } from './handlers/voice';
 import { handleTranscribe } from './handlers/transcribe';
 import { handleConfig, handleSetup, handleStats } from './handlers/config';
 import { handleGame } from './handlers/games';
+import { handleCast } from './handlers/cast';
 import {
   handleLaugh,
   handleJoke,
@@ -269,6 +270,8 @@ export async function handleInteraction(
         return await handleMicroFun(i, deps, '8ball');
       case 'fortune':
         return await handleMicroFun(i, deps, 'fortune');
+      case 'cast':
+        return await handleCast(i, deps);
       case 'fact':
         return await handleMicroFun(i, deps, 'fact');
       case 'wyr':

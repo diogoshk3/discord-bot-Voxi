@@ -79,6 +79,7 @@
     "cmd.voice": "語音",
     "cmd.fun": "趣味",
     "cmd.admin": "管理",
+    "cmd.sub": "使用 /cast 為語音通話中的每個人隨機分配主題角色，然後聽取結果。",
     "price.eyebrow": "定價",
     "price.title": "核心功能免費，Premium 公道實惠。",
     "price.sub": "基于 Piper 的核心功能永久免费。Premium 可解锁 Kokoro、Google HD 以及需要更多算力的附加功能。",
@@ -338,7 +339,8 @@
       ["/fact · /fortune · /wyr", "趣味知識、運勢與兩難抉擇"],
       ["/birthday set", "Vozen 在你生日時獻唱"],
       ["/topspeakers", "誰講話最多＋連續紀錄"],
-      ["/randomizer", "Vozen 隨機選一個選項並唸出來"]
+      ["/randomizer", "Vozen 隨機選一個選項並唸出來"],
+      ["/cast", "為語音通話中的每個人隨機分配主題角色，然後聽取結果"]
     ],
     "admin": [
       ["/config greet", "向加入通話的成員打招呼"],
