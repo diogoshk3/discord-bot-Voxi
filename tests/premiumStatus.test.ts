@@ -6,6 +6,7 @@ import {
   grantUserPremium,
   grantGuildPass,
   activateSeat,
+  syncDiscordEntitlements,
 } from '../src/store/premium';
 
 const U = 'user-1';
@@ -53,6 +54,15 @@ describe('buildPremiumStatus — vista do painel', () => {
     expect(v.pass!.used).toBe(2);
     expect(v.pass!.active).toBe(true);
     expect(v.pass!.guilds).toEqual(['g-1', 'g-2']);
+  });
+
+  it('shows the effective Discord Plus expiry without changing the direct purchase row', () => {
+    grantUserPremium(db, U, 1, 'kofi', now);
+    const discordExpiry = now + 3 * DAY;
+    syncDiscordEntitlements(db, [{ kind: 'user', id: U, expiresAt: discordExpiry }]);
+    expect(buildPremiumStatus(db, U, now).plus).toEqual({ active: true, expiresAt: discordExpiry });
+    syncDiscordEntitlements(db, []);
+    expect(buildPremiumStatus(db, U, now).plus.expiresAt).toBe(now + DAY);
   });
 
   it('passe expirado -> active false', () => {

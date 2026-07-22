@@ -11,10 +11,19 @@ export type PremiumKind = 'guild' | 'user';
 const DAY_MS = 86_400_000;
 
 export function isGuildPremium(db: Database.Database, guildId: string, now: number): boolean {
-  // DIRECT server premium (redeem/discord/manual)...
-  const row = db.prepare('SELECT expires_at FROM premium_guild WHERE guild_id = ?').get(guildId) as
-    { expires_at: number } | undefined;
-  if (row && row.expires_at > now) return true;
+  // DIRECT server Premium (redeem/Ko-fi/manual) or current Discord Premium App access.
+  const row = db
+    .prepare(
+      `SELECT MAX(expires_at) AS expires_at
+         FROM (
+           SELECT expires_at FROM premium_guild WHERE guild_id = ?
+           UNION ALL
+           SELECT expires_at FROM discord_premium_entitlement
+             WHERE kind = 'guild' AND target_id = ?
+         )`,
+    )
+    .get(guildId, guildId) as { expires_at: number | null };
+  if (row.expires_at !== null && row.expires_at > now) return true;
   // ...OR a PASS: is there an activation of this server whose pass has not expired yet?
   const pass = db
     .prepare(
@@ -34,9 +43,12 @@ export function isUserPremium(db: Database.Database, userId: string, now: number
            SELECT expires_at FROM premium_user WHERE user_id = ?
            UNION ALL
            SELECT rewarded_at + ? AS expires_at FROM vote_reward WHERE user_id = ?
+           UNION ALL
+           SELECT expires_at FROM discord_premium_entitlement
+             WHERE kind = 'user' AND target_id = ?
          )`,
     )
-    .get(userId, VOTE_REWARD_MS, userId) as { expires_at: number | null };
+    .get(userId, VOTE_REWARD_MS, userId, userId) as { expires_at: number | null };
   return row.expires_at !== null && row.expires_at > now;
 }
 
@@ -49,7 +61,7 @@ export function getGuildPremiumExpiry(db: Database.Database, guildId: string): n
 
 /**
  * EFFECTIVE end of the server's Premium for DISPLAY (active only): the max between the direct
- * expiry (redeem/discord/manual) and the end of any pass that has an active license
+ * expiry (redeem/Ko-fi/manual), the current Discord entitlement, and the end of any pass that has an active license
  * here. null if the server is not Premium now. (To EXTEND, use getGuildPremium
  * Expiry, which is only the direct row.)
  */
@@ -63,12 +75,15 @@ export function effectiveGuildPremiumExpiry(
       `SELECT MAX(exp) AS m FROM (
          SELECT expires_at AS exp FROM premium_guild WHERE guild_id = ? AND expires_at > ?
          UNION ALL
+         SELECT expires_at AS exp FROM discord_premium_entitlement
+           WHERE kind = 'guild' AND target_id = ? AND expires_at > ?
+         UNION ALL
          SELECT p.expires_at FROM premium_pass_activation a
            JOIN premium_pass p ON p.user_id = a.user_id
            WHERE a.guild_id = ? AND p.expires_at > ?
        )`,
     )
-    .get(guildId, now, guildId, now) as { m: number | null };
+    .get(guildId, now, guildId, now, guildId, now) as { m: number | null };
   return row.m ?? null;
 }
 
@@ -81,9 +96,12 @@ export function getUserPremiumExpiry(db: Database.Database, userId: string): num
            SELECT expires_at FROM premium_user WHERE user_id = ?
            UNION ALL
            SELECT rewarded_at + ? AS expires_at FROM vote_reward WHERE user_id = ?
+           UNION ALL
+           SELECT expires_at FROM discord_premium_entitlement
+             WHERE kind = 'user' AND target_id = ?
          )`,
     )
-    .get(userId, VOTE_REWARD_MS, userId) as { expires_at: number | null };
+    .get(userId, VOTE_REWARD_MS, userId, userId) as { expires_at: number | null };
   return row.expires_at;
 }
 
@@ -174,7 +192,7 @@ export function listPassActivations(db: Database.Database, userId: string): stri
  * keyed by owner). Non-expired passes only. `premium_pass_activation` has no UNIQUE on
  * guild_id, so two owners COULD have activated the same guild — DETERMINISTIC
  * tiebreak by the oldest `activated_at` (the first to cover the guild). null if
- * no active pass covers the guild (e.g. direct Premium via redeem/discord, no pass).
+ * no active pass covers the guild (e.g. direct Premium or Discord access, no pass).
  */
 export function resolveGuildPassOwner(
   db: Database.Database,
@@ -352,44 +370,9 @@ export function recordKofiTransaction(
 
 // ── Discord Premium Apps (entitlements) ──────────────────────────────────────
 // When the operator enables Discord's native monetization (SKUs), purchases arrive
-// as "entitlements". We reuse the premium_* tables with source='discord' to
-// avoid duplicating the gating logic (isGuildPremium/isUserPremium already suffice). The full
-// sync (sync*Entitlements) is reconciling: it grants the active ones and revokes the
-// source='discord' ones that no longer exist (refund/cancellation). It never SHORTENS an
-// existing premium (uses the MAX) and never touches rows of another source (e.g. redeem):
-// if a redeem has a longer expiry, the row keeps its source and is ignored during revocation.
-
-/** Grants/extends guild premium from a Discord entitlement (source='discord'). */
-export function upsertDiscordGuildPremium(
-  db: Database.Database,
-  guildId: string,
-  expiresAt: number,
-): void {
-  db.prepare(
-    `INSERT INTO premium_guild (guild_id, expires_at, source)
-     VALUES (?, ?, 'discord')
-     ON CONFLICT(guild_id) DO UPDATE SET
-       expires_at = MAX(excluded.expires_at, premium_guild.expires_at),
-       source = CASE WHEN premium_guild.expires_at > excluded.expires_at
-                     THEN premium_guild.source ELSE 'discord' END`,
-  ).run(guildId, expiresAt);
-}
-
-/** Same, for per-user Vozen Plus. */
-export function upsertDiscordUserPremium(
-  db: Database.Database,
-  userId: string,
-  expiresAt: number,
-): void {
-  db.prepare(
-    `INSERT INTO premium_user (user_id, expires_at, source)
-     VALUES (?, ?, 'discord')
-     ON CONFLICT(user_id) DO UPDATE SET
-       expires_at = MAX(excluded.expires_at, premium_user.expires_at),
-       source = CASE WHEN premium_user.expires_at > excluded.expires_at
-                     THEN premium_user.source ELSE 'discord' END`,
-  ).run(userId, expiresAt);
-}
+// as entitlements. Their current state is reconciled in discord_premium_entitlement,
+// independently of durable Ko-fi/redeem/manual grants in premium_*. This keeps a Discord
+// cancellation from revoking a separately purchased entitlement.
 
 export interface EntitlementGrant {
   kind: PremiumKind;
@@ -404,49 +387,45 @@ export interface EntitlementSyncResult {
 }
 
 /**
- * Reconciles ALL active Discord entitlements with the premium_* tables.
- * `grants` must be the COMPLETE list of active entitlements (full fetch) — grants
- * the active ones and revokes (deletes) the source='discord' rows that are no longer present. Transactional.
+ * Reconciles ALL active Discord entitlements with the current Discord state table.
+ * `grants` must be the COMPLETE list of active entitlements (full fetch). Duplicate grants
+ * for the same target collapse to their longest expiry. This never changes premium_* direct
+ * purchase records. Transactional.
  */
 export function syncDiscordEntitlements(
   db: Database.Database,
   grants: EntitlementGrant[],
 ): EntitlementSyncResult {
   const tx = db.transaction((): EntitlementSyncResult => {
-    const activeGuilds = new Set(grants.filter((g) => g.kind === 'guild').map((g) => g.id));
-    const activeUsers = new Set(grants.filter((g) => g.kind === 'user').map((g) => g.id));
-
-    // Revoke what was 'discord' and is no longer active (refund/cancellation).
-    const staleGuilds = (
-      db.prepare("SELECT guild_id FROM premium_guild WHERE source = 'discord'").all() as {
-        guild_id: string;
-      }[]
-    ).filter((r) => !activeGuilds.has(r.guild_id));
-    const staleUsers = (
-      db.prepare("SELECT user_id FROM premium_user WHERE source = 'discord'").all() as {
-        user_id: string;
-      }[]
-    ).filter((r) => !activeUsers.has(r.user_id));
-    for (const r of staleGuilds) {
-      db.prepare("DELETE FROM premium_guild WHERE guild_id = ? AND source = 'discord'").run(
-        r.guild_id,
-      );
-    }
-    for (const r of staleUsers) {
-      db.prepare("DELETE FROM premium_user WHERE user_id = ? AND source = 'discord'").run(
-        r.user_id,
-      );
+    const active = new Map<string, EntitlementGrant>();
+    for (const grant of grants) {
+      const key = `${grant.kind}:${grant.id}`;
+      const existing = active.get(key);
+      if (!existing || grant.expiresAt > existing.expiresAt) active.set(key, grant);
     }
 
-    // Grant/extend the active ones.
-    for (const g of grants) {
-      if (g.kind === 'guild') upsertDiscordGuildPremium(db, g.id, g.expiresAt);
-      else upsertDiscordUserPremium(db, g.id, g.expiresAt);
+    const stored = db.prepare('SELECT kind, target_id FROM discord_premium_entitlement').all() as {
+      kind: PremiumKind;
+      target_id: string;
+    }[];
+    const stale = stored.filter((row) => !active.has(`${row.kind}:${row.target_id}`));
+    const deleteEntitlement = db.prepare(
+      'DELETE FROM discord_premium_entitlement WHERE kind = ? AND target_id = ?',
+    );
+    for (const row of stale) deleteEntitlement.run(row.kind, row.target_id);
+
+    const upsertEntitlement = db.prepare(
+      `INSERT INTO discord_premium_entitlement (kind, target_id, expires_at)
+       VALUES (?, ?, ?)
+       ON CONFLICT(kind, target_id) DO UPDATE SET expires_at = excluded.expires_at`,
+    );
+    for (const grant of active.values()) {
+      upsertEntitlement.run(grant.kind, grant.id, grant.expiresAt);
     }
     return {
-      guildsActive: activeGuilds.size,
-      usersActive: activeUsers.size,
-      revoked: staleGuilds.length + staleUsers.length,
+      guildsActive: [...active.values()].filter((g) => g.kind === 'guild').length,
+      usersActive: [...active.values()].filter((g) => g.kind === 'user').length,
+      revoked: stale.length,
     };
   });
   return tx();

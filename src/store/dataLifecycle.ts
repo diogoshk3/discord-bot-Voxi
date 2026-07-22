@@ -89,6 +89,9 @@ export const USER_ERASE_BESPOKE = ['kofi_supporter', 'gcloud_usage'] as const;
  * decision (hand-reviewed); the extended guard accepts them.
  */
 export const LIFECYCLE_REVIEWED_EXEMPT = [
+  // Current Discord monetization state. target_id can identify a user or guild, but this is a
+  // paid-access record reconciled from Discord, not data that /privacy erase may revoke.
+  'discord_premium_entitlement',
   'premium_code', // code ledger: created_by/redeemed_by = proof of purchase/redemption, retained
   'kofi_transaction', // idempotency ledger: Ko-fi transaction_id, not a user ID
   'kofi_pending', // pending purchases, purged by TTL (startPendingPurgeJob); tx id + email_hash

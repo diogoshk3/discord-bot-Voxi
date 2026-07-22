@@ -143,8 +143,9 @@ export function initDb(path: string): Database.Database {
         last_date   TEXT NOT NULL DEFAULT ''
       );
 
-      -- Per-guild Vozen Premium. expires_at uses Unix milliseconds; a missing or expired
-      -- row is Free. source records redeem, kofi, discord, or manual provenance.
+      -- Per-guild Vozen Premium purchased/granted directly. expires_at uses Unix
+      -- milliseconds; a missing or expired row is Free. source records redeem, kofi,
+      -- or manual provenance. Discord Premium App state is reconciled separately below.
       CREATE TABLE IF NOT EXISTS premium_guild (
         guild_id   TEXT PRIMARY KEY,
         expires_at INTEGER NOT NULL,
@@ -157,6 +158,18 @@ export function initDb(path: string): Database.Database {
         expires_at INTEGER NOT NULL,
         source     TEXT NOT NULL DEFAULT ''
       );
+
+      -- Current Discord Premium App entitlements. This is reconciled from Discord's
+      -- complete active entitlement list, so it must never overwrite durable paid rows.
+      -- kind is 'guild' for Premium and 'user' for Plus.
+      CREATE TABLE IF NOT EXISTS discord_premium_entitlement (
+        kind       TEXT NOT NULL CHECK (kind IN ('guild', 'user')),
+        target_id  TEXT NOT NULL,
+        expires_at INTEGER NOT NULL,
+        PRIMARY KEY (kind, target_id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_discord_premium_entitlement_target
+        ON discord_premium_entitlement (target_id);
 
       -- Active top.gg vote entitlement. The raw Discord ID is needed only while the
       -- 48h reward can be used and is erasable through /privacy erase. The permanent

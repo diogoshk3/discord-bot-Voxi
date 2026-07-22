@@ -81,6 +81,9 @@ function seedGuild(db: Database.Database, g: string, u: string): void {
     'kofi',
   );
   db.prepare(
+    'INSERT INTO discord_premium_entitlement (kind, target_id, expires_at) VALUES (?,?,?)',
+  ).run('guild', g, 9_999_999_999_999);
+  db.prepare(
     'INSERT INTO premium_pass_activation (user_id, guild_id, activated_at) VALUES (?,?,?)',
   ).run(u, g, 1);
 }
@@ -103,6 +106,7 @@ describe('purgeGuild', () => {
       // Retained: NOT deleted (server's financial record + paid licence).
       expect(count(db, 'premium_guild', 'guild_id', 'G')).toBe(1);
       expect(count(db, 'premium_pass_activation', 'guild_id', 'G')).toBe(1);
+      expect(count(db, 'discord_premium_entitlement', 'target_id', 'G')).toBe(1);
     } finally {
       db.close();
     }
@@ -200,6 +204,9 @@ describe('eraseUser', () => {
         'kofi',
       );
       db.prepare(
+        'INSERT INTO discord_premium_entitlement (kind, target_id, expires_at) VALUES (?,?,?)',
+      ).run('user', 'U', 9_999_999_999_999);
+      db.prepare(
         'INSERT INTO premium_pass (user_id, seats, expires_at, source) VALUES (?,?,?,?)',
       ).run('U', 3, 9_999_999_999_999, 'kofi');
       db.prepare(
@@ -222,6 +229,7 @@ describe('eraseUser', () => {
       // Retained: intact.
       expect(count(db, 'premium_user', 'user_id', 'U')).toBe(1);
       expect(count(db, 'premium_pass', 'user_id', 'U')).toBe(1);
+      expect(count(db, 'discord_premium_entitlement', 'target_id', 'U')).toBe(1);
       expect(count(db, 'kofi_activation_consent', 'discord_id', 'U')).toBe(1);
     } finally {
       db.close();

@@ -3,8 +3,8 @@
 // Bridge between Discord's "entitlements" (Premium Apps purchases) and internal premium.
 // Discord's Monetization Policy requires that paid features also be purchasable via
 // Premium Apps; when the operator creates the SKUs and sets PREMIUM_GUILD_SKU_ID /
-// PREMIUM_USER_SKU_ID, each active purchase becomes a grant in the premium_* tables
-// (source 'discord'). WITHOUT those IDs configured, ALL of this stays INERT (the bot runs
+// PREMIUM_USER_SKU_ID, each active purchase becomes a reconciled Discord entitlement.
+// WITHOUT those IDs configured, ALL of this stays INERT (the bot runs
 // as it does today, only with /redeem codes) — so it is safe to have in production before
 // the app is verified and native monetization is turned on.
 //
