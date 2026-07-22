@@ -146,6 +146,7 @@ describe('site localization contract', () => {
     const generator = source('tools/build-i18n.mjs');
     const pkg = JSON.parse(source('package.json')) as { scripts: Record<string, string> };
     expect(generator).toContain("process.argv.includes('--check')");
+    expect(generator).toContain("value.replace(/\\r\\n?/g, '\\n')");
     expect(generator).toContain('site/js/i18n-v40.js is out of date');
     expect(pkg.scripts['build:i18n']).toBe('node tools/build-i18n.mjs');
     expect(pkg.scripts['check:i18n']).toBe('node tools/build-i18n.mjs --check');

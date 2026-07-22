@@ -17,6 +17,7 @@ const SRC = join(ROOT, 'tools', 'i18n-src');
 const LANGS = ['en', 'pt', 'fr', 'es', 'de', 'tr', 'ar', 'zh', 'ru', 'ko'];
 const OUTPUT = join(ROOT, 'site', 'js', 'i18n-v40.js');
 const checkOnly = process.argv.includes('--check');
+const normalizeLineEndings = (value) => value.replace(/\r\n?/g, '\n');
 
 const data = {};
 for (const l of LANGS) data[l] = JSON.parse(readFileSync(join(SRC, `${l}.json`), 'utf8'));
@@ -93,7 +94,7 @@ if (checkOnly) {
   } catch {
     // The same actionable error covers a missing output and a stale one.
   }
-  if (current !== out) {
+  if (normalizeLineEndings(current) !== normalizeLineEndings(out)) {
     throw new Error('site/js/i18n-v40.js is out of date; run npm run build:i18n');
   }
   console.log(
