@@ -171,17 +171,29 @@ describe('smoke: boot without a token (assembles real deps without connecting to
     expect(new Set(names).size).toBe(names.length);
   });
 
-  it('guild commands are restricted to the Guild context; the public ones are not', () => {
-    // /redeem is also DM-capable: it grants to the redeemer's ACCOUNT, not to a guild.
-    const DM_CAPABLE = new Set(['invite', 'vote', 'help', 'uptime', 'bot-stats', 'redeem']);
+  it('registers explicit contexts for guild commands, DMs and reviewed User Apps', () => {
+    const USER_APP = new Set([
+      'invite',
+      'vote',
+      'help',
+      'uptime',
+      'bot-stats',
+      'tts-file',
+      'translate',
+      'Translate',
+      'Transcribe voice message',
+    ]);
     for (const def of commandDefs) {
       const contexts = (def as { contexts?: number[] }).contexts;
-      if (DM_CAPABLE.has(def.name)) {
-        // Public: no context restriction (usable in DMs and in a guild).
-        expect(contexts ?? null).toBeNull();
+      if (USER_APP.has(def.name)) {
+        expect(contexts).toEqual([0, 1, 2]);
+        expect(def.integration_types).toEqual([0, 1]);
+      } else if (def.name === 'redeem') {
+        expect(contexts).toEqual([0, 1]);
+        expect(def.integration_types).toEqual([0]);
       } else {
-        // Guild-only: exactly [Guild] (0).
         expect(contexts).toEqual([0]);
+        expect(def.integration_types).toEqual([0]);
       }
     }
   });

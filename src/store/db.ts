@@ -308,8 +308,23 @@ export function initDb(path: string): Database.Database {
         guild_id TEXT NOT NULL,
         user_id TEXT NOT NULL,
         locale TEXT,
+        speak_locale TEXT,
         opted_out INTEGER NOT NULL DEFAULT 0,
         PRIMARY KEY (guild_id, user_id)
+      );
+
+      CREATE TABLE IF NOT EXISTS user_voice_favorite (
+        user_id    TEXT NOT NULL,
+        voice_model TEXT NOT NULL,
+        created_at INTEGER NOT NULL,
+        PRIMARY KEY (user_id, voice_model)
+      );
+
+      CREATE TABLE IF NOT EXISTS user_voice_recent (
+        user_id    TEXT NOT NULL,
+        voice_model TEXT NOT NULL,
+        used_at    INTEGER NOT NULL,
+        PRIMARY KEY (user_id, voice_model)
       );
       CREATE TABLE IF NOT EXISTS translation_daily_usage (
         day TEXT NOT NULL,
@@ -333,6 +348,13 @@ export function initDb(path: string): Database.Database {
         auto_read INTEGER CHECK (auto_read IN (0, 1)),
         translation_enabled INTEGER CHECK (translation_enabled IN (0, 1)),
         default_voice TEXT,
+        engine TEXT,
+        speed REAL,
+        max_chars INTEGER,
+        read_bots INTEGER CHECK (read_bots IN (0, 1)),
+        voice_channel_id TEXT,
+        locale TEXT,
+        effect TEXT,
         PRIMARY KEY (guild_id, channel_id)
       );
 
@@ -442,6 +464,27 @@ export function initDb(path: string): Database.Database {
     const uvCols = db.pragma('table_info(user_voice)') as Array<{ name: string }>;
     if (!uvCols.some((c) => c.name === 'engine')) {
       db.exec("ALTER TABLE user_voice ADD COLUMN engine TEXT NOT NULL DEFAULT 'google'");
+    }
+    const translationPreferenceCols = db.pragma('table_info(translation_preference)') as Array<{
+      name: string;
+    }>;
+    if (!translationPreferenceCols.some((column) => column.name === 'speak_locale')) {
+      db.exec('ALTER TABLE translation_preference ADD COLUMN speak_locale TEXT');
+    }
+    const channelProfileCols = db.pragma('table_info(channel_profile)') as Array<{ name: string }>;
+    const channelProfileMigrations = [
+      ['engine', 'TEXT'],
+      ['speed', 'REAL'],
+      ['max_chars', 'INTEGER'],
+      ['read_bots', 'INTEGER CHECK (read_bots IN (0, 1))'],
+      ['voice_channel_id', 'TEXT'],
+      ['locale', 'TEXT'],
+      ['effect', 'TEXT'],
+    ] as const;
+    for (const [column, definition] of channelProfileMigrations) {
+      if (!channelProfileCols.some((existing) => existing.name === column)) {
+        db.exec(`ALTER TABLE channel_profile ADD COLUMN ${column} ${definition}`);
+      }
     }
     // Existing rows came from the vote-only scheduler, so `vote` is the honest backfill:
     // after the 24h shared cooldown their next card is support, preserving alternation.

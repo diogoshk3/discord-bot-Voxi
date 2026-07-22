@@ -1,4 +1,5 @@
 import type Database from 'better-sqlite3';
+import { isGuildPremium, isUserPremium } from './premium';
 
 export interface TranslationMapping {
   guildId: string;
@@ -11,6 +12,8 @@ export interface TranslationPreference {
   guildId: string;
   userId: string;
   optedOut: boolean;
+  locale: string | null;
+  speakLocale: string | null;
 }
 
 export type TranslationReservation =
@@ -19,6 +22,28 @@ export type TranslationReservation =
 export function utcDayKey(now = Date.now()): string {
   if (!Number.isFinite(now)) throw new Error('Translation timestamp must be finite');
   return new Date(now).toISOString().slice(0, 10);
+}
+
+function rollingWindowStart(day: string): string {
+  const parsed = Date.parse(`${day}T00:00:00.000Z`);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || !Number.isFinite(parsed))
+    throw new Error('Translation day must be UTC YYYY-MM-DD');
+  return new Date(parsed - 29 * 86_400_000).toISOString().slice(0, 10);
+}
+
+/** Published rolling 30-day caps. Paid entitlements raise capacity, never authorization. */
+export function resolveTranslationLimits(
+  db: Database.Database,
+  guildId: string | null,
+  userId: string,
+  now = Date.now(),
+): { guildLimit: number; userLimit: number } {
+  const plus = isUserPremium(db, userId, now);
+  const premium = guildId ? isGuildPremium(db, guildId, now) : false;
+  return {
+    guildLimit: premium ? 500_000 : 100_000,
+    userLimit: plus || premium ? 100_000 : 10_000,
+  };
 }
 
 export function listTranslationMappings(
@@ -105,25 +130,44 @@ export function getTranslationPreference(
 ): TranslationPreference {
   const row = db
     .prepare(
-      `SELECT opted_out AS optedOut FROM translation_preference
+      `SELECT opted_out AS optedOut, locale, speak_locale AS speakLocale
+       FROM translation_preference
        WHERE guild_id = ? AND user_id = ?`,
     )
-    .get(guildId, userId) as { optedOut: number } | undefined;
-  return { guildId, userId, optedOut: row?.optedOut === 1 };
+    .get(guildId, userId) as
+    { optedOut: number; locale: string | null; speakLocale: string | null } | undefined;
+  return {
+    guildId,
+    userId,
+    optedOut: row?.optedOut === 1,
+    locale: row?.locale ?? null,
+    speakLocale: row?.speakLocale ?? null,
+  };
 }
 
 export function setTranslationPreference(
   db: Database.Database,
-  preference: TranslationPreference,
+  preference: Pick<TranslationPreference, 'guildId' | 'userId' | 'optedOut'> &
+    Partial<Pick<TranslationPreference, 'locale' | 'speakLocale'>>,
 ): void {
+  const current = getTranslationPreference(db, preference.guildId, preference.userId);
   db.prepare(
-    `INSERT INTO translation_preference (guild_id, user_id, opted_out)
-     VALUES (?, ?, ?)
-     ON CONFLICT(guild_id, user_id) DO UPDATE SET opted_out = excluded.opted_out`,
-  ).run(preference.guildId, preference.userId, preference.optedOut ? 1 : 0);
+    `INSERT INTO translation_preference (guild_id, user_id, locale, speak_locale, opted_out)
+     VALUES (?, ?, ?, ?, ?)
+     ON CONFLICT(guild_id, user_id) DO UPDATE SET
+       locale = excluded.locale,
+       speak_locale = excluded.speak_locale,
+       opted_out = excluded.opted_out`,
+  ).run(
+    preference.guildId,
+    preference.userId,
+    preference.locale === undefined ? current.locale : preference.locale,
+    preference.speakLocale === undefined ? current.speakLocale : preference.speakLocale,
+    preference.optedOut ? 1 : 0,
+  );
 }
 
-/** Atomically reserves guild and per-user daily characters before any provider request. */
+/** Atomically reserves guild and per-user characters in the rolling 30-day window. */
 export function reserveTranslationChars(
   db: Database.Database,
   input: {
@@ -146,28 +190,39 @@ export function reserveTranslationChars(
   )
     throw new Error('Translation limits must be non-negative integers');
   const day = input.day ?? utcDayKey();
+  const windowStart = rollingWindowStart(day);
   class Denied extends Error {
     constructor(readonly reason: 'guild_quota' | 'user_quota') {
       super(reason);
     }
   }
   const reserve = db.transaction(() => {
-    const guild = db
-      .prepare(
-        `INSERT INTO translation_daily_usage (day, guild_id, chars) VALUES (?, ?, ?)
-         ON CONFLICT(day, guild_id) DO UPDATE SET chars = chars + excluded.chars
-         WHERE translation_daily_usage.chars + excluded.chars <= ?`,
-      )
-      .run(day, guildId, chars, guildLimit);
-    if (guild.changes !== 1) throw new Denied('guild_quota');
-    const user = db
-      .prepare(
-        `INSERT INTO translation_user_daily_usage (day, guild_id, user_id, chars) VALUES (?, ?, ?, ?)
-         ON CONFLICT(day, guild_id, user_id) DO UPDATE SET chars = chars + excluded.chars
-         WHERE translation_user_daily_usage.chars + excluded.chars <= ?`,
-      )
-      .run(day, guildId, userId, chars, userLimit);
-    if (user.changes !== 1) throw new Denied('user_quota');
+    const guildUsed = (
+      db
+        .prepare(
+          `SELECT COALESCE(SUM(chars), 0) AS used FROM translation_daily_usage
+           WHERE guild_id = ? AND day BETWEEN ? AND ?`,
+        )
+        .get(guildId, windowStart, day) as { used: number }
+    ).used;
+    if (guildUsed + chars > guildLimit) throw new Denied('guild_quota');
+    const userUsed = (
+      db
+        .prepare(
+          `SELECT COALESCE(SUM(chars), 0) AS used FROM translation_user_daily_usage
+           WHERE guild_id = ? AND user_id = ? AND day BETWEEN ? AND ?`,
+        )
+        .get(guildId, userId, windowStart, day) as { used: number }
+    ).used;
+    if (userUsed + chars > userLimit) throw new Denied('user_quota');
+    db.prepare(
+      `INSERT INTO translation_daily_usage (day, guild_id, chars) VALUES (?, ?, ?)
+       ON CONFLICT(day, guild_id) DO UPDATE SET chars = chars + excluded.chars`,
+    ).run(day, guildId, chars);
+    db.prepare(
+      `INSERT INTO translation_user_daily_usage (day, guild_id, user_id, chars) VALUES (?, ?, ?, ?)
+       ON CONFLICT(day, guild_id, user_id) DO UPDATE SET chars = chars + excluded.chars`,
+    ).run(day, guildId, userId, chars);
   });
   try {
     reserve();

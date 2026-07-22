@@ -115,6 +115,7 @@ function makeSetupInteraction(opts: {
   voiceChannel?: unknown;
   // "complete" channels indexed by id (simulates guild.channels.cache)
   guildChannels?: Record<string, unknown>;
+  testVoice?: boolean;
 }): FakeInteraction {
   const replies: string[] = [];
   const admin = opts.admin ?? true;
@@ -146,6 +147,7 @@ function makeSetupInteraction(opts: {
     channel: opts.interactionChannel ?? null,
     options: {
       getChannel: (_name: string) => opts.optionChannel ?? null,
+      getBoolean: (name: string) => (name === 'test-voice' ? (opts.testVoice ?? false) : null),
     },
   };
 }
@@ -204,6 +206,33 @@ describe('/setup — happy path (all perms + in VC)', () => {
     // mentions "type"/"escrever" as the final step for members
     expect(text).toMatch(/type|escrev/i);
 
+    deps.players.get(GUILD)?.destroy();
+  });
+
+  it('queues a short local voice diagnostic only when test-voice is requested', async () => {
+    const textCh = makeTextChannel('ch-text', [
+      PermissionFlagsBits.ViewChannel,
+      PermissionFlagsBits.SendMessages,
+    ]);
+    const i = makeSetupInteraction({
+      interactionChannel: textCh,
+      guildChannels: { 'ch-text': textCh },
+      voiceChannel: makeVoiceChannel('vc-1', 'Voice', [
+        PermissionFlagsBits.Connect,
+        PermissionFlagsBits.Speak,
+      ]),
+      testVoice: true,
+    });
+    const deps = makeSetupDeps(db);
+    deps.engine = { synth: vi.fn(async () => 'voice-test.wav') };
+
+    await handleInteraction(i as any, deps);
+
+    await vi.waitFor(() => expect(deps.engine.synth).toHaveBeenCalledOnce());
+    expect(deps.engine.synth).toHaveBeenCalledWith(
+      expect.objectContaining({ text: 'Vozen is ready.', engine: 'piper' }),
+    );
+    expect(i.replies.join('\n')).toContain('Voice test queued');
     deps.players.get(GUILD)?.destroy();
   });
 });
@@ -489,5 +518,12 @@ describe('/setup — command definition', () => {
     // The localization of the bot's REPLIES (t()/i18n) remains intact — this is just the name.
     expect(opt?.name).toBe('channel');
     expect(opt?.name_localizations).toBeUndefined();
+  });
+
+  it('has an optional test-voice diagnostic toggle', () => {
+    const def = commandDefs.find((c) => c.name === 'setup');
+    const opt = def?.options?.find((o) => o.name === 'test-voice');
+    expect(opt?.type).toBe(5);
+    expect(opt?.required ?? false).toBe(false);
   });
 });

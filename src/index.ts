@@ -3,7 +3,7 @@ import path from 'node:path';
 import { getVoiceConnection } from '@discordjs/voice';
 import { Events, Routes, PermissionFlagsBits, Status } from 'discord.js';
 import { loadConfig } from './config/index';
-import { startBotListUpdater } from './botLists';
+import { startBotListUpdater, syncTopggCommands } from './botLists';
 import { log } from './logging/logger';
 import { initDb } from './store/db';
 import { startDepartedPurgeJob } from './store/guildDeparted';
@@ -51,6 +51,7 @@ import { persistGameScores } from './store/gameScore';
 import { t, DEFAULT_LOCALE } from './i18n/index';
 import { createClient, bindEvents } from './bot/client';
 import { registerCommands, registerOwnerCommands } from './bot/registerCommands';
+import { commandDefs } from './commands/definitions';
 import { installSignalHandlers } from './bot/shutdown';
 import { startHealthServer } from './health';
 import { mapPublicStatus } from './health/publicStatus';
@@ -60,7 +61,12 @@ import { startEntitlementSync } from './premium/entitlementSync';
 import { startKofiWebhook } from './premium/kofiWebhook';
 import { parseShopMap } from './premium/kofi';
 import { createStatusApi } from './premium/statusApi';
-import { createDashboardApi, listAuthorizedTextChannels } from './premium/dashboardApi';
+import {
+  createDashboardApi,
+  listAuthorizedTextChannels,
+  listAuthorizedVoiceChannels,
+  listConfigurableRoles,
+} from './premium/dashboardApi';
 import { createAdminApi, type AdminUserBrief } from './premium/adminApi';
 import { startVoteWebhookServer } from './vote';
 import { listProviderHealth } from './store/operationalMetrics';
@@ -363,6 +369,14 @@ async function main(): Promise<void> {
             const guild = client.guilds.cache.get(id);
             return guild ? listAuthorizedTextChannels(guild) : [];
           },
+          resolveVoiceChannels: (id) => {
+            const guild = client.guilds.cache.get(id);
+            return guild ? listAuthorizedVoiceChannels(guild) : [];
+          },
+          resolveRoles: (id) => {
+            const guild = client.guilds.cache.get(id);
+            return guild ? listConfigurableRoles(guild) : [];
+          },
           availableModels,
           logError: (m, err) => log.error(m, err),
         })
@@ -483,6 +497,11 @@ async function main(): Promise<void> {
         token: config.topggToken,
         serverCount: () => client.guilds.cache.size,
       });
+      if (config.topggToken) {
+        // Top.gg v1 accepts Discord's public command JSON directly. Owner-only guild
+        // commands are intentionally excluded because commandDefs contains public commands only.
+        void syncTopggCommands(config.topggToken, commandDefs);
+      }
     } catch (err) {
       log.error('[index] failed to start the bot-list updater (ignored)', err);
     }

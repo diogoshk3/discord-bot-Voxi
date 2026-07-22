@@ -24,6 +24,9 @@ interface QueueEnvelope extends QueueItem {
   readonly lane: QueueLane;
 }
 
+/** Private worker metadata. Never expose this object through queueSnapshot(). */
+export type QueueWorkItem = QueueEnvelope;
+
 /** Safe to send to Discord. It deliberately has no request, text, model, path or author id. */
 export interface PublicQueueItem {
   id: string;
@@ -47,21 +50,30 @@ export class PlayQueue {
   constructor(private readonly cap: number) {}
 
   enqueue(item: QueueItem, options: QueueEnqueueOptions = {}): boolean {
-    if (this.size() >= this.cap) return false;
-    const envelope: QueueEnvelope = {
-      req: item.req,
-      id: randomUUID(),
-      authorId: options.authorId ?? null,
-      createdAt: options.now ?? Date.now(),
-      source: options.source ?? 'system',
-      lane: options.lane ?? 'standard',
-    };
-    (envelope.lane === 'accessibility' ? this.accessibility : this.standard).push(envelope);
+    return this.enqueueMany([item], options);
+  }
+
+  /** Adds a logical multi-part utterance all-or-nothing so a full queue cannot cut it short. */
+  enqueueMany(items: readonly QueueItem[], options: QueueEnqueueOptions = {}): boolean {
+    if (items.length === 0 || this.size() + items.length > this.cap) return false;
+    const createdAt = options.now ?? Date.now();
+    const lane = options.lane ?? 'standard';
+    const target = lane === 'accessibility' ? this.accessibility : this.standard;
+    for (const item of items) {
+      target.push({
+        req: item.req,
+        id: randomUUID(),
+        authorId: options.authorId ?? null,
+        createdAt,
+        source: options.source ?? 'system',
+        lane,
+      });
+    }
     return true;
   }
 
   /** Private worker-only dequeue. Do not expose this result to command rendering. */
-  dequeue(): QueueItem | undefined {
+  dequeue(): QueueWorkItem | undefined {
     // Accessibility remains responsive, but a sustained priority stream cannot starve
     // normal callers forever. FIFO is preserved inside each lane.
     if (

@@ -727,7 +727,7 @@ function handleDashboardRequest(
     res
       .writeHead(204, {
         ...cors,
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
         'Access-Control-Allow-Headers': 'Authorization, Content-Type',
         'Access-Control-Max-Age': '600',
       })
@@ -770,6 +770,70 @@ function handleDashboardRequest(
           /* response already sent */
         }
       });
+    return;
+  }
+
+  const profileMatch = path.match(/^\/api\/dashboard\/guild\/(\d{1,20})\/profile\/(\d{1,20})$/);
+  if (profileMatch) {
+    const [, guildId, channelId] = profileMatch;
+    if (req.method === 'DELETE') {
+      ctx.dashboardApi
+        .deleteChannelProfile(bearer, guildId, channelId)
+        .then((deleted) => {
+          if (deleted === null) return json(403, { error: 'forbidden' });
+          res.writeHead(204, cors).end();
+        })
+        .catch((err) => {
+          ctx.logError('[dashboard] failed to delete channel profile', err);
+          try {
+            json(500, { error: 'internal' });
+          } catch {
+            /* response already sent */
+          }
+        });
+      return;
+    }
+    if (req.method === 'POST') {
+      let body = '';
+      let aborted = false;
+      req.on('data', (chunk) => {
+        if (aborted) return;
+        body += chunk;
+        if (body.length > MAX_DASHBOARD_BODY) {
+          aborted = true;
+          json(413, { error: 'too_large' });
+          req.destroy();
+        }
+      });
+      req.on('end', () => {
+        if (aborted) return;
+        let patch: unknown;
+        try {
+          patch = JSON.parse(body || '{}');
+        } catch {
+          json(400, { error: 'bad_json' });
+          return;
+        }
+        ctx.dashboardApi
+          .saveChannelProfile(bearer, guildId, channelId, patch)
+          .then((result) => {
+            if (result === null) return json(403, { error: 'forbidden' });
+            if ('error' in result) return json(400, result);
+            json(200, result);
+          })
+          .catch((err) => {
+            ctx.logError('[dashboard] failed to save channel profile', err);
+            try {
+              json(500, { error: 'internal' });
+            } catch {
+              /* response already sent */
+            }
+          });
+      });
+      req.on('error', (err) => ctx.logError('[dashboard] profile request error', err));
+      return;
+    }
+    json(405, { error: 'method_not_allowed' });
     return;
   }
 

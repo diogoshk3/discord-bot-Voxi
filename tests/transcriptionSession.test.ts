@@ -76,6 +76,22 @@ describe('TranscriptionSession', () => {
     expect(posts).toEqual([]);
   });
 
+  it('records only aggregate captured audio duration, never speaker or transcript content', async () => {
+    const durations: number[] = [];
+    const { deps } = makeDeps({
+      capture: vi.fn(async (_userId: string, onUtterance: (pcm: Buffer) => void) => {
+        onUtterance(Buffer.alloc(48_000 * 2 * 2));
+      }),
+      recordAudioMs: (value: number) => durations.push(value),
+    });
+    const session = new TranscriptionSession(deps as TranscriptionSessionDeps);
+
+    await session.onSpeakingStart('yes');
+
+    expect(durations).toEqual([1_000]);
+    expect(JSON.stringify(durations)).not.toMatch(/yes|Rita|good game/);
+  });
+
   it('stop() marks the session as stopped: new speaking-starts are ignored', async () => {
     const { deps, captured } = makeDeps();
     const s = new TranscriptionSession(deps as unknown as TranscriptionSessionDeps);

@@ -22,6 +22,7 @@ import { forgetVoicePresence } from '../../store/voicePresence';
 import { cleanText, collectUrlMedia, collectMarkdownMedia } from '../../textCleaning/clean';
 import { prepareSpeech, redactRequest, hasReadableText } from '../prepareSpeech';
 import { log } from '../../logging/logger';
+import { handleTranscribeVoiceMessage, handleTranslateMessage } from './messageTools';
 import { t } from '../../i18n/index';
 import { localeForUser, reply } from '../helpers';
 import { editCard, replyCard } from '../../ui/messages';
@@ -200,6 +201,7 @@ export async function speakRawText(
   if (!readable) return { status: 'blocked' };
   const outReq = redacted;
   outReq.effect = getVoiceEffect(deps.db, guildId, userId); // voice effect (premium)
+  outReq.streamSentences = true;
   if (deps.config.messageLeadMs > 0) outReq.leadSilenceMs = deps.config.messageLeadMs;
   const queued = await player.say(outReq, {
     authorId: userId,
@@ -273,8 +275,10 @@ export async function handleTtsFile(i: ChatInputCommandInteraction, deps: BotDep
     return;
   }
 
-  const cfg = getGuildConfig(deps.db, i.guildId!);
-  const limiter = getLimiter(deps, i.guildId!, cfg.ratePerMin);
+  const guildId = i.guildId;
+  const preferenceScope = guildId ?? '@user-app';
+  const cfg = getGuildConfig(deps.db, preferenceScope);
+  const limiter = getLimiter(deps, preferenceScope, cfg.ratePerMin);
   if (!limiter.allow(i.user.id, Date.now())) {
     await i.editReply(editCard(t('tts.tooFast', locale), { tone: 'warning' }));
     return;
@@ -289,16 +293,16 @@ export async function handleTtsFile(i: ChatInputCommandInteraction, deps: BotDep
     return;
   }
 
-  const userVoice = getUserVoice(deps.db, i.guildId!, i.user.id);
+  const userVoice = getUserVoice(deps.db, preferenceScope, i.user.id);
   const { req } = prepareSpeech({
     personal: cleaned,
     pronunciations: [
       ...getUserPronunciations(deps.db, i.user.id),
-      ...getServerPronunciations(deps.db, i.guildId!),
+      ...(guildId ? getServerPronunciations(deps.db, guildId) : []),
     ],
     userVoice,
     available: deps.availableModels,
-    autoDetect: isDetectionOn(deps.db, i.guildId!, i.user.id),
+    autoDetect: isDetectionOn(deps.db, preferenceScope, i.user.id),
     guildDefaultVoice: cfg.defaultVoice,
     defaultVoice: deps.config.defaultVoice,
     defaultSpeed: deps.config.defaultSpeed,
@@ -311,21 +315,21 @@ export async function handleTtsFile(i: ChatInputCommandInteraction, deps: BotDep
     await i.editReply(editCard(t('ttsFile.unavailable', locale), { tone: 'warning' }));
     return;
   }
-  const redacted = redactRequest(req, getBlocklist(deps.db, i.guildId!));
+  const redacted = redactRequest(req, guildId ? getBlocklist(deps.db, guildId) : []);
   if (!hasReadableText(redacted.text) && !redacted.segments?.some((s) => hasReadableText(s.text))) {
     await i.editReply(editCard(t('tts.blocked', locale), { tone: 'warning' }));
     return;
   }
   const resolvedEngine = resolveUserEngine(
     deps.db,
-    i.guildId!,
+    preferenceScope,
     i.user.id,
     userVoice?.engine,
     Date.now(),
   );
   redacted.engine = resolvedEngine.engine;
   redacted.gcloudBudget = resolvedEngine.gcloudBudget;
-  redacted.effect = getVoiceEffect(deps.db, i.guildId!, i.user.id);
+  redacted.effect = guildId ? getVoiceEffect(deps.db, guildId, i.user.id) : undefined;
 
   let temporary: Awaited<ReturnType<typeof makeTemporaryMediaCopy>> | undefined;
   try {
@@ -353,14 +357,17 @@ export async function handleMessageContextMenu(
   i: MessageContextMenuCommandInteraction,
   deps: BotDeps,
 ): Promise<void> {
-  if (i.commandName !== 'Speak') return;
-  const locale = localeForUser(deps, i);
-  // Unlike the slash commands (all protected by handleInteraction's try/catch),
-  // the context-menu is dispatched directly in client.ts with
-  // `void handleMessageContextMenu(...)` — WITHOUT catch. Without this try/catch, a throw
-  // in speakRawText would leave the user stuck at "Vozen is thinking…" forever
-  // (the deferReply was never edited) + unhandledRejection. Mirrors the slash catch.
   try {
+    if (i.commandName === 'Translate') {
+      await handleTranslateMessage(i, deps);
+      return;
+    }
+    if (i.commandName === 'Transcribe voice message') {
+      await handleTranscribeVoiceMessage(i, deps);
+      return;
+    }
+    if (i.commandName !== 'Speak') return;
+    const locale = localeForUser(deps, i);
     await i.deferReply({ flags: MessageFlags.Ephemeral });
     if (!i.guildId || !i.guild) {
       await i.editReply(editCard(t('error.generic', locale), { tone: 'danger' }));
@@ -390,9 +397,12 @@ export async function handleMessageContextMenu(
       }),
     );
   } catch (err) {
-    log.error('[speak] Speak context-menu error:', err);
+    // Message actions are intentionally dispatched without awaiting in client.ts. Contain every
+    // failure here so a provider/database fault cannot become an unhandled rejection or leave a
+    // deferred interaction stuck indefinitely.
+    log.error(`[context] ${i.commandName} message action failed:`, err);
     if (!i.isRepliable()) return;
-    const msg = t('error.generic', locale);
+    const msg = t('error.generic', 'en');
     if (i.deferred && !i.replied) {
       await i.editReply(editCard(msg, { tone: 'danger' })).catch(() => {});
     } else if (!i.replied) {

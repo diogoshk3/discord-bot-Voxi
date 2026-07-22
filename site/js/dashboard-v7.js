@@ -43,10 +43,10 @@
   /* Estrutura do formulário: campos agrupados por tema. A whitelist de escrita é no
      backend (DASHBOARD_FIELDS em src/premium/dashboardApi.ts) — isto é só a vista. */
   var SECTIONS = [
-    { id: "reading", fields: ["autoread", "readBots", "textInVoice", "antispam"] },
-    { id: "voice", fields: ["xsaid", "autojoin", "greetOnJoin"] },
-    { id: "community", fields: ["streakAnnounce", "soundboard"] },
-    { id: "limits", fields: ["maxChars", "ratePerMin", "locale"] },
+    { id: "reading", fields: ["autoread", "readBots", "textInVoice", "antispam", "translationEnabled"] },
+    { id: "voice", fields: ["xsaid", "autojoin", "greetOnJoin", "stayInCall"] },
+    { id: "community", fields: ["streakAnnounce", "soundboard", "votePromos"] },
+    { id: "limits", fields: ["maxChars", "ratePerMin", "locale", "priorityRoleId", "blockedRoleId"] },
   ];
   var FIELD = {
     autoread: { type: "toggle" },
@@ -63,7 +63,23 @@
     locale: { type: "select" },
     ttsChannelId: { type: "channel" },
     defaultVoice: { type: "voice" },
+    priorityRoleId: { type: "role" },
+    blockedRoleId: { type: "role" },
+    translationEnabled: { type: "toggle" },
+    votePromos: { type: "toggle" },
+    stayInCall: { type: "toggle" },
   };
+  var NEW_FIELD_COPY = {
+    priorityRoleId: ["Priority queue role", "Members with this role use the accessibility queue lane."],
+    blockedRoleId: ["Blocked TTS role", "This restriction always wins over priority and subscriptions."],
+    translationEnabled: ["Automatic translation", "Allow only the channel mappings explicitly configured for this server."],
+    votePromos: ["Community reminders", "Show the opt-in Top.gg and support rotation."],
+    stayInCall: ["Stay in call", "Keep the bot connected when an active Premium server is empty."],
+  };
+  function fieldCopy(key, description) {
+    var copy = NEW_FIELD_COPY[key];
+    return copy ? copy[description ? 1 : 0] : t("dashboard." + (description ? "d_" : "f_") + key);
+  }
 
   function sectionsFor(meta) {
     var sections = SECTIONS.map(function (section) {
@@ -205,8 +221,13 @@
     ".dash-status{font-size:.9rem;color:var(--text-2,#9a9ab0)}",
     ".dash-status--ok{color:var(--aqua,#38e0c8)}",
     ".dash-status--err{color:var(--amber,#e6b34d)}",
+    ".dash-profiles{margin-top:22px;padding-top:20px;border-top:1px solid var(--line-2,#23233a)}",
+    ".dash-profiles__grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}",
+    ".dash-profile-field{display:flex;flex-direction:column;gap:6px;color:var(--text-2,#9a9ab0);font-size:.78rem}",
+    ".dash-profile-field .dash-sel,.dash-profile-field .dash-num{width:100%;max-width:none;text-align:left;box-sizing:border-box}",
+    ".dash-profile-actions{display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap}",
     /* mobile: barra de guardar colada ao fundo (forms longos) */
-    "@media(max-width:720px){.dash-savebar{position:sticky;bottom:0;margin:22px -22px -22px;padding:14px 22px;background:var(--panel-2,#12121c);border-top:1px solid var(--line-2,#23233a)}.dash-sel{max-width:150px}}",
+    "@media(max-width:720px){.dash-savebar{position:sticky;bottom:0;margin:22px -22px -22px;padding:14px 22px;background:var(--panel-2,#12121c);border-top:1px solid var(--line-2,#23233a)}.dash-sel{max-width:150px}.dash-profiles__grid{grid-template-columns:1fr}}",
     "@media(prefers-reduced-motion:reduce){.dash-guild,.dash-sw__tr,.dash-sw__tr::after,.dash-num,.dash-sel{transition:none}}",
   ].join("\n");
   var styleEl = document.createElement("style");
@@ -383,6 +404,9 @@
       if (key === "locale" && Array.isArray(meta.options.locales)) {
         return meta.options.locales;
       }
+      if ((key === "priorityRoleId" || key === "blockedRoleId") && Array.isArray(meta.options.roles)) {
+        return meta.options.roles;
+      }
     }
     // Compatibility with the old API: keep the current locale visible without inventing a
     // client-side catalogue. Channel and voice remain hidden by sectionsFor().
@@ -394,6 +418,8 @@
       opts += '<option value=""' + (val === null ? " selected" : "") + ">" + esc(t("dashboard.channelNone")) + "</option>";
     } else if (key === "defaultVoice") {
       opts += '<option value=""' + (val === "" ? " selected" : "") + ">" + esc(t("dashboard.voiceGlobal")) + "</option>";
+    } else if (key === "priorityRoleId" || key === "blockedRoleId") {
+      opts += '<option value=""' + (val === null ? " selected" : "") + ">No role</option>";
     }
     var options = optionsFor(key, val, meta);
     for (var i = 0; i < options.length; i++) {
@@ -428,7 +454,7 @@
   function rowHtml(key, cfg, meta) {
     var f = FIELD[key];
     var control;
-    var desc = t("dashboard.d_" + key);
+    var desc = fieldCopy(key, true);
     if (f.type === "toggle") control = swHtml(key, !!cfg[key]);
     else if (f.type === "num") {
       control = numHtml(key, f, cfg[key]);
@@ -436,7 +462,7 @@
     } else control = selHtml(key, fieldValue(key, cfg), meta);
     return (
       '<label class="dash-row"><span class="dash-row__txt"><span class="dash-row__l">' +
-      esc(t("dashboard.f_" + key)) +
+      esc(fieldCopy(key, false)) +
       '</span><span class="dash-row__d">' +
       esc(desc) +
       "</span></span>" +
@@ -487,12 +513,160 @@
       });
   }
 
+  function profileOptionHtml(options, value, emptyLabel) {
+    var out = '<option value="">' + esc(emptyLabel) + "</option>";
+    for (var i = 0; i < options.length; i++) {
+      out +=
+        '<option value="' +
+        esc(options[i].id) +
+        '"' +
+        (options[i].id === value ? " selected" : "") +
+        ">" +
+        esc(options[i].label) +
+        "</option>";
+    }
+    return out;
+  }
+
+  function triStateHtml(key) {
+    return (
+      '<select class="dash-sel" data-p="' +
+      key +
+      '"><option value="">Inherit server setting</option><option value="true">On</option><option value="false">Off</option></select>'
+    );
+  }
+
+  function profileEditorHtml(meta) {
+    if (!meta.capabilities.channelProfiles) return "";
+    var channels = meta.options.channels || [];
+    var voices = meta.options.voices || [];
+    var voiceChannels = meta.options.voiceChannels || [];
+    var locales = meta.options.locales || [];
+    return (
+      '<section class="dash-profiles" aria-labelledby="dashProfilesTitle">' +
+      '<p class="dash-sec__t" id="dashProfilesTitle">Channel profiles</p>' +
+      '<p class="dash-row__d">Override reading and voice behaviour for one text channel. Inherit keeps the server default.</p>' +
+      '<div class="dash-profiles__grid">' +
+      '<label class="dash-profile-field">Text channel<select class="dash-sel" id="dashProfileChannel">' +
+      profileOptionHtml(channels, "", "Choose a channel") +
+      "</select></label>" +
+      '<label class="dash-profile-field">Auto-read' + triStateHtml("autoRead") + "</label>" +
+      '<label class="dash-profile-field">Automatic translation' +
+      triStateHtml("translationEnabled") +
+      "</label>" +
+      '<label class="dash-profile-field">Read bots' + triStateHtml("readBots") + "</label>" +
+      '<label class="dash-profile-field">Default voice<select class="dash-sel" data-p="defaultVoice">' +
+      profileOptionHtml(voices, "", "Inherit server voice") +
+      "</select></label>" +
+      '<label class="dash-profile-field">Engine<select class="dash-sel" data-p="engine"><option value="">Inherit</option><option value="google">Default</option><option value="piper">Piper</option><option value="kokoro">Kokoro (paid)</option><option value="gcloud">Google HD (paid)</option></select></label>' +
+      '<label class="dash-profile-field">Language<select class="dash-sel" data-p="locale">' +
+      profileOptionHtml(locales, "", "Infer from the voice") +
+      "</select></label>" +
+      '<label class="dash-profile-field">Voice effect<select class="dash-sel" data-p="effect"><option value="">None / personal choice</option><option value="robot">Robot</option><option value="echo">Echo</option><option value="deep">Deep (paid)</option><option value="chipmunk">Chipmunk (paid)</option><option value="radio">Radio (paid)</option><option value="phone">Phone (paid)</option><option value="underwater">Underwater (paid)</option><option value="demon">Demon (paid)</option></select></label>' +
+      '<label class="dash-profile-field">Voice-channel binding<select class="dash-sel" data-p="voiceChannelId">' +
+      profileOptionHtml(voiceChannels, "", "Any active call") +
+      "</select></label>" +
+      '<label class="dash-profile-field">Speed (0.5–2.0)<input class="dash-num" data-p="speed" type="number" min="0.5" max="2" step="0.05" placeholder="Inherit"></label>' +
+      '<label class="dash-profile-field">Maximum characters<input class="dash-num" data-p="maxChars" type="number" min="1" max="2000" placeholder="Inherit"></label>' +
+      "</div>" +
+      '<div class="dash-profile-actions"><button type="button" class="' +
+      BTN +
+      '" id="dashProfileSave">Save profile</button><button type="button" class="btn btn--ghost" id="dashProfileDelete">Delete profile</button><span class="dash-status" id="dashProfileStatus" aria-live="polite"></span></div></section>'
+    );
+  }
+
+  function wireProfileEditor(guild, guilds, meta) {
+    if (!meta.capabilities.channelProfiles) return;
+    var channel = document.getElementById("dashProfileChannel");
+    var save = document.getElementById("dashProfileSave");
+    var remove = document.getElementById("dashProfileDelete");
+    var status = document.getElementById("dashProfileStatus");
+    if (!channel || !save || !remove || !status) return;
+
+    function selectedProfile() {
+      var profiles = Array.isArray(meta.channelProfiles) ? meta.channelProfiles : [];
+      for (var i = 0; i < profiles.length; i++) {
+        if (profiles[i].channelId === channel.value) return profiles[i];
+      }
+      return null;
+    }
+    function setProfileValue(key, value) {
+      var input = root.querySelector('[data-p="' + key + '"]');
+      if (!input) return;
+      input.value = value === null || value === undefined ? "" : String(value);
+    }
+    function loadSelected() {
+      var profile = selectedProfile();
+      ["autoRead", "translationEnabled", "readBots", "defaultVoice", "engine", "locale", "effect", "voiceChannelId", "speed", "maxChars"].forEach(function (key) {
+        setProfileValue(key, profile ? profile[key] : null);
+      });
+      remove.disabled = !profile;
+      status.textContent = "";
+    }
+    function profileBody() {
+      var out = {};
+      ["autoRead", "translationEnabled", "readBots"].forEach(function (key) {
+        var value = root.querySelector('[data-p="' + key + '"]').value;
+        out[key] = value === "" ? null : value === "true";
+      });
+      ["defaultVoice", "engine", "locale", "effect", "voiceChannelId"].forEach(function (key) {
+        var value = root.querySelector('[data-p="' + key + '"]').value;
+        out[key] = value === "" ? null : value;
+      });
+      ["speed", "maxChars"].forEach(function (key) {
+        var value = root.querySelector('[data-p="' + key + '"]').value;
+        out[key] = value === "" ? null : Number(value);
+      });
+      return out;
+    }
+    channel.addEventListener("change", loadSelected);
+    save.addEventListener("click", function () {
+      if (!channel.value) {
+        status.textContent = "Choose a text channel first.";
+        return;
+      }
+      status.textContent = "Saving…";
+      fetch(API + "/api/dashboard/guild/" + guild.id + "/profile/" + channel.value, {
+        method: "POST",
+        headers: Object.assign({ "Content-Type": "application/json" }, authHeaders()),
+        body: JSON.stringify(profileBody()),
+      })
+        .then(function (res) {
+          if (!res.ok) throw new Error("profile-save");
+          return res.json();
+        })
+        .then(function (data) {
+          renderForm(guild, data.config, guilds, data, true);
+        })
+        .catch(function () {
+          status.textContent = "Could not save this profile.";
+        });
+    });
+    remove.addEventListener("click", function () {
+      if (!channel.value || !selectedProfile()) return;
+      status.textContent = "Deleting…";
+      fetch(API + "/api/dashboard/guild/" + guild.id + "/profile/" + channel.value, {
+        method: "DELETE",
+        headers: authHeaders(),
+      })
+        .then(function (res) {
+          if (res.status !== 204) throw new Error("profile-delete");
+          return loadForm(guild, guilds);
+        })
+        .catch(function () {
+          status.textContent = "Could not delete this profile.";
+        });
+    });
+    loadSelected();
+  }
+
   // Valor normalizado de um campo (bool/num/string) a partir de um objeto de config.
   function fieldValue(key, src) {
     var f = FIELD[key];
     if (f.type === "toggle") return !!src[key];
     if (f.type === "num") return Number(src[key]);
     if (f.type === "channel") return src[key] === null ? null : String(src[key]);
+    if (f.type === "role") return src[key] === null ? null : String(src[key]);
     if (f.type === "voice") return String(src[key] || "");
     return String(src[key] || "en");
   }
@@ -504,6 +678,7 @@
     if (f.type === "toggle") return el.checked;
     if (f.type === "num") return Number(el.value);
     if (f.type === "channel") return el.value === "" ? null : el.value;
+    if (f.type === "role") return el.value === "" ? null : el.value;
     return el.value;
   }
 
@@ -537,12 +712,20 @@
       esc(t("dashboard.save")) +
       '</button><span class="dash-status" id="dashStatus" aria-live="polite"></span></div>';
 
-    view('<div class="dash-form">' + headHtml(guild) + sectionsHtml + savebar + "</div>");
+    view(
+      '<div class="dash-form">' +
+        headHtml(guild) +
+        sectionsHtml +
+        profileEditorHtml(meta) +
+        savebar +
+        "</div>",
+    );
     wireIconFallback(root.querySelector(".dash-head__ic"), guild.name, "dash-head__ph");
 
     var formEl = root.querySelector(".dash-form");
     var saveBtn = document.getElementById("dashSave");
     var statusEl = document.getElementById("dashStatus");
+    wireProfileEditor(guild, guilds, meta);
 
     function countChanges() {
       var n = 0;
@@ -646,9 +829,9 @@
         if (!row) return;
         var lEl = row.querySelector(".dash-row__l");
         var dEl = row.querySelector(".dash-row__d");
-        if (lEl) lEl.textContent = t("dashboard.f_" + key);
+        if (lEl) lEl.textContent = fieldCopy(key, false);
         if (dEl) {
-          var desc = t("dashboard.d_" + key);
+          var desc = fieldCopy(key, true);
           if (FIELD[key].type === "num") desc += " (" + FIELD[key].min + "–" + FIELD[key].max + ")";
           dEl.textContent = desc;
         }
@@ -656,6 +839,7 @@
           FIELD[key].type === "select" ||
           FIELD[key].type === "channel" ||
           FIELD[key].type === "voice"
+          || FIELD[key].type === "role"
         ) {
           var currentValue = domValue(key);
           ctrl.innerHTML = selectOptionsHtml(key, currentValue, meta);

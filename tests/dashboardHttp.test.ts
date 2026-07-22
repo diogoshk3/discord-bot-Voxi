@@ -5,6 +5,7 @@ import { initDb } from '../src/store/db';
 import { startKofiWebhook } from '../src/premium/kofiWebhook';
 import { createDashboardApi } from '../src/premium/dashboardApi';
 import { getGuildConfig } from '../src/store/guildConfig';
+import { getChannelProfile } from '../src/store/channelProfiles';
 
 const TOKEN = 'good-token';
 const CLIENT_ID = '1523826014935842997';
@@ -57,6 +58,7 @@ describe('/api/dashboard/* - HTTP routes', () => {
       fetchImpl: fakeFetch(),
       botHasGuild: (id) => id === GUILD,
       resolveChannels: () => [{ id: CHANNEL, label: '#general' }],
+      resolveVoiceChannels: () => [{ id: '888888888888888888', label: 'Lounge' }],
       availableModels: [VOICE],
     });
     server = startKofiWebhook({
@@ -165,5 +167,23 @@ describe('/api/dashboard/* - HTTP routes', () => {
         })
       ).status,
     ).toBe(400);
+  });
+
+  it('creates and deletes a channel profile through its scoped route', async () => {
+    const base = await start();
+    const profileUrl = `${base}/api/dashboard/guild/${GUILD}/profile/${CHANNEL}`;
+    const saved = await fetch(profileUrl, {
+      method: 'POST',
+      headers: { ...auth, 'content-type': 'application/json' },
+      body: JSON.stringify({ autoRead: true, engine: 'piper', maxChars: 500 }),
+    });
+    expect(saved.status).toBe(200);
+    expect(getChannelProfile(db, GUILD, CHANNEL)).toMatchObject({
+      autoRead: true,
+      engine: 'piper',
+      maxChars: 500,
+    });
+    expect((await fetch(profileUrl, { method: 'DELETE', headers: auth })).status).toBe(204);
+    expect(getChannelProfile(db, GUILD, CHANNEL)).toBeNull();
   });
 });

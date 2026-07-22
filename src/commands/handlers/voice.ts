@@ -31,6 +31,13 @@ import { isGuildPremium, isUserPremium } from '../../store/premium';
 import { setVoiceEffect } from '../../store/voiceEffect';
 import { isVoiceEffect, isPremiumEffect, effectLabel, type VoiceEffect } from '../../tts/effects';
 import { engineLabel, isPremiumVoiceEngine } from '../../tts/engineLabels';
+import {
+  addVoiceFavorite,
+  listRecentVoices,
+  listVoiceFavorites,
+  recordRecentVoice,
+  removeVoiceFavorite,
+} from '../../store/voiceLibrary';
 import { sanitizeSpeakerName } from '../../language/speakerName';
 import { formatVoiceList, makeLocalizedNamer } from '../../language/voiceMap';
 import type { SynthRequest } from '../../tts/engine';
@@ -292,12 +299,17 @@ async function handleVoiceBrowse(
     await reply(i, t('voice.browse.empty', locale));
     return;
   }
+  const favourites = new Set(listVoiceFavorites(deps.db, i.user.id));
+  const recent = new Set(listRecentVoices(deps.db, i.user.id));
   let page = 0;
   let expired = false;
   const render = () => {
     const current = paginateVoiceCatalog(voices, page);
     page = current.page;
-    const lines = current.slice.map((voice) => `â€¢ **${voice.label}** â€” ${voice.engine}`);
+    const lines = current.slice.map((voice) => {
+      const badges = `${favourites.has(voice.id) ? ' ⭐' : ''}${recent.has(voice.id) ? ' 🕘' : ''}`;
+      return `• **${voice.label}** — ${voice.engine}${badges}`;
+    });
     return {
       content: `${t('voice.browse.title', locale, {
         page: current.page + 1,
@@ -351,6 +363,41 @@ export async function handleVoice(i: ChatInputCommandInteraction, deps: BotDeps)
     await handleVoiceBrowse(i, deps, locale);
     return;
   }
+  if (sub === 'favorite' || sub === 'unfavorite') {
+    const model = i.options.getString('model', true);
+    if (!deps.availableModels.includes(model)) {
+      await reply(i, t('voice.unknownModel', locale));
+      return;
+    }
+    if (sub === 'favorite') {
+      const saved = addVoiceFavorite(deps.db, i.user.id, model);
+      await reply(
+        i,
+        saved
+          ? `Added **${makeLocalizedNamer(i.locale, deps.availableModels)(model)}** to your favourites.`
+          : 'Your favourites are full. Remove one before adding another.',
+      );
+    } else {
+      const removed = removeVoiceFavorite(deps.db, i.user.id, model);
+      await reply(i, removed ? 'Voice removed from your favourites.' : 'That voice was not saved.');
+    }
+    return;
+  }
+  if (sub === 'favorites' || sub === 'recent') {
+    const models =
+      sub === 'favorites'
+        ? listVoiceFavorites(deps.db, i.user.id)
+        : listRecentVoices(deps.db, i.user.id);
+    const available = models.filter((model) => deps.availableModels.includes(model));
+    const title = sub === 'favorites' ? 'Favourite voices' : 'Recent voices';
+    await reply(
+      i,
+      available.length
+        ? `**${title}**\n${available.map((model) => `• ${makeLocalizedNamer(i.locale, deps.availableModels)(model)} — \`${model}\``).join('\n')}`
+        : `**${title}**\nNo available voices yet.`,
+    );
+    return;
+  }
   if (sub === 'set') {
     const model = i.options.getString('model', true);
     if (!deps.availableModels.includes(model)) {
@@ -397,6 +444,7 @@ export async function handleVoice(i: ChatInputCommandInteraction, deps: BotDeps)
       }
     }
     setUserVoice(deps.db, i.guildId!, i.user.id, model, clamped, engine);
+    recordRecentVoice(deps.db, i.user.id, model);
     // Beginner-friendly copy: voice name IN THE USER'S LANGUAGE (i.locale) + raw
     // copy-pasteable id. Includes the chosen engine.
     await reply(

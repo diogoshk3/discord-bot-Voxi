@@ -89,4 +89,13 @@ describe('Vozen Components V2 message system', () => {
     expect(Number(messageEditCard('Done.').flags)).toBe(MessageFlags.IsComponentsV2);
     expect(messageEditCard('Done.')).toMatchObject({ content: null, embeds: [] });
   });
+
+  it('suppresses mentions by default and allows an explicit safe override', () => {
+    expect(replyCard('@everyone translated output').allowedMentions).toEqual({ parse: [] });
+    expect(channelCard('<@123> notice').allowedMentions).toEqual({ parse: [] });
+    expect(
+      replyCard('<@123> explicit', { allowedMentions: { users: ['123'], parse: [] } })
+        .allowedMentions,
+    ).toEqual({ users: ['123'], parse: [] });
+  });
 });

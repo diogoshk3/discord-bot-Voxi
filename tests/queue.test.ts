@@ -33,6 +33,31 @@ describe('PlayQueue', () => {
     expect(q.dequeue()?.req).toEqual(item('a').req);
   });
 
+  it('enqueueMany is atomic when the full batch does not fit', () => {
+    const q = new PlayQueue(2);
+    expect(q.enqueue(item('existing'))).toBe(true);
+    expect(q.enqueueMany([item('part one'), item('part two')])).toBe(false);
+    expect(q.size()).toBe(1);
+    expect(q.dequeue()?.req.text).toBe('existing');
+  });
+
+  it('enqueueMany preserves chunk order and shared attribution', () => {
+    const q = new PlayQueue(3);
+    expect(
+      q.enqueueMany([item('part one'), item('part two')], {
+        authorId: 'author',
+        source: 'message',
+        now: 100,
+      }),
+    ).toBe(true);
+    expect(q.snapshot(150).map(({ source, ageMs }) => ({ source, ageMs }))).toEqual([
+      { source: 'message', ageMs: 50 },
+      { source: 'message', ageMs: 50 },
+    ]);
+    expect(q.dequeue()?.req.text).toBe('part one');
+    expect(q.dequeue()?.req.text).toBe('part two');
+  });
+
   it('depois de dequeue ha espaco para enqueue de novo', () => {
     const q = new PlayQueue(1);
     expect(q.enqueue(item('a'))).toBe(true);

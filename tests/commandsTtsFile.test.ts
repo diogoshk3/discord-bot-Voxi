@@ -31,11 +31,11 @@ function makeDeps(db: Database.Database, synth: ReturnType<typeof vi.fn>): BotDe
   } as unknown as BotDeps;
 }
 
-function interaction(text: string) {
+function interaction(text: string, guildId: string | null = GUILD) {
   const edits: unknown[] = [];
   return {
     commandName: 'tts-file',
-    guildId: GUILD,
+    guildId,
     user: { id: USER },
     locale: 'en-US',
     replied: false,
@@ -88,5 +88,16 @@ describe('/tts-file', () => {
     const synth = vi.fn(async () => audioPath);
     await handleInteraction(interaction('a'.repeat(501)) as any, makeDeps(db, synth));
     expect(synth).not.toHaveBeenCalled();
+  });
+
+  it('works as a private User App command without reading guild state', async () => {
+    const synth = vi.fn(async () => audioPath);
+    const i = interaction('Private DM export', null);
+    await handleInteraction(i as any, makeDeps(db, synth));
+
+    expect(synth).toHaveBeenCalledWith(
+      expect.objectContaining({ text: 'Private DM export', effect: undefined }),
+    );
+    expect(JSON.stringify(i.edits)).toContain('vozen-audio.wav');
   });
 });

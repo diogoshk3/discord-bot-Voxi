@@ -368,6 +368,24 @@ export async function handleSetup(i: ChatInputCommandInteraction, deps: BotDeps)
     }
   }
 
+  const testVoiceRequested = i.options.getBoolean('test-voice') ?? false;
+  let voiceTestQueued = false;
+  if (testVoiceRequested && joinedChannelName !== null) {
+    const player = deps.players.get(i.guildId!);
+    const model = deps.availableModels[0] ?? deps.config.defaultVoice ?? 'en_US-amy-medium';
+    voiceTestQueued =
+      (await player?.say(
+        {
+          text: 'Vozen is ready.',
+          model,
+          speed: deps.config.defaultSpeed ?? 1,
+          engine: 'piper',
+          singleVoice: true,
+        },
+        { source: 'system', lane: 'accessibility' },
+      )) ?? false;
+  }
+
   // (d) Beginner-friendly summary.
   const lines: string[] = [
     t('setup.done', locale),
@@ -384,6 +402,7 @@ export async function handleSetup(i: ChatInputCommandInteraction, deps: BotDeps)
   if (joinedChannelName !== null) {
     lines.push('', t('setup.joinedVoice', locale, { channel: joinedChannelName }));
   }
+  if (voiceTestQueued) lines.push('🔊 Voice test queued with the local Piper engine.');
 
   const anyMissing = [viewState, sendState, connectState, speakState].includes('missing');
   if (anyMissing) {

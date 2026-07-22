@@ -16,6 +16,7 @@ import type { BotDeps } from '../bot/deps';
 import { removePlayer } from '../bot/deps';
 import { rememberVoicePresence } from '../store/voicePresence';
 import { log } from '../logging/logger';
+import { addOperationalMetric, setProviderHealth } from '../store/operationalMetrics';
 
 /**
  * STAGE channels: when joining a stage channel, the bot ends up as AUDIENCE (suppressed)
@@ -57,11 +58,21 @@ export function createVoiceSession(
     selfDeaf: true,
     selfMute: false,
   });
-  const player = new GuildVoicePlayer(connection, deps.engine, deps.config.queueCap, () => {
-    if (deps.players.get(guildId) !== player) return;
-    removePlayer(deps, guildId);
-    getVoiceConnection(guildId)?.destroy();
-  });
+  const player = new GuildVoicePlayer(
+    connection,
+    deps.engine,
+    deps.config.queueCap,
+    () => {
+      if (deps.players.get(guildId) !== player) return;
+      removePlayer(deps, guildId);
+      getVoiceConnection(guildId)?.destroy();
+    },
+    (metric, provider, value) => {
+      addOperationalMetric(deps.db, metric, provider, value);
+      if (metric === 'synth_success') setProviderHealth(deps.db, provider, 'healthy');
+      if (metric === 'synth_failure') setProviderHealth(deps.db, provider, 'degraded');
+    },
+  );
   deps.players.set(guildId, player);
   // Persist the current call for two distinct startup policies: Premium 24/7 always
   // restores it; a normal call restores it only after the one-shot deployment marker.

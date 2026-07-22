@@ -8,6 +8,16 @@ import { ChannelType, PermissionFlagsBits, type Guild } from 'discord.js';
 import { LOCALE_DISPLAY_NAMES, SUPPORTED_LOCALES } from '../i18n/index';
 import { voiceDisplayName } from '../language/voiceMap';
 import { getGuildConfig, setGuildConfig, type GuildConfig } from '../store/guildConfig';
+import {
+  deleteChannelProfile,
+  getChannelProfile,
+  listChannelProfiles,
+  saveChannelProfile,
+  type ChannelProfile,
+  type ChannelProfilePatch,
+} from '../store/channelProfiles';
+import type { UserEngine } from '../store/userVoice';
+import { VOICE_EFFECTS } from '../tts/effects';
 
 const BOOL_FIELDS = [
   'autoread',
@@ -19,6 +29,9 @@ const BOOL_FIELDS = [
   'streakAnnounce',
   'soundboard',
   'greetOnJoin',
+  'translationEnabled',
+  'votePromos',
+  'stayInCall',
 ] as const;
 
 export const DASHBOARD_FIELDS = [
@@ -28,6 +41,8 @@ export const DASHBOARD_FIELDS = [
   'locale',
   'ttsChannelId',
   'defaultVoice',
+  'priorityRoleId',
+  'blockedRoleId',
 ] as const;
 type DashboardField = (typeof DASHBOARD_FIELDS)[number];
 
@@ -44,22 +59,31 @@ export interface DashboardGuildPayload {
   capabilities: {
     ttsChannelId: true;
     defaultVoice: true;
-    /** Reserved until the dashboard has an authorised profile editor. Old clients ignore it. */
-    channelProfiles: false;
+    channelProfiles: true;
   };
   options: {
     channels: DashboardOption[];
     voices: DashboardOption[];
     locales: DashboardOption[];
+    voiceChannels: DashboardOption[];
+    roles: DashboardOption[];
   };
+  channelProfiles: ChannelProfile[];
 }
 
 export interface InvalidDashboardSetting {
   error: 'invalid_setting';
-  field: 'ttsChannelId' | 'defaultVoice';
+  field: 'ttsChannelId' | 'defaultVoice' | 'priorityRoleId' | 'blockedRoleId';
 }
 
 export type DashboardSaveResult = DashboardGuildPayload | InvalidDashboardSetting | null;
+
+export interface InvalidChannelProfile {
+  error: 'invalid_profile';
+  field: keyof ChannelProfilePatch | 'channelId' | 'limit';
+}
+
+export type DashboardProfileSaveResult = DashboardGuildPayload | InvalidChannelProfile | null;
 
 const MAX_CHARS_MIN = 1;
 const MAX_CHARS_MAX = 2000;
@@ -72,6 +96,96 @@ const clampInt = (value: number, low: number, high: number): number =>
 export interface DashboardValidationOptions {
   channelIds: ReadonlySet<string>;
   voiceIds: ReadonlySet<string>;
+  roleIds?: ReadonlySet<string>;
+}
+
+export interface ChannelProfileValidationOptions extends DashboardValidationOptions {
+  voiceChannelIds: ReadonlySet<string>;
+}
+
+export type SanitizeChannelProfileResult =
+  { ok: true; patch: Partial<ChannelProfilePatch> } | ({ ok: false } & InvalidChannelProfile);
+
+const PROFILE_BOOL_FIELDS = ['autoRead', 'translationEnabled', 'readBots'] as const;
+const PROFILE_ENGINES: readonly UserEngine[] = ['google', 'piper', 'kokoro', 'gcloud'];
+
+export function sanitizeChannelProfile(
+  input: unknown,
+  options: ChannelProfileValidationOptions,
+): SanitizeChannelProfileResult {
+  const src = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>;
+  const patch: Partial<ChannelProfilePatch> = {};
+  for (const field of PROFILE_BOOL_FIELDS) {
+    if (field in src) {
+      if (src[field] !== null && typeof src[field] !== 'boolean')
+        return { ok: false, error: 'invalid_profile', field };
+      patch[field] = src[field] as boolean | null;
+    }
+  }
+  if ('defaultVoice' in src) {
+    if (
+      src.defaultVoice !== null &&
+      (typeof src.defaultVoice !== 'string' || !options.voiceIds.has(src.defaultVoice))
+    )
+      return { ok: false, error: 'invalid_profile', field: 'defaultVoice' };
+    patch.defaultVoice = src.defaultVoice as string | null;
+  }
+  if ('engine' in src) {
+    if (
+      src.engine !== null &&
+      (typeof src.engine !== 'string' || !PROFILE_ENGINES.includes(src.engine as UserEngine))
+    )
+      return { ok: false, error: 'invalid_profile', field: 'engine' };
+    patch.engine = src.engine as UserEngine | null;
+  }
+  if ('speed' in src) {
+    if (
+      src.speed !== null &&
+      (typeof src.speed !== 'number' ||
+        !Number.isFinite(src.speed) ||
+        src.speed < 0.5 ||
+        src.speed > 2)
+    )
+      return { ok: false, error: 'invalid_profile', field: 'speed' };
+    patch.speed = src.speed as number | null;
+  }
+  if ('maxChars' in src) {
+    if (
+      src.maxChars !== null &&
+      (typeof src.maxChars !== 'number' ||
+        !Number.isInteger(src.maxChars) ||
+        src.maxChars < MAX_CHARS_MIN ||
+        src.maxChars > MAX_CHARS_MAX)
+    )
+      return { ok: false, error: 'invalid_profile', field: 'maxChars' };
+    patch.maxChars = src.maxChars as number | null;
+  }
+  if ('voiceChannelId' in src) {
+    if (
+      src.voiceChannelId !== null &&
+      (typeof src.voiceChannelId !== 'string' || !options.voiceChannelIds.has(src.voiceChannelId))
+    )
+      return { ok: false, error: 'invalid_profile', field: 'voiceChannelId' };
+    patch.voiceChannelId = src.voiceChannelId as string | null;
+  }
+  if ('locale' in src) {
+    if (
+      src.locale !== null &&
+      (typeof src.locale !== 'string' ||
+        !(SUPPORTED_LOCALES as readonly string[]).includes(src.locale))
+    )
+      return { ok: false, error: 'invalid_profile', field: 'locale' };
+    patch.locale = src.locale as string | null;
+  }
+  if ('effect' in src) {
+    if (
+      src.effect !== null &&
+      (typeof src.effect !== 'string' || !(VOICE_EFFECTS as readonly string[]).includes(src.effect))
+    )
+      return { ok: false, error: 'invalid_profile', field: 'effect' };
+    patch.effect = src.effect as string | null;
+  }
+  return { ok: true, patch };
 }
 
 export type SanitizePatchResult =
@@ -126,6 +240,26 @@ export function sanitizePatch(
     patch.defaultVoice = src.defaultVoice;
   }
 
+  const roleIds = options.roleIds ?? new Set<string>();
+  for (const field of ['priorityRoleId', 'blockedRoleId'] as const) {
+    if (!(field in src)) continue;
+    if (src[field] !== null && (typeof src[field] !== 'string' || !roleIds.has(src[field]))) {
+      return { ok: false, error: 'invalid_setting', field };
+    }
+    patch[field] = src[field] as string | null;
+  }
+  const currentRoles = current as typeof current & {
+    priorityRoleId?: string | null;
+    blockedRoleId?: string | null;
+  };
+  const priority =
+    patch.priorityRoleId !== undefined ? patch.priorityRoleId : currentRoles.priorityRoleId;
+  const blocked =
+    patch.blockedRoleId !== undefined ? patch.blockedRoleId : currentRoles.blockedRoleId;
+  if (priority && priority === blocked) {
+    return { ok: false, error: 'invalid_setting', field: 'blockedRoleId' };
+  }
+
   const effectiveChannel =
     patch.ttsChannelId !== undefined ? patch.ttsChannelId : current.ttsChannelId;
   if ('ttsChannelId' in src && src.ttsChannelId !== null && !('autoread' in src)) {
@@ -173,6 +307,8 @@ export interface DashboardApiDeps {
   fetchImpl: typeof fetch;
   botHasGuild: (guildId: string) => boolean;
   resolveChannels: (guildId: string) => DashboardOption[];
+  resolveVoiceChannels?: (guildId: string) => DashboardOption[];
+  resolveRoles?: (guildId: string) => DashboardOption[];
   availableModels: readonly string[];
   guildsTtlMs?: number;
   cacheMaxEntries?: number;
@@ -183,6 +319,13 @@ export interface DashboardApi {
   listGuilds(token: string): Promise<ManageableGuild[] | null>;
   getGuild(token: string, guildId: string): Promise<DashboardGuildPayload | null>;
   saveConfig(token: string, guildId: string, patch: unknown): Promise<DashboardSaveResult>;
+  saveChannelProfile(
+    token: string,
+    guildId: string,
+    channelId: string,
+    patch: unknown,
+  ): Promise<DashboardProfileSaveResult>;
+  deleteChannelProfile(token: string, guildId: string, channelId: string): Promise<boolean | null>;
 }
 
 const DISCORD_GUILDS = 'https://discord.com/api/v10/users/@me/guilds';
@@ -320,7 +463,19 @@ export function createDashboardApi(deps: DashboardApiDeps): DashboardApi {
       label: voiceDisplayName(id),
     }));
     const locales = SUPPORTED_LOCALES.map((id) => ({ id, label: LOCALE_DISPLAY_NAMES[id] }));
-    return { channels, voices, locales };
+    let voiceChannels: DashboardOption[] = [];
+    let roles: DashboardOption[] = [];
+    try {
+      voiceChannels = deps.resolveVoiceChannels?.(guildId) ?? [];
+    } catch (error) {
+      deps.logError?.('[dashboard] failed to resolve guild voice channels', error);
+    }
+    try {
+      roles = deps.resolveRoles?.(guildId) ?? [];
+    } catch (error) {
+      deps.logError?.('[dashboard] failed to resolve guild roles', error);
+    }
+    return { channels, voices, locales, voiceChannels, roles };
   }
 
   function buildPayload(guildId: string): DashboardGuildPayload {
@@ -348,11 +503,9 @@ export function createDashboardApi(deps: DashboardApiDeps): DashboardApi {
     }
     return {
       config,
-      // Profiles deliberately stay hidden while this API only accepts the existing, fully
-      // validated guild-config patch. Exposing an editor before it can validate every profile
-      // channel against live bot permissions would create an unsafe arbitrary-channel surface.
-      capabilities: { ttsChannelId: true, defaultVoice: true, channelProfiles: false },
+      capabilities: { ttsChannelId: true, defaultVoice: true, channelProfiles: true },
       options,
+      channelProfiles: listChannelProfiles(deps.db, guildId),
     };
   }
 
@@ -373,6 +526,7 @@ export function createDashboardApi(deps: DashboardApiDeps): DashboardApi {
         {
           channelIds: new Set(options.channels.map((option) => option.id)),
           voiceIds: new Set(options.voices.map((option) => option.id)),
+          roleIds: new Set(options.roles.map((option) => option.id)),
         },
         current,
       );
@@ -380,5 +534,76 @@ export function createDashboardApi(deps: DashboardApiDeps): DashboardApi {
       setGuildConfig(deps.db, guildId, clean.patch);
       return buildPayload(guildId);
     },
+
+    async saveChannelProfile(token, guildId, channelId, input) {
+      if (!(await authorize(token, guildId))) return null;
+      const options = availableOptions(guildId);
+      if (!options.channels.some((channel) => channel.id === channelId)) {
+        return { error: 'invalid_profile', field: 'channelId' };
+      }
+      const clean = sanitizeChannelProfile(input, {
+        channelIds: new Set(options.channels.map((option) => option.id)),
+        voiceIds: new Set(options.voices.map((option) => option.id)),
+        voiceChannelIds: new Set(options.voiceChannels.map((option) => option.id)),
+      });
+      if (!clean.ok) return { error: clean.error, field: clean.field };
+      const current = getChannelProfile(deps.db, guildId, channelId);
+      const empty: ChannelProfilePatch = {
+        autoRead: null,
+        translationEnabled: null,
+        defaultVoice: null,
+        engine: null,
+        speed: null,
+        maxChars: null,
+        readBots: null,
+        voiceChannelId: null,
+        locale: null,
+        effect: null,
+      };
+      if (
+        !saveChannelProfile(deps.db, guildId, channelId, { ...empty, ...current, ...clean.patch })
+      ) {
+        return { error: 'invalid_profile', field: 'limit' };
+      }
+      return buildPayload(guildId);
+    },
+
+    async deleteChannelProfile(token, guildId, channelId) {
+      if (!(await authorize(token, guildId))) return null;
+      deleteChannelProfile(deps.db, guildId, channelId);
+      return true;
+    },
   };
+}
+
+/** Returns voice/stage channels where the bot can connect and speak. */
+export function listAuthorizedVoiceChannels(guild: Guild): DashboardOption[] {
+  const botMember = guild.members.me;
+  if (!botMember) return [];
+  return [...guild.channels.cache.values()]
+    .filter(
+      (channel) =>
+        channel.type === ChannelType.GuildVoice || channel.type === ChannelType.GuildStageVoice,
+    )
+    .filter((channel) =>
+      channel
+        .permissionsFor(botMember)
+        ?.has([
+          PermissionFlagsBits.ViewChannel,
+          PermissionFlagsBits.Connect,
+          PermissionFlagsBits.Speak,
+        ]),
+    )
+    .sort(
+      (left, right) => left.rawPosition - right.rawPosition || left.name.localeCompare(right.name),
+    )
+    .map((channel) => ({ id: channel.id, label: channel.name }));
+}
+
+/** Managed integration roles and @everyone are not useful queue-policy choices. */
+export function listConfigurableRoles(guild: Guild): DashboardOption[] {
+  return [...guild.roles.cache.values()]
+    .filter((role) => role.id !== guild.id && !role.managed)
+    .sort((left, right) => right.position - left.position || left.name.localeCompare(right.name))
+    .map((role) => ({ id: role.id, label: role.name }));
 }

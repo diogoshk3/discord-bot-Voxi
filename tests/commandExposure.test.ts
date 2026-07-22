@@ -9,17 +9,15 @@ describe('command exposure policy', () => {
     });
   });
 
-  it('keeps voice, administration, configuration and translation commands out of DMs/User Apps', () => {
+  it('keeps voice, administration and configuration commands out of DMs/User Apps', () => {
     for (const name of [
       'join',
       'leave',
       'tts',
-      'tts-file',
       'Speak',
       'voice',
       'config',
       'setup',
-      'translate',
       'transcribe',
       'queue',
       'premium',
@@ -28,14 +26,35 @@ describe('command exposure policy', () => {
     }
   });
 
+  it('exposes only reviewed private tools to User Install contexts', () => {
+    for (const name of ['tts-file', 'translate', 'Translate', 'Transcribe voice message']) {
+      expect(commandExposure(name)).toMatchObject({ dmSafe: true, userAppCandidate: true });
+      const definition = commandDefs.find((entry) => entry.name === name);
+      expect(definition?.integration_types).toEqual([0, 1]);
+      expect(definition?.contexts).toEqual([0, 1, 2]);
+    }
+  });
+
   it('has exactly the reviewed DM-safe command set and restricts all other registered commands', () => {
     const dmSafe = commandDefs
       .filter((def) => commandExposure(def.name).dmSafe)
       .map((def) => def.name);
-    expect(dmSafe).toEqual(['invite', 'vote', 'help', 'uptime', 'bot-stats', 'redeem']);
+    expect(dmSafe).toEqual([
+      'invite',
+      'vote',
+      'help',
+      'tts-file',
+      'translate',
+      'uptime',
+      'bot-stats',
+      'Translate',
+      'Transcribe voice message',
+      'redeem',
+    ]);
     for (const def of commandDefs) {
       if (!commandExposure(def.name).dmSafe) {
         expect((def as { contexts?: number[] }).contexts).toEqual([0]);
+        expect(def.integration_types).toEqual([0]);
       }
     }
   });

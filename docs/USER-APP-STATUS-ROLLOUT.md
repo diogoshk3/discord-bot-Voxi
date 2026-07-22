@@ -18,20 +18,27 @@ authorize a Developer Portal, DNS, Pages, VPS, Discord OAuth or Top.gg change.
 
 ## User App (manual Developer Portal work)
 
-The code exposes **candidate metadata only**. It does not register User Install
-commands or enable User Apps remotely. Before enabling anything in the Discord
-Developer Portal, verify the then-current Discord policy and portal UI.
+The registered command JSON now carries explicit Guild Install/User Install metadata;
+the Developer Portal must still have User Install enabled before Discord distributes it.
+Before changing that portal setting, verify the then-current Discord policy and portal UI.
 
-Initial candidate actions are informational: `/help`, `/invite`, `/vote`, `/uptime`
-and `/bot-stats`. `/redeem` remains DM-safe but is intentionally not a User App
-candidate because it changes a personal entitlement. No voice, queue, transcription,
-translation, moderation, server configuration, Premium-pass or owner command can be
-made User-App-capable without a new reviewed code and privacy change.
+Reviewed User App actions are `/help`, `/invite`, `/vote`, `/uptime`, `/bot-stats`,
+`/tts-file`, `/translate text`, `/translate language`, the `Translate` message action,
+and the `Transcribe voice message` action. The last four are explicit, ephemeral tools:
+they never join a call, scan history, or act on another account. `/tts-file` generates a
+private attachment; message transcription accepts only bounded Discord-hosted audio and
+uses temporary local files. Other `/translate` subcommands fail closed outside a server.
+
+`/redeem` remains DM-safe but is intentionally Guild-Install-only because it changes a
+personal entitlement. Queue, live voice, moderation, server configuration, Premium-pass
+and owner commands remain Guild-Install/Guild-context only.
 
 Acceptance checks:
 
 - In a DM/User App context, no candidate can look up a guild, read a guild config,
-  join/speak in a voice channel, scan content or access another account.
+  join/speak in a voice channel, scan history or access another account.
+- `/tts-file` uses only the global defaults and the caller's personal scope; message
+  actions receive only the message explicitly selected through Discord.
 - In a guild, candidate behavior stays unchanged.
 - Attempting a guild-only command from an unsupported context is prevented by Discord
   command registration and still fails safely in the handler if forged.

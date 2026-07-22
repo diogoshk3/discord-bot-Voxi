@@ -10,6 +10,10 @@ export interface SynthRequest {
   // `text`. Does NOT enter the cacheKey (decided at playback/post-synthesis, doesn't
   // change the base audio).
   emphasisSource?: string;
+  // Opt-in latency mode for normal spoken text. The player queues bounded sentence chunks
+  // atomically, allowing the first part to synthesize and play before the full paragraph is
+  // ready. File exports and already-segmented multilingual requests stay single jobs.
+  streamSentences?: boolean;
   // Milliseconds of silence to PREPEND to the synthesized audio (default: none).
   // Used e.g. by /joke to create a real pause BEFORE the laughter (the laughter is a
   // separate utterance with leadSilenceMs). Optional: absent => output unchanged.

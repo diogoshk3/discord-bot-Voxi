@@ -6,6 +6,7 @@ import {
   getTranslationPreference,
   refundTranslationChars,
   reserveTranslationChars,
+  resolveTranslationLimits,
 } from '../store/translation';
 import { addOperationalMetric, setProviderHealth } from '../store/operationalMetrics';
 import { TranslationError } from './provider';
@@ -122,12 +123,13 @@ export async function handleTranslationMessage(message: Message, deps: BotDeps):
   if (!plain) return;
   const truncated = plain.length > TRANSLATION_INPUT_CAP;
   const text = plain.slice(0, TRANSLATION_INPUT_CAP);
+  const limits = resolveTranslationLimits(deps.db, message.guildId, message.author.id);
   const reservation = reserveTranslationChars(deps.db, {
     guildId: message.guildId,
     userId: message.author.id,
     chars: [...text].length,
-    guildLimit: cfg.translationDailyCharLimit,
-    userLimit: cfg.translationPerUserDailyCharLimit,
+    guildLimit: limits.guildLimit,
+    userLimit: limits.userLimit,
   });
   if (!reservation.ok) {
     await notifyQuotaOnce(message);
@@ -151,11 +153,12 @@ export async function handleTranslationMessage(message: Message, deps: BotDeps):
       content: `${translated}${truncated ? '\n\n_Translation was shortened to the configured safety limit._' : ''}${TRANSLATION_MARKER}`,
       allowedMentions: { parse: [] },
     });
-    addOperationalMetric(deps.db, 'synth_success', 'azure_translation');
+    addOperationalMetric(deps.db, 'translation_success', 'azure_translation');
+    addOperationalMetric(deps.db, 'translation_chars', 'azure_translation', [...text].length);
     setProviderHealth(deps.db, 'azure_translation', 'healthy');
   } catch (err) {
     refundTranslationChars(deps.db, reservation, message.guildId, message.author.id);
-    addOperationalMetric(deps.db, 'synth_failure', 'azure_translation');
+    addOperationalMetric(deps.db, 'translation_failure', 'azure_translation');
     setProviderHealth(deps.db, 'azure_translation', 'degraded');
     const code = err instanceof TranslationError ? err.code : 'transient';
     // IDs/error class only: never the source text, translated text, request body or provider response.

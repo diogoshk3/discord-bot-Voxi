@@ -43,6 +43,8 @@ export interface TranscriptionSessionDeps {
   toWav: (pcm: Buffer, outPath: string) => Promise<string>;
   /** Captures a speaker's speech (default: makeReceiverCapture; tests inject a fake). */
   capture: CaptureFn;
+  /** Identity-free aggregate duration hook. PCM is fixed at 48 kHz, stereo, signed 16-bit. */
+  recordAudioMs?: (value: number) => void;
   /** Temp dir for the ephemeral WAVs (default: os.tmpdir()). */
   tmpDir?: string;
 }
@@ -88,6 +90,7 @@ export class TranscriptionSession {
 
   private async handleUtterance(userId: string, pcm: Buffer): Promise<void> {
     if (this.stopped) return;
+    this.deps.recordAudioMs?.(Math.round((pcm.length / (48_000 * 2 * 2)) * 1_000));
     const out = join(
       this.deps.tmpDir ?? tmpdir(),
       `vozen-stt-${process.pid}-${this.id}-${this.seq++}.wav`,

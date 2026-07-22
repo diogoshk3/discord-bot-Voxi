@@ -10,15 +10,14 @@ import {
   addTranslationMapping,
   clearTranslationConfig,
   listTranslationMappings,
-  refundTranslationChars,
-  reserveTranslationChars,
+  getTranslationPreference,
   removeTranslationMapping,
+  resolveTranslationLimits,
   setTranslationPreference,
 } from '../../store/translation';
-import { minimiseTranslationText, TRANSLATION_INPUT_CAP } from '../../translation/messageListener';
-import { TranslationError } from '../../translation/provider';
 import { SUPPORTED_LOCALES } from '../../i18n/index';
 import { reply } from '../helpers';
+import { translateExplicitText } from '../../translation/explicit';
 
 function isManager(i: ChatInputCommandInteraction): boolean {
   return (
@@ -54,11 +53,70 @@ export async function handleTranslate(
   i: ChatInputCommandInteraction,
   deps: BotDeps,
 ): Promise<void> {
-  if (!i.guildId) {
-    await reply(i, 'Translation is available only in a server.');
+  const sub = i.options.getSubcommand();
+  const preferenceScope = i.guildId ?? '@user-app';
+  if (sub === 'language') {
+    const locale = i.options.getString('locale', true);
+    if (!validLocale(locale)) {
+      await reply(i, 'That locale is not supported.');
+      return;
+    }
+    const current = getTranslationPreference(deps.db, preferenceScope, i.user.id);
+    setTranslationPreference(deps.db, { ...current, locale });
+    await reply(i, `Your default translation language is now **${locale}**.`);
     return;
   }
-  const sub = i.options.getSubcommand();
+  if (sub === 'text') {
+    const raw = i.options.getString('text', true);
+    const preferred = getTranslationPreference(deps.db, preferenceScope, i.user.id).locale;
+    const locale = i.options.getString('locale') ?? preferred ?? i.locale.split('-', 1)[0] ?? 'en';
+    if (!validLocale(locale)) {
+      await reply(i, 'That locale is not supported.');
+      return;
+    }
+    const result = await translateExplicitText({
+      db: deps.db,
+      provider: deps.translationProvider,
+      guildId: i.guildId,
+      userId: i.user.id,
+      text: raw,
+      targetLocale: locale,
+    });
+    const response = result.ok
+      ? `**Translation · ${locale}**\n${result.text.slice(0, 1_800)}`
+      : result.reason === 'quota'
+        ? 'Your rolling 30-day translation limit has been reached.'
+        : result.reason === 'disabled'
+          ? 'Translation is temporarily unavailable because no provider is configured.'
+          : result.reason === 'empty'
+            ? 'Provide readable text to translate.'
+            : 'Translation is temporarily unavailable.';
+    await reply(i, response);
+    return;
+  }
+  if (!i.guildId) {
+    await reply(i, 'This translation setting is available only in a server.');
+    return;
+  }
+  if (sub === 'speak-language') {
+    const locale = i.options.getString('locale', true).toLowerCase();
+    if (locale !== 'off' && !validLocale(locale)) {
+      await reply(i, 'That locale is not supported. Use `off` to disable this preference.');
+      return;
+    }
+    const current = getTranslationPreference(deps.db, i.guildId, i.user.id);
+    setTranslationPreference(deps.db, {
+      ...current,
+      speakLocale: locale === 'off' ? null : locale,
+    });
+    await reply(
+      i,
+      locale === 'off'
+        ? 'Translate-before-speaking is now off.'
+        : `Vozen will translate your readable messages to **${locale}** before speaking. If translation is unavailable, it safely reads the original text.`,
+    );
+    return;
+  }
   if (sub === 'opt-out') {
     const optedOut = i.options.getBoolean('active', true);
     setTranslationPreference(deps.db, { guildId: i.guildId, userId: i.user.id, optedOut });
@@ -75,13 +133,14 @@ export async function handleTranslate(
     const cfg = getGuildConfig(deps.db, i.guildId);
     const mappings = listTranslationMappings(deps.db, i.guildId);
     const provider = deps.translationProvider;
+    const limits = resolveTranslationLimits(deps.db, i.guildId, i.user.id);
     await reply(
       i,
       [
         `Translation: **${cfg.translationEnabled ? 'on' : 'off'}**`,
         `Provider: ${provider?.enabled ? provider.kind : 'not configured (disabled)'}`,
         `Mappings: ${mappings.length}`,
-        `Daily cap: ${cfg.translationDailyCharLimit} characters (per member: ${cfg.translationPerUserDailyCharLimit})`,
+        `Rolling 30-day cap: ${limits.guildLimit.toLocaleString('en-US')} characters (you: ${limits.userLimit.toLocaleString('en-US')})`,
       ].join('\n'),
     );
     return;
@@ -179,44 +238,32 @@ export async function handleTranslate(
     return;
   }
   if (sub === 'preview') {
-    const text = minimiseTranslationText(i.options.getString('text', true)).slice(
-      0,
-      TRANSLATION_INPUT_CAP,
-    );
+    const text = i.options.getString('text', true);
     const locale = i.options.getString('locale', true);
-    if (!text || !validLocale(locale)) {
+    if (!validLocale(locale)) {
       await reply(i, 'Provide readable text and a supported target locale.');
       return;
     }
-    if (!deps.translationProvider?.enabled) {
-      await reply(i, 'Translation is disabled because the operator has not configured a provider.');
-      return;
-    }
-    const cfg = getGuildConfig(deps.db, i.guildId);
-    const reservation = reserveTranslationChars(deps.db, {
+    const result = await translateExplicitText({
+      db: deps.db,
+      provider: deps.translationProvider,
       guildId: i.guildId,
       userId: i.user.id,
-      chars: [...text].length,
-      guildLimit: cfg.translationDailyCharLimit,
-      userLimit: cfg.translationPerUserDailyCharLimit,
+      text,
+      targetLocale: locale,
     });
-    if (!reservation.ok) {
-      await reply(i, 'The translation quota is exhausted for today.');
-      return;
-    }
-    try {
-      const translated = await deps.translationProvider.translate({ text, targetLocale: locale });
-      await reply(i, `Preview (${locale}):\n${translated}`);
-    } catch (err) {
-      refundTranslationChars(deps.db, reservation, i.guildId, i.user.id);
-      const code = err instanceof TranslationError ? err.code : 'transient';
-      await reply(
-        i,
-        code === 'disabled'
-          ? 'Translation is currently disabled.'
-          : 'Translation is temporarily unavailable.',
-      );
-    }
+    await reply(
+      i,
+      result.ok
+        ? `Preview (${locale}):\n${result.text.slice(0, 1_800)}`
+        : result.reason === 'quota'
+          ? 'The rolling 30-day translation limit has been reached.'
+          : result.reason === 'empty'
+            ? 'Provide readable text and a supported target locale.'
+            : result.reason === 'disabled'
+              ? 'Translation is currently disabled.'
+              : 'Translation is temporarily unavailable.',
+    );
     return;
   }
   // Defensive no-op for a malformed interaction/version mismatch.

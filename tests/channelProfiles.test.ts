@@ -17,13 +17,32 @@ describe('channel profiles', () => {
     const db = initDb(':memory:');
     const columns = db.pragma('table_info(channel_profile)') as Array<{ name: string }>;
     expect(columns.map((column) => column.name)).toEqual(
-      expect.arrayContaining(['guild_id', 'channel_id', 'auto_read', 'translation_enabled']),
+      expect.arrayContaining([
+        'guild_id',
+        'channel_id',
+        'auto_read',
+        'translation_enabled',
+        'engine',
+        'speed',
+        'max_chars',
+        'read_bots',
+        'voice_channel_id',
+        'locale',
+        'effect',
+      ]),
     );
     const config = getGuildConfig(db, guild);
     expect(resolveChannelPolicy(config, null)).toEqual({
       autoRead: config.autoread,
       translationEnabled: config.translationEnabled,
       defaultVoice: config.defaultVoice,
+      engine: null,
+      speed: null,
+      maxChars: config.maxChars,
+      readBots: config.readBots,
+      voiceChannelId: null,
+      locale: null,
+      effect: null,
     });
   });
 
@@ -35,6 +54,13 @@ describe('channel profiles', () => {
         autoRead: null,
         translationEnabled: null,
         defaultVoice: null,
+        engine: null,
+        speed: null,
+        maxChars: null,
+        readBots: null,
+        voiceChannelId: null,
+        locale: null,
+        effect: null,
       });
       const profile = getChannelProfile(database, 'guild', 'other');
       expect(profile?.autoRead).toBeNull();
@@ -54,6 +80,13 @@ describe('channel profiles', () => {
         autoRead: true,
         translationEnabled: true,
         defaultVoice: 'voice-1',
+        engine: 'piper',
+        speed: 1.2,
+        maxChars: 500,
+        readBots: true,
+        voiceChannelId: 'voice-channel-1',
+        locale: 'es',
+        effect: 'robot',
       }),
     ).toBe(true);
     const profile = getChannelProfile(db, guild, 'text-1');
@@ -63,11 +96,25 @@ describe('channel profiles', () => {
       autoRead: true,
       translationEnabled: true,
       defaultVoice: 'voice-1',
+      engine: 'piper',
+      speed: 1.2,
+      maxChars: 500,
+      readBots: true,
+      voiceChannelId: 'voice-channel-1',
+      locale: 'es',
+      effect: 'robot',
     });
     expect(resolveChannelPolicy(getGuildConfig(db, guild), profile)).toEqual({
       autoRead: true,
       translationEnabled: true,
       defaultVoice: 'voice-1',
+      engine: 'piper',
+      speed: 1.2,
+      maxChars: 500,
+      readBots: true,
+      voiceChannelId: 'voice-channel-1',
+      locale: 'es',
+      effect: 'robot',
     });
     deleteChannelProfile(db, guild, 'text-1');
     expect(getChannelProfile(db, guild, 'text-1')).toBeNull();
@@ -81,6 +128,13 @@ describe('channel profiles', () => {
           autoRead: null,
           translationEnabled: null,
           defaultVoice: null,
+          engine: null,
+          speed: null,
+          maxChars: null,
+          readBots: null,
+          voiceChannelId: null,
+          locale: null,
+          effect: null,
         }),
       ).toBe(true);
     }
@@ -90,6 +144,13 @@ describe('channel profiles', () => {
         autoRead: true,
         translationEnabled: null,
         defaultVoice: null,
+        engine: null,
+        speed: null,
+        maxChars: null,
+        readBots: null,
+        voiceChannelId: null,
+        locale: null,
+        effect: null,
       }),
     ).toBe(false);
     expect(
@@ -97,6 +158,13 @@ describe('channel profiles', () => {
         autoRead: true,
         translationEnabled: null,
         defaultVoice: null,
+        engine: null,
+        speed: null,
+        maxChars: null,
+        readBots: null,
+        voiceChannelId: null,
+        locale: null,
+        effect: null,
       }),
     ).toBe(true);
   });

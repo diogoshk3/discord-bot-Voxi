@@ -312,6 +312,8 @@
       ["/join", "Entra en tu canal de voz"],
       ["/leave", "Sale del canal de voz"],
       ["/tts", "Lee un texto en voz alta"],
+      ["/tts-file", "Create a private audio file without joining a call"],
+      ["/translate text", "Translate text privately, including as a User App"],
       ["/skip", "Salta el audio actual"],
       ["/shut-up", "Silencia a Vozen al instante (vacía la cola)"],
       ["/setup", "Configuración guiada en un paso"],
@@ -323,6 +325,8 @@
     "voice": [
       ["/voice set", "Elige tu voz, idioma y motor"],
       ["/voice list", "Explora todas las voces"],
+      ["/voice favorites", "Open your saved favourite voices"],
+      ["/voice recent", "Open your recently used voices"],
       ["/voice preview", "Escucha una muestra de voz"],
       ["/voice effect", "Robot, eco, demonio… efectos de voz"],
       ["/voice nickname", "Cómo te llama Vozen en voz alta"],

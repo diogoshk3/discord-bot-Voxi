@@ -39,7 +39,7 @@ export function healthResponse(
   if (path === '/health') {
     return { status: 200, body: JSON.stringify({ status: 'ok' }) };
   }
-  if (path === '/status' && publicStatus) {
+  if ((path === '/status' || path === '/api/public/status') && publicStatus) {
     try {
       return { status: 200, body: JSON.stringify(publicStatus()) };
     } catch {
@@ -76,7 +76,18 @@ export function startHealthServer(
       req.url,
       config.publicStatusEnabled ? publicStatus : undefined,
     );
-    res.writeHead(status, { 'Content-Type': 'application/json' });
+    const path = (req.url ?? '').split('?')[0];
+    const publicRoute = status === 200 && (path === '/status' || path === '/api/public/status');
+    const origin = req.headers.origin;
+    const allowedOrigin =
+      origin === 'https://vozen.org' || origin === 'https://www.vozen.org' ? origin : undefined;
+    res.writeHead(status, {
+      'Content-Type': 'application/json',
+      ...(publicRoute ? { 'Cache-Control': 'public, max-age=30' } : {}),
+      ...(publicRoute && allowedOrigin
+        ? { 'Access-Control-Allow-Origin': allowedOrigin, Vary: 'Origin' }
+        : {}),
+    });
     res.end(body);
   });
 

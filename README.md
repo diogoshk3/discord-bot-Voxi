@@ -33,7 +33,7 @@ voice channel, type in the text channel, and you're done.
 - **Auto-read** — pick a channel with `/setup` and Vozen reads everything written
   there. No prefixes. It also reads mentions of and replies to the bot.
 - **A voice per person** — everyone picks their own voice, speed and engine with
-  `/voice config`, and it reads all of their messages in it.
+  `/voice config`, saves favourites/recent voices, and reads all of their messages in it.
 - **35 languages, with optional automatic detection** — choose any of the 38 voices,
   or opt in to per-message detection with `/voice detection on`.
 - **Says who's talking** — "Sam said hello", with nicknames you can set yourself.
@@ -46,23 +46,30 @@ voice channel, type in the text channel, and you're done.
   `/randomizer`, `/sound`, `/birthday`.
 - **Moderation** — blocked words, per-user rate limit, character cap, role gating
   and per-channel control, all under `/config`.
+- **Private tools anywhere** — `/tts-file`, `/translate text`, and the Translate/
+  Transcribe message actions work ephemerally without joining a call; reviewed actions
+  can be installed as a Discord User App.
+- **Channel profiles** — admins can give each channel its own voice, engine, language,
+  speed, limits, bot-reading rule and voice-channel binding from the web dashboard.
 - **The interface speaks your language** — the bot's own replies are translated
   into 30+ languages and follow each person's Discord language.
 
 ## Commands worth knowing
 
-| Command          | What it does                                         |
-| ---------------- | ---------------------------------------------------- |
-| `/setup`         | One-step setup for the server                        |
-| `/join` `/leave` | Bring Vozen into your voice channel, or send it away |
-| `/tts`           | Read one message out loud                            |
-| `/tts-file`      | Create a short private audio attachment (no call)    |
-| `/voice config`  | Panel to pick your voice, speed and engine           |
-| `/voice browse`  | Search the voices currently available on this bot    |
-| `/skip`          | Skip what's playing                                  |
-| `/config`        | Server settings (needs Manage Server)                |
-| `/help`          | The full command list                                |
-| `/privacy erase` | Delete your erasable personal data from Vozen        |
+| Command                           | What it does                                         |
+| --------------------------------- | ---------------------------------------------------- |
+| `/setup`                          | One-step setup for the server                        |
+| `/join` `/leave`                  | Bring Vozen into your voice channel, or send it away |
+| `/tts`                            | Read one message out loud                            |
+| `/tts-file`                       | Create a short private audio attachment (no call)    |
+| `/voice config`                   | Panel to pick your voice, speed and engine           |
+| `/voice browse`                   | Search the voices currently available on this bot    |
+| `/voice favorite` `/voice recent` | Save and reopen personal voice shortcuts             |
+| `/translate text`                 | Translate text privately with a rolling usage limit  |
+| `/skip`                           | Skip what's playing                                  |
+| `/config`                         | Server settings (needs Manage Server)                |
+| `/help`                           | The full command list                                |
+| `/privacy erase`                  | Delete your erasable personal data from Vozen        |
 
 ## Premium
 
@@ -96,8 +103,9 @@ there is nothing easier than inviting the hosted bot:
 - [**Privacy Policy**](PRIVACY.md) — what is stored, for how long, and how to delete it.
   Message text is processed and thrown away; it is never used to train anything.
 - [**Terms of Service**](TERMS.md) — acceptable use, warranties, liability.
-- [**User App and public status rollout**](docs/USER-APP-STATUS-ROLLOUT.md) — manual,
-  post-approval Developer Portal and proxy checklist; neither surface is enabled by source alone.
+- [**User App and public status rollout**](docs/USER-APP-STATUS-ROLLOUT.md) — reviewed
+  command metadata plus the manual Developer Portal and proxy activation checklist.
+- [**Live service status**](https://vozen.org/status) — coarse bot, database and provider state.
 
 ## License
 

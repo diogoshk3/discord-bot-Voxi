@@ -7,8 +7,10 @@ import {
   createDashboardApi,
   DASHBOARD_FIELDS,
   listAuthorizedTextChannels,
+  sanitizeChannelProfile,
   sanitizePatch,
 } from '../src/premium/dashboardApi';
+import { getChannelProfile } from '../src/store/channelProfiles';
 
 const TOKEN = 'tok-abc';
 const CLIENT_ID = '1523826014935842997';
@@ -57,6 +59,8 @@ function makeApi(
     fetchImpl: fakeGuildsFetch(TOKEN, guilds, oauth),
     botHasGuild: (id) => botGuilds.includes(id),
     resolveChannels: () => channels,
+    resolveVoiceChannels: () => [{ id: 'voice-channel-1', label: 'Lounge' }],
+    resolveRoles: () => [{ id: 'role-1', label: 'Speakers' }],
     availableModels: [VOICE],
   });
 }
@@ -136,6 +140,60 @@ describe('sanitizePatch - whitelist, validation and channel behaviour', () => {
   it('all dashboard fields are declared', () => {
     expect(DASHBOARD_FIELDS).toContain('ttsChannelId');
     expect(DASHBOARD_FIELDS).toContain('defaultVoice');
+    expect(DASHBOARD_FIELDS).toEqual(
+      expect.arrayContaining([
+        'priorityRoleId',
+        'blockedRoleId',
+        'translationEnabled',
+        'votePromos',
+        'stayInCall',
+      ]),
+    );
+  });
+});
+
+describe('sanitizeChannelProfile - inherited overrides and authoritative options', () => {
+  const options = {
+    channelIds: new Set([CHANNEL]),
+    voiceChannelIds: new Set(['voice-channel-1']),
+    voiceIds: new Set([VOICE]),
+  };
+
+  it('accepts bounded nullable overrides and discards unknown fields', () => {
+    expect(
+      sanitizeChannelProfile(
+        {
+          autoRead: true,
+          translationEnabled: false,
+          defaultVoice: VOICE,
+          engine: 'piper',
+          speed: 1.25,
+          maxChars: 450,
+          readBots: true,
+          voiceChannelId: 'voice-channel-1',
+          owner: true,
+        },
+        options,
+      ),
+    ).toEqual({
+      ok: true,
+      patch: {
+        autoRead: true,
+        translationEnabled: false,
+        defaultVoice: VOICE,
+        engine: 'piper',
+        speed: 1.25,
+        maxChars: 450,
+        readBots: true,
+        voiceChannelId: 'voice-channel-1',
+      },
+    });
+  });
+
+  it('rejects tampered voices, channels and engines', () => {
+    expect(sanitizeChannelProfile({ defaultVoice: 'bad' }, options)).toMatchObject({ ok: false });
+    expect(sanitizeChannelProfile({ voiceChannelId: 'bad' }, options)).toMatchObject({ ok: false });
+    expect(sanitizeChannelProfile({ engine: 'shell' }, options)).toMatchObject({ ok: false });
   });
 });
 
@@ -253,11 +311,41 @@ describe('createDashboardApi - authorization and authoritative options', () => {
     expect(payload?.capabilities).toEqual({
       ttsChannelId: true,
       defaultVoice: true,
-      channelProfiles: false,
+      channelProfiles: true,
     });
     expect(payload?.options.channels).toEqual([{ id: CHANNEL, label: 'general' }]);
     expect(payload?.options.voices[0]).toMatchObject({ id: VOICE });
     expect(payload?.options.locales).toContainEqual({ id: 'pt', label: expect.any(String) });
+    expect(payload?.options.voiceChannels).toEqual([{ id: 'voice-channel-1', label: 'Lounge' }]);
+    expect(payload?.options.roles).toEqual([{ id: 'role-1', label: 'Speakers' }]);
+    expect(payload?.channelProfiles).toEqual([]);
+  });
+
+  it('creates and deletes a validated channel profile for an authorized manager', async () => {
+    const api = makeApi(db, [{ id: GUILD, name: 'Mine', icon: null, permissions: MANAGE_GUILD }]);
+    const saved = await api.saveChannelProfile(TOKEN, GUILD, CHANNEL, {
+      autoRead: true,
+      translationEnabled: null,
+      defaultVoice: VOICE,
+      engine: 'piper',
+      speed: 1.1,
+      maxChars: 500,
+      readBots: false,
+      voiceChannelId: 'voice-channel-1',
+    });
+    expect(saved && 'channelProfiles' in saved ? saved.channelProfiles : []).toHaveLength(1);
+    expect(getChannelProfile(db, GUILD, CHANNEL)?.engine).toBe('piper');
+    expect(await api.deleteChannelProfile(TOKEN, GUILD, CHANNEL)).toBe(true);
+    expect(getChannelProfile(db, GUILD, CHANNEL)).toBeNull();
+  });
+
+  it('rejects an unauthorized or tampered profile without writing it', async () => {
+    const api = makeApi(db, [{ id: GUILD, name: 'Mine', icon: null, permissions: MANAGE_GUILD }]);
+    expect(await api.saveChannelProfile(TOKEN, GUILD, 'tampered', {})).toMatchObject({
+      error: 'invalid_profile',
+    });
+    expect(await api.saveChannelProfile('wrong-token', GUILD, CHANNEL, {})).toBeNull();
+    expect(getChannelProfile(db, GUILD, CHANNEL)).toBeNull();
   });
 
   it('saves valid settings and rejects tampered values without touching storage', async () => {
@@ -266,13 +354,37 @@ describe('createDashboardApi - authorization and authoritative options', () => {
       xsaid: false,
       ttsChannelId: CHANNEL,
       defaultVoice: VOICE,
+      priorityRoleId: 'role-1',
+      blockedRoleId: null,
+      translationEnabled: true,
     });
     expect(saved && 'config' in saved ? saved.config.ttsChannelId : null).toBe(CHANNEL);
     expect(getGuildConfig(db, GUILD).autoread).toBe(true);
+    expect(getGuildConfig(db, GUILD).priorityRoleId).toBe('role-1');
 
     const rejected = await api.saveConfig(TOKEN, GUILD, { defaultVoice: 'tampered' });
     expect(rejected).toEqual({ error: 'invalid_setting', field: 'defaultVoice' });
     expect(getGuildConfig(db, GUILD).defaultVoice).toBe(VOICE);
+  });
+
+  it('rejects tampered queue roles and a role cannot be both priority and blocked', () => {
+    const options = {
+      channelIds: new Set([CHANNEL]),
+      voiceIds: new Set([VOICE]),
+      roleIds: new Set(['role-1']),
+    };
+    expect(
+      sanitizePatch({ priorityRoleId: 'tampered' }, options, {
+        ttsChannelId: null,
+        autoread: false,
+      }),
+    ).toMatchObject({ ok: false, field: 'priorityRoleId' });
+    expect(
+      sanitizePatch({ priorityRoleId: 'role-1', blockedRoleId: 'role-1' }, options, {
+        ttsChannelId: null,
+        autoread: false,
+      }),
+    ).toMatchObject({ ok: false, field: 'blockedRoleId' });
   });
 
   it('shows removed channels and models as disabled options without mutating storage on GET', async () => {

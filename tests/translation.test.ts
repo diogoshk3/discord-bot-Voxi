@@ -5,8 +5,11 @@ import { setGuildConfig } from '../src/store/guildConfig';
 import {
   addTranslationMapping,
   getTranslationMapping,
+  getTranslationPreference,
   refundTranslationChars,
   reserveTranslationChars,
+  resolveTranslationLimits,
+  setTranslationPreference,
 } from '../src/store/translation';
 import {
   minimiseTranslationText,
@@ -21,6 +24,7 @@ import {
 } from '../src/translation/provider';
 import type { BotDeps } from '../src/bot/deps';
 import { canMapChannel } from '../src/commands/handlers/translation';
+import { translateExplicitText, translateTextForSpeech } from '../src/translation/explicit';
 
 const GUILD = 'guild-1';
 const SOURCE = 'source-1';
@@ -153,6 +157,94 @@ describe('translation persistence and quota', () => {
         day: '2026-07-22',
       }),
     ).toMatchObject({ ok: true });
+  });
+
+  it('enforces a rolling 30-day window instead of resetting the allowance every day', () => {
+    const database = db();
+    expect(
+      reserveTranslationChars(database, {
+        guildId: GUILD,
+        userId: USER,
+        chars: 7,
+        guildLimit: 10,
+        userLimit: 10,
+        day: '2026-07-01',
+      }),
+    ).toMatchObject({ ok: true });
+    expect(
+      reserveTranslationChars(database, {
+        guildId: GUILD,
+        userId: USER,
+        chars: 4,
+        guildLimit: 10,
+        userLimit: 10,
+        day: '2026-07-22',
+      }),
+    ).toEqual({ ok: false, reason: 'guild_quota' });
+    expect(
+      reserveTranslationChars(database, {
+        guildId: GUILD,
+        userId: USER,
+        chars: 10,
+        guildLimit: 10,
+        userLimit: 10,
+        day: '2026-08-01',
+      }),
+    ).toMatchObject({ ok: true });
+  });
+
+  it('uses the published free, Plus and Premium 30-day caps', () => {
+    const database = db();
+    expect(resolveTranslationLimits(database, GUILD, USER, Date.now())).toEqual({
+      guildLimit: 100_000,
+      userLimit: 10_000,
+    });
+    database
+      .prepare('INSERT INTO premium_user (user_id, expires_at) VALUES (?, ?)')
+      .run(USER, Date.now() + 60_000);
+    expect(resolveTranslationLimits(database, GUILD, USER, Date.now()).userLimit).toBe(100_000);
+    database
+      .prepare('INSERT INTO premium_guild (guild_id, expires_at) VALUES (?, ?)')
+      .run(GUILD, Date.now() + 60_000);
+    expect(resolveTranslationLimits(database, GUILD, USER, Date.now()).guildLimit).toBe(500_000);
+  });
+
+  it('stores a member target locale independently from their automatic opt-out', () => {
+    const database = db();
+    setTranslationPreference(database, {
+      guildId: GUILD,
+      userId: USER,
+      optedOut: true,
+      locale: 'pt',
+      speakLocale: 'es',
+    });
+    setTranslationPreference(database, { guildId: GUILD, userId: USER, optedOut: false });
+    expect(getTranslationPreference(database, GUILD, USER)).toEqual({
+      guildId: GUILD,
+      userId: USER,
+      optedOut: false,
+      locale: 'pt',
+      speakLocale: 'es',
+    });
+  });
+
+  it('keeps translate-before-speaking disabled until the member explicitly selects a locale', () => {
+    const database = db();
+    expect(getTranslationPreference(database, GUILD, USER).speakLocale).toBeNull();
+    setTranslationPreference(database, {
+      guildId: GUILD,
+      userId: USER,
+      optedOut: false,
+      speakLocale: 'fr',
+    });
+    expect(getTranslationPreference(database, GUILD, USER).speakLocale).toBe('fr');
+    setTranslationPreference(database, {
+      guildId: GUILD,
+      userId: USER,
+      optedOut: false,
+      speakLocale: null,
+    });
+    expect(getTranslationPreference(database, GUILD, USER).speakLocale).toBeNull();
   });
 });
 
@@ -291,5 +383,71 @@ describe('translation message listener', () => {
         day: new Date().toISOString().slice(0, 10),
       }),
     ).toMatchObject({ ok: true });
+  });
+});
+
+describe('explicit translation', () => {
+  it('is available without automatic channel translation and applies the personal quota', async () => {
+    const database = db();
+    const translate = vi.fn(async () => 'olÃ¡');
+    const result = await translateExplicitText({
+      db: database,
+      provider: { kind: 'azure', enabled: true, translate },
+      guildId: null,
+      userId: USER,
+      text: 'hello',
+      targetLocale: 'pt',
+      now: Date.parse('2026-07-22T12:00:00Z'),
+    });
+    expect(result).toEqual({ ok: true, text: 'olÃ¡', sourceChars: 5 });
+    expect(translate).toHaveBeenCalledWith({ text: 'hello', targetLocale: 'pt' });
+  });
+
+  it('refunds its reservation when the provider fails', async () => {
+    const database = db();
+    const input = {
+      db: database,
+      provider: {
+        kind: 'azure' as const,
+        enabled: true,
+        translate: vi.fn(async () => {
+          throw new TranslationError('transient', 'down');
+        }),
+      },
+      guildId: GUILD,
+      userId: USER,
+      text: 'hello',
+      targetLocale: 'pt',
+      now: Date.parse('2026-07-22T12:00:00Z'),
+    };
+    await expect(translateExplicitText(input)).resolves.toEqual({
+      ok: false,
+      reason: 'unavailable',
+    });
+    input.provider.translate = vi.fn(async () => 'olÃ¡');
+    await expect(translateExplicitText(input)).resolves.toMatchObject({ ok: true });
+  });
+
+  it('translates an opted-in speech body but safely falls back to the original', async () => {
+    const database = db();
+    const translated = await translateTextForSpeech({
+      db: database,
+      provider: { kind: 'azure', enabled: true, translate: vi.fn(async () => 'hola') },
+      guildId: GUILD,
+      userId: USER,
+      text: 'hello',
+      targetLocale: 'es',
+    });
+    expect(translated).toEqual({ text: 'hola', translated: true });
+
+    const fallback = await translateTextForSpeech({
+      db: database,
+      provider: undefined,
+      guildId: GUILD,
+      userId: USER,
+      text: 'hello',
+      targetLocale: 'es',
+    });
+    expect(fallback).toEqual({ text: 'hello', translated: false });
   });
 });

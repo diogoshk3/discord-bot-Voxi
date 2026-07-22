@@ -23,6 +23,8 @@ import { pickWelcomeChannel, buildWelcomeEmbed, welcomeLocaleFor } from './welco
 import { createErrorReporter } from '../errorReporter';
 import { bindGatewayWatch } from './gatewayWatch';
 import { log } from '../logging/logger';
+import { addOperationalMetric, setProviderHealth } from '../store/operationalMetrics';
+import { handleTranslationReaction } from '../translation/reaction';
 
 export function createClient(): Client {
   return new Client({
@@ -30,9 +32,10 @@ export function createClient(): Client {
       GatewayIntentBits.Guilds,
       GatewayIntentBits.GuildVoiceStates,
       GatewayIntentBits.GuildMessages,
+      GatewayIntentBits.GuildMessageReactions,
       GatewayIntentBits.MessageContent,
     ],
-    partials: [Partials.Channel],
+    partials: [Partials.Channel, Partials.Message, Partials.Reaction, Partials.User],
     // Global security default: user-controlled bot output cannot mention everyone,
     // roles, or users unless a call site opts in explicitly.
     allowedMentions: { parse: [] },
@@ -91,6 +94,11 @@ export function bindEvents(deps: BotDeps): void {
 
   client.once(Events.ClientReady, (c) => {
     log.info(`[client] online as ${c.user.tag}`);
+    try {
+      setProviderHealth(deps.db, 'internal', 'healthy');
+    } catch (err) {
+      log.warn('[metrics] failed to initialise local provider health (ignored)', err);
+    }
     // P9.3 — presence as subtle self-marketing (brand + CTA). Defensive: never let a
     // presence failure crash the bot startup.
     try {
@@ -111,11 +119,20 @@ export function bindEvents(deps: BotDeps): void {
       return;
     }
     if (!interaction.isChatInputCommand()) return;
+    try {
+      addOperationalMetric(deps.db, 'command_invoked', 'internal');
+    } catch (err) {
+      log.warn('[metrics] failed to record command aggregate (ignored)', err);
+    }
     void handleInteraction(interaction, deps);
   });
 
   client.on(Events.MessageCreate, (message: Message) => {
     void handleMessage(message, deps);
+  });
+
+  client.on(Events.MessageReactionAdd, (reaction, user) => {
+    void handleTranslationReaction(reaction, user, deps);
   });
 
   // VoiceStateUpdate — someone joined/left/switched voice channel. Serves the rule
@@ -136,6 +153,11 @@ export function bindEvents(deps: BotDeps): void {
   // (pickWelcomeChannel/buildWelcomeEmbed); here we just wire the pieces: null -> don't
   // send; try/catch to NEVER crash (new guild = default locale 'en').
   client.on(Events.GuildCreate, (guild: Guild) => {
+    try {
+      addOperationalMetric(deps.db, 'guild_join', 'internal');
+    } catch (err) {
+      log.warn('[metrics] failed to record server-join aggregate (ignored)', err);
+    }
     // Re-invite: cancel any scheduled purge (the bot came back within the grace period).
     try {
       if (deps.db) unmarkGuildDeparted(deps.db, guild.id);

@@ -11,15 +11,27 @@ import {
 import { existsSync } from 'node:fs';
 import type { TTSEngine, SynthRequest } from '../tts/engine';
 import { emphasisGain } from '../tts/emphasis';
-import { PlayQueue, type PublicQueueItem, type QueueEnqueueOptions } from './queue';
+import { splitForFastPlayback } from '../tts/sentenceChunks';
+import {
+  PlayQueue,
+  type PublicQueueItem,
+  type QueueEnqueueOptions,
+  type QueueWorkItem,
+} from './queue';
 import { raceStates } from './raceStates';
 import { log } from '../logging/logger';
 import { metrics } from '../metrics';
+import {
+  providerForEngine,
+  type OperationalMetric,
+  type OperationalProvider,
+} from '../store/operationalMetrics';
 
 // Maximum time to wait for the VoiceConnection to become Ready before playing. On a
 // slow connection / 1st speech the connection may be in signalling/connecting; playing
 // at that instant sends the audio into the void (no sound and no error).
 const CONNECTION_READY_TIMEOUT_MS = 10_000;
+const FAST_PLAYBACK_CHUNK_CHARS = 220;
 
 export class GuildVoicePlayer {
   private readonly player: AudioPlayer;
@@ -34,13 +46,18 @@ export class GuildVoicePlayer {
   private paused = false;
   // An item that was already dequeued when an admin paused during synthesis/readiness.
   // It stays private and is resumed before later queue items, preserving FIFO.
-  private held: { req: SynthRequest } | null = null;
+  private held: QueueWorkItem | null = null;
 
   constructor(
     private readonly connection: VoiceConnection,
     private readonly engine: TTSEngine,
     queueCap: number,
     private readonly onIdle: () => void,
+    private readonly recordOperational?: (
+      metric: OperationalMetric,
+      provider: OperationalProvider,
+      value: number,
+    ) => void,
   ) {
     this.queue = new PlayQueue(queueCap);
     this.player = createAudioPlayer();
@@ -80,9 +97,23 @@ export class GuildVoicePlayer {
     // Enqueues SYNCHRONOUSLY in arrival order (preserves the FIFO of spec §7).
     // The synthesis happens in the worker (playNext), not here, so as not to reorder
     // concurrent requests by the synthesis duration/cache-hit.
-    const ok = this.queue.enqueue({ req }, options);
+    const chunks =
+      req.streamSentences && !req.assetPath && !req.segments
+        ? splitForFastPlayback(req.text, FAST_PLAYBACK_CHUNK_CHARS)
+        : [req.text];
+    const requests = chunks.map((text, index) => ({
+      req: {
+        ...req,
+        text,
+        emphasisSource: text,
+        leadSilenceMs: index === 0 ? req.leadSilenceMs : undefined,
+        streamSentences: false,
+      },
+    }));
+    const ok = this.queue.enqueueMany(requests, options);
     if (!ok) {
       log.warn('[player] queue is full; request dropped');
+      this.recordOperational?.('queue_drop', providerForEngine(req.engine), 1);
       return false;
     }
     if (!this.playing) {
@@ -235,6 +266,7 @@ export class GuildVoicePlayer {
 
     let audioPath: string;
     const synthStart = process.hrtime.bigint();
+    const provider = providerForEngine(next.req.engine);
     if (next.req.assetPath) {
       // Fixed ASSET (e.g. the /rizz sound effect): WAV already ready on disk, played DIRECTLY —
       // no engine/cache/effects (none of that applies to a fixed clip). Missing file =
@@ -242,6 +274,7 @@ export class GuildVoicePlayer {
       if (!existsSync(next.req.assetPath)) {
         log.error('[player] audio asset is missing; item skipped:', next.req.assetPath);
         metrics.inc('synthErrors');
+        this.recordOperational?.('synth_failure', 'internal', 1);
         void this.playNext();
         return;
       }
@@ -250,10 +283,14 @@ export class GuildVoicePlayer {
       try {
         audioPath = await this.engine.synth(next.req);
         // Effective synthesis latency (includes fast cache hit and slow miss/spawn).
-        metrics.recordSynthMs(Number(process.hrtime.bigint() - synthStart) / 1e6);
+        const synthMs = Number(process.hrtime.bigint() - synthStart) / 1e6;
+        metrics.recordSynthMs(synthMs);
+        this.recordOperational?.('synth_latency_ms', provider, Math.round(synthMs));
+        this.recordOperational?.('synth_success', provider, 1);
       } catch (err) {
         log.error('[player] synthesis error; item skipped:', err);
         metrics.inc('synthErrors');
+        this.recordOperational?.('synth_failure', provider, 1);
         // Skip this item and continue the queue without crashing (no stack growth:
         // we are after the await).
         void this.playNext();
@@ -335,9 +372,11 @@ export class GuildVoicePlayer {
       // audio started playing), otherwise a failure counted 2× (messagesSpoken + synthErrors).
       this.player.play(resource);
       metrics.inc('messagesSpoken');
+      this.recordOperational?.('ttfa_ms', provider, Math.max(0, Date.now() - next.createdAt));
     } catch (err) {
       log.error('[player] failed to create or play resource; item skipped:', err);
       metrics.inc('synthErrors');
+      this.recordOperational?.('synth_failure', provider, 1);
       // No stack growth (we are after awaits); resets the worker via
       // the next iteration, which will set playing=false if the queue empties.
       void this.playNext();

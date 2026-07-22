@@ -50,6 +50,8 @@ export const GUILD_RETAINED_TABLES = ['premium_guild', 'premium_pass_activation'
 /** Deleted by `/privacy erase` (personal data). */
 export const USER_ERASE_TABLES = [
   'user_voice',
+  'user_voice_favorite',
+  'user_voice_recent',
   'tts_optout',
   'tts_lang_detect_on', // the user's automatic language-detection opt-in (per guild)
   'user_nickname',

@@ -46,6 +46,16 @@ describe('public status mapping', () => {
     expect(JSON.parse(result.body).status).toBe('operational');
   });
 
+  it('serves the versioned public API path and keeps the legacy alias compatible', () => {
+    const resolver = () =>
+      mapPublicStatus({ botReady: true, databaseReady: true, providerStates: ['healthy'] });
+    expect(healthResponse('/api/public/status', resolver)).toEqual(
+      healthResponse('/status', resolver),
+    );
+    expect(healthResponse('/api/public/status?source=site', resolver).status).toBe(200);
+    expect(healthResponse('/api/public/status').status).toBe(404);
+  });
+
   it('fails closed without exposing an exception when the status resolver fails', () => {
     expect(
       JSON.parse(
