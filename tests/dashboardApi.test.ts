@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type Database from 'better-sqlite3';
 import { ChannelType, Collection, type Guild } from 'discord.js';
 import { initDb } from '../src/store/db';
@@ -11,6 +11,7 @@ import {
 } from '../src/premium/dashboardApi';
 
 const TOKEN = 'tok-abc';
+const CLIENT_ID = '1523826014935842997';
 const GUILD = '999999999999999999';
 const CHANNEL = '777777777777777777';
 const VOICE = 'en_US-amy-medium';
@@ -18,11 +19,25 @@ const MANAGE_GUILD = '0x20';
 const NONE = '0';
 const ADMIN = '0x8';
 
-function fakeGuildsFetch(expected: string, guilds: unknown[]): typeof fetch {
-  return (async (_url: string, init?: { headers?: Record<string, string> }) => {
+function fakeGuildsFetch(
+  expected: string,
+  guilds: unknown[],
+  oauth: { applicationId?: string; scopes?: readonly string[] } = {},
+): typeof fetch {
+  return (async (url: string, init?: { headers?: Record<string, string> }) => {
     const auth = init?.headers?.Authorization ?? '';
     if (auth !== `Bearer ${expected}`) {
       return { ok: false, status: 401, json: async () => ({}) } as unknown as Response;
+    }
+    if (url.endsWith('/oauth2/@me')) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          application: { id: oauth.applicationId ?? CLIENT_ID },
+          scopes: oauth.scopes ?? ['identify', 'guilds'],
+        }),
+      } as unknown as Response;
     }
     return { ok: true, status: 200, json: async () => guilds } as unknown as Response;
   }) as unknown as typeof fetch;
@@ -33,11 +48,13 @@ function makeApi(
   guilds: unknown[],
   botGuilds: string[] = [GUILD],
   channels = [{ id: CHANNEL, label: 'general' }],
+  oauth: { applicationId?: string; scopes?: readonly string[] } = {},
 ) {
   return createDashboardApi({
     db,
     now: () => 1_000,
-    fetchImpl: fakeGuildsFetch(TOKEN, guilds),
+    expectedClientId: CLIENT_ID,
+    fetchImpl: fakeGuildsFetch(TOKEN, guilds, oauth),
     botHasGuild: (id) => botGuilds.includes(id),
     resolveChannels: () => channels,
     availableModels: [VOICE],
@@ -193,6 +210,39 @@ describe('createDashboardApi - authorization and authoritative options', () => {
     const guilds = [{ id: GUILD, name: 'Mine', icon: null, permissions: MANAGE_GUILD }];
     expect(await makeApi(db, guilds).getGuild('wrong-token', GUILD)).toBeNull();
     expect(await makeApi(db, guilds, []).getGuild(TOKEN, GUILD)).toBeNull();
+  });
+
+  it.each([[{ applicationId: 'another-app' }], [{ scopes: ['identify'] }]] as const)(
+    'does not expose guilds or config for a token missing dashboard authorization',
+    async (oauth) => {
+      const api = makeApi(
+        db,
+        [{ id: GUILD, name: 'Mine', icon: null, permissions: MANAGE_GUILD }],
+        [GUILD],
+        [{ id: CHANNEL, label: 'general' }],
+        oauth,
+      );
+      await expect(api.listGuilds(TOKEN)).resolves.toBeNull();
+      await expect(api.getGuild(TOKEN, GUILD)).resolves.toBeNull();
+    },
+  );
+
+  it('does not log a bearer token when Discord validation fails', async () => {
+    const logError = vi.fn();
+    const api = createDashboardApi({
+      db,
+      now: () => 1_000,
+      expectedClientId: CLIENT_ID,
+      fetchImpl: (async () => {
+        throw new Error(`request failed for Bearer ${TOKEN}`);
+      }) as typeof fetch,
+      botHasGuild: () => true,
+      resolveChannels: () => [],
+      availableModels: [],
+      logError,
+    });
+    await expect(api.listGuilds(TOKEN)).resolves.toBeNull();
+    expect(JSON.stringify(logError.mock.calls)).not.toContain(TOKEN);
   });
 
   it('returns config, capabilities and backend-generated channel, voice and locale options', async () => {

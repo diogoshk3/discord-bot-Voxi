@@ -312,6 +312,7 @@ async function main(): Promise<void> {
       ? createStatusApi({
           db,
           now: () => Date.now(),
+          expectedClientId: config.clientId,
           // Wrapped (not raw `fetch`) so `this` is correct — avoids "Illegal invocation".
           fetchImpl: (u, i) => fetch(u, i),
           resolveGuildName: (id) => client.guilds.cache.get(id)?.name ?? null,
@@ -324,6 +325,7 @@ async function main(): Promise<void> {
       ? createDashboardApi({
           db,
           now: () => Date.now(),
+          expectedClientId: config.clientId,
           fetchImpl: (u, i) => fetch(u, i),
           botHasGuild: (id) => client.guilds.cache.has(id),
           resolveChannels: (id) => {

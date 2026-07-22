@@ -7,15 +7,23 @@ import { createDashboardApi } from '../src/premium/dashboardApi';
 import { getGuildConfig } from '../src/store/guildConfig';
 
 const TOKEN = 'good-token';
+const CLIENT_ID = '1523826014935842997';
 const GUILD = '123123123123123123';
 const OTHER = '456456456456456456';
 const CHANNEL = '789789789789789789';
 const VOICE = 'en_US-amy-medium';
 
 function fakeFetch(): typeof fetch {
-  return (async (_url: string, init?: { headers?: Record<string, string> }) => {
+  return (async (url: string, init?: { headers?: Record<string, string> }) => {
     if (init?.headers?.Authorization !== `Bearer ${TOKEN}`) {
       return { ok: false, status: 401, json: async () => ({}) } as unknown as Response;
+    }
+    if (url.endsWith('/oauth2/@me')) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ application: { id: CLIENT_ID }, scopes: ['identify', 'guilds'] }),
+      } as unknown as Response;
     }
     return {
       ok: true,
@@ -45,6 +53,7 @@ describe('/api/dashboard/* - HTTP routes', () => {
     const dashboardApi = createDashboardApi({
       db,
       now: () => 1_000,
+      expectedClientId: CLIENT_ID,
       fetchImpl: fakeFetch(),
       botHasGuild: (id) => id === GUILD,
       resolveChannels: () => [{ id: CHANNEL, label: '#general' }],

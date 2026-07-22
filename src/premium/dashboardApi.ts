@@ -3,6 +3,7 @@
 // returned after MANAGE_GUILD/ADMINISTRATOR and bot presence have both been confirmed.
 
 import type Database from 'better-sqlite3';
+import { createHash } from 'node:crypto';
 import { ChannelType, PermissionFlagsBits, type Guild } from 'discord.js';
 import { LOCALE_DISPLAY_NAMES, SUPPORTED_LOCALES } from '../i18n/index';
 import { voiceDisplayName } from '../language/voiceMap';
@@ -165,6 +166,8 @@ export function listAuthorizedTextChannels(guild: Guild): DashboardOption[] {
 export interface DashboardApiDeps {
   db: Database.Database;
   now: () => number;
+  /** Discord application that is allowed to mint dashboard tokens. */
+  expectedClientId: string;
   fetchImpl: typeof fetch;
   botHasGuild: (guildId: string) => boolean;
   resolveChannels: (guildId: string) => DashboardOption[];
@@ -181,6 +184,7 @@ export interface DashboardApi {
 }
 
 const DISCORD_GUILDS = 'https://discord.com/api/v10/users/@me/guilds';
+const DISCORD_OAUTH_ME = 'https://discord.com/api/v10/oauth2/@me';
 const MANAGE_GUILD = 0x20n;
 const ADMINISTRATOR = 0x8n;
 const FETCH_TIMEOUT_MS = 5_000;
@@ -209,6 +213,9 @@ export function createDashboardApi(deps: DashboardApiDeps): DashboardApi {
   const maxEntries = Math.max(1, Math.floor(deps.cacheMaxEntries ?? 512));
   const cache = new Map<string, { guilds: ManageableGuild[] | null; exp: number }>();
 
+  const tokenCacheKey = (token: string): string =>
+    createHash('sha256').update(token).digest('base64url');
+
   function prune(now: number): void {
     for (const [key, value] of cache) if (value.exp <= now) cache.delete(key);
     while (cache.size >= maxEntries) {
@@ -220,38 +227,74 @@ export function createDashboardApi(deps: DashboardApiDeps): DashboardApi {
 
   async function fetchManageable(token: string): Promise<ManageableGuild[] | null> {
     const now = deps.now();
-    const hit = cache.get(token);
+    const cacheKey = tokenCacheKey(token);
+    const hit = cache.get(cacheKey);
     if (hit && hit.exp > now) return hit.guilds;
-    if (hit) cache.delete(token);
+    if (hit) cache.delete(cacheKey);
     prune(now);
 
     let guilds: ManageableGuild[] | null = null;
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
     try {
-      const response = await deps.fetchImpl(DISCORD_GUILDS, {
-        headers: { Authorization: `Bearer ${token}` },
-        signal: controller.signal,
-      });
-      if (response.ok) {
-        const raw = (await response.json()) as unknown;
-        guilds = (Array.isArray(raw) ? raw : [])
-          .filter((guild): guild is Record<string, unknown> => !!guild && typeof guild === 'object')
-          .filter((guild) => typeof guild.id === 'string' && deps.botHasGuild(guild.id))
-          .filter((guild) => canManage(guild.permissions, guild.owner))
-          .map((guild) => ({
-            id: guild.id as string,
-            name: typeof guild.name === 'string' ? guild.name : (guild.id as string),
-            icon: typeof guild.icon === 'string' ? guild.icon : null,
-          }));
+      const oauthController = new AbortController();
+      const oauthTimer = setTimeout(() => oauthController.abort(), FETCH_TIMEOUT_MS);
+      let oauth: Response;
+      try {
+        oauth = await deps.fetchImpl(DISCORD_OAUTH_ME, {
+          headers: { Authorization: `Bearer ${token}` },
+          signal: oauthController.signal,
+        });
+      } finally {
+        clearTimeout(oauthTimer);
+      }
+      if (oauth.ok) {
+        const authorization = (await oauth.json()) as {
+          application?: { id?: unknown };
+          scopes?: unknown;
+        };
+        const scopes = Array.isArray(authorization.scopes)
+          ? authorization.scopes.filter((scope): scope is string => typeof scope === 'string')
+          : [];
+        const isAuthorizedToken =
+          authorization.application?.id === deps.expectedClientId &&
+          scopes.includes('identify') &&
+          scopes.includes('guilds');
+        if (isAuthorizedToken) {
+          const guildController = new AbortController();
+          const guildTimer = setTimeout(() => guildController.abort(), FETCH_TIMEOUT_MS);
+          let response: Response;
+          try {
+            response = await deps.fetchImpl(DISCORD_GUILDS, {
+              headers: { Authorization: `Bearer ${token}` },
+              signal: guildController.signal,
+            });
+          } finally {
+            clearTimeout(guildTimer);
+          }
+          if (response.ok) {
+            const raw = (await response.json()) as unknown;
+            guilds = (Array.isArray(raw) ? raw : [])
+              .filter(
+                (guild): guild is Record<string, unknown> => !!guild && typeof guild === 'object',
+              )
+              .filter((guild) => typeof guild.id === 'string' && deps.botHasGuild(guild.id))
+              .filter((guild) => canManage(guild.permissions, guild.owner))
+              .map((guild) => ({
+                id: guild.id as string,
+                name: typeof guild.name === 'string' ? guild.name : (guild.id as string),
+                icon: typeof guild.icon === 'string' ? guild.icon : null,
+              }));
+          }
+        }
       }
     } catch (error) {
-      deps.logError?.('[dashboard] failed to list Discord guilds', error);
-    } finally {
-      clearTimeout(timer);
+      // Fetch error messages can include request headers. Keep bearer tokens out of logs.
+      deps.logError?.(
+        '[dashboard] failed to list Discord guilds',
+        error instanceof Error ? error.name : 'fetch_error',
+      );
     }
     prune(now);
-    cache.set(token, { guilds, exp: now + ttl });
+    cache.set(cacheKey, { guilds, exp: now + ttl });
     return guilds;
   }
 

@@ -9,6 +9,7 @@
 // refresh. Logic isolated from the HTTP server (mounted in kofiWebhook.ts) to be testable.
 
 import type Database from 'better-sqlite3';
+import { createHash } from 'node:crypto';
 import { buildPremiumStatus } from '../store/premium';
 
 /** Minimal identity we pull from Discord's /users/@me. */
@@ -47,6 +48,8 @@ export type ActivationIdentityResult =
 export interface StatusApiDeps {
   db: Database.Database;
   now: () => number;
+  /** Discord application that is allowed to mint tokens for this panel. */
+  expectedClientId: string;
   /** Injectable for tests; in production it is Node's global fetch. */
   fetchImpl: typeof fetch;
   /** Resolves a server's name by ID (bot's guild cache). Absent => ID only. */
@@ -91,6 +94,11 @@ export function createStatusApi(deps: StatusApiDeps): StatusApi {
   const ttl = deps.identityTtlMs ?? 60_000;
   const maxCacheEntries = Math.max(1, Math.floor(deps.identityCacheMaxEntries ?? 512));
   const cache = new Map<string, { identity: DiscordIdentity | null; exp: number }>();
+
+  // OAuth tokens are credentials. Never retain them in an in-memory cache key where a heap dump
+  // or accidental diagnostics could disclose a bearer token.
+  const tokenCacheKey = (token: string): string =>
+    createHash('sha256').update(token).digest('base64url');
 
   function pruneCache(now: number): void {
     for (const [key, value] of cache) {
@@ -139,47 +147,54 @@ export function createStatusApi(deps: StatusApiDeps): StatusApi {
 
   async function resolveIdentity(token: string): Promise<DiscordIdentity | null> {
     const now = deps.now();
-    const hit = cache.get(token);
+    const cacheKey = tokenCacheKey(token);
+    const hit = cache.get(cacheKey);
     if (hit && hit.exp > now) return hit.identity;
-    if (hit) cache.delete(token);
+    if (hit) cache.delete(cacheKey);
     pruneCache(now);
 
     let identity: DiscordIdentity | null = null;
-    const ac = new AbortController();
-    const timer = setTimeout(() => ac.abort(), DISCORD_FETCH_TIMEOUT_MS);
-    try {
-      const res = await deps.fetchImpl(DISCORD_ME, {
-        headers: { Authorization: `Bearer ${token}` },
-        signal: ac.signal,
-      });
-      if (res.ok) {
-        const u = (await res.json()) as {
-          id?: unknown;
-          username?: unknown;
-          global_name?: unknown;
-          avatar?: unknown;
-        };
-        if (typeof u.id === 'string') {
-          const name =
-            (typeof u.global_name === 'string' && u.global_name) ||
-            (typeof u.username === 'string' && u.username) ||
-            u.id;
-          identity = {
-            id: u.id,
-            username: name,
-            avatar: typeof u.avatar === 'string' ? u.avatar : null,
+    const authorization = await fetchDiscordJson(DISCORD_OAUTH_ME, token);
+    if (authorization.ok) {
+      const oauth = authorization.body as {
+        application?: { id?: unknown };
+        user?: { id?: unknown };
+        scopes?: unknown;
+      };
+      const oauthUserId = oauth.user?.id;
+      const scopes = Array.isArray(oauth.scopes)
+        ? oauth.scopes.filter((scope): scope is string => typeof scope === 'string')
+        : [];
+      if (
+        oauth.application?.id === deps.expectedClientId &&
+        typeof oauthUserId === 'string' &&
+        scopes.includes('identify')
+      ) {
+        const user = await fetchDiscordJson(DISCORD_ME, token);
+        if (user.ok) {
+          const u = user.body as {
+            id?: unknown;
+            username?: unknown;
+            global_name?: unknown;
+            avatar?: unknown;
           };
+          if (typeof u.id === 'string' && u.id === oauthUserId) {
+            const name =
+              (typeof u.global_name === 'string' && u.global_name) ||
+              (typeof u.username === 'string' && u.username) ||
+              u.id;
+            identity = {
+              id: u.id,
+              username: name,
+              avatar: typeof u.avatar === 'string' ? u.avatar : null,
+            };
+          }
         }
       }
-    } catch (err) {
-      deps.logError?.('[premium-api] failed to validate the Discord token', err);
-      identity = null;
-    } finally {
-      clearTimeout(timer);
     }
     // Cache even the `null` (invalid token) to avoid repeating the fetch under spam.
     pruneCache(now);
-    cache.set(token, { identity, exp: now + ttl });
+    cache.set(cacheKey, { identity, exp: now + ttl });
     return identity;
   }
 
