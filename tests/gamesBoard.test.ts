@@ -62,7 +62,14 @@ function harness() {
 const G = 'g1';
 const C = 'c1';
 const say = (mgr: GameManager, authorId: string, content: string): void => {
-  mgr.handleMessage({ guildId: G, channelId: C, authorId, authorName: authorId, content });
+  mgr.handleMessage({
+    guildId: G,
+    channelId: C,
+    authorId,
+    authorName: authorId,
+    content,
+    canTriggerSpeech: true,
+  });
 };
 // The session seed = clock.now() at start = 0 (FakeClock starts at 0).
 const SEED = 0;

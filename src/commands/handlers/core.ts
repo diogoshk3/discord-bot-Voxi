@@ -115,6 +115,7 @@ export async function handleLeave(i: ChatInputCommandInteraction, deps: BotDeps)
 /** Result (discriminated) of trying to READ a text out loud with the user's voice. */
 export type SpeakOutcome =
   | { status: 'no-player' }
+  | { status: 'not-in-same-voice' }
   | { status: 'rate-limited' }
   | { status: 'empty' }
   | { status: 'blocked' }
@@ -135,9 +136,18 @@ export async function speakRawText(
   userId: string,
   guild: Guild,
   raw: string,
+  callerVoiceChannelId: string | null,
 ): Promise<SpeakOutcome> {
   const player = getPlayer(deps, guildId);
   if (!player) return { status: 'no-player' };
+  const botVoiceChannelId = guild.members.me?.voice.channelId ?? null;
+  if (
+    callerVoiceChannelId === null ||
+    botVoiceChannelId === null ||
+    callerVoiceChannelId !== botVoiceChannelId
+  ) {
+    return { status: 'not-in-same-voice' };
+  }
   const cfg = getGuildConfig(deps.db, guildId);
   const rl = getLimiter(deps, guildId, cfg.ratePerMin);
   if (!rl.allow(userId, Date.now())) return { status: 'rate-limited' };
@@ -199,6 +209,7 @@ export async function speakRawText(
 function speakOutcomeMessage(outcome: SpeakOutcome, locale: string): string {
   switch (outcome.status) {
     case 'no-player':
+    case 'not-in-same-voice':
       return t('tts.notInVoice', locale);
     case 'rate-limited':
       return t('tts.tooFast', locale);
@@ -222,7 +233,14 @@ export async function handleTts(i: ChatInputCommandInteraction, deps: BotDeps): 
     await i.editReply(editCard(t('tts.nothingToRead', locale), { tone: 'warning' }));
     return;
   }
-  const outcome = await speakRawText(deps, i.guildId!, i.user.id, i.guild!, raw);
+  const outcome = await speakRawText(
+    deps,
+    i.guildId!,
+    i.user.id,
+    i.guild!,
+    raw,
+    i.guild!.members.cache.get(i.user.id)?.voice.channelId ?? null,
+  );
   await i.editReply(
     editCard(speakOutcomeMessage(outcome, locale), {
       tone:
@@ -258,7 +276,14 @@ export async function handleMessageContextMenu(
       await i.editReply(editCard(t('speak.emptyMessage', locale), { tone: 'warning' }));
       return;
     }
-    const outcome = await speakRawText(deps, i.guildId, i.user.id, i.guild, raw);
+    const outcome = await speakRawText(
+      deps,
+      i.guildId,
+      i.user.id,
+      i.guild,
+      raw,
+      i.guild.members.cache.get(i.user.id)?.voice.channelId ?? null,
+    );
     await i.editReply(
       editCard(speakOutcomeMessage(outcome, locale), {
         tone:

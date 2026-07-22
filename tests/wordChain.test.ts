@@ -65,6 +65,7 @@ const msg = (authorId: string, content: string) => ({
   authorId,
   authorName: authorId.toUpperCase(),
   content,
+  canTriggerSpeech: true,
 });
 // The last key sent and its params (the translate mock returns "key {json}").
 function lastSend(send: ReturnType<typeof vi.fn>): {

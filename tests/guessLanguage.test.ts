@@ -130,6 +130,7 @@ describe('guessLanguage — full match', () => {
         authorId: 'u1',
         authorName: 'Ana',
         content: localizedLanguageName(base, 'en'),
+        canTriggerSpeech: true,
       });
       await flush();
     }
@@ -154,6 +155,7 @@ describe('guessLanguage — full match', () => {
       authorId: 'u',
       authorName: 'U',
       content: 'klingon',
+      canTriggerSpeech: true,
     });
     await flush();
 
@@ -189,6 +191,7 @@ describe('guessLanguage — full match', () => {
       authorId: 'first',
       authorName: 'F',
       content: answer,
+      canTriggerSpeech: true,
     });
     mgr.handleMessage({
       guildId: G,
@@ -196,6 +199,7 @@ describe('guessLanguage — full match', () => {
       authorId: 'second',
       authorName: 'S',
       content: answer,
+      canTriggerSpeech: true,
     });
     await flush();
     // Let the remaining rounds expire by timeout so the match ends and persists.

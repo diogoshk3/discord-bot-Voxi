@@ -60,6 +60,7 @@ const msg = (authorId: string, content: string) => ({
   authorId,
   authorName: authorId.toUpperCase(),
   content,
+  canTriggerSpeech: true,
 });
 const sentKeys = (send: ReturnType<typeof vi.fn>): string[] =>
   send.mock.calls.map((c) => String(c[1]).split(' ')[0]);

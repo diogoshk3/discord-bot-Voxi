@@ -30,13 +30,13 @@ function makeMessage(opts: { mention?: boolean }): any {
   return {
     author: { bot: false, id: USER },
     guild: {
-      members: { cache: { get: () => undefined } },
+      members: { cache: { get: () => undefined }, me: { voice: { channelId: 'vc-1' } } },
       channels: { cache: { get: () => undefined } },
     },
     guildId: GUILD,
     channelId: CHAN,
     content: 'ola mundo',
-    member: { roles: { cache: { has: () => false } } },
+    member: { voice: { channelId: 'vc-1' }, roles: { cache: { has: () => false } } },
     mentions: {
       has: () => mention,
       repliedUser: null,

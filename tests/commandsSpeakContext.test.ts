@@ -35,13 +35,24 @@ function makeDeps(
   } as unknown as BotDeps;
 }
 
-function makeInteraction(content: string) {
+function makeInteraction(
+  content: string,
+  voice: { callerVoiceChannelId?: string; botVoiceChannelId?: string } = {},
+) {
   const replies: string[] = [];
+  const callerVoiceChannelId = voice.callerVoiceChannelId ?? 'vc-1';
+  const botVoiceChannelId = voice.botVoiceChannelId ?? 'vc-1';
   return {
     commandName: 'Speak',
     guildId: GUILD,
     guild: {
-      members: { cache: { get: () => undefined } },
+      members: {
+        cache: {
+          get: (id: string) =>
+            id === 'u-1' ? { voice: { channelId: callerVoiceChannelId } } : undefined,
+        },
+        me: { voice: { channelId: botVoiceChannelId } },
+      },
       channels: { cache: { get: () => undefined } },
     },
     user: { id: 'u-1' },
@@ -87,6 +98,16 @@ describe('context-menu "Speak"', () => {
     expect(i.replies.length).toBe(1);
   });
 
+  it('caller outside Vozen’s voice channel is not synthesized and receives the existing voice guidance', async () => {
+    const i = makeInteraction('olá', {
+      callerVoiceChannelId: 'vc-caller',
+      botVoiceChannelId: 'vc-bot',
+    });
+    await handleMessageContextMenu(i as any, makeDeps(db, say));
+    expect(say).not.toHaveBeenCalled();
+    expect(i.replies.join('')).toMatch(/voice|call|voz|canal/i);
+  });
+
   it('ignores other context-menu commands (name != Speak)', async () => {
     const i = makeInteraction('olá');
     (i as any).commandName = 'Outro';
@@ -112,7 +133,12 @@ describe('context-menu "Speak"', () => {
       commandName: 'Speak',
       guildId: GUILD,
       guild: {
-        members: { cache: { get: () => undefined } },
+        members: {
+          cache: {
+            get: (id: string) => (id === 'u-1' ? { voice: { channelId: 'vc-1' } } : undefined),
+          },
+          me: { voice: { channelId: 'vc-1' } },
+        },
         channels: { cache: { get: () => undefined } },
       },
       user: { id: 'u-1' },

@@ -76,6 +76,7 @@ describe('Reflexes', () => {
       authorId: 'jumpy',
       authorName: 'J',
       content: 'já!',
+      canTriggerSpeech: true,
     });
     await flush();
     expect(sentKeys(send)).toContain('game.reflexes.tooSoon');
@@ -90,6 +91,7 @@ describe('Reflexes', () => {
       authorId: 'fast',
       authorName: 'Fast',
       content: 'aqui',
+      canTriggerSpeech: true,
     });
     await flush();
 
@@ -103,6 +105,7 @@ describe('Reflexes', () => {
         authorId: 'fast',
         authorName: 'Fast',
         content: 'x',
+        canTriggerSpeech: true,
       });
       await flush();
     }
@@ -139,6 +142,7 @@ describe('Vozen Says', () => {
         authorId: 'u',
         authorName: 'U',
         content: word,
+        canTriggerSpeech: true,
       });
       await flush();
       const newKeys = send.mock.calls.slice(before).map((c) => String(c[1]).split(' ')[0]);

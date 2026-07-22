@@ -163,6 +163,15 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     if (!cfg.enabled) return;
     if (message.author.bot && !cfg.readBots) return;
 
+    // A normal human may only cause speech from the call Vozen is already in. Bots are the
+    // deliberate read_bots exception: if an admin enabled that setting, their messages keep
+    // the historic behavior and are not made dependent on a Discord voice-state cache.
+    const authorVoiceChannelId = message.member?.voice?.channelId ?? null;
+    const botVoiceChannelId = message.guild.members?.me?.voice?.channelId ?? null;
+    const canTriggerSpeech =
+      message.author.bot ||
+      (authorVoiceChannelId !== null && authorVoiceChannelId === botVoiceChannelId);
+
     // Minigames (/game): if there is an active game IN THE CHANNEL of this message, hand it to
     // the game (a potential guess) and do NOT read it aloud — players' answers
     // are not TTS. Placed BEFORE auto-read/rate-limit (but AFTER the kill-switch/
@@ -175,6 +184,7 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
         authorId: message.author.id,
         authorName: message.member?.displayName ?? message.author.username ?? 'someone',
         content: message.content ?? '',
+        canTriggerSpeech,
       })
     ) {
       // Observability of the games routing: a game in a THREAD only works if the
@@ -202,7 +212,6 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
       message.reference?.messageId != null && message.mentions.repliedUser?.id === me.id;
     // text-in-voice: message sent in the text chat INSIDE the voice channel where
     // Vozen is now (the voice channel's text has channelId == the voice channel's id).
-    const botVoiceChannelId = message.guild.members?.me?.voice?.channelId ?? null;
     const isTextInVoice =
       cfg.textInVoice && botVoiceChannelId != null && botVoiceChannelId === message.channelId;
 
@@ -234,10 +243,17 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     // in a call and the author is in a voice channel (and the bot has Connect/Speak), it joins
     // the author's channel on its own — instead of requiring a manual /join.
     let player = getPlayer(deps, message.guildId);
+    let autojoinedThisMessage = false;
     if (!player) {
       player = maybeAutojoin(message, deps, cfg.autojoin);
       if (!player) return;
+      // createVoiceSession updates the voice connection immediately, but Discord's member
+      // cache may lag behind it. This one message is the only safe exception to the normal
+      // cache-based same-call check: it is the exact author who caused this handler to join.
+      autojoinedThisMessage = true;
     }
+
+    if (!canTriggerSpeech && !autojoinedThisMessage) return;
 
     // cleanup with the guild's caches
     const cleaned = cleanText(message.content ?? '', {

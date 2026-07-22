@@ -122,6 +122,7 @@ describe('Matemática Falada — acerto', () => {
         authorId: 'u',
         authorName: 'U',
         content: `${result}`,
+        canTriggerSpeech: true,
       });
       await flush();
     }
@@ -151,6 +152,7 @@ describe('Ditado — acerto', () => {
         authorId: 'u',
         authorName: 'U',
         content: word,
+        canTriggerSpeech: true,
       });
       await flush();
     }
