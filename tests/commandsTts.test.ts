@@ -31,8 +31,13 @@ function makeDeps(db: Database.Database, player?: { say: ReturnType<typeof vi.fn
   return deps;
 }
 
-function makeTtsInteraction(text: string) {
+function makeTtsInteraction(
+  text: string,
+  voice: { callerVoiceChannelId?: string; botVoiceChannelId?: string } = {},
+) {
   const replies: string[] = [];
+  const callerVoiceChannelId = voice.callerVoiceChannelId ?? 'vc-1';
+  const botVoiceChannelId = voice.botVoiceChannelId ?? 'vc-1';
   return {
     commandName: 'tts',
     guildId: GUILD,
@@ -49,7 +54,10 @@ function makeTtsInteraction(text: string) {
     },
     // guild.members.cache / channels.cache used by the cleanText resolver.
     guild: {
-      members: { cache: new Map() },
+      members: {
+        cache: new Map([[USER, { voice: { channelId: callerVoiceChannelId } }]]),
+        me: { voice: { channelId: botVoiceChannelId } },
+      },
       channels: { cache: new Map() },
     },
     options: {
@@ -96,6 +104,20 @@ describe('/tts — full say() does not lie "queued"', () => {
     // t('tts.busy', 'en') = "I'm busy right now — try again in a moment."
     expect(i.replies.some((r) => /busy/i.test(r))).toBe(true);
     expect(i.replies.some((r) => /queue/i.test(r))).toBe(false);
+  });
+
+  it('caller outside Vozen’s voice channel is not synthesized and receives the existing voice guidance', async () => {
+    const say = vi.fn().mockResolvedValue(true);
+    const deps = makeDeps(db, { say });
+    const i = makeTtsInteraction('ola mundo', {
+      callerVoiceChannelId: 'vc-caller',
+      botVoiceChannelId: 'vc-bot',
+    });
+
+    await handleInteraction(i as any, deps);
+
+    expect(say).not.toHaveBeenCalled();
+    expect(i.replies.join('')).toMatch(/voice|call/i);
   });
 });
 

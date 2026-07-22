@@ -94,6 +94,7 @@ function makeMessage(opts: {
         cache: {
           get: (id: string) => (id === '123' ? { displayName: 'Diogo' } : undefined),
         },
+        me: { voice: { channelId: 'vc-1' } },
       },
       channels: {
         cache: {
@@ -104,7 +105,7 @@ function makeMessage(opts: {
     guildId: GUILD,
     channelId: opts.channelId ?? CHAN,
     content: opts.content,
-    member: { roles: { cache: { has: () => true } } },
+    member: { voice: { channelId: 'vc-1' }, roles: { cache: { has: () => true } } },
     mentions: {
       has: () => mention,
       repliedUser: replyToBot ? { id: BOT_ID } : null,

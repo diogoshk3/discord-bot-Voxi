@@ -46,6 +46,17 @@ function makePreviewInteraction(opts: { model?: string | null } = {}) {
     commandName: 'voice',
     guildId: GUILD,
     user: { id: USER },
+    guild: {
+      members: {
+        me: { voice: { channelId: 'vc-preview' } },
+        cache: {
+          get: (id: string) =>
+            id === USER
+              ? { voice: { channelId: 'vc-preview' }, roles: { cache: new Map<string, unknown>() } }
+              : undefined,
+        },
+      },
+    },
     replies,
     replied: false,
     deferred: false,

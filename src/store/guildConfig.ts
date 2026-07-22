@@ -55,6 +55,16 @@ export interface GuildConfig {
   // TTS channel. OFF by default and enabled only by a server admin through
   // /config vote-reminders. Never sends DMs or mentions.
   votePromos: boolean;
+  /** Accessibility queue lane. Admin-configured role only; entitlement never grants this. */
+  priorityRoleId: string | null;
+  /** Hard queue denial role. Takes precedence over priority and every caller option. */
+  blockedRoleId: string | null;
+  /** Translation is default-deny and needs both this flag and a valid mapping. */
+  translationEnabled: boolean;
+  /** Atomic daily character cap shared by all translation mappings in this guild. */
+  translationDailyCharLimit: number;
+  /** Daily per-member cap, applied before any external provider request. */
+  translationPerUserDailyCharLimit: number;
 }
 
 const DEFAULTS: GuildConfig = {
@@ -79,6 +89,11 @@ const DEFAULTS: GuildConfig = {
   streakAnnounce: true, // streak 🔥 notice ON by default
   soundboard: true, // /sound ON by default (admin turns off with /config soundboard)
   votePromos: false, // alternating Top.gg/support notices OFF by default; admin must opt in
+  priorityRoleId: null,
+  blockedRoleId: null,
+  translationEnabled: false,
+  translationDailyCharLimit: 10_000,
+  translationPerUserDailyCharLimit: 2_000,
 };
 
 interface GuildConfigRow {
@@ -102,6 +117,11 @@ interface GuildConfigRow {
   streak_announce: number | null;
   soundboard: number | null;
   vote_promos: number | null;
+  priority_role_id: string | null;
+  blocked_role_id: string | null;
+  translation_enabled: number | null;
+  translation_daily_char_limit: number | null;
+  translation_per_user_daily_char_limit: number | null;
 }
 
 type SqlValue = string | number | null;
@@ -259,6 +279,41 @@ export const GUILD_CONFIG_COLUMNS: GuildConfigColumn[] = [
     sqlType: 'INTEGER NOT NULL DEFAULT 0',
     toDb: asBool,
     fromDb: (r) => (r == null ? DEFAULTS.votePromos : r === 1),
+  },
+  {
+    prop: 'priorityRoleId',
+    column: 'priority_role_id',
+    sqlType: 'TEXT',
+    toDb: asIs,
+    fromDb: (r) => r,
+  },
+  {
+    prop: 'blockedRoleId',
+    column: 'blocked_role_id',
+    sqlType: 'TEXT',
+    toDb: asIs,
+    fromDb: (r) => r,
+  },
+  {
+    prop: 'translationEnabled',
+    column: 'translation_enabled',
+    sqlType: 'INTEGER NOT NULL DEFAULT 0',
+    toDb: asBool,
+    fromDb: (r) => (r == null ? DEFAULTS.translationEnabled : r === 1),
+  },
+  {
+    prop: 'translationDailyCharLimit',
+    column: 'translation_daily_char_limit',
+    sqlType: 'INTEGER NOT NULL DEFAULT 10000',
+    toDb: asIs,
+    fromDb: (r) => r ?? DEFAULTS.translationDailyCharLimit,
+  },
+  {
+    prop: 'translationPerUserDailyCharLimit',
+    column: 'translation_per_user_daily_char_limit',
+    sqlType: 'INTEGER NOT NULL DEFAULT 2000',
+    toDb: asIs,
+    fromDb: (r) => r ?? DEFAULTS.translationPerUserDailyCharLimit,
   },
 ];
 

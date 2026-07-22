@@ -24,6 +24,18 @@ import {
 import { t } from '../../i18n/index';
 import { localeForUser, localePrefixOf, reply } from '../helpers';
 import { editCard } from '../../ui/messages';
+import { admitUserSpeech } from '../../voice/admission';
+
+function admitInteractionSpeech(i: ChatInputCommandInteraction, deps: BotDeps) {
+  if (!i.guildId || !i.guild) return { allowed: false as const };
+  return admitUserSpeech(
+    deps,
+    i.guildId,
+    i.user.id,
+    i.guild,
+    i.guild.members.cache.get(i.user.id)?.voice.channelId ?? null,
+  );
+}
 
 /**
  * /laugh — Vozen laughs in the voice CURRENTLY selected by the user. Per-user
@@ -39,6 +51,11 @@ export async function handleLaugh(i: ChatInputCommandInteraction, deps: BotDeps)
   const locale = localeForUser(deps, i);
   const player = getPlayer(deps, i.guildId!);
   if (!player) {
+    await i.editReply(editCard(t('tts.notInVoice', locale), { tone: 'danger' }));
+    return;
+  }
+  const admission = admitInteractionSpeech(i, deps);
+  if (!admission.allowed) {
     await i.editReply(editCard(t('tts.notInVoice', locale), { tone: 'danger' }));
     return;
   }
@@ -69,7 +86,11 @@ export async function handleLaugh(i: ChatInputCommandInteraction, deps: BotDeps)
     ...resolveUserEngine(deps.db, i.guildId!, i.user.id, stored?.engine, Date.now()),
   };
   // say() returns false when the queue is at cap: in that case we reuse tts.busy.
-  const queued = await player.say(req);
+  const queued = await player.say(req, {
+    authorId: i.user.id,
+    source: 'command',
+    lane: admission.lane,
+  });
   await i.editReply(
     editCard(queued ? t('laugh.playing', locale) : t('tts.busy', locale), {
       tone: queued ? 'success' : 'warning',
@@ -97,6 +118,11 @@ export async function handleJoke(i: ChatInputCommandInteraction, deps: BotDeps):
   const locale = localeForUser(deps, i);
   const player = getPlayer(deps, i.guildId!);
   if (!player) {
+    await i.editReply(editCard(t('tts.notInVoice', locale), { tone: 'danger' }));
+    return;
+  }
+  const admission = admitInteractionSpeech(i, deps);
+  if (!admission.allowed) {
     await i.editReply(editCard(t('tts.notInVoice', locale), { tone: 'danger' }));
     return;
   }
@@ -148,13 +174,16 @@ export async function handleJoke(i: ChatInputCommandInteraction, deps: BotDeps):
   // ALWAYS queue the joke alone first. The reply is based on THIS utterance: if the
   // queue is full (say false), we respond busy and don't queue the laughter.
   // singleVoice: the joke's language is KNOWN (chosen), detection doesn't decide.
-  const queued = await player.say({
-    text: joke,
-    model,
-    speed,
-    singleVoice: true,
-    ...resolvedEngine,
-  });
+  const queued = await player.say(
+    {
+      text: joke,
+      model,
+      speed,
+      singleVoice: true,
+      ...resolvedEngine,
+    },
+    { authorId: i.user.id, source: 'command', lane: admission.lane },
+  );
 
   // If `laughter` AND the joke entered the queue, queue the LAUGHTER as a SEPARATE utterance with a
   // real 2s pause IN FRONT (leadSilenceMs). This way Vozen speaks the joke, PAUSES ~2s,
@@ -162,16 +191,19 @@ export async function handleJoke(i: ChatInputCommandInteraction, deps: BotDeps):
   // best-effort: if the queue fills up meanwhile, it simply doesn't laugh (the reply already reflects
   // the joke). Two queue-items: a /skip during the joke won't catch the laughter — acceptable.
   if (queued && risos) {
-    await player.say({
-      text: laughterFor(lang.prefix),
-      model,
-      speed,
-      ...resolvedEngine,
-      leadSilenceMs: JOKE_LAUGH_PAUSE_MS,
-      // singleVoice: without this, a multi-script edge-case would lose the leadSilenceMs
-      // (the per-segment path calls base.synth without it). The language is known.
-      singleVoice: true,
-    });
+    await player.say(
+      {
+        text: laughterFor(lang.prefix),
+        model,
+        speed,
+        ...resolvedEngine,
+        leadSilenceMs: JOKE_LAUGH_PAUSE_MS,
+        // singleVoice: without this, a multi-script edge-case would lose the leadSilenceMs
+        // (the per-segment path calls base.synth without it). The language is known.
+        singleVoice: true,
+      },
+      { authorId: i.user.id, source: 'command', lane: admission.lane },
+    );
   }
 
   // Confirmation includes the written joke (the user sees what is being read).
@@ -214,6 +246,11 @@ export async function handleRizz(i: ChatInputCommandInteraction, deps: BotDeps):
     await i.editReply(editCard(t('tts.notInVoice', locale), { tone: 'danger' }));
     return;
   }
+  const admission = admitInteractionSpeech(i, deps);
+  if (!admission.allowed) {
+    await i.editReply(editCard(t('tts.notInVoice', locale), { tone: 'danger' }));
+    return;
+  }
   const langKey = i.options.getString('language', true);
   const lang = jokeLangByKey(langKey);
   if (!lang) {
@@ -249,19 +286,25 @@ export async function handleRizz(i: ChatInputCommandInteraction, deps: BotDeps):
   const speed = deps.config.defaultSpeed;
 
   // ALWAYS queue the line alone first; the reply is based on THIS utterance.
-  const queued = await player.say({
-    text: line,
-    model,
-    speed,
-    singleVoice: true,
-    ...resolvedEngine,
-  });
+  const queued = await player.say(
+    {
+      text: line,
+      model,
+      speed,
+      singleVoice: true,
+      ...resolvedEngine,
+    },
+    { authorId: i.user.id, source: 'command', lane: admission.lane },
+  );
 
   // "rizz" sound effect afterward (SEPARATE utterance, played directly via assetPath — no engine
   // or cache). Best-effort: if the queue fills up meanwhile, it simply doesn't play the effect
   // (the reply already reflects the line). `text: ''` -> no emphasis gain.
   if (queued && sound) {
-    await player.say({ text: '', model, speed, singleVoice: true, assetPath: RIZZ_SFX_PATH });
+    await player.say(
+      { text: '', model, speed, singleVoice: true, assetPath: RIZZ_SFX_PATH },
+      { authorId: i.user.id, source: 'command', lane: admission.lane },
+    );
   }
 
   await i.editReply(
@@ -312,6 +355,11 @@ export async function handleSound(i: ChatInputCommandInteraction, deps: BotDeps)
     await i.editReply(editCard(t('tts.notInVoice', locale), { tone: 'danger' }));
     return;
   }
+  const admission = admitInteractionSpeech(i, deps);
+  if (!admission.allowed) {
+    await i.editReply(editCard(t('tts.notInVoice', locale), { tone: 'danger' }));
+    return;
+  }
 
   // per-user rate-limit (SAME limiter as /tts): without this a user could fill the
   // voice queue with clips and drown out everyone's TTS. AFTER deferReply.
@@ -324,13 +372,16 @@ export async function handleSound(i: ChatInputCommandInteraction, deps: BotDeps)
   // Fixed clip played DIRECTLY (assetPath skips engine/cache/effects). model/speed are
   // placeholders required by the SynthRequest type — ignored when there is an assetPath.
   const model = cfg.defaultVoice || deps.config.defaultVoice || 'en_US-amy-medium';
-  const queued = await player.say({
-    text: '',
-    model,
-    speed: deps.config.defaultSpeed,
-    singleVoice: true,
-    assetPath: join(SFX_DIR, soundFilename(clip.key)),
-  });
+  const queued = await player.say(
+    {
+      text: '',
+      model,
+      speed: deps.config.defaultSpeed,
+      singleVoice: true,
+      assetPath: join(SFX_DIR, soundFilename(clip.key)),
+    },
+    { authorId: i.user.id, source: 'command', lane: admission.lane },
+  );
   await i.editReply(
     editCard(queued ? t('sound.playing', locale, { name: clip.name }) : t('tts.busy', locale), {
       tone: queued ? 'success' : 'warning',
@@ -383,6 +434,11 @@ export async function handleMicroFun(
   // Speech (best-effort): only if Vozen is in the call AND the user is not rate-limited.
   const player = getPlayer(deps, i.guildId!);
   if (player) {
+    const admission = admitInteractionSpeech(i, deps);
+    if (!admission.allowed) {
+      await i.editReply(editCard(replyText));
+      return;
+    }
     const cfg = getGuildConfig(deps.db, i.guildId!);
     const rl = getLimiter(deps, i.guildId!, cfg.ratePerMin);
     if (rl.allow(i.user.id, Date.now())) {
@@ -401,13 +457,16 @@ export async function handleMicroFun(
         Date.now(),
       );
       // singleVoice: the phrase's language is KNOWN (the bank), detection doesn't decide.
-      void player.say({
-        text: spoken,
-        model,
-        speed: deps.config.defaultSpeed,
-        singleVoice: true,
-        ...resolvedEngine,
-      });
+      void player.say(
+        {
+          text: spoken,
+          model,
+          speed: deps.config.defaultSpeed,
+          singleVoice: true,
+          ...resolvedEngine,
+        },
+        { authorId: i.user.id, source: 'command', lane: admission.lane },
+      );
     }
   }
 

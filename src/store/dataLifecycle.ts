@@ -32,6 +32,11 @@ export const GUILD_PURGE_TABLES = [
   'voice_presence',
   'stt_consent',
   'guild_departed', // the departure marker itself (self-cleanup when purging the server)
+  'translation_mapping', // opt-in source/destination channel routing, no message content
+  'translation_preference', // per-member translation opt-out in the guild
+  'translation_daily_usage', // guild-scoped aggregate character quota
+  'translation_user_daily_usage', // per-member bounded quota
+  'channel_profile', // channel behaviour configuration only, no content
 ] as const;
 
 /**
@@ -45,6 +50,8 @@ export const GUILD_RETAINED_TABLES = ['premium_guild', 'premium_pass_activation'
 /** Deleted by `/privacy erase` (personal data). */
 export const USER_ERASE_TABLES = [
   'user_voice',
+  'user_voice_favorite',
+  'user_voice_recent',
   'tts_optout',
   'tts_lang_detect_on', // the user's automatic language-detection opt-in (per guild)
   'user_nickname',
@@ -57,6 +64,8 @@ export const USER_ERASE_TABLES = [
   'pronunciation_user',
   'stt_consent',
   'vote_reward',
+  'translation_preference',
+  'translation_user_daily_usage',
 ] as const;
 
 /**
@@ -89,6 +98,9 @@ export const USER_ERASE_BESPOKE = ['kofi_supporter', 'gcloud_usage'] as const;
  * decision (hand-reviewed); the extended guard accepts them.
  */
 export const LIFECYCLE_REVIEWED_EXEMPT = [
+  // Current Discord monetization state. target_id can identify a user or guild, but this is a
+  // paid-access record reconciled from Discord, not data that /privacy erase may revoke.
+  'discord_premium_entitlement',
   'premium_code', // code ledger: created_by/redeemed_by = proof of purchase/redemption, retained
   'kofi_transaction', // idempotency ledger: Ko-fi transaction_id, not a user ID
   'kofi_pending', // pending purchases, purged by TTL (startPendingPurgeJob); tx id + email_hash
@@ -98,6 +110,18 @@ export const LIFECYCLE_REVIEWED_EXEMPT = [
   // same account cannot erase-and-reclaim. Retained only while the promotion exists.
   'vote_redemption',
   'vote_redemption_meta', // non-personal fingerprint that prevents silent secret rotation
+  'topgg_webhook_event', // short-retention external delivery-id idempotency ledger
+] as const;
+
+/**
+ * Identity-free service aggregates. These rows contain neither Discord identifiers nor
+ * content, so `/privacy erase` and guild departure cannot target a person or server.
+ * Retention is operational: rotate/purge them with instance logs when no longer useful.
+ */
+export const IDENTITY_FREE_OPERATIONAL_TABLES = [
+  'operational_daily_metric',
+  'provider_health_state',
+  'gcloud_daily_usage',
 ] as const;
 
 /**

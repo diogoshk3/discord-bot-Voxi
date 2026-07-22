@@ -6,7 +6,8 @@ import { AudioCache } from './cache';
 import { PiperEngine } from './piper';
 import { NeuralEngine } from './neural';
 import { GCloudEngine, type GcloudUsage, type GcloudLimits } from './gcloud';
-import { getGcloudMonthlyChars, addGcloudMonthlyChars } from '../store/gcloudUsage';
+import { refundGcloudChars, reserveGcloudChars } from '../store/gcloudUsage';
+import { addOperationalMetric, setProviderHealth } from '../store/operationalMetrics';
 import { GTTSEngine } from './gtts';
 import { MultiSegmentEngine } from './multiSegment';
 import { RouterEngine } from './router';
@@ -68,8 +69,12 @@ export function createPerUserEngine(
   // configured default. Monthly counters are persistent when a database is supplied.
   const gcloudUsage: GcloudUsage | undefined = db
     ? {
-        getMonthly: (s, k, m) => getGcloudMonthlyChars(db, s, k, m),
-        addMonthly: (s, k, m, c) => addGcloudMonthlyChars(db, s, k, m, c),
+        reserve: (s, k, m, monthlyLimit, day, dailyLimit, chars) =>
+          reserveGcloudChars(db, s, k, m, monthlyLimit, day, dailyLimit, chars),
+        refund: (s, k, m, day, dailyLimit, chars) =>
+          refundGcloudChars(db, s, k, m, day, dailyLimit, chars),
+        record: (metric, value = 1) => addOperationalMetric(db, metric, 'gcloud', value),
+        setHealth: (health) => setProviderHealth(db, 'gcloud', health),
       }
     : undefined;
   const gcloudLimits: GcloudLimits = {

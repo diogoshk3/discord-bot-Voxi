@@ -46,6 +46,12 @@ function makeLaughInteraction() {
     commandName: 'laugh',
     guildId: GUILD,
     user: { id: USER },
+    guild: {
+      members: {
+        me: { voice: { channelId: 'vc-1' } },
+        cache: new Map([[USER, { voice: { channelId: 'vc-1' } }]]),
+      },
+    },
     replies,
     replied: false,
     deferred: false,

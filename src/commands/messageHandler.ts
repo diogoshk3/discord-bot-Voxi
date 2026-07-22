@@ -28,6 +28,14 @@ import { prepareSpeech, redactRequest, hasReadableText } from './prepareSpeech';
 import { t } from '../i18n/index';
 import { log } from '../logging/logger';
 import { channelCard } from '../ui/messages';
+import { resolveQueueLane } from '../voice/queuePolicy';
+import { handleTranslationMessage } from '../translation/messageListener';
+import { translateTextForSpeech } from '../translation/explicit';
+import { getTranslationPreference } from '../store/translation';
+import { getChannelProfile } from '../store/channelProfiles';
+import { resolveChannelPolicy } from '../policy/channelPolicy';
+import { isPremiumEffect, isVoiceEffect } from '../tts/effects';
+import { isGuildPremium, isUserPremium } from '../store/premium';
 
 /**
  * Collects the MEDIA to announce from a message: URLs in the text (link/gif, via
@@ -152,6 +160,9 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     // down, which contradicted this guard and threw if a pre-READY message arrived).
     const me = deps.client.user;
     if (!me) return;
+    // Text translation is an independent, never-spoken path. It runs before normal auto-read
+    // admission and retains its own default-deny mappings and quotas.
+    await handleTranslationMessage(message, deps);
     // Vozen NEVER reads itself — anti-loop, regardless of read_bots.
     if (message.author.id === me.id) return;
 
@@ -160,8 +171,22 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     // (otherwise it would keep consuming messages and speaking). And messages from OTHER
     // bots/webhooks should only reach the game (as guesses) if read_bots is ON.
     const cfg = getGuildConfig(deps.db, message.guildId);
+    const channelProfile = getChannelProfile(deps.db, message.guildId, message.channelId);
+    const channelPolicy = resolveChannelPolicy(cfg, channelProfile);
     if (!cfg.enabled) return;
-    if (message.author.bot && !cfg.readBots) return;
+    if (message.author.bot && !channelPolicy.readBots) return;
+
+    // A normal human may only cause speech from the call Vozen is already in. Bots are the
+    // deliberate read_bots exception: if an admin enabled that setting, their messages keep
+    // the historic behavior and are not made dependent on a Discord voice-state cache.
+    const authorVoiceChannelId = message.member?.voice?.channelId ?? null;
+    const botVoiceChannelId = message.guild.members?.me?.voice?.channelId ?? null;
+    const matchesProfileBinding =
+      channelPolicy.voiceChannelId === null || channelPolicy.voiceChannelId === botVoiceChannelId;
+    const canTriggerSpeech =
+      matchesProfileBinding &&
+      (message.author.bot ||
+        (authorVoiceChannelId !== null && authorVoiceChannelId === botVoiceChannelId));
 
     // Minigames (/game): if there is an active game IN THE CHANNEL of this message, hand it to
     // the game (a potential guess) and do NOT read it aloud — players' answers
@@ -175,6 +200,7 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
         authorId: message.author.id,
         authorName: message.member?.displayName ?? message.author.username ?? 'someone',
         content: message.content ?? '',
+        canTriggerSpeech,
       })
     ) {
       // Observability of the games routing: a game in a THREAD only works if the
@@ -192,7 +218,11 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     const media = collectMessageMedia(message);
     if (!message.content && media.length === 0) return;
 
-    const isAutoreadChannel = cfg.autoread && cfg.ttsChannelId === message.channelId;
+    // A profile must opt in explicitly for a different channel. An inert profile (all inherited)
+    // never expands auto-read beyond the existing configured TTS channel.
+    const isAutoreadChannel =
+      channelProfile?.autoRead === true ||
+      (!channelProfile && cfg.autoread && cfg.ttsChannelId === message.channelId);
     const isMention = message.mentions.has(me.id, {
       ignoreEveryone: true,
       ignoreRoles: true,
@@ -202,7 +232,6 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
       message.reference?.messageId != null && message.mentions.repliedUser?.id === me.id;
     // text-in-voice: message sent in the text chat INSIDE the voice channel where
     // Vozen is now (the voice channel's text has channelId == the voice channel's id).
-    const botVoiceChannelId = message.guild.members?.me?.voice?.channelId ?? null;
     const isTextInVoice =
       cfg.textInVoice && botVoiceChannelId != null && botVoiceChannelId === message.channelId;
 
@@ -233,15 +262,28 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     // gating: active player in this guild. With autojoin ON, if Vozen is not yet
     // in a call and the author is in a voice channel (and the bot has Connect/Speak), it joins
     // the author's channel on its own — instead of requiring a manual /join.
+    if (
+      channelPolicy.voiceChannelId &&
+      !message.author.bot &&
+      authorVoiceChannelId !== channelPolicy.voiceChannelId
+    )
+      return;
     let player = getPlayer(deps, message.guildId);
+    let autojoinedThisMessage = false;
     if (!player) {
       player = maybeAutojoin(message, deps, cfg.autojoin);
       if (!player) return;
+      // createVoiceSession updates the voice connection immediately, but Discord's member
+      // cache may lag behind it. This one message is the only safe exception to the normal
+      // cache-based same-call check: it is the exact author who caused this handler to join.
+      autojoinedThisMessage = true;
     }
+
+    if (!canTriggerSpeech && !autojoinedThisMessage) return;
 
     // cleanup with the guild's caches
     const cleaned = cleanText(message.content ?? '', {
-      maxChars: cfg.maxChars,
+      maxChars: channelPolicy.maxChars,
       resolveUser: (id: string) =>
         message.guild!.members.cache.get(id)?.displayName ??
         deps.client.users.cache.get(id)?.username ??
@@ -257,6 +299,12 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     // (the emoji strip's safety net): none of that is "readable". Without a readable body
     // AND without media -> not worth synthesizing.
     if (!/[\p{L}\p{N}]/u.test(cleaned) && media.length === 0) return;
+
+    // Role policy is authorization for queue admission only. A blocked role always wins;
+    // no subscription, command option or user-controlled value can bypass it.
+    const roleIds = message.member?.roles?.cache?.keys?.() ?? [];
+    const queuePolicy = resolveQueueLane(cfg, roleIds);
+    if (!queuePolicy.allowed) return;
 
     // per-user rate-limit (persistent per-guild limiter). Runs NOW — AFTER the readable-text
     // guard — so that a message that was never going to be spoken (emoji/link/empty) does NOT
@@ -311,7 +359,23 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
 
     // Server-wide word personalization is handled by /server-pronunciation (applied
     // inside prepareSpeech). The cleaned text passes through as-is as the base.
-    const personal = cleaned;
+    let personal = cleaned;
+    const translationPreference = getTranslationPreference(
+      deps.db,
+      message.guildId,
+      message.author.id,
+    );
+    if (translationPreference.speakLocale && /[\p{L}\p{N}]/u.test(personal)) {
+      const beforeSpeech = await translateTextForSpeech({
+        db: deps.db,
+        provider: deps.translationProvider,
+        guildId: message.guildId,
+        userId: message.author.id,
+        text: personal,
+        targetLocale: translationPreference.speakLocale,
+      });
+      personal = beforeSpeech.text;
+    }
 
     // EN slang expansion, guild pronunciation and voice(s) choice — incl. the
     // MIXED synthesis when the message combines base-language + known EN slang
@@ -333,6 +397,13 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
       message.author.username ??
       '';
     const speakerName = sanitizeSpeakerName(rawName);
+    const profileLocaleVoice = channelPolicy.locale
+      ? deps.availableModels.find(
+          (model) =>
+            model.toLowerCase().startsWith(`${channelPolicy.locale!.toLowerCase()}_`) ||
+            model.toLowerCase().startsWith(`${channelPolicy.locale!.toLowerCase()}-`),
+        )
+      : undefined;
     const { req } = prepareSpeech({
       personal,
       // The author's pronunciations FIRST (their term wins) + the SERVER's next.
@@ -343,9 +414,9 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
       userVoice,
       available: deps.availableModels,
       autoDetect: isDetectionOn(deps.db, message.guildId, message.author.id),
-      guildDefaultVoice: cfg.defaultVoice,
+      guildDefaultVoice: channelPolicy.defaultVoice || profileLocaleVoice || '',
       defaultVoice: deps.config.defaultVoice,
-      defaultSpeed: deps.config.defaultSpeed,
+      defaultSpeed: channelPolicy.speed ?? deps.config.defaultSpeed,
       media,
       announceSpeaker: announce ? speakerName : undefined,
     });
@@ -358,7 +429,7 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
       deps.db,
       message.guildId,
       message.author.id,
-      userVoice?.engine,
+      userVoice?.engine ?? channelPolicy.engine ?? undefined,
       Date.now(),
     );
     req.engine = resolvedEngine.engine;
@@ -375,8 +446,18 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     if (!readable) return;
 
     const outReq = redacted;
+    outReq.streamSentences = true;
     // Voice effect (premium): applied to the WAV by the EffectEngine (external engine).
-    outReq.effect = getVoiceEffect(deps.db, message.guildId, message.author.id);
+    const personalEffect = getVoiceEffect(deps.db, message.guildId, message.author.id);
+    let effectiveEffect = personalEffect;
+    if (personalEffect === 'none' && channelPolicy.effect && isVoiceEffect(channelPolicy.effect)) {
+      const paidEffectAllowed =
+        !isPremiumEffect(channelPolicy.effect) ||
+        isUserPremium(deps.db, message.author.id, Date.now()) ||
+        isGuildPremium(deps.db, message.guildId, Date.now());
+      if (paidEffectAllowed) effectiveEffect = channelPolicy.effect;
+    }
+    outReq.effect = effectiveEffect;
 
     // Everything passed validation; queue acceptance below decides whether it counts as usage.
 
@@ -384,7 +465,11 @@ export async function handleMessage(message: Message, deps: BotDeps): Promise<vo
     // (silence PREPENDED to the WAV). Configurable (MESSAGE_LEAD_MS); 0 = no wait.
     if (deps.config.messageLeadMs > 0) outReq.leadSilenceMs = deps.config.messageLeadMs;
 
-    const queued = await player.say(outReq);
+    const queued = await player.say(outReq, {
+      authorId: message.author.id,
+      source: 'message',
+      lane: queuePolicy.lane,
+    });
 
     // Everything below is usage/accounting for a request that ACTUALLY entered the queue. A full
     // queue must not change the leaderboard, last-speaker suppression, streaks, or voice stats.

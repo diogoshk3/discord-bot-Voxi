@@ -312,6 +312,8 @@
       ["/join", "음성 채널에 참여"],
       ["/leave", "음성 채널에서 나가기"],
       ["/tts", "텍스트를 소리 내어 읽기"],
+      ["/tts-file", "Create a private audio file without joining a call"],
+      ["/translate text", "Translate text privately, including as a User App"],
       ["/skip", "현재 오디오 건너뛰기"],
       ["/shut-up", "지금 바로 Vozen 조용히 시키기 (대기열 비우기)"],
       ["/setup", "단계별 원스텝 설정"],
@@ -323,6 +325,8 @@
     "voice": [
       ["/voice set", "음성, 언어, 엔진 선택"],
       ["/voice list", "모든 음성 둘러보기"],
+      ["/voice favorites", "Open your saved favourite voices"],
+      ["/voice recent", "Open your recently used voices"],
       ["/voice preview", "음성 샘플 들어보기"],
       ["/voice effect", "로봇, 에코, 악마… 음성 효과"],
       ["/voice nickname", "Vozen이 나를 부르는 방식"],

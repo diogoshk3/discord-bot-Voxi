@@ -312,6 +312,8 @@
       ["/join", "加入你的語音頻道"],
       ["/leave", "離開語音頻道"],
       ["/tts", "大聲朗讀一段文字"],
+      ["/tts-file", "Create a private audio file without joining a call"],
+      ["/translate text", "Translate text privately, including as a User App"],
       ["/skip", "略過目前的音訊"],
       ["/shut-up", "立刻讓 Vozen 安靜（清空佇列）"],
       ["/setup", "一步到位的引導式設定"],
@@ -323,6 +325,8 @@
     "voice": [
       ["/voice set", "選擇你的語音、語言與引擎"],
       ["/voice list", "瀏覽所有語音"],
+      ["/voice favorites", "Open your saved favourite voices"],
+      ["/voice recent", "Open your recently used voices"],
       ["/voice preview", "試聽語音範例"],
       ["/voice effect", "機器人、回音、惡魔……語音特效"],
       ["/voice nickname", "Vozen 大聲稱呼你的方式"],

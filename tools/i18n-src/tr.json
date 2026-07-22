@@ -312,6 +312,8 @@
       ["/join", "Ses kanalına katıl"],
       ["/leave", "Ses kanalından ayrıl"],
       ["/tts", "Bir metni yüksek sesle oku"],
+      ["/tts-file", "Create a private audio file without joining a call"],
+      ["/translate text", "Translate text privately, including as a User App"],
       ["/skip", "Mevcut sesi atla"],
       ["/shut-up", "Vozen'i hemen sustur (kuyruğu temizler)"],
       ["/setup", "Tek adımlı rehberli kurulum"],
@@ -323,6 +325,8 @@
     "voice": [
       ["/voice set", "Sesini, dilini ve motorunu seç"],
       ["/voice list", "Tüm seslere göz at"],
+      ["/voice favorites", "Open your saved favourite voices"],
+      ["/voice recent", "Open your recently used voices"],
       ["/voice preview", "Bir ses örneği dinle"],
       ["/voice effect", "Robot, yankı, iblis… ses efektleri"],
       ["/voice nickname", "Vozen sana yüksek sesle nasıl seslenir"],

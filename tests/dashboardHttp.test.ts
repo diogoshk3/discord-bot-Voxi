@@ -5,17 +5,26 @@ import { initDb } from '../src/store/db';
 import { startKofiWebhook } from '../src/premium/kofiWebhook';
 import { createDashboardApi } from '../src/premium/dashboardApi';
 import { getGuildConfig } from '../src/store/guildConfig';
+import { getChannelProfile } from '../src/store/channelProfiles';
 
 const TOKEN = 'good-token';
+const CLIENT_ID = '1523826014935842997';
 const GUILD = '123123123123123123';
 const OTHER = '456456456456456456';
 const CHANNEL = '789789789789789789';
 const VOICE = 'en_US-amy-medium';
 
 function fakeFetch(): typeof fetch {
-  return (async (_url: string, init?: { headers?: Record<string, string> }) => {
+  return (async (url: string, init?: { headers?: Record<string, string> }) => {
     if (init?.headers?.Authorization !== `Bearer ${TOKEN}`) {
       return { ok: false, status: 401, json: async () => ({}) } as unknown as Response;
+    }
+    if (url.endsWith('/oauth2/@me')) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ application: { id: CLIENT_ID }, scopes: ['identify', 'guilds'] }),
+      } as unknown as Response;
     }
     return {
       ok: true,
@@ -45,9 +54,11 @@ describe('/api/dashboard/* - HTTP routes', () => {
     const dashboardApi = createDashboardApi({
       db,
       now: () => 1_000,
+      expectedClientId: CLIENT_ID,
       fetchImpl: fakeFetch(),
       botHasGuild: (id) => id === GUILD,
       resolveChannels: () => [{ id: CHANNEL, label: '#general' }],
+      resolveVoiceChannels: () => [{ id: '888888888888888888', label: 'Lounge' }],
       availableModels: [VOICE],
     });
     server = startKofiWebhook({
@@ -156,5 +167,23 @@ describe('/api/dashboard/* - HTTP routes', () => {
         })
       ).status,
     ).toBe(400);
+  });
+
+  it('creates and deletes a channel profile through its scoped route', async () => {
+    const base = await start();
+    const profileUrl = `${base}/api/dashboard/guild/${GUILD}/profile/${CHANNEL}`;
+    const saved = await fetch(profileUrl, {
+      method: 'POST',
+      headers: { ...auth, 'content-type': 'application/json' },
+      body: JSON.stringify({ autoRead: true, engine: 'piper', maxChars: 500 }),
+    });
+    expect(saved.status).toBe(200);
+    expect(getChannelProfile(db, GUILD, CHANNEL)).toMatchObject({
+      autoRead: true,
+      engine: 'piper',
+      maxChars: 500,
+    });
+    expect((await fetch(profileUrl, { method: 'DELETE', headers: auth })).status).toBe(204);
+    expect(getChannelProfile(db, GUILD, CHANNEL)).toBeNull();
   });
 });

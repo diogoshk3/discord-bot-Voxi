@@ -30,6 +30,8 @@ export interface MetricsSnapshot {
   gcloudSynths: number;
   gcloudChars: number;
   gcloudFallbacks: number;
+  /** Live-STT jobs rejected before sidecar execution because the bounded queue is saturated/expired. */
+  sttOverloads: number;
 }
 
 /** Size of the sliding window of latencies kept in memory. */
@@ -55,6 +57,7 @@ class Metrics {
   gcloudSynths = 0;
   gcloudChars = 0;
   gcloudFallbacks = 0;
+  sttOverloads = 0;
   // Latency: total counter + sliding window of the last samples (ms).
   synthCount = 0;
   private synthMs: number[] = [];
@@ -102,6 +105,7 @@ class Metrics {
       gcloudSynths: this.gcloudSynths,
       gcloudChars: this.gcloudChars,
       gcloudFallbacks: this.gcloudFallbacks,
+      sttOverloads: this.sttOverloads,
     };
   }
 
@@ -119,6 +123,7 @@ class Metrics {
     this.gcloudSynths = 0;
     this.gcloudChars = 0;
     this.gcloudFallbacks = 0;
+    this.sttOverloads = 0;
     this.synthCount = 0;
     this.synthMs = [];
   }

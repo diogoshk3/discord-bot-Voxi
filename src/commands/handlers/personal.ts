@@ -312,6 +312,7 @@ async function drawAndAnnounce(
         i.user.id,
         i.guild,
         t('rand.speak', locale, { winner }),
+        i.guild.members.cache.get(i.user.id)?.voice.channelId ?? null,
       );
       spoke = outcome.status === 'queued';
     } catch (err) {

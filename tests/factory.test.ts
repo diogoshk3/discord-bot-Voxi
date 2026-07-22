@@ -30,6 +30,7 @@ function baseConfig(overrides: Partial<AppConfig> = {}): AppConfig {
     queueCap: 20,
     maxChars: 300,
     ratePerMin: 5,
+    publicStatusEnabled: false,
     ttsEngine: 'piper',
     openaiApiKey: undefined,
     googleTtsApiKey: undefined,
@@ -39,7 +40,6 @@ function baseConfig(overrides: Partial<AppConfig> = {}): AppConfig {
     gcloudPass8MonthlyChars: 1_000_000,
     gcloudDailyCharBudget: 300_000,
     multilingualSegments: false,
-    topggWebhookAllowInsecure: false,
     // Required AppConfig fields that the tests' typecheck now demands.
     noiseScale: 0.667,
     noiseW: 0.8,

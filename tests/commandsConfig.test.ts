@@ -768,3 +768,43 @@ describe('/config vote-reminders — admin opt-in (default OFF)', () => {
     expect(getGuildConfig(db, GUILD).votePromos).toBe(false);
   });
 });
+
+describe('/config queue roles — Manage Server configuration', () => {
+  let db: Database.Database;
+  beforeEach(() => {
+    db = initDb(':memory:');
+  });
+  afterEach(() => {
+    db.close();
+  });
+
+  it('persists and clears the priority role', async () => {
+    const set = makeConfigInteraction({
+      sub: 'priority-role',
+      optionsMap: { role: { id: 'priority' } },
+    });
+    await handleInteraction(set as any, makeConfigDeps(db));
+    expect(getGuildConfig(db, GUILD).priorityRoleId).toBe('priority');
+
+    const clear = makeConfigInteraction({ sub: 'priority-role' });
+    await handleInteraction(clear as any, makeConfigDeps(db));
+    expect(getGuildConfig(db, GUILD).priorityRoleId).toBeNull();
+  });
+
+  it('persists the blocked role and rejects assigning the same role to both policies', async () => {
+    const blocked = makeConfigInteraction({
+      sub: 'blocked-role',
+      optionsMap: { role: { id: 'blocked' } },
+    });
+    await handleInteraction(blocked as any, makeConfigDeps(db));
+    expect(getGuildConfig(db, GUILD).blockedRoleId).toBe('blocked');
+
+    const invalid = makeConfigInteraction({
+      sub: 'priority-role',
+      optionsMap: { role: { id: 'blocked' } },
+    });
+    await handleInteraction(invalid as any, makeConfigDeps(db));
+    expect(getGuildConfig(db, GUILD).priorityRoleId).toBeNull();
+    expect(invalid.replies.join('\n')).toMatch(/different role/i);
+  });
+});

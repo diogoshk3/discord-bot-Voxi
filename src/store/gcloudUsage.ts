@@ -20,6 +20,12 @@ export function monthKeyUTC(now: number): string {
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
 }
 
+/** UTC day key used by the persistent, service-wide daily cost backstop. */
+export function dayKeyUTC(now: number): string {
+  const d = new Date(now);
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+}
+
 /** Chars already spent by this pool (scope,key) in the given month. No row => 0. */
 export function getGcloudMonthlyChars(
   db: Database.Database,
@@ -49,6 +55,79 @@ export function addGcloudMonthlyChars(
      VALUES (?, ?, ?, ?)
      ON CONFLICT(scope, key, month) DO UPDATE SET chars = chars + excluded.chars`,
   ).run(scope, key, month, chars);
+}
+
+/**
+ * Atomically reserves a paid Google HD call. Both the monthly pool and optional global
+ * daily backstop are conditional UPSERTs in one SQLite transaction, so independent bot
+ * processes cannot over-admit the same limit. `false` means no counter was changed.
+ */
+export function reserveGcloudChars(
+  db: Database.Database,
+  scope: UsageScope,
+  key: string,
+  month: string,
+  monthlyLimit: number,
+  day: string,
+  dailyLimit: number,
+  chars: number,
+): boolean {
+  if (!Number.isInteger(chars) || chars <= 0)
+    throw new Error('Reserved chars must be a positive integer');
+  if (!Number.isInteger(monthlyLimit) || monthlyLimit < 0)
+    throw new Error('Monthly limit must be a non-negative integer');
+  if (!Number.isInteger(dailyLimit) || dailyLimit < 0)
+    throw new Error('Daily limit must be a non-negative integer');
+  class ReservationDenied extends Error {}
+  const reserve = db.transaction(() => {
+    const monthly = db
+      .prepare(
+        `INSERT INTO gcloud_usage (scope, key, month, chars) VALUES (?, ?, ?, ?)
+       ON CONFLICT(scope, key, month) DO UPDATE SET chars = chars + excluded.chars
+       WHERE gcloud_usage.chars + excluded.chars <= ?`,
+      )
+      .run(scope, key, month, chars, monthlyLimit);
+    if (monthly.changes !== 1) throw new ReservationDenied();
+    if (dailyLimit === 0) return true;
+    const daily = db
+      .prepare(
+        `INSERT INTO gcloud_daily_usage (day, chars) VALUES (?, ?)
+       ON CONFLICT(day) DO UPDATE SET chars = chars + excluded.chars
+       WHERE gcloud_daily_usage.chars + excluded.chars <= ?`,
+      )
+      .run(day, chars, dailyLimit);
+    if (daily.changes !== 1) throw new ReservationDenied();
+    return true;
+  });
+  try {
+    return reserve();
+  } catch (err) {
+    if (err instanceof ReservationDenied) return false;
+    throw err;
+  }
+}
+
+/** Refunds an unused reservation after a provider call failed before producing audio. */
+export function refundGcloudChars(
+  db: Database.Database,
+  scope: UsageScope,
+  key: string,
+  month: string,
+  day: string,
+  dailyLimit: number,
+  chars: number,
+): void {
+  const refund = db.transaction(() => {
+    db.prepare(
+      'UPDATE gcloud_usage SET chars = MAX(0, chars - ?) WHERE scope = ? AND key = ? AND month = ?',
+    ).run(chars, scope, key, month);
+    if (dailyLimit > 0)
+      db.prepare('UPDATE gcloud_daily_usage SET chars = MAX(0, chars - ?) WHERE day = ?').run(
+        chars,
+        day,
+      );
+  });
+  refund();
 }
 
 /**

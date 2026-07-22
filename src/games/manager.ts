@@ -34,6 +34,8 @@ export interface IncomingMessage {
   authorId: string;
   authorName: string;
   content: string;
+  /** Whether this message's author may make the bot speak in its current voice channel. */
+  canTriggerSpeech: boolean;
 }
 
 export type StartResult = 'started' | 'already-active';
@@ -128,7 +130,7 @@ export class GameManager {
     const session = this.sessions.get(msg.guildId);
     if (!session || session.ended) return false;
     if (session.channelId !== msg.channelId) return false;
-    const ctx = this.makeContext(session);
+    const ctx = this.makeContext(session, msg.canTriggerSpeech);
     const gm: GameMessage = {
       authorId: msg.authorId,
       authorName: msg.authorName,
@@ -217,7 +219,7 @@ export class GameManager {
     }
   }
 
-  private makeContext(s: Session): GameContext {
+  private makeContext(s: Session, canTriggerSpeech = true): GameContext {
     const env = this.env;
     return {
       guildId: s.guildId,
@@ -227,6 +229,7 @@ export class GameManager {
       availableModels: env.availableModels,
       defaultVoice: env.defaultVoiceOf(s.guildId),
       say: async (text: string, opts): Promise<boolean> => {
+        if (!canTriggerSpeech) return false;
         const player = env.getPlayer(s.guildId);
         if (!player) return false;
         try {

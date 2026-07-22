@@ -1,6 +1,10 @@
 import 'dotenv/config';
 import { log } from '../logging/logger';
 import { PIPER_DEFAULT_SYNTH_PARAMS } from '../tts/calibration';
+import {
+  parseTranslationProviderConfig,
+  type TranslationProviderConfig,
+} from '../translation/provider';
 
 export type TtsEngineKind = 'piper' | 'neural' | 'gtts' | 'router';
 
@@ -32,8 +36,14 @@ export interface AppConfig {
   gcloudPass3MonthlyChars: number; // pool of the 3-server pass/month (default 400 000)
   gcloudPass8MonthlyChars: number; // pool of the 8-server pass/month (default 1 000 000)
   gcloudDailyCharBudget: number; // GLOBAL in-memory backstop/day (0 = off; default 300 000)
+  /** Explicit provider configuration for text translation. Inert unless Azure config is complete. */
+  translationProvider?: TranslationProviderConfig;
   presenceText?: string;
   healthPort?: number;
+  /** Explicit opt-in for the coarse /status route on the loopback health listener. */
+  publicStatusEnabled: boolean;
+  /** Optional operator-authored public incident notice; it is sanitized and bounded at output. */
+  publicStatusIncident?: string;
   shards?: string;
   // P11.5 — OPTIONAL top.gg webhook. Port absent => no server (default).
   // Secret absent => webhook without auth (insecure; always recommended to set it).
@@ -43,10 +53,6 @@ export interface AppConfig {
   // intentionally separate from the rotatable Top.gg webhook secret. Required
   // for vote rewards; minimum 32 characters. Env: VOTE_REDEMPTION_SECRET.
   voteRedemptionSecret?: string;
-  // SEC-01 — EXPLICIT opt-in to run the top.gg webhook WITHOUT a secret (insecure:
-  // anyone who discovers the port forges votes). Default false => without a secret,
-  // the listener does NOT start. Env: TOPGG_WEBHOOK_ALLOW_INSECURE=true.
-  topggWebhookAllowInsecure: boolean;
   // Wave 3 — auto-post of the server count to top.gg (ranking/discovery).
   // top.gg API token (TOPGG_TOKEN). Absent => the updater does NOT start (opt-in).
   topggToken?: string;
@@ -291,10 +297,8 @@ export function validateConfigEnv(env: Record<string, string | undefined>): Conf
 
   const topggPortSet = (env.TOPGG_WEBHOOK_PORT ?? '').trim() !== '';
   const topggSecretNonEmpty = (env.TOPGG_WEBHOOK_SECRET ?? '').trim() !== '';
-  const insecureTopggEnabled =
-    topggPortSet && (env.TOPGG_WEBHOOK_ALLOW_INSECURE ?? '').trim().toLowerCase() === 'true';
   const redemptionSecret = (env.VOTE_REDEMPTION_SECRET ?? '').trim();
-  if ((topggSecretNonEmpty || insecureTopggEnabled) && redemptionSecret.length < 32) {
+  if (topggSecretNonEmpty && redemptionSecret.length < 32) {
     findings.push({
       level: 'error',
       message:
@@ -349,12 +353,15 @@ export function loadConfig(): AppConfig {
       integer: true,
     }),
     gcloudDailyCharBudget: numEnv('GCLOUD_DAILY_CHAR_BUDGET', 300_000),
+    translationProvider: parseTranslationProviderConfig(process.env),
     // P9.3 — optional presence text; empty/absent => undefined and buildPresence
     // uses its brand default. Exact override when set.
     presenceText: strEnv('PRESENCE_TEXT', '') || undefined,
     // P9.7 — OPTIONAL port for the HTTP health endpoint (uptime monitors). Absent
     // => undefined => does NOT start any server (default). Set => number.
     healthPort: numEnvOptional('HEALTH_PORT'),
+    publicStatusEnabled: boolEnvDefaultOff('PUBLIC_STATUS_ENABLED'),
+    publicStatusIncident: strEnv('PUBLIC_STATUS_INCIDENT', '') || undefined,
     // P11.4 — RAW value of BOT_SHARDS (sharding opt-in). Absent/empty =>
     // undefined => single-process (default). The interpretation (auto / N / single) is
     // done by resolveShardCount in the launcher src/shard.ts — here we only carry
@@ -368,13 +375,12 @@ export function loadConfig(): AppConfig {
     shards: strEnv('BOT_SHARDS', '') || undefined,
     // P11.5 — OPTIONAL top.gg webhook. TOPGG_WEBHOOK_PORT absent/empty/invalid
     // => undefined => does NOT start a webhook server (default), just like
-    // HEALTH_PORT. TOPGG_WEBHOOK_SECRET absent/empty => undefined => webhook without
-    // auth (insecure; see startVoteWebhookServer, which warns in that case). Dedicated
-    // port, separate from HEALTH_PORT on purpose.
+    // HEALTH_PORT. TOPGG_WEBHOOK_SECRET absent/empty => the dedicated listener
+    // refuses to start, so vote rewards are never exposed without authentication.
+    // Dedicated port, separate from HEALTH_PORT on purpose.
     topggWebhookPort: numEnvOptional('TOPGG_WEBHOOK_PORT'),
     topggWebhookSecret: strEnv('TOPGG_WEBHOOK_SECRET', '') || undefined,
     voteRedemptionSecret: strEnv('VOTE_REDEMPTION_SECRET', '') || undefined,
-    topggWebhookAllowInsecure: boolEnvDefaultOff('TOPGG_WEBHOOK_ALLOW_INSECURE'),
     topggToken: strEnv('TOPGG_TOKEN', '') || undefined,
     errorWebhookUrl: strEnv('ERROR_WEBHOOK_URL', '') || undefined,
     claimHelpWebhookUrl:

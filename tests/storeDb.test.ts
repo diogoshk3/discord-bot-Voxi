@@ -4,6 +4,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import Database from 'better-sqlite3';
 import { initDb } from '../src/store/db';
+import { reserveGcloudChars } from '../src/store/gcloudUsage';
+import { addOperationalMetric, setProviderHealth } from '../src/store/operationalMetrics';
 
 // CHARACTERIZATION of the durability settings production actually runs with.
 //
@@ -65,5 +67,81 @@ describe('initDb — durability pragmas (characterization)', () => {
     expect(
       db.prepare('SELECT last_kind FROM vote_promo_state WHERE guild_id = ?').get('guild-1'),
     ).toEqual({ last_kind: 'vote' });
+  });
+});
+
+describe('persistent operational aggregates and paid quota admission', () => {
+  let dir: string;
+  let primary: Database.Database | undefined;
+  let secondary: Database.Database | undefined;
+
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), 'vozen-operational-db-'));
+    primary = initDb(join(dir, 'shared.db'));
+    secondary = initDb(join(dir, 'shared.db'));
+  });
+  afterEach(() => {
+    secondary?.close();
+    primary?.close();
+    secondary = undefined;
+    primary = undefined;
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('admits only one monthly reservation across independent SQLite connections', () => {
+    expect(reserveGcloudChars(primary!, 'user', 'pool', '2026-07', 5, '2026-07-15', 0, 3)).toBe(
+      true,
+    );
+    expect(reserveGcloudChars(secondary!, 'user', 'pool', '2026-07', 5, '2026-07-15', 0, 3)).toBe(
+      false,
+    );
+    expect(
+      primary!
+        .prepare('SELECT chars FROM gcloud_usage WHERE scope = ? AND key = ?')
+        .get('user', 'pool'),
+    ).toEqual({ chars: 3 });
+  });
+
+  it('rolls back the monthly reservation when a second connection loses the daily global race', () => {
+    expect(reserveGcloudChars(primary!, 'user', 'pool-a', '2026-07', 100, '2026-07-15', 5, 3)).toBe(
+      true,
+    );
+    expect(
+      reserveGcloudChars(secondary!, 'user', 'pool-b', '2026-07', 100, '2026-07-15', 5, 3),
+    ).toBe(false);
+    expect(
+      primary!.prepare('SELECT chars FROM gcloud_daily_usage WHERE day = ?').get('2026-07-15'),
+    ).toEqual({ chars: 3 });
+    expect(
+      primary!.prepare('SELECT chars FROM gcloud_usage WHERE key = ?').get('pool-b'),
+    ).toBeUndefined();
+  });
+
+  it('stores only daily numeric aggregates and provider health timestamps', () => {
+    addOperationalMetric(primary!, 'provider_charged_chars', 'gcloud', 12, '2026-07-15');
+    addOperationalMetric(secondary!, 'provider_charged_chars', 'gcloud', 8, '2026-07-15');
+    setProviderHealth(primary!, 'gcloud', 'degraded', 10);
+    setProviderHealth(secondary!, 'gcloud', 'healthy', 20);
+    expect(
+      primary!.prepare('SELECT day, metric, provider, value FROM operational_daily_metric').get(),
+    ).toEqual({
+      day: '2026-07-15',
+      metric: 'provider_charged_chars',
+      provider: 'gcloud',
+      value: 20,
+    });
+    expect(
+      primary!
+        .prepare(
+          'SELECT provider, health, changed_at, last_healthy_at, last_degraded_at FROM provider_health_state',
+        )
+        .get(),
+    ).toEqual({
+      provider: 'gcloud',
+      health: 'healthy',
+      changed_at: 20,
+      last_healthy_at: 20,
+      last_degraded_at: 10,
+    });
   });
 });

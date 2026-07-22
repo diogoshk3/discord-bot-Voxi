@@ -68,7 +68,7 @@ function predictedFlips(seed: number): ('heads' | 'tails')[] {
 }
 
 function msg(authorId: string, authorName: string, content: string) {
-  return { guildId: G, channelId: C, authorId, authorName, content };
+  return { guildId: G, channelId: C, authorId, authorName, content, canTriggerSpeech: true };
 }
 
 describe('Heads or Tails', () => {

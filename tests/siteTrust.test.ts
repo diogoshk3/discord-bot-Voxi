@@ -135,4 +135,16 @@ describe('site acquisition and trust contracts', () => {
     expect(pkg.scripts?.['check:site']).toContain('npm run check:site-copy');
     expect(source('tools/check-site-copy.mjs')).toContain("from 'parse5'");
   });
+
+  it('ships a privacy-safe public status page backed by the versioned API', () => {
+    const page = source('site/status.html');
+    const script = source('site/js/status-v1.js');
+
+    expect(page).toContain('Vozen service status');
+    expect(page).toContain('js/status-v1.js');
+    expect(script).toContain('https://api.vozen.org/api/public/status');
+    expect(script).toContain('textContent');
+    expect(script).not.toContain('innerHTML');
+    expect(script).not.toMatch(/guild|user|message|token|secret/i);
+  });
 });

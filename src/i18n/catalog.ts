@@ -215,6 +215,22 @@ export const catalog: Record<string, Entry> = {
     en: "I'm busy right now — try again in a moment.",
     pt: 'Estou ocupado agora — tenta daqui a um instante.',
   },
+  'ttsFile.tooLong': {
+    en: 'Keep an audio file export to {max} characters or fewer.',
+    pt: 'Mantem a exportaÃ§Ã£o de Ã¡udio com {max} caracteres ou menos.',
+  },
+  'ttsFile.unavailable': {
+    en: 'Your selected voice is not available on this instance. Choose another voice and try again.',
+    pt: 'A voz selecionada nÃ£o estÃ¡ disponÃ­vel nesta instÃ¢ncia. Escolhe outra voz e tenta novamente.',
+  },
+  'ttsFile.ready': {
+    en: 'Your private audio file is ready. It is not stored by Vozen after delivery.',
+    pt: 'O teu ficheiro de Ã¡udio privado estÃ¡ pronto. O Vozen nÃ£o o guarda depois da entrega.',
+  },
+  'ttsFile.failed': {
+    en: 'I could not create that audio file. Please try again.',
+    pt: 'NÃ£o consegui criar esse ficheiro de Ã¡udio. Tenta outra vez.',
+  },
 
   // ── /voice ────────────────────────────────────────────────────────────────
   'voice.unknownModel': {
@@ -243,6 +259,24 @@ export const catalog: Record<string, Entry> = {
   'voice.listEmpty': {
     en: '(none installed)',
     pt: '(nenhuma instalada)',
+  },
+  'voice.browse.invalidLocale': {
+    en: 'Use a two-letter language code, for example `en` or `pt`.',
+    pt: 'Usa um cÃ³digo de idioma com duas letras, por exemplo `en` ou `pt`.',
+  },
+  'voice.browse.empty': {
+    en: 'No available catalog voices match those filters.',
+    pt: 'NÃ£o hÃ¡ vozes disponÃ­veis no catÃ¡logo que correspondam a esses filtros.',
+  },
+  'voice.browse.title': {
+    en: 'Available voice catalog â€” page {page}/{pages}',
+    pt: 'CatÃ¡logo de vozes disponÃ­veis â€” pÃ¡gina {page}/{pages}',
+  },
+  'voice.browse.previous': { en: 'Previous', pt: 'Anterior' },
+  'voice.browse.next': { en: 'Next', pt: 'Seguinte' },
+  'voice.browse.expired': {
+    en: 'Voice browser expired. Run `/voice browse` again.',
+    pt: 'O browser de vozes expirou. Corre `/voice browse` novamente.',
   },
   // Sucesso do /voice reset: confirma o reset e aponta o PROXIMO PASSO (escolher
   // outra voz) — /voice list para ver as opcoes, /voice set para escolher.

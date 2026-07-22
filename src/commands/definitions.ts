@@ -12,6 +12,7 @@ import {
   PermissionFlagsBits,
   ChannelType,
   InteractionContextType,
+  ApplicationIntegrationType,
   type RESTPostAPIApplicationCommandsJSONBody,
 } from 'discord.js';
 import { EFFECT_CHOICES } from '../tts/effects';
@@ -46,7 +47,36 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
     .setDescription('Vozen reads a text out loud')
     .addStringOption((o) => o.setName('text').setDescription('What to read').setRequired(true))
     .toJSON(),
+  // Explicit private export.  This does NOT join or speak in a voice channel.
+  new SlashCommandBuilder()
+    .setName('tts-file')
+    .setDescription('Create a private audio file from short text (does not join a call)')
+    .addStringOption((o) =>
+      o
+        .setName('text')
+        .setDescription('Short text to turn into audio')
+        .setRequired(true)
+        .setMaxLength(500),
+    )
+    .toJSON(),
   new SlashCommandBuilder().setName('skip').setDescription('Skip the current audio').toJSON(),
+  new SlashCommandBuilder()
+    .setName('queue')
+    .setDescription('View or manage the privacy-safe playback queue')
+    .addSubcommand((s) => s.setName('show').setDescription('Show pending queue metadata'))
+    .addSubcommand((s) =>
+      s
+        .setName('remove')
+        .setDescription('Remove one of your queued items (admins may remove any item)')
+        .addStringOption((o) =>
+          o.setName('id').setDescription('Opaque queue item id').setRequired(true),
+        ),
+    )
+    .addSubcommand((s) => s.setName('clear').setDescription('Manage Server: clear queued audio'))
+    .addSubcommand((s) => s.setName('skip').setDescription('Manage Server: skip current audio'))
+    .addSubcommand((s) => s.setName('pause').setDescription('Manage Server: pause audio'))
+    .addSubcommand((s) => s.setName('resume').setDescription('Manage Server: resume audio'))
+    .toJSON(),
   // /shut-up — silences Vozen NOW: clears the whole queue and stops what's playing (without leaving
   // the call). /skip only skips the current message; this clears everything.
   new SlashCommandBuilder()
@@ -173,6 +203,130 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
         .setDescription('Permanently delete all your personal data (asks you to confirm first)'),
     )
     .toJSON(),
+  // Text-only, explicit opt-in translation. It is deliberately not a voice command and
+  // automatic output never enters the TTS queue.
+  new SlashCommandBuilder()
+    .setName('translate')
+    .setDescription('Configure opt-in text translation (never speaks translated text)')
+    .addSubcommand((s) =>
+      s
+        .setName('text')
+        .setDescription('Translate text privately')
+        .addStringOption((o) =>
+          o
+            .setName('text')
+            .setDescription('Text to translate')
+            .setRequired(true)
+            .setMaxLength(1000),
+        )
+        .addStringOption((o) =>
+          o.setName('locale').setDescription('Target locale, for example en or pt'),
+        ),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName('language')
+        .setDescription('Save your default translation language')
+        .addStringOption((o) =>
+          o
+            .setName('locale')
+            .setDescription('Target locale, for example en or pt')
+            .setRequired(true),
+        ),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName('speak-language')
+        .setDescription('Translate your messages before Vozen reads them (opt-in)')
+        .addStringOption((o) =>
+          o
+            .setName('locale')
+            .setDescription('Target locale, or off to disable')
+            .setRequired(true)
+            .setAutocomplete(true),
+        ),
+    )
+    .addSubcommand((s) =>
+      s.setName('status').setDescription('Show translation status (Manage Server)'),
+    )
+    .addSubcommand((s) =>
+      s.setName('enable').setDescription('Enable configured mappings (Manage Server)'),
+    )
+    .addSubcommand((s) =>
+      s.setName('disable').setDescription('Disable automatic translation (Manage Server)'),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName('clear')
+        .setDescription('Delete mappings and member translation opt-outs (Manage Server)'),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName('map-add')
+        .setDescription('Map a source text channel to a destination (Manage Server)')
+        .addChannelOption((o) =>
+          o
+            .setName('source')
+            .setDescription('Source text channel')
+            .addChannelTypes(ChannelType.GuildText)
+            .setRequired(true),
+        )
+        .addChannelOption((o) =>
+          o
+            .setName('destination')
+            .setDescription('Destination text channel')
+            .addChannelTypes(ChannelType.GuildText)
+            .setRequired(true),
+        )
+        .addStringOption((o) =>
+          o
+            .setName('locale')
+            .setDescription('Target locale, for example en or pt')
+            .setRequired(true),
+        ),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName('map-remove')
+        .setDescription('Remove a source channel mapping (Manage Server)')
+        .addChannelOption((o) =>
+          o
+            .setName('source')
+            .setDescription('Source text channel')
+            .addChannelTypes(ChannelType.GuildText)
+            .setRequired(true),
+        ),
+    )
+    .addSubcommand((s) =>
+      s.setName('map-list').setDescription('List channel mappings (Manage Server)'),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName('preview')
+        .setDescription('Preview a translation without posting it (Manage Server)')
+        .addStringOption((o) =>
+          o
+            .setName('text')
+            .setDescription('Text to translate')
+            .setRequired(true)
+            .setMaxLength(1000),
+        )
+        .addStringOption((o) =>
+          o
+            .setName('locale')
+            .setDescription('Target locale, for example en or pt')
+            .setRequired(true),
+        ),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName('opt-out')
+        .setDescription('Opt in or out of automatic translation for your messages')
+        .addBooleanOption((o) =>
+          o.setName('active').setDescription('Turn opt-out on or off').setRequired(true),
+        ),
+    )
+    .toJSON(),
   // /top-speakers — who had the most messages read by Vozen + consecutive-day streaks.
   new SlashCommandBuilder()
     .setName('top-speakers')
@@ -259,6 +413,48 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
       s.setName('config').setDescription('Open a panel to set up your voice (no accidental Enter)'),
     )
     .addSubcommand((s) => s.setName('list').setDescription('List the available models'))
+    .addSubcommand((s) =>
+      s
+        .setName('favorite')
+        .setDescription('Add a voice to your personal favourites')
+        .addStringOption((o) =>
+          o.setName('model').setDescription('Voice model').setRequired(true).setAutocomplete(true),
+        ),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName('unfavorite')
+        .setDescription('Remove a voice from your personal favourites')
+        .addStringOption((o) =>
+          o.setName('model').setDescription('Voice model').setRequired(true).setAutocomplete(true),
+        ),
+    )
+    .addSubcommand((s) => s.setName('favorites').setDescription('Show your favourite voices'))
+    .addSubcommand((s) => s.setName('recent').setDescription('Show your ten recent voices'))
+    .addSubcommand((s) =>
+      s
+        .setName('browse')
+        .setDescription('Browse the currently available voice catalog')
+        .addStringOption((o) =>
+          o.setName('query').setDescription('Search by voice or language').setMaxLength(50),
+        )
+        .addStringOption((o) =>
+          o
+            .setName('locale')
+            .setDescription('Two-letter voice language, for example en')
+            .setMaxLength(2),
+        )
+        .addStringOption((o) =>
+          o
+            .setName('engine')
+            .setDescription('Catalog engine')
+            .addChoices(
+              { name: 'All available voices', value: 'all' },
+              { name: 'Local catalog voices', value: 'local' },
+              { name: 'Google catalog voices', value: 'google' },
+            ),
+        ),
+    )
     .addSubcommand((s) => s.setName('reset').setDescription('Reset your voice to the default'))
     .addSubcommand((s) =>
       s
@@ -372,6 +568,23 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
             .setDescription('Allowed role (empty = no restriction)')
             .setRequired(false),
         ),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName('priority-role')
+        .setDescription('Accessibility queue priority role (omit to clear)')
+        .addRoleOption((o) =>
+          o
+            .setName('role')
+            .setDescription('Role with accessibility queue priority')
+            .setRequired(false),
+        ),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName('blocked-role')
+        .setDescription('Block a role from adding audio to the queue (omit to clear)')
+        .addRoleOption((o) => o.setName('role').setDescription('Blocked role').setRequired(false)),
     )
     .addSubcommand((s) =>
       s
@@ -528,6 +741,12 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
         .addChannelTypes(ChannelType.GuildText)
         .setRequired(false),
     )
+    .addBooleanOption((o) =>
+      o
+        .setName('test-voice')
+        .setDescription('Play a short local voice check after setup')
+        .setRequired(false),
+    )
     .toJSON(),
   new SlashCommandBuilder()
     .setName('stats')
@@ -671,6 +890,14 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
   // Context-menu (right-click a message -> Apps -> Speak): reads that message out
   // loud with the voice of whoever clicked. Complements /tts without typing anything.
   new ContextMenuCommandBuilder().setName('Speak').setType(ApplicationCommandType.Message).toJSON(),
+  new ContextMenuCommandBuilder()
+    .setName('Translate')
+    .setType(ApplicationCommandType.Message)
+    .toJSON(),
+  new ContextMenuCommandBuilder()
+    .setName('Transcribe voice message')
+    .setType(ApplicationCommandType.Message)
+    .toJSON(),
   // /redeem — PUBLIC: redeems a gift code (generated by the owner with /generate-code).
   // Grants Plus or a Premium pass to the redeemer's account (not to a server), so
   // it is DM-capable. Single-use; see store/premiumCode.ts.
@@ -683,9 +910,54 @@ const commandDefsRaw: RESTPostAPIApplicationCommandsJSONBody[] = [
     .toJSON(),
 ];
 
-// Commands usable in DM: they only return TEXT and don't depend on guild/voice/store.
-// (/redeem too: grants to the redeemer's ACCOUNT, not to a server.)
-const DM_CAPABLE_COMMANDS = new Set(['invite', 'vote', 'help', 'uptime', 'bot-stats', 'redeem']);
+export type CommandCapability =
+  | 'information'
+  | 'personal-entitlement'
+  | 'voice'
+  | 'guild-configuration'
+  | 'translation'
+  | 'moderation'
+  | 'owner';
+
+export interface CommandExposure {
+  /** A User App must be enabled manually in the Developer Portal before this can change runtime scope. */
+  userAppCandidate: boolean;
+  /** Existing gateway handlers are safe with no guild object. This is not an authorization grant. */
+  dmSafe: boolean;
+  capabilities: readonly CommandCapability[];
+}
+
+const DM_SAFE_EXPOSURES: Readonly<Record<string, CommandExposure>> = {
+  invite: { dmSafe: true, userAppCandidate: true, capabilities: ['information'] },
+  vote: { dmSafe: true, userAppCandidate: true, capabilities: ['information'] },
+  help: { dmSafe: true, userAppCandidate: true, capabilities: ['information'] },
+  uptime: { dmSafe: true, userAppCandidate: true, capabilities: ['information'] },
+  'bot-stats': { dmSafe: true, userAppCandidate: true, capabilities: ['information'] },
+  'tts-file': { dmSafe: true, userAppCandidate: true, capabilities: ['voice'] },
+  translate: { dmSafe: true, userAppCandidate: true, capabilities: ['translation'] },
+  Translate: { dmSafe: true, userAppCandidate: true, capabilities: ['translation'] },
+  'Transcribe voice message': {
+    dmSafe: true,
+    userAppCandidate: true,
+    capabilities: ['translation'],
+  },
+  // This is a personal entitlement action. It never reads a guild, joins voice or scans messages.
+  redeem: { dmSafe: true, userAppCandidate: false, capabilities: ['personal-entitlement'] },
+};
+
+const DEFAULT_GUILD_EXPOSURE: CommandExposure = {
+  dmSafe: false,
+  userAppCandidate: false,
+  capabilities: ['voice'],
+};
+
+/**
+ * Single declarative context policy. New commands safely become guild-only until an
+ * explicit review adds them above; this metadata never replaces handler-side checks.
+ */
+export function commandExposure(name: string): CommandExposure {
+  return DM_SAFE_EXPOSURES[name] ?? DEFAULT_GUILD_EXPOSURE;
+}
 
 // All OTHER commands depend on a guild (voice session, config and per-guild
 // store). By default Discord shows global commands in DM too, where
@@ -695,8 +967,35 @@ const DM_CAPABLE_COMMANDS = new Set(['invite', 'vote', 'help', 'uptime', 'bot-st
 // .setContexts() in ~10 builders) so no new command is forgotten. Also covers
 // the "Speak" context-menu (needs a voice channel).
 const commandDefsWithContext: RESTPostAPIApplicationCommandsJSONBody[] = commandDefsRaw.map(
-  (def) =>
-    DM_CAPABLE_COMMANDS.has(def.name) ? def : { ...def, contexts: [InteractionContextType.Guild] },
+  (def) => {
+    const exposure = commandExposure(def.name);
+    if (exposure.userAppCandidate) {
+      return {
+        ...def,
+        integration_types: [
+          ApplicationIntegrationType.GuildInstall,
+          ApplicationIntegrationType.UserInstall,
+        ],
+        contexts: [
+          InteractionContextType.Guild,
+          InteractionContextType.BotDM,
+          InteractionContextType.PrivateChannel,
+        ],
+      };
+    }
+    if (exposure.dmSafe) {
+      return {
+        ...def,
+        integration_types: [ApplicationIntegrationType.GuildInstall],
+        contexts: [InteractionContextType.Guild, InteractionContextType.BotDM],
+      };
+    }
+    return {
+      ...def,
+      integration_types: [ApplicationIntegrationType.GuildInstall],
+      contexts: [InteractionContextType.Guild],
+    };
+  },
 );
 export const commandDefs: RESTPostAPIApplicationCommandsJSONBody[] = commandDefsWithContext;
 

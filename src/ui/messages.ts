@@ -98,7 +98,7 @@ export function replyCard<Row extends MessageActionRowComponentBuilder>(
     flags: options.ephemeral
       ? MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
       : MessageFlags.IsComponentsV2,
-    allowedMentions: options.allowedMentions,
+    allowedMentions: options.allowedMentions ?? { parse: [] },
   };
 }
 
@@ -110,7 +110,7 @@ export function editCard<Row extends MessageActionRowComponentBuilder>(
   return {
     components: [containerFor(content, options)],
     flags: MessageFlags.IsComponentsV2,
-    allowedMentions: options.allowedMentions,
+    allowedMentions: options.allowedMentions ?? { parse: [] },
   };
 }
 
@@ -121,7 +121,7 @@ export function updateCard<Row extends MessageActionRowComponentBuilder>(
 ): InteractionUpdateOptions {
   return {
     components: [containerFor(content, options)],
-    allowedMentions: options.allowedMentions,
+    allowedMentions: options.allowedMentions ?? { parse: [] },
   };
 }
 
@@ -133,7 +133,7 @@ export function channelCard<Row extends MessageActionRowComponentBuilder>(
   return {
     components: [containerFor(content, options)],
     flags: MessageFlags.IsComponentsV2,
-    allowedMentions: options.allowedMentions,
+    allowedMentions: options.allowedMentions ?? { parse: [] },
   };
 }
 
@@ -147,6 +147,6 @@ export function messageEditCard<Row extends MessageActionRowComponentBuilder>(
     embeds: [],
     components: [containerFor(content, options)],
     flags: MessageFlags.IsComponentsV2,
-    allowedMentions: options.allowedMentions,
+    allowedMentions: options.allowedMentions ?? { parse: [] },
   };
 }

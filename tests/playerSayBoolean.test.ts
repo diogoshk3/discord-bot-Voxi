@@ -97,4 +97,27 @@ describe('GuildVoicePlayer.say() — devolve boolean (P18.1)', () => {
 
     await expect(player.say(req('ola'))).resolves.toBe(false);
   });
+
+  it('streams long text as ordered sentence chunks when explicitly requested', async () => {
+    const seen: string[] = [];
+    const engine: TTSEngine = {
+      synth: async (request) => {
+        seen.push(request.text);
+        return request.text;
+      },
+    };
+    const player = new GuildVoicePlayer(makeConnection() as any, engine, 20, () => {});
+
+    const first =
+      `The first sentence can start playing quickly ${'without waiting '.repeat(9)}`.trim() + '.';
+    const second =
+      `The second sentence follows afterwards ${'with the same voice '.repeat(8)}`.trim() + '.';
+    await expect(player.say({ ...req(`${first} ${second}`), streamSentences: true })).resolves.toBe(
+      true,
+    );
+
+    await vi.waitFor(() => expect(seen.length).toBe(2));
+    expect(seen).toEqual([first, second]);
+    player.destroy();
+  });
 });

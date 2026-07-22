@@ -312,6 +312,8 @@
       ["/join", "Deinem Sprachkanal beitreten"],
       ["/leave", "Den Sprachkanal verlassen"],
       ["/tts", "Einen Text laut vorlesen"],
+      ["/tts-file", "Create a private audio file without joining a call"],
+      ["/translate text", "Translate text privately, including as a User App"],
       ["/skip", "Das aktuelle Audio überspringen"],
       ["/shut-up", "Vozen sofort verstummen lassen (leert die Warteschlange)"],
       ["/setup", "Geführtes Ein-Schritt-Setup"],
@@ -323,6 +325,8 @@
     "voice": [
       ["/voice set", "Stimme, Sprache & Engine wählen"],
       ["/voice list", "Alle Stimmen durchstöbern"],
+      ["/voice favorites", "Open your saved favourite voices"],
+      ["/voice recent", "Open your recently used voices"],
       ["/voice preview", "Eine Stimmenprobe anhören"],
       ["/voice effect", "Roboter, Echo, Dämon … Stimmeneffekte"],
       ["/voice nickname", "Wie Vozen dich laut anspricht"],

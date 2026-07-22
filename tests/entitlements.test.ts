@@ -14,6 +14,9 @@ import {
   isGuildPremium,
   isUserPremium,
   grantGuildPremium,
+  grantUserPremium,
+  effectiveGuildPremiumExpiry,
+  getUserPremiumExpiry,
   syncDiscordEntitlements,
 } from '../src/store/premium';
 
@@ -149,5 +152,37 @@ describe('syncDiscordEntitlements — reconciliation with premium_*', () => {
     syncDiscordEntitlements(db, [{ kind: 'guild', id: 'g1', expiresAt: NOW + 1000 }]); // short
     // Expiry stays at the MAXIMUM (the redeem one) and the row remains premium.
     expect(isGuildPremium(db, 'g1', NOW + 2000)).toBe(true); // still premium well after discord
+  });
+
+  it('keeps a direct entitlement when the overlapping Discord entitlement is cancelled', () => {
+    const directExpiry = grantGuildPremium(db, 'g-direct', 1, 'redeem', NOW);
+    const discordExpiry = directExpiry + 100_000;
+    syncDiscordEntitlements(db, [{ kind: 'guild', id: 'g-direct', expiresAt: discordExpiry }]);
+    expect(effectiveGuildPremiumExpiry(db, 'g-direct', NOW)).toBe(discordExpiry);
+    syncDiscordEntitlements(db, []);
+    expect(effectiveGuildPremiumExpiry(db, 'g-direct', NOW)).toBe(directExpiry);
+    expect(isGuildPremium(db, 'g-direct', directExpiry - 1)).toBe(true);
+  });
+
+  it('continues access when direct user access expires while Discord remains active', () => {
+    const directExpiry = grantUserPremium(db, 'u-direct', 1, 'manual', NOW);
+    const discordExpiry = directExpiry + 100_000;
+    syncDiscordEntitlements(db, [{ kind: 'user', id: 'u-direct', expiresAt: discordExpiry }]);
+    expect(isUserPremium(db, 'u-direct', directExpiry + 1)).toBe(true);
+    expect(getUserPremiumExpiry(db, 'u-direct')).toBe(discordExpiry);
+  });
+
+  it('collapses duplicate Discord grants to the longest expiry and removes only Discord rows', () => {
+    grantGuildPremium(db, 'paid', 1, 'kofi', NOW);
+    syncDiscordEntitlements(db, [
+      { kind: 'guild', id: 'g1', expiresAt: NOW + 10 },
+      { kind: 'guild', id: 'g1', expiresAt: NOW + 100 },
+      { kind: 'user', id: 'u1', expiresAt: NOW + 50 },
+    ]);
+    expect(effectiveGuildPremiumExpiry(db, 'g1', NOW)).toBe(NOW + 100);
+    const res = syncDiscordEntitlements(db, [{ kind: 'user', id: 'u1', expiresAt: NOW + 50 }]);
+    expect(res).toEqual({ guildsActive: 0, usersActive: 1, revoked: 1 });
+    expect(isGuildPremium(db, 'g1', NOW)).toBe(false);
+    expect(isGuildPremium(db, 'paid', NOW)).toBe(true);
   });
 });

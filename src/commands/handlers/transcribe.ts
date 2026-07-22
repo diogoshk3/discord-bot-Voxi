@@ -25,6 +25,7 @@ import { pcmToWavFile } from '../../voice/recorder';
 import { hasSttConsent, grantSttConsent, revokeSttConsent } from '../../store/sttConsent';
 import { isGuildPremium } from '../../store/premium';
 import { evaluateTranscribeStart, shouldAutoStop, resolveTranscribeLang } from '../transcribeGate';
+import { addOperationalMetric } from '../../store/operationalMetrics';
 import { sanitizeSpeakerName } from '../../language/speakerName';
 import { localeFor, localeForUser, reply } from '../helpers';
 import { t } from '../../i18n/index';
@@ -189,6 +190,7 @@ export async function handleTranscribe(
         channel.send({ content: text, allowedMentions: { parse: [] } }).then(() => {}),
       toWav: (pcm, out) => pcmToWavFile(pcm, out),
       capture: makeReceiverCapture(conn),
+      recordAudioMs: (value) => addOperationalMetric(deps.db, 'stt_audio_ms', 'internal', value),
     });
 
     const speakingHandler = (uid: string): void => {

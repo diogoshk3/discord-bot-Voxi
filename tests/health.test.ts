@@ -5,8 +5,8 @@ import { SERVER_TIMEOUTS } from '../src/http/serverHardening';
 import type { AppConfig } from '../src/config/index';
 
 // Helper: AppConfig minima — so `healthPort` interessa ao startHealthServer.
-function cfg(healthPort?: number): AppConfig {
-  return { healthPort } as unknown as AppConfig;
+function cfg(healthPort?: number, publicStatusEnabled = false): AppConfig {
+  return { healthPort, publicStatusEnabled } as unknown as AppConfig;
 }
 
 describe('healthResponse — handler puro (sem abrir porta)', () => {
@@ -78,5 +78,33 @@ describe('startHealthServer — arranque opcional', () => {
     expect(server!.requestTimeout).toBe(SERVER_TIMEOUTS.request);
     expect(server!.headersTimeout).toBe(SERVER_TIMEOUTS.headers);
     expect(server!.keepAliveTimeout).toBe(SERVER_TIMEOUTS.keepAlive);
+  });
+
+  it('keeps /status unavailable until the explicit public-status opt-in is enabled', async () => {
+    server = startHealthServer(cfg(0, false), () => ({
+      status: 'operational',
+      components: { bot: 'operational', database: 'operational', providers: 'operational' },
+    }));
+    await new Promise<void>((resolve) => server!.once('listening', () => resolve()));
+    const addr = server!.address();
+    if (addr === null || typeof addr === 'string') throw new Error('endereco inesperado');
+    expect((await fetch(`http://127.0.0.1:${addr.port}/status`)).status).toBe(404);
+  });
+
+  it('allows the official website to read the versioned public status route', async () => {
+    server = startHealthServer(cfg(0, true), () => ({
+      status: 'operational',
+      components: { bot: 'operational', database: 'operational', providers: 'operational' },
+    }));
+    await new Promise<void>((resolve) => server!.once('listening', resolve));
+    const addr = server!.address();
+    if (addr === null || typeof addr === 'string') throw new Error('unexpected address');
+
+    const response = await fetch(`http://127.0.0.1:${addr.port}/api/public/status`, {
+      headers: { Origin: 'https://vozen.org' },
+    });
+    expect(response.status).toBe(200);
+    expect(response.headers.get('access-control-allow-origin')).toBe('https://vozen.org');
+    expect(response.headers.get('cache-control')).toBe('public, max-age=30');
   });
 });

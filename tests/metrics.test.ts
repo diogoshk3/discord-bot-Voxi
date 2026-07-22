@@ -143,6 +143,7 @@ describe('metrics — basic API', () => {
       gcloudSynths: 0,
       gcloudChars: 0,
       gcloudFallbacks: 0,
+      sttOverloads: 0,
     });
   });
 
@@ -227,6 +228,7 @@ describe('metrics — basic API', () => {
       gcloudSynths: 0,
       gcloudChars: 0,
       gcloudFallbacks: 0,
+      sttOverloads: 0,
     });
   });
 
@@ -355,6 +357,46 @@ describe('GuildVoicePlayer — metrics wiring', () => {
 
     player.destroy();
     expect(metrics.snapshot().synthErrors).toBe(0);
+  });
+
+  it('emits provider, latency, TTFA and queue-drop aggregates without content', async () => {
+    const recorded: Array<{ metric: string; provider: string; value: number }> = [];
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const engine: TTSEngine = {
+      synth: async () => {
+        await gate;
+        return 'audio.wav';
+      },
+    };
+    const player = new GuildVoicePlayer(
+      makeConnection() as any,
+      engine,
+      1,
+      () => {},
+      (metric, provider, value) => recorded.push({ metric, provider, value }),
+    );
+
+    await player.say(
+      { text: 'private words', model: 'm', speed: 1, engine: 'piper' },
+      { authorId: 'private-id', source: 'command', now: Date.now() - 50 },
+    );
+    await player.say({ text: 'dropped words', model: 'm', speed: 1, engine: 'piper' });
+    await player.say({ text: 'also dropped', model: 'm', speed: 1, engine: 'piper' });
+    release();
+
+    await vi.waitFor(() =>
+      expect(recorded.some((entry) => entry.metric === 'synth_success')).toBe(true),
+    );
+    expect(recorded.some((entry) => entry.metric === 'queue_drop')).toBe(true);
+    expect(recorded.some((entry) => entry.metric === 'synth_latency_ms')).toBe(true);
+    expect(recorded.some((entry) => entry.metric === 'ttfa_ms' && entry.value >= 50)).toBe(true);
+    expect(recorded.every((entry) => entry.provider === 'piper')).toBe(true);
+    expect(JSON.stringify(recorded)).not.toContain('private words');
+    expect(JSON.stringify(recorded)).not.toContain('private-id');
+    player.destroy();
   });
 });
 

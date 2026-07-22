@@ -16,9 +16,8 @@
 // Security:
 //  - v1 verifies x-topgg-signature over the raw body with HMAC-SHA256 and rejects
 //    timestamps older than five minutes. Legacy v0 compares Authorization in constant time.
-//  - Without a `secret` configured, the webhook by default does NOT start (SEC-01) —
-//    without auth, anyone who discovers the port forges votes. To start anyway
-//    (without auth), the explicit opt-in TOPGG_WEBHOOK_ALLOW_INSECURE=true is required.
+//  - Without a `secret` configured, the webhook does NOT start (SEC-01): without
+//    authentication, anyone who discovers the port could forge votes.
 //
 // New listings send nested `vote.create` / `webhook.test` events. Legacy
 // `upvote` / `test` payloads remain supported during migration.
@@ -49,7 +48,7 @@ export interface VoteWebhookInput {
    * `votes` metric). The caller wires the perk grant here (see index.ts). A throw
    * returns 500 so Top.gg retries the delivery.
    */
-  onUpvote?: (userId: string) => void;
+  onUpvote?: (userId: string, eventId?: string) => unknown;
 }
 
 export interface VoteData {
@@ -213,7 +212,12 @@ export function handleVoteWebhook(input: VoteWebhookInput): VoteWebhookResult {
 
   if ((type === 'upvote' || type === 'vote.create') && user !== '') {
     try {
-      onUpvote?.(user);
+      // A v1 event id is supplied to the caller's durable ledger. Returning false
+      // means this exact delivery was already processed, so it is a successful no-op.
+      const processed = onUpvote?.(user, eventId);
+      if (processed === false) {
+        return { status: 200, body: JSON.stringify({ status: 'duplicate' }), vote };
+      }
     } catch {
       return { status: 500, body: JSON.stringify({ status: 'reward_failed' }), vote };
     }
@@ -236,31 +240,20 @@ export function handleVoteWebhook(input: VoteWebhookInput): VoteWebhookResult {
  * endpoint.
  */
 export function startVoteWebhookServer(
-  config: Pick<
-    AppConfig,
-    'clientId' | 'topggWebhookPort' | 'topggWebhookSecret' | 'topggWebhookAllowInsecure'
-  >,
-  onUpvote?: (userId: string) => void,
+  config: Pick<AppConfig, 'clientId' | 'topggWebhookPort' | 'topggWebhookSecret'>,
+  onUpvote?: (userId: string, eventId?: string) => unknown,
 ): Server | undefined {
   const port = config.topggWebhookPort;
   if (port === undefined) return undefined;
 
   const secret = config.topggWebhookSecret;
   if (secret === undefined || secret === '') {
-    if (!config.topggWebhookAllowInsecure) {
-      // SEC-01: without a secret, anyone who discovers the port forges votes. Refusing
-      // to start is the safe default; the explicit opt-in is left to those who know the risk.
-      log.error(
-        `[vote] TOPGG_WEBHOOK_PORT definido (${port}) mas TOPGG_WEBHOOK_SECRET vazio — ` +
-          'the webhook will not start. Set TOPGG_WEBHOOK_SECRET, or explicitly accept the ' +
-          'risk with TOPGG_WEBHOOK_ALLOW_INSECURE=true to start without authentication.',
-      );
-      return undefined;
-    }
-    log.warn(
-      `[vote] TOPGG_WEBHOOK_PORT definido (${port}) sem TOPGG_WEBHOOK_SECRET e com ` +
-        'TOPGG_WEBHOOK_ALLOW_INSECURE=true; webhook authentication is disabled (unsafe).',
+    // SEC-01: without a secret, anyone who discovers the port could forge votes.
+    log.error(
+      `[vote] TOPGG_WEBHOOK_PORT definido (${port}) mas TOPGG_WEBHOOK_SECRET vazio — ` +
+        'the webhook will not start. Set TOPGG_WEBHOOK_SECRET to enable authenticated vote rewards.',
     );
+    return undefined;
   }
 
   const server = http.createServer((req, res) => {

@@ -102,6 +102,11 @@ describe('store', () => {
         streakAnnounce: true, // streak 🔥 announcement ON by default
         soundboard: true, // /sound ON by default
         votePromos: false, // alternating Top.gg/support reminders OFF by default; admins opt in
+        priorityRoleId: null,
+        blockedRoleId: null,
+        translationEnabled: false,
+        translationDailyCharLimit: 10000,
+        translationPerUserDailyCharLimit: 2000,
       });
     });
 
@@ -151,6 +156,11 @@ describe('store', () => {
         streakAnnounce: true, // streak 🔥 announcement ON by default
         soundboard: true, // /sound ON by default
         votePromos: false, // alternating Top.gg/support reminders OFF by default; admins opt in
+        priorityRoleId: null,
+        blockedRoleId: null,
+        translationEnabled: false,
+        translationDailyCharLimit: 10000,
+        translationPerUserDailyCharLimit: 2000,
       });
     });
 
@@ -253,6 +263,11 @@ describe('store', () => {
         streakAnnounce: false,
         soundboard: false,
         votePromos: true,
+        priorityRoleId: 'priority-role',
+        blockedRoleId: 'blocked-role',
+        translationEnabled: true,
+        translationDailyCharLimit: 20000,
+        translationPerUserDailyCharLimit: 3000,
       };
       setGuildConfig(db, G, full);
       expect(getGuildConfig(db, G)).toEqual(full);
@@ -307,6 +322,11 @@ describe('store', () => {
           streakAnnounce: true,
           soundboard: true,
           votePromos: false,
+          priorityRoleId: null,
+          blockedRoleId: null,
+          translationEnabled: false,
+          translationDailyCharLimit: 10000,
+          translationPerUserDailyCharLimit: 2000,
         });
         // All descriptor columns now exist after the migration.
         const info = migrated.pragma('table_info(guild_config)') as Array<{ name: string }>;

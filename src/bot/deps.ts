@@ -15,6 +15,7 @@ import { invalidateGuild } from '../store/cache';
 import { forgetVoicePresence } from '../store/voicePresence';
 import { stopTranscriptionForGuild } from '../commands/handlers/transcribe';
 import { log } from '../logging/logger';
+import type { TranslationProvider } from '../translation/provider';
 
 export interface BotDeps {
   client: Client;
@@ -73,6 +74,8 @@ export interface BotDeps {
    * spoofable via env. Empty/absent => no grant is authorized.
    */
   ownerIds?: Set<string>;
+  /** Optional external text translation provider. Absent has the same safe behaviour as disabled. */
+  translationProvider?: TranslationProvider;
 }
 
 export function getPlayer(deps: BotDeps, guildId: string): GuildVoicePlayer | undefined {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { PlayQueue } from '../src/voice/queue';
+import { MAX_ACCESSIBILITY_BURST, PlayQueue } from '../src/voice/queue';
 import type { SynthRequest } from '../src/tts/engine';
 
 const item = (text: string): { req: SynthRequest } => ({
@@ -18,8 +18,8 @@ describe('PlayQueue', () => {
     expect(q.enqueue(item('a'))).toBe(true);
     expect(q.enqueue(item('b'))).toBe(true);
     expect(q.size()).toBe(2);
-    expect(q.dequeue()).toEqual(item('a'));
-    expect(q.dequeue()).toEqual(item('b'));
+    expect(q.dequeue()?.req).toEqual(item('a').req);
+    expect(q.dequeue()?.req).toEqual(item('b').req);
     expect(q.dequeue()).toBeUndefined();
     expect(q.size()).toBe(0);
   });
@@ -30,7 +30,32 @@ describe('PlayQueue', () => {
     expect(q.enqueue(item('b'))).toBe(true);
     expect(q.enqueue(item('c'))).toBe(false);
     expect(q.size()).toBe(2);
-    expect(q.dequeue()).toEqual(item('a'));
+    expect(q.dequeue()?.req).toEqual(item('a').req);
+  });
+
+  it('enqueueMany is atomic when the full batch does not fit', () => {
+    const q = new PlayQueue(2);
+    expect(q.enqueue(item('existing'))).toBe(true);
+    expect(q.enqueueMany([item('part one'), item('part two')])).toBe(false);
+    expect(q.size()).toBe(1);
+    expect(q.dequeue()?.req.text).toBe('existing');
+  });
+
+  it('enqueueMany preserves chunk order and shared attribution', () => {
+    const q = new PlayQueue(3);
+    expect(
+      q.enqueueMany([item('part one'), item('part two')], {
+        authorId: 'author',
+        source: 'message',
+        now: 100,
+      }),
+    ).toBe(true);
+    expect(q.snapshot(150).map(({ source, ageMs }) => ({ source, ageMs }))).toEqual([
+      { source: 'message', ageMs: 50 },
+      { source: 'message', ageMs: 50 },
+    ]);
+    expect(q.dequeue()?.req.text).toBe('part one');
+    expect(q.dequeue()?.req.text).toBe('part two');
   });
 
   it('depois de dequeue ha espaco para enqueue de novo', () => {
@@ -67,7 +92,7 @@ describe('PlayQueue', () => {
     expect(q.enqueue(item('b'))).toBe(false);
     expect(q.size()).toBe(1);
     // Liberta a unica vaga
-    expect(q.dequeue()).toEqual(item('a'));
+    expect(q.dequeue()?.req).toEqual(item('a').req);
     expect(q.size()).toBe(0);
     // Ha espaco de novo
     expect(q.enqueue(item('b'))).toBe(true);
@@ -92,6 +117,50 @@ describe('PlayQueue', () => {
     // Depois do clear volta a aceitar itens normalmente
     expect(q.enqueue(item('c'))).toBe(true);
     expect(q.size()).toBe(1);
-    expect(q.dequeue()).toEqual(item('c'));
+    expect(q.dequeue()?.req).toEqual(item('c').req);
+  });
+
+  it('uses two FIFO lanes with a shared cap and accessibility only between items', () => {
+    const q = new PlayQueue(3);
+    q.enqueue(item('first'), { authorId: 'u1', source: 'message', now: 100 });
+    q.enqueue(item('priority'), {
+      authorId: 'u2',
+      source: 'command',
+      lane: 'accessibility',
+      now: 101,
+    });
+    q.enqueue(item('second'), { authorId: 'u3', source: 'message', now: 102 });
+    expect(q.enqueue(item('over-cap'))).toBe(false);
+    expect(q.dequeue()?.req.text).toBe('priority');
+    expect(q.dequeue()?.req.text).toBe('first');
+    expect(q.dequeue()?.req.text).toBe('second');
+  });
+
+  it('limits sustained accessibility bursts so a waiting standard job is not starved', () => {
+    const q = new PlayQueue(10);
+    q.enqueue(item('normal'));
+    for (let i = 0; i < MAX_ACCESSIBILITY_BURST + 2; i++) {
+      q.enqueue(item(`priority-${i}`), { lane: 'accessibility' });
+    }
+    const first = Array.from({ length: MAX_ACCESSIBILITY_BURST }, () => q.dequeue()?.req.text);
+    expect(first).toEqual(
+      Array.from({ length: MAX_ACCESSIBILITY_BURST }, (_, i) => `priority-${i}`),
+    );
+    expect(q.dequeue()?.req.text).toBe('normal');
+    expect(q.dequeue()?.req.text).toBe(`priority-${MAX_ACCESSIBILITY_BURST}`);
+  });
+
+  it('snapshot is opaque and author removal does not expose another request', () => {
+    const q = new PlayQueue(3);
+    q.enqueue(item('private spoken text'), { authorId: 'author-a', source: 'message', now: 100 });
+    q.enqueue(item('other secret'), { authorId: 'author-b', source: 'command', now: 101 });
+    const snapshot = q.snapshot(150);
+    expect(snapshot).toHaveLength(2);
+    expect(JSON.stringify(snapshot)).not.toContain('private spoken text');
+    expect(JSON.stringify(snapshot)).not.toContain('author-a');
+    expect(snapshot[0]).toMatchObject({ source: 'message', lane: 'standard', ageMs: 50 });
+    expect(q.removeByAuthor('author-a')).toBe(1);
+    expect(q.size()).toBe(1);
+    expect(q.dequeue()?.req.text).toBe('other secret');
   });
 });

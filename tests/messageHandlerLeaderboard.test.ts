@@ -55,14 +55,18 @@ function makeMsg(): any {
   return {
     author: { bot: false, id: USER, username: 'Ana' },
     guild: {
-      members: { cache: { get: () => undefined } },
+      members: { cache: { get: () => undefined }, me: { voice: { channelId: 'vc-1' } } },
       channels: { cache: { get: () => undefined } },
     },
     guildId: GUILD,
     channelId: CHAN,
     channel: { send: vi.fn().mockResolvedValue(undefined) }, // msg channel (streak); irrelevant here
     content: 'ola malta tudo bem por aqui hoje neste servidor',
-    member: { displayName: 'Ana', roles: { cache: { has: () => false } } },
+    member: {
+      displayName: 'Ana',
+      voice: { channelId: 'vc-1' },
+      roles: { cache: { has: () => false } },
+    },
     mentions: { has: () => false, repliedUser: null },
     reference: null,
   };

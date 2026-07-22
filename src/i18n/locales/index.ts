@@ -47,39 +47,49 @@ import tr from './tr';
 import uk from './uk';
 import vi from './vi';
 import zh from './zh';
+import { catalog } from '../catalog';
+
+// New catalogue copy must remain usable while a locale-specific wording is being
+// reviewed.  Existing locale entries always win; the deliberate final fallback is
+// the canonical English string, never a missing key or an unsafe raw error.
+function withCatalogFallback(locale: Record<string, string>): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(catalog).map(([key, entry]) => [key, locale[key] ?? entry.en]),
+  );
+}
 
 export const locales: Record<string, Record<string, string>> = {
-  ar,
-  ca,
-  cs,
-  cy,
-  da,
-  de,
-  el,
-  es,
-  fa,
-  fi,
-  fr,
-  hu,
-  is,
-  it,
-  ja,
-  ka,
-  kk,
-  lb,
-  lv,
-  ne,
-  nl,
-  pl,
-  ro,
-  ru,
-  sk,
-  sl,
-  sr,
-  sv,
-  sw,
-  tr,
-  uk,
-  vi,
-  zh,
+  ar: withCatalogFallback(ar),
+  ca: withCatalogFallback(ca),
+  cs: withCatalogFallback(cs),
+  cy: withCatalogFallback(cy),
+  da: withCatalogFallback(da),
+  de: withCatalogFallback(de),
+  el: withCatalogFallback(el),
+  es: withCatalogFallback(es),
+  fa: withCatalogFallback(fa),
+  fi: withCatalogFallback(fi),
+  fr: withCatalogFallback(fr),
+  hu: withCatalogFallback(hu),
+  is: withCatalogFallback(is),
+  it: withCatalogFallback(it),
+  ja: withCatalogFallback(ja),
+  ka: withCatalogFallback(ka),
+  kk: withCatalogFallback(kk),
+  lb: withCatalogFallback(lb),
+  lv: withCatalogFallback(lv),
+  ne: withCatalogFallback(ne),
+  nl: withCatalogFallback(nl),
+  pl: withCatalogFallback(pl),
+  ro: withCatalogFallback(ro),
+  ru: withCatalogFallback(ru),
+  sk: withCatalogFallback(sk),
+  sl: withCatalogFallback(sl),
+  sr: withCatalogFallback(sr),
+  sv: withCatalogFallback(sv),
+  sw: withCatalogFallback(sw),
+  tr: withCatalogFallback(tr),
+  uk: withCatalogFallback(uk),
+  vi: withCatalogFallback(vi),
+  zh: withCatalogFallback(zh),
 };

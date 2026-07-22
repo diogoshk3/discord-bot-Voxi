@@ -1,6 +1,10 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { EventEmitter } from 'node:events';
-import { WhisperTranscriber, resolveSttConcurrency } from '../src/voice/whisperTranscriber';
+import {
+  WhisperOverloadError,
+  WhisperTranscriber,
+  resolveSttConcurrency,
+} from '../src/voice/whisperTranscriber';
 
 // FAKE Whisper sidecar: prints {ready} BY ITSELF on startup (no warmup prompt, like the
 // real tools/whisper_sidecar.py), then responds to each line (=WAV path) with
@@ -81,6 +85,16 @@ describe('WhisperTranscriber', () => {
     await t.transcribe('/tmp/1.wav');
     await t.transcribe('/tmp/2.wav');
     expect(counter.spawns).toBe(1);
+  });
+
+  it('rejects excess pending work with a typed overload error', async () => {
+    t = new WhisperTranscriber({ exe: 'py', args: ['w.py'] }, fakeSidecar('never-ready'), 1000, {
+      maxPending: 1,
+    });
+    const first = t.transcribe('/tmp/1.wav');
+    await expect(t.transcribe('/tmp/2.wav')).rejects.toBeInstanceOf(WhisperOverloadError);
+    t.dispose();
+    await expect(first).rejects.toThrow(/morreu/);
   });
 });
 

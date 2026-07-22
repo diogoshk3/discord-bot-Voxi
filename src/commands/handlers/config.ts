@@ -16,6 +16,7 @@ import { GREET_LANGUAGE_CHOICES, GREET_LOCALES } from '../../voice/greeting';
 import { t, SUPPORTED_LOCALES, LOCALE_DISPLAY_NAMES, type SupportedLocale } from '../../i18n/index';
 import { localeForUser, reply } from '../helpers';
 import { joinUserVoice } from './core';
+import { clearTranslationConfig } from '../../store/translation';
 
 export async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
   const locale = localeForUser(deps, i);
@@ -92,6 +93,27 @@ export async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps
     } else {
       setGuildConfig(deps.db, i.guildId!, { ttsRoleId: null });
       await reply(i, t('config.roleCleared', locale));
+    }
+  } else if (sub === 'priority-role' || sub === 'blocked-role') {
+    const role = i.options.getRole('role', false);
+    const cfg = getGuildConfig(deps.db, i.guildId!);
+    const isPriority = sub === 'priority-role';
+    const other = isPriority ? cfg.blockedRoleId : cfg.priorityRoleId;
+    if (role && role.id === other) {
+      await reply(i, 'Choose a different role: a role cannot be both priority and blocked.');
+      return;
+    }
+    if (isPriority) {
+      setGuildConfig(deps.db, i.guildId!, { priorityRoleId: role?.id ?? null });
+      await reply(
+        i,
+        role
+          ? `Accessibility queue priority set to <@&${role.id}>.`
+          : 'Accessibility queue priority role cleared.',
+      );
+    } else {
+      setGuildConfig(deps.db, i.guildId!, { blockedRoleId: role?.id ?? null });
+      await reply(i, role ? `Queue block set to <@&${role.id}>.` : 'Queue block role cleared.');
     }
   } else if (sub === 'enabled') {
     // Server kill-switch: the messageHandler already ignores everything when enabled=false.
@@ -205,12 +227,20 @@ export async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps
     const off = t('config.off', locale);
     const channelStr = cfg.ttsChannelId ? `<#${cfg.ttsChannelId}>` : t('config.valueNone', locale);
     const roleStr = cfg.ttsRoleId ? `<@&${cfg.ttsRoleId}>` : t('config.valueAny', locale);
+    const priorityRoleStr = cfg.priorityRoleId
+      ? `<@&${cfg.priorityRoleId}>`
+      : t('config.valueNone', locale);
+    const blockedRoleStr = cfg.blockedRoleId
+      ? `<@&${cfg.blockedRoleId}>`
+      : t('config.valueNone', locale);
     const voiceStr = cfg.defaultVoice || t('config.valueAutoDetect', locale);
     const lines = [
       t('config.showTitle', locale),
       t('config.showChannel', locale, { value: channelStr }),
       t('config.showAutoread', locale, { value: cfg.autoread ? on : off }),
       t('config.showRole', locale, { value: roleStr }),
+      `Queue priority role: ${priorityRoleStr}`,
+      `Queue blocked role: ${blockedRoleStr}`,
       t('config.showEnabled', locale, { value: cfg.enabled ? on : off }),
       t('config.showXsaid', locale, { value: cfg.xsaid ? on : off }),
       t('config.showAutojoin', locale, { value: cfg.autojoin ? on : off }),
@@ -232,6 +262,8 @@ export async function handleConfig(i: ChatInputCommandInteraction, deps: BotDeps
     await reply(i, lines.join('\n'));
   } else if (sub === 'reset') {
     resetGuildConfig(deps.db, i.guildId!);
+    // Mapping/preference tables are outside guild_config, so reset must remove the old scope too.
+    clearTranslationConfig(deps.db, i.guildId!);
     await reply(i, t('config.reset', locale));
   }
 }
@@ -336,6 +368,24 @@ export async function handleSetup(i: ChatInputCommandInteraction, deps: BotDeps)
     }
   }
 
+  const testVoiceRequested = i.options.getBoolean('test-voice') ?? false;
+  let voiceTestQueued = false;
+  if (testVoiceRequested && joinedChannelName !== null) {
+    const player = deps.players.get(i.guildId!);
+    const model = deps.availableModels[0] ?? deps.config.defaultVoice ?? 'en_US-amy-medium';
+    voiceTestQueued =
+      (await player?.say(
+        {
+          text: 'Vozen is ready.',
+          model,
+          speed: deps.config.defaultSpeed ?? 1,
+          engine: 'piper',
+          singleVoice: true,
+        },
+        { source: 'system', lane: 'accessibility' },
+      )) ?? false;
+  }
+
   // (d) Beginner-friendly summary.
   const lines: string[] = [
     t('setup.done', locale),
@@ -352,6 +402,7 @@ export async function handleSetup(i: ChatInputCommandInteraction, deps: BotDeps)
   if (joinedChannelName !== null) {
     lines.push('', t('setup.joinedVoice', locale, { channel: joinedChannelName }));
   }
+  if (voiceTestQueued) lines.push('🔊 Voice test queued with the local Piper engine.');
 
   const anyMissing = [viewState, sendState, connectState, speakState].includes('missing');
   if (anyMissing) {

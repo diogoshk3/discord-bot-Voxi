@@ -37,6 +37,7 @@ const GUILD_KEYED = new Set([
   'tts_optout',
   'tts_lang_detect_on',
   'user_effect',
+  'channel_profile',
 ]);
 
 function tableMap(db: Database.Database, table: string): TableCache {

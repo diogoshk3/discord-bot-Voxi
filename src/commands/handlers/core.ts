@@ -22,9 +22,15 @@ import { forgetVoicePresence } from '../../store/voicePresence';
 import { cleanText, collectUrlMedia, collectMarkdownMedia } from '../../textCleaning/clean';
 import { prepareSpeech, redactRequest, hasReadableText } from '../prepareSpeech';
 import { log } from '../../logging/logger';
+import { handleTranscribeVoiceMessage, handleTranslateMessage } from './messageTools';
 import { t } from '../../i18n/index';
 import { localeForUser, reply } from '../helpers';
 import { editCard, replyCard } from '../../ui/messages';
+import { makeTemporaryMediaCopy } from '../../media/temporaryMedia';
+import { admitUserSpeech } from '../../voice/admission';
+
+/** File exports are intentionally shorter than normal in-call TTS. */
+const MAX_TTS_FILE_CHARS = 500;
 
 /**
  * Result (discriminated) of trying to join Vozen to the caller's voice channel.
@@ -115,6 +121,7 @@ export async function handleLeave(i: ChatInputCommandInteraction, deps: BotDeps)
 /** Result (discriminated) of trying to READ a text out loud with the user's voice. */
 export type SpeakOutcome =
   | { status: 'no-player' }
+  | { status: 'not-in-same-voice' }
   | { status: 'rate-limited' }
   | { status: 'empty' }
   | { status: 'blocked' }
@@ -135,9 +142,13 @@ export async function speakRawText(
   userId: string,
   guild: Guild,
   raw: string,
+  callerVoiceChannelId: string | null,
 ): Promise<SpeakOutcome> {
   const player = getPlayer(deps, guildId);
   if (!player) return { status: 'no-player' };
+  const admission = admitUserSpeech(deps, guildId, userId, guild, callerVoiceChannelId);
+  if (!admission.allowed)
+    return { status: admission.reason === 'blocked' ? 'blocked' : 'not-in-same-voice' };
   const cfg = getGuildConfig(deps.db, guildId);
   const rl = getLimiter(deps, guildId, cfg.ratePerMin);
   if (!rl.allow(userId, Date.now())) return { status: 'rate-limited' };
@@ -190,8 +201,13 @@ export async function speakRawText(
   if (!readable) return { status: 'blocked' };
   const outReq = redacted;
   outReq.effect = getVoiceEffect(deps.db, guildId, userId); // voice effect (premium)
+  outReq.streamSentences = true;
   if (deps.config.messageLeadMs > 0) outReq.leadSilenceMs = deps.config.messageLeadMs;
-  const queued = await player.say(outReq);
+  const queued = await player.say(outReq, {
+    authorId: userId,
+    source: 'command',
+    lane: admission.lane,
+  });
   return { status: queued ? 'queued' : 'busy' };
 }
 
@@ -199,6 +215,7 @@ export async function speakRawText(
 function speakOutcomeMessage(outcome: SpeakOutcome, locale: string): string {
   switch (outcome.status) {
     case 'no-player':
+    case 'not-in-same-voice':
       return t('tts.notInVoice', locale);
     case 'rate-limited':
       return t('tts.tooFast', locale);
@@ -222,13 +239,113 @@ export async function handleTts(i: ChatInputCommandInteraction, deps: BotDeps): 
     await i.editReply(editCard(t('tts.nothingToRead', locale), { tone: 'warning' }));
     return;
   }
-  const outcome = await speakRawText(deps, i.guildId!, i.user.id, i.guild!, raw);
+  const outcome = await speakRawText(
+    deps,
+    i.guildId!,
+    i.user.id,
+    i.guild!,
+    raw,
+    i.guild!.members.cache.get(i.user.id)?.voice.channelId ?? null,
+  );
   await i.editReply(
     editCard(speakOutcomeMessage(outcome, locale), {
       tone:
         outcome.status === 'queued' ? 'success' : outcome.status === 'busy' ? 'warning' : 'danger',
     }),
   );
+}
+
+/**
+ * `/tts-file` is an explicit, ephemeral export.  It deliberately does not inspect or
+ * join voice state and never calls a GuildVoicePlayer: creating a file is not speaking
+ * in a call.  All cost/limit checks happen before the engine is asked to synthesize.
+ */
+export async function handleTtsFile(i: ChatInputCommandInteraction, deps: BotDeps): Promise<void> {
+  await i.deferReply({ flags: MessageFlags.Ephemeral });
+  const locale = localeForUser(deps, i);
+  const raw = i.options.getString('text', true).trim();
+  if (!raw || !/[\p{L}\p{N}]/u.test(raw)) {
+    await i.editReply(editCard(t('tts.nothingToRead', locale), { tone: 'warning' }));
+    return;
+  }
+  if (raw.length > MAX_TTS_FILE_CHARS) {
+    await i.editReply(
+      editCard(t('ttsFile.tooLong', locale, { max: MAX_TTS_FILE_CHARS }), { tone: 'warning' }),
+    );
+    return;
+  }
+
+  const guildId = i.guildId;
+  const preferenceScope = guildId ?? '@user-app';
+  const cfg = getGuildConfig(deps.db, preferenceScope);
+  const limiter = getLimiter(deps, preferenceScope, cfg.ratePerMin);
+  if (!limiter.allow(i.user.id, Date.now())) {
+    await i.editReply(editCard(t('tts.tooFast', locale), { tone: 'warning' }));
+    return;
+  }
+  const cleaned = cleanText(raw, {
+    maxChars: MAX_TTS_FILE_CHARS,
+    resolveUser: () => 'someone',
+    resolveChannel: () => 'channel',
+  });
+  if (!/[\p{L}\p{N}]/u.test(cleaned)) {
+    await i.editReply(editCard(t('tts.nothingAfterClean', locale), { tone: 'warning' }));
+    return;
+  }
+
+  const userVoice = getUserVoice(deps.db, preferenceScope, i.user.id);
+  const { req } = prepareSpeech({
+    personal: cleaned,
+    pronunciations: [
+      ...getUserPronunciations(deps.db, i.user.id),
+      ...(guildId ? getServerPronunciations(deps.db, guildId) : []),
+    ],
+    userVoice,
+    available: deps.availableModels,
+    autoDetect: isDetectionOn(deps.db, preferenceScope, i.user.id),
+    guildDefaultVoice: cfg.defaultVoice,
+    defaultVoice: deps.config.defaultVoice,
+    defaultSpeed: deps.config.defaultSpeed,
+    media: [], // File export never fetches or describes arbitrary URL media.
+  });
+  if (
+    !deps.availableModels.includes(req.model) ||
+    (req.segments?.some((segment) => !deps.availableModels.includes(segment.model)) ?? false)
+  ) {
+    await i.editReply(editCard(t('ttsFile.unavailable', locale), { tone: 'warning' }));
+    return;
+  }
+  const redacted = redactRequest(req, guildId ? getBlocklist(deps.db, guildId) : []);
+  if (!hasReadableText(redacted.text) && !redacted.segments?.some((s) => hasReadableText(s.text))) {
+    await i.editReply(editCard(t('tts.blocked', locale), { tone: 'warning' }));
+    return;
+  }
+  const resolvedEngine = resolveUserEngine(
+    deps.db,
+    preferenceScope,
+    i.user.id,
+    userVoice?.engine,
+    Date.now(),
+  );
+  redacted.engine = resolvedEngine.engine;
+  redacted.gcloudBudget = resolvedEngine.gcloudBudget;
+  redacted.effect = guildId ? getVoiceEffect(deps.db, guildId, i.user.id) : undefined;
+
+  let temporary: Awaited<ReturnType<typeof makeTemporaryMediaCopy>> | undefined;
+  try {
+    const cachedAudioPath = await deps.engine.synth(redacted);
+    temporary = await makeTemporaryMediaCopy(cachedAudioPath);
+    await i.editReply({
+      content: t('ttsFile.ready', locale),
+      files: [{ attachment: temporary.path, name: 'vozen-audio.wav' }],
+    });
+  } catch {
+    // Do not log file paths or user text. The generic error handler only runs when this
+    // function throws, so handle the export failure locally.
+    await i.editReply(editCard(t('ttsFile.failed', locale), { tone: 'danger' })).catch(() => {});
+  } finally {
+    await temporary?.cleanup().catch(() => {});
+  }
 }
 
 /**
@@ -240,14 +357,17 @@ export async function handleMessageContextMenu(
   i: MessageContextMenuCommandInteraction,
   deps: BotDeps,
 ): Promise<void> {
-  if (i.commandName !== 'Speak') return;
-  const locale = localeForUser(deps, i);
-  // Unlike the slash commands (all protected by handleInteraction's try/catch),
-  // the context-menu is dispatched directly in client.ts with
-  // `void handleMessageContextMenu(...)` — WITHOUT catch. Without this try/catch, a throw
-  // in speakRawText would leave the user stuck at "Vozen is thinking…" forever
-  // (the deferReply was never edited) + unhandledRejection. Mirrors the slash catch.
   try {
+    if (i.commandName === 'Translate') {
+      await handleTranslateMessage(i, deps);
+      return;
+    }
+    if (i.commandName === 'Transcribe voice message') {
+      await handleTranscribeVoiceMessage(i, deps);
+      return;
+    }
+    if (i.commandName !== 'Speak') return;
+    const locale = localeForUser(deps, i);
     await i.deferReply({ flags: MessageFlags.Ephemeral });
     if (!i.guildId || !i.guild) {
       await i.editReply(editCard(t('error.generic', locale), { tone: 'danger' }));
@@ -258,7 +378,14 @@ export async function handleMessageContextMenu(
       await i.editReply(editCard(t('speak.emptyMessage', locale), { tone: 'warning' }));
       return;
     }
-    const outcome = await speakRawText(deps, i.guildId, i.user.id, i.guild, raw);
+    const outcome = await speakRawText(
+      deps,
+      i.guildId,
+      i.user.id,
+      i.guild,
+      raw,
+      i.guild.members.cache.get(i.user.id)?.voice.channelId ?? null,
+    );
     await i.editReply(
       editCard(speakOutcomeMessage(outcome, locale), {
         tone:
@@ -270,9 +397,12 @@ export async function handleMessageContextMenu(
       }),
     );
   } catch (err) {
-    log.error('[speak] Speak context-menu error:', err);
+    // Message actions are intentionally dispatched without awaiting in client.ts. Contain every
+    // failure here so a provider/database fault cannot become an unhandled rejection or leave a
+    // deferred interaction stuck indefinitely.
+    log.error(`[context] ${i.commandName} message action failed:`, err);
     if (!i.isRepliable()) return;
-    const msg = t('error.generic', locale);
+    const msg = t('error.generic', 'en');
     if (i.deferred && !i.replied) {
       await i.editReply(editCard(msg, { tone: 'danger' })).catch(() => {});
     } else if (!i.replied) {

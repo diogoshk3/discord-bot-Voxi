@@ -74,12 +74,34 @@ function seedGuild(db: Database.Database, g: string, u: string): void {
     1,
   );
   db.prepare('INSERT INTO stt_consent (user_id, guild_id, consent_at) VALUES (?,?,?)').run(u, g, 1);
+  db.prepare(
+    'INSERT INTO translation_mapping (guild_id, source_channel_id, destination_channel_id, target_locale) VALUES (?,?,?,?)',
+  ).run(g, `source-${g}`, `destination-${g}`, 'pt');
+  db.prepare(
+    'INSERT INTO translation_preference (guild_id, user_id, locale, opted_out) VALUES (?,?,?,?)',
+  ).run(g, u, 'pt', 0);
+  db.prepare('INSERT INTO translation_daily_usage (day, guild_id, chars) VALUES (?,?,?)').run(
+    '2026-07-22',
+    g,
+    1,
+  );
+  db.prepare(
+    'INSERT INTO translation_user_daily_usage (day, guild_id, user_id, chars) VALUES (?,?,?,?)',
+  ).run('2026-07-22', g, u, 1);
+  db.prepare('INSERT INTO channel_profile (guild_id, channel_id, auto_read) VALUES (?,?,?)').run(
+    g,
+    `profile-${g}`,
+    1,
+  );
   // Retained (financial/entitlement) — must NOT be touched by the purge.
   db.prepare('INSERT INTO premium_guild (guild_id, expires_at, source) VALUES (?,?,?)').run(
     g,
     9_999_999_999_999,
     'kofi',
   );
+  db.prepare(
+    'INSERT INTO discord_premium_entitlement (kind, target_id, expires_at) VALUES (?,?,?)',
+  ).run('guild', g, 9_999_999_999_999);
   db.prepare(
     'INSERT INTO premium_pass_activation (user_id, guild_id, activated_at) VALUES (?,?,?)',
   ).run(u, g, 1);
@@ -103,6 +125,7 @@ describe('purgeGuild', () => {
       // Retained: NOT deleted (server's financial record + paid licence).
       expect(count(db, 'premium_guild', 'guild_id', 'G')).toBe(1);
       expect(count(db, 'premium_pass_activation', 'guild_id', 'G')).toBe(1);
+      expect(count(db, 'discord_premium_entitlement', 'target_id', 'G')).toBe(1);
     } finally {
       db.close();
     }
@@ -200,6 +223,9 @@ describe('eraseUser', () => {
         'kofi',
       );
       db.prepare(
+        'INSERT INTO discord_premium_entitlement (kind, target_id, expires_at) VALUES (?,?,?)',
+      ).run('user', 'U', 9_999_999_999_999);
+      db.prepare(
         'INSERT INTO premium_pass (user_id, seats, expires_at, source) VALUES (?,?,?,?)',
       ).run('U', 3, 9_999_999_999_999, 'kofi');
       db.prepare(
@@ -222,6 +248,7 @@ describe('eraseUser', () => {
       // Retained: intact.
       expect(count(db, 'premium_user', 'user_id', 'U')).toBe(1);
       expect(count(db, 'premium_pass', 'user_id', 'U')).toBe(1);
+      expect(count(db, 'discord_premium_entitlement', 'target_id', 'U')).toBe(1);
       expect(count(db, 'kofi_activation_consent', 'discord_id', 'U')).toBe(1);
     } finally {
       db.close();

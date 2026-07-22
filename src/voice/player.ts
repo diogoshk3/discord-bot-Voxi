@@ -11,15 +11,27 @@ import {
 import { existsSync } from 'node:fs';
 import type { TTSEngine, SynthRequest } from '../tts/engine';
 import { emphasisGain } from '../tts/emphasis';
-import { PlayQueue } from './queue';
+import { splitForFastPlayback } from '../tts/sentenceChunks';
+import {
+  PlayQueue,
+  type PublicQueueItem,
+  type QueueEnqueueOptions,
+  type QueueWorkItem,
+} from './queue';
 import { raceStates } from './raceStates';
 import { log } from '../logging/logger';
 import { metrics } from '../metrics';
+import {
+  providerForEngine,
+  type OperationalMetric,
+  type OperationalProvider,
+} from '../store/operationalMetrics';
 
 // Maximum time to wait for the VoiceConnection to become Ready before playing. On a
 // slow connection / 1st speech the connection may be in signalling/connecting; playing
 // at that instant sends the audio into the void (no sound and no error).
 const CONNECTION_READY_TIMEOUT_MS = 10_000;
+const FAST_PLAYBACK_CHUNK_CHARS = 220;
 
 export class GuildVoicePlayer {
   private readonly player: AudioPlayer;
@@ -31,12 +43,21 @@ export class GuildVoicePlayer {
   // in-flight item must be DISCARDED before playing. See skip()/playNext().
   private pendingSkip = false;
   private reconnecting = false;
+  private paused = false;
+  // An item that was already dequeued when an admin paused during synthesis/readiness.
+  // It stays private and is resumed before later queue items, preserving FIFO.
+  private held: QueueWorkItem | null = null;
 
   constructor(
     private readonly connection: VoiceConnection,
     private readonly engine: TTSEngine,
     queueCap: number,
     private readonly onIdle: () => void,
+    private readonly recordOperational?: (
+      metric: OperationalMetric,
+      provider: OperationalProvider,
+      value: number,
+    ) => void,
   ) {
     this.queue = new PlayQueue(queueCap);
     this.player = createAudioPlayer();
@@ -65,7 +86,7 @@ export class GuildVoicePlayer {
     });
   }
 
-  async say(req: SynthRequest): Promise<boolean> {
+  async say(req: SynthRequest, options: QueueEnqueueOptions = {}): Promise<boolean> {
     // Returns the SYNCHRONOUS RESULT of enqueuing: true if the request entered the queue,
     // false if it was discarded (player destroyed OR queue at cap). The explicit
     // commands (/tts, /voice preview) use this boolean to not lie "queued"
@@ -76,9 +97,23 @@ export class GuildVoicePlayer {
     // Enqueues SYNCHRONOUSLY in arrival order (preserves the FIFO of spec §7).
     // The synthesis happens in the worker (playNext), not here, so as not to reorder
     // concurrent requests by the synthesis duration/cache-hit.
-    const ok = this.queue.enqueue({ req });
+    const chunks =
+      req.streamSentences && !req.assetPath && !req.segments
+        ? splitForFastPlayback(req.text, FAST_PLAYBACK_CHUNK_CHARS)
+        : [req.text];
+    const requests = chunks.map((text, index) => ({
+      req: {
+        ...req,
+        text,
+        emphasisSource: text,
+        leadSilenceMs: index === 0 ? req.leadSilenceMs : undefined,
+        streamSentences: false,
+      },
+    }));
+    const ok = this.queue.enqueueMany(requests, options);
     if (!ok) {
       log.warn('[player] queue is full; request dropped');
+      this.recordOperational?.('queue_drop', providerForEngine(req.engine), 1);
       return false;
     }
     if (!this.playing) {
@@ -91,7 +126,58 @@ export class GuildVoicePlayer {
   // queue. /skip reads this BEFORE skip() to distinguish "nothing playing" from
   // "I skipped" — instead of always pretending it skipped. Does NOT change state.
   isActive(): boolean {
-    return this.playing || this.queue.size() > 0;
+    return this.playing || this.held !== null || this.queue.size() > 0;
+  }
+
+  isPaused(): boolean {
+    return this.paused;
+  }
+
+  /** Pauses current audio or holds the next item before it can start; never drops work. */
+  pause(): boolean {
+    if (this.destroyed || !this.isActive() || this.paused) return false;
+    this.paused = true;
+    try {
+      this.player.pause(true);
+    } catch {
+      // A synthesis/readiness window has no native resource to pause; playNext holds it safely.
+    }
+    return true;
+  }
+
+  /** Continues native paused audio or restarts the single worker for a held/pending item. */
+  resume(): boolean {
+    if (this.destroyed || !this.paused) return false;
+    this.paused = false;
+    try {
+      if (this.player.state.status === AudioPlayerStatus.Paused) {
+        this.player.unpause();
+        return true;
+      }
+    } catch {
+      // Worker restart below remains safe if the native player was replaced/destroyed.
+    }
+    if (!this.playing) void this.playNext();
+    return true;
+  }
+
+  /** Privacy-safe pending work only. The current private request is never exposed. */
+  queueSnapshot(now: number = Date.now()): PublicQueueItem[] {
+    return this.queue.snapshot(now);
+  }
+
+  /** Removes the invoking author's queued work only; never interrupts the current item. */
+  removeQueuedByAuthor(authorId: string): number {
+    return this.queue.removeByAuthor(authorId);
+  }
+
+  /** Moderator-only caller must enforce permission before using this opaque id action. */
+  removeQueuedById(id: string): boolean {
+    return this.queue.removeById(id);
+  }
+
+  removeQueuedByAuthorId(authorId: string, id: string): boolean {
+    return this.queue.removeByAuthorId(authorId, id);
   }
 
   skip(): void {
@@ -108,7 +194,8 @@ export class GuildVoicePlayer {
     // discards the in-flight item before playing it.
     const wasPlaying =
       this.player.state.status === AudioPlayerStatus.Playing ||
-      this.player.state.status === AudioPlayerStatus.Buffering;
+      this.player.state.status === AudioPlayerStatus.Buffering ||
+      this.player.state.status === AudioPlayerStatus.Paused;
     this.player.stop(true);
     if (!wasPlaying) {
       this.pendingSkip = true;
@@ -125,10 +212,13 @@ export class GuildVoicePlayer {
    */
   silence(): void {
     if (this.destroyed) return;
+    this.paused = false;
     this.queue.clear();
+    this.held = null;
     const wasPlaying =
       this.player.state.status === AudioPlayerStatus.Playing ||
-      this.player.state.status === AudioPlayerStatus.Buffering;
+      this.player.state.status === AudioPlayerStatus.Buffering ||
+      this.player.state.status === AudioPlayerStatus.Paused;
     this.player.stop(true);
     if (!wasPlaying) this.pendingSkip = true;
   }
@@ -137,6 +227,7 @@ export class GuildVoicePlayer {
     if (this.destroyed) return;
     this.destroyed = true;
     this.queue.clear();
+    this.held = null;
     this.playing = false;
     try {
       this.player.stop(true);
@@ -152,7 +243,12 @@ export class GuildVoicePlayer {
 
   private async playNext(): Promise<void> {
     if (this.destroyed) return;
-    const next = this.queue.dequeue();
+    if (this.paused) {
+      this.playing = false;
+      return;
+    }
+    const next = this.held ?? this.queue.dequeue();
+    this.held = null;
     if (!next) {
       this.playing = false;
       return;
@@ -170,6 +266,7 @@ export class GuildVoicePlayer {
 
     let audioPath: string;
     const synthStart = process.hrtime.bigint();
+    const provider = providerForEngine(next.req.engine);
     if (next.req.assetPath) {
       // Fixed ASSET (e.g. the /rizz sound effect): WAV already ready on disk, played DIRECTLY —
       // no engine/cache/effects (none of that applies to a fixed clip). Missing file =
@@ -177,6 +274,7 @@ export class GuildVoicePlayer {
       if (!existsSync(next.req.assetPath)) {
         log.error('[player] audio asset is missing; item skipped:', next.req.assetPath);
         metrics.inc('synthErrors');
+        this.recordOperational?.('synth_failure', 'internal', 1);
         void this.playNext();
         return;
       }
@@ -185,10 +283,14 @@ export class GuildVoicePlayer {
       try {
         audioPath = await this.engine.synth(next.req);
         // Effective synthesis latency (includes fast cache hit and slow miss/spawn).
-        metrics.recordSynthMs(Number(process.hrtime.bigint() - synthStart) / 1e6);
+        const synthMs = Number(process.hrtime.bigint() - synthStart) / 1e6;
+        metrics.recordSynthMs(synthMs);
+        this.recordOperational?.('synth_latency_ms', provider, Math.round(synthMs));
+        this.recordOperational?.('synth_success', provider, 1);
       } catch (err) {
         log.error('[player] synthesis error; item skipped:', err);
         metrics.inc('synthErrors');
+        this.recordOperational?.('synth_failure', provider, 1);
         // Skip this item and continue the queue without crashing (no stack growth:
         // we are after the await).
         void this.playNext();
@@ -198,6 +300,14 @@ export class GuildVoicePlayer {
 
     // The synthesis may have taken a while; the player may have been destroyed in the meantime.
     if (this.destroyed) return;
+
+    // Pause may happen during synthesis. Hold the private item rather than speaking it or
+    // losing FIFO; resume will process this exact item before the rest of the queue.
+    if (this.paused) {
+      this.held = next;
+      this.playing = false;
+      return;
+    }
 
     // Ensure the connection is Ready BEFORE playing. If it is in
     // signalling/connecting (slow connection / 1st speech), playing now would send the
@@ -221,6 +331,12 @@ export class GuildVoicePlayer {
 
     // entersState is one more await; re-check destroyed before playing.
     if (this.destroyed) return;
+
+    if (this.paused) {
+      this.held = next;
+      this.playing = false;
+      return;
+    }
 
     // /skip fired DURING this item's synthesis/entersState (window in which the
     // AudioPlayer was Idle and stop() was a no-op): discard the in-flight item WITHOUT
@@ -256,9 +372,11 @@ export class GuildVoicePlayer {
       // audio started playing), otherwise a failure counted 2× (messagesSpoken + synthErrors).
       this.player.play(resource);
       metrics.inc('messagesSpoken');
+      this.recordOperational?.('ttfa_ms', provider, Math.max(0, Date.now() - next.createdAt));
     } catch (err) {
       log.error('[player] failed to create or play resource; item skipped:', err);
       metrics.inc('synthErrors');
+      this.recordOperational?.('synth_failure', provider, 1);
       // No stack growth (we are after awaits); resets the worker via
       // the next iteration, which will set playing=false if the queue empties.
       void this.playNext();

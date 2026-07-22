@@ -40,7 +40,12 @@ export function initDb(path: string): Database.Database {
         stay_in_call   INTEGER NOT NULL DEFAULT 0,
         streak_announce INTEGER NOT NULL DEFAULT 1,
         soundboard     INTEGER NOT NULL DEFAULT 1,
-        vote_promos    INTEGER NOT NULL DEFAULT 0
+        vote_promos    INTEGER NOT NULL DEFAULT 0,
+        priority_role_id TEXT,
+        blocked_role_id  TEXT,
+        translation_enabled INTEGER NOT NULL DEFAULT 0,
+        translation_daily_char_limit INTEGER NOT NULL DEFAULT 10000,
+        translation_per_user_daily_char_limit INTEGER NOT NULL DEFAULT 2000
       );
 
       CREATE TABLE IF NOT EXISTS blocklist (
@@ -143,8 +148,9 @@ export function initDb(path: string): Database.Database {
         last_date   TEXT NOT NULL DEFAULT ''
       );
 
-      -- Per-guild Vozen Premium. expires_at uses Unix milliseconds; a missing or expired
-      -- row is Free. source records redeem, kofi, discord, or manual provenance.
+      -- Per-guild Vozen Premium purchased/granted directly. expires_at uses Unix
+      -- milliseconds; a missing or expired row is Free. source records redeem, kofi,
+      -- or manual provenance. Discord Premium App state is reconciled separately below.
       CREATE TABLE IF NOT EXISTS premium_guild (
         guild_id   TEXT PRIMARY KEY,
         expires_at INTEGER NOT NULL,
@@ -157,6 +163,18 @@ export function initDb(path: string): Database.Database {
         expires_at INTEGER NOT NULL,
         source     TEXT NOT NULL DEFAULT ''
       );
+
+      -- Current Discord Premium App entitlements. This is reconciled from Discord's
+      -- complete active entitlement list, so it must never overwrite durable paid rows.
+      -- kind is 'guild' for Premium and 'user' for Plus.
+      CREATE TABLE IF NOT EXISTS discord_premium_entitlement (
+        kind       TEXT NOT NULL CHECK (kind IN ('guild', 'user')),
+        target_id  TEXT NOT NULL,
+        expires_at INTEGER NOT NULL,
+        PRIMARY KEY (kind, target_id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_discord_premium_entitlement_target
+        ON discord_premium_entitlement (target_id);
 
       -- Active top.gg vote entitlement. The raw Discord ID is needed only while the
       -- 48h reward can be used and is erasable through /privacy erase. The permanent
@@ -181,6 +199,13 @@ export function initDb(path: string): Database.Database {
       CREATE TABLE IF NOT EXISTS vote_redemption_meta (
         singleton          INTEGER PRIMARY KEY CHECK (singleton = 1),
         secret_fingerprint TEXT NOT NULL
+      );
+
+      -- Top.gg v1 delivery IDs are a short-retention idempotency ledger. The event id
+      -- is external protocol metadata, not Discord identity/content, and is purged daily.
+      CREATE TABLE IF NOT EXISTS topgg_webhook_event (
+        event_id     TEXT PRIMARY KEY,
+        processed_at INTEGER NOT NULL
       );
 
       -- Persistent per-server rotation for occasional Top.gg/support reminders.
@@ -239,6 +264,98 @@ export function initDb(path: string): Database.Database {
         month TEXT NOT NULL,
         chars INTEGER NOT NULL DEFAULT 0,
         PRIMARY KEY (scope, key, month)
+      );
+
+      -- Persistent UTC-day global Google HD backstop. This intentionally has no guild,
+      -- user, content or request columns: it is one daily service-wide cost counter.
+      CREATE TABLE IF NOT EXISTS gcloud_daily_usage (
+        day   TEXT PRIMARY KEY,
+        chars INTEGER NOT NULL DEFAULT 0
+      );
+
+      -- Identity-free operational telemetry. Each row is only a UTC day, a fixed metric
+      -- name, a provider label and a numeric aggregate; never text, audio, Discord IDs,
+      -- tokens, request metadata or raw provider errors.
+      CREATE TABLE IF NOT EXISTS operational_daily_metric (
+        day      TEXT NOT NULL,
+        metric   TEXT NOT NULL,
+        provider TEXT NOT NULL,
+        value    INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (day, metric, provider)
+      );
+
+      -- Provider state carries only health/degradation timestamps. Error/request bodies
+      -- remain in ordinary transient logs and are deliberately not copied here.
+      CREATE TABLE IF NOT EXISTS provider_health_state (
+        provider          TEXT PRIMARY KEY,
+        health            TEXT NOT NULL CHECK (health IN ('healthy', 'degraded')),
+        changed_at        INTEGER NOT NULL,
+        last_healthy_at   INTEGER,
+        last_degraded_at  INTEGER
+      );
+
+      -- Opt-in text translation configuration. Source text and translated output are never
+      -- persisted: only channel routing, locale and bounded character counters live here.
+      CREATE TABLE IF NOT EXISTS translation_mapping (
+        guild_id TEXT NOT NULL,
+        source_channel_id TEXT NOT NULL,
+        destination_channel_id TEXT NOT NULL,
+        target_locale TEXT NOT NULL,
+        PRIMARY KEY (guild_id, source_channel_id),
+        CHECK (source_channel_id <> destination_channel_id)
+      );
+      CREATE TABLE IF NOT EXISTS translation_preference (
+        guild_id TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        locale TEXT,
+        speak_locale TEXT,
+        opted_out INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (guild_id, user_id)
+      );
+
+      CREATE TABLE IF NOT EXISTS user_voice_favorite (
+        user_id    TEXT NOT NULL,
+        voice_model TEXT NOT NULL,
+        created_at INTEGER NOT NULL,
+        PRIMARY KEY (user_id, voice_model)
+      );
+
+      CREATE TABLE IF NOT EXISTS user_voice_recent (
+        user_id    TEXT NOT NULL,
+        voice_model TEXT NOT NULL,
+        used_at    INTEGER NOT NULL,
+        PRIMARY KEY (user_id, voice_model)
+      );
+      CREATE TABLE IF NOT EXISTS translation_daily_usage (
+        day TEXT NOT NULL,
+        guild_id TEXT NOT NULL,
+        chars INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (day, guild_id)
+      );
+      CREATE TABLE IF NOT EXISTS translation_user_daily_usage (
+        day TEXT NOT NULL,
+        guild_id TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        chars INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (day, guild_id, user_id)
+      );
+
+      -- Per-channel overrides. Nullable fields inherit the guild configuration so a newly
+      -- created profile is inert. This table intentionally contains configuration only.
+      CREATE TABLE IF NOT EXISTS channel_profile (
+        guild_id TEXT NOT NULL,
+        channel_id TEXT NOT NULL,
+        auto_read INTEGER CHECK (auto_read IN (0, 1)),
+        translation_enabled INTEGER CHECK (translation_enabled IN (0, 1)),
+        default_voice TEXT,
+        engine TEXT,
+        speed REAL,
+        max_chars INTEGER,
+        read_bots INTEGER CHECK (read_bots IN (0, 1)),
+        voice_channel_id TEXT,
+        locale TEXT,
+        effect TEXT,
+        PRIMARY KEY (guild_id, channel_id)
       );
 
       -- Hashed-email to Discord-ID map for Ko-fi renewals. The first purchase supplies the
@@ -347,6 +464,27 @@ export function initDb(path: string): Database.Database {
     const uvCols = db.pragma('table_info(user_voice)') as Array<{ name: string }>;
     if (!uvCols.some((c) => c.name === 'engine')) {
       db.exec("ALTER TABLE user_voice ADD COLUMN engine TEXT NOT NULL DEFAULT 'google'");
+    }
+    const translationPreferenceCols = db.pragma('table_info(translation_preference)') as Array<{
+      name: string;
+    }>;
+    if (!translationPreferenceCols.some((column) => column.name === 'speak_locale')) {
+      db.exec('ALTER TABLE translation_preference ADD COLUMN speak_locale TEXT');
+    }
+    const channelProfileCols = db.pragma('table_info(channel_profile)') as Array<{ name: string }>;
+    const channelProfileMigrations = [
+      ['engine', 'TEXT'],
+      ['speed', 'REAL'],
+      ['max_chars', 'INTEGER'],
+      ['read_bots', 'INTEGER CHECK (read_bots IN (0, 1))'],
+      ['voice_channel_id', 'TEXT'],
+      ['locale', 'TEXT'],
+      ['effect', 'TEXT'],
+    ] as const;
+    for (const [column, definition] of channelProfileMigrations) {
+      if (!channelProfileCols.some((existing) => existing.name === column)) {
+        db.exec(`ALTER TABLE channel_profile ADD COLUMN ${column} ${definition}`);
+      }
     }
     // Existing rows came from the vote-only scheduler, so `vote` is the honest backfill:
     // after the 24h shared cooldown their next card is support, preserving alternation.

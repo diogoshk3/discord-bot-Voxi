@@ -133,13 +133,35 @@ describe('GCloudEngine — synthesis via the official Google Cloud TTS API', () 
 // back to gTTS) when: there is no budget (fail-safe), the text exceeds maxChars, the monthly
 // pool is exhausted, or the global/day backstop blows. Without `limits` (Phase 1) none of
 // this applies.
-function memUsage(): GcloudUsage & { store: Map<string, number> } {
+function memUsage(): GcloudUsage & {
+  store: Map<string, number>;
+  getMonthly: (scope: string, key: string, month: string) => number;
+  addMonthly: (scope: string, key: string, month: string, chars: number) => void;
+} {
   const store = new Map<string, number>();
   const k = (s: string, key: string, mo: string) => `${s}|${key}|${mo}`;
   return {
     store,
     getMonthly: (s, key, mo) => store.get(k(s, key, mo)) ?? 0,
-    addMonthly: (s, key, mo, c) => store.set(k(s, key, mo), (store.get(k(s, key, mo)) ?? 0) + c),
+    addMonthly: (s, key, mo, chars) =>
+      store.set(k(s, key, mo), (store.get(k(s, key, mo)) ?? 0) + chars),
+    reserve: (s, key, mo, limit, day, dailyLimit, chars) => {
+      const current = store.get(k(s, key, mo)) ?? 0;
+      if (current + chars > limit) return false;
+      const dailyKey = `daily|${day}`;
+      const dailyCurrent = store.get(dailyKey) ?? 0;
+      if (dailyLimit > 0 && dailyCurrent + chars > dailyLimit) return false;
+      store.set(k(s, key, mo), current + chars);
+      if (dailyLimit > 0) store.set(dailyKey, dailyCurrent + chars);
+      return true;
+    },
+    refund: (s, key, mo, day, dailyLimit, chars) => {
+      store.set(k(s, key, mo), Math.max(0, (store.get(k(s, key, mo)) ?? 0) - chars));
+      if (dailyLimit > 0) {
+        const dailyKey = `daily|${day}`;
+        store.set(dailyKey, Math.max(0, (store.get(dailyKey) ?? 0) - chars));
+      }
+    },
   };
 }
 const LIMITS: GcloudLimits = {

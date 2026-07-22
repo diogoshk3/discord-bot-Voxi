@@ -15,11 +15,14 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { log } from '../logging/logger';
 import { Semaphore } from '../tts/semaphore';
+import { metrics } from '../metrics';
 
 /** Cap per transcription (the spike gave ~2.2s for 13.6s of speech; generous but finite cap). */
 const TRANSCRIBE_TIMEOUT_MS = 30_000;
 /** Cap waiting for {ready} (loading the `base` model ~1-2s on CPU; 1st time downloads ~140MB). */
 const READY_TIMEOUT_MS = 120_000;
+const MAX_PENDING_JOBS = 32;
+const MAX_PENDING_AGE_MS = 60_000;
 
 /**
  * GLOBAL CONCURRENCY cap for STT sessions (all guilds, whole process) — plan
@@ -61,9 +64,25 @@ export interface Transcript {
 
 interface Job {
   path: string;
+  createdAt: number;
   resolve: (t: Transcript) => void;
   reject: (e: Error) => void;
   timer?: ReturnType<typeof setTimeout>;
+}
+
+/** Typed signal so callers can render a retryable overload message without parsing strings. */
+export class WhisperOverloadError extends Error {
+  readonly code = 'whisper_overloaded';
+  constructor(reason: 'full' | 'expired') {
+    super(`whisper: queue ${reason}`);
+    this.name = 'WhisperOverloadError';
+  }
+}
+
+export interface WhisperQueuePolicy {
+  maxPending?: number;
+  maxPendingAgeMs?: number;
+  now?: () => number;
 }
 
 export class WhisperTranscriber {
@@ -80,6 +99,7 @@ export class WhisperTranscriber {
     // Spawn injection for tests (default: the real child_process.spawn).
     private readonly spawnImpl: typeof spawn = spawn,
     private readonly readyTimeoutMs: number = READY_TIMEOUT_MS,
+    private readonly queuePolicy: WhisperQueuePolicy = {},
   ) {}
 
   /** Is there a Whisper sidecar installed on this instance? */
@@ -99,7 +119,15 @@ export class WhisperTranscriber {
         reject(new Error('whisper: sidecar unavailable'));
         return;
       }
-      this.queue.push({ path: wavPath, resolve, reject });
+      // Includes the in-flight job in the finite budget. Keeping this bounded prevents a
+      // long sidecar stall from accumulating unbounded PCM-derived WAV work in memory/disk.
+      const maxPending = this.queuePolicy.maxPending ?? MAX_PENDING_JOBS;
+      if (this.queue.length + (this.active ? 1 : 0) >= maxPending) {
+        metrics.inc('sttOverloads');
+        reject(new WhisperOverloadError('full'));
+        return;
+      }
+      this.queue.push({ path: wavPath, createdAt: this.now(), resolve, reject });
       this.pump();
     });
   }
@@ -117,7 +145,8 @@ export class WhisperTranscriber {
       return;
     }
     if (!this.ready) return; // waiting for {ready}; onLine calls pump() once it becomes ready
-    const job = this.queue.shift()!;
+    const job = this.nextFreshJob();
+    if (!job) return;
     this.active = job;
     job.timer = setTimeout(() => {
       if (this.active !== job) return;
@@ -133,6 +162,21 @@ export class WhisperTranscriber {
       job.reject(e as Error);
       this.restart();
     }
+  }
+
+  private nextFreshJob(): Job | undefined {
+    const maxAge = this.queuePolicy.maxPendingAgeMs ?? MAX_PENDING_AGE_MS;
+    while (this.queue.length > 0) {
+      const job = this.queue.shift()!;
+      if (this.now() - job.createdAt <= maxAge) return job;
+      metrics.inc('sttOverloads');
+      job.reject(new WhisperOverloadError('expired'));
+    }
+    return undefined;
+  }
+
+  private now(): number {
+    return this.queuePolicy.now?.() ?? Date.now();
   }
 
   private ensureChild(): boolean {

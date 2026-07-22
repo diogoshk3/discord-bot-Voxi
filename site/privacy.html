@@ -37,7 +37,7 @@
     <main class="legal">
       <a class="back" href="/">← Back to Vozen</a>
       <h1>Privacy Policy</h1>
-      <p class="updated">Last updated: 20 July 2026</p>
+      <p class="updated">Last updated: 22 July 2026</p>
 
       <p>
         Vozen is a text-to-speech (TTS) bot for Discord. This page explains exactly what
@@ -72,8 +72,8 @@
         the moment it is spoken.
       </p>
       <ul>
-        <li><b>Your preferences</b> — your chosen voice and engine, speaking speed, an optional voice effect, personal abbreviations, and a phonetic nickname (how you want your name pronounced out loud).</li>
-        <li><b>Server settings</b> — set by server admins: the TTS channel, auto-read on/off, default voice, character/rate limits, language, greeting options, a word blocklist, and pronunciation overrides.</li>
+        <li><b>Your preferences</b> — your chosen voice and engine, speaking speed, up to 25 favourite and 10 recent voice model IDs, an optional voice effect, personal abbreviations, translation language, and a phonetic nickname.</li>
+        <li><b>Server settings</b> — set by server admins: the TTS channel, auto-read, default voice, limits, language, greetings, a blocklist, pronunciation overrides, queue roles, and optional per-channel profiles editable in the dashboard.</li>
         <li><b>Opt-out list</b> — if you ask Vozen not to read your messages, we store that choice.</li>
         <li><b>Fun stats</b> — minigame scores (points and wins) and "top speaker" counts (how many of your messages were read aloud, plus daily streaks). These power the <code>/topspeakers</code> and <code>/game</code> leaderboards.</li>
         <li><b>Aggregate TTS usage</b> — the <code>talk_usage</code> table keeps counters by server, user, detected/selected language, and resolved TTS engine. It stores counts only, never message text. These aggregates let the private operator console show a top talker's dominant language and engine. They are deleted for that user by <code>/privacy erase</code> and for that server by the server-data purge.</li>
@@ -85,8 +85,8 @@
       <h2>3. Why we store it (legal bases)</h2>
       <ul>
         <li><b>To provide the service you asked for</b> (GDPR Art. 6(1)(b)/(f)) — your voice/engine/speed preferences, server settings, opt-out choice, pronunciation overrides, and the one-time use of your verified Discord email to activate the matching paid purchase.</li>
-        <li><b>Your consent</b> (Art. 6(1)(a)) — your optional birthday and voice transcription (see §5). You can withdraw consent at any time; it does not affect processing already done.</li>
-        <li><b>Our legitimate interests</b> (Art. 6(1)(f)) — keeping the bot working and fair: rate limits, the blocklist, anti-spam, operational/security logs, the non-reversible vote-redemption marker needed to enforce the one-account lifetime limit, and the minigame and "top speaker" leaderboards. You can object at any time (see §11).</li>
+        <li><b>Your consent</b> (Art. 6(1)(a)) — your optional birthday and voice transcription (see §6). You can withdraw consent at any time; it does not affect processing already done.</li>
+        <li><b>Our legitimate interests</b> (Art. 6(1)(f)) — keeping the bot working and fair: rate limits, the blocklist, anti-spam, operational/security logs, the non-reversible vote-redemption marker needed to enforce the one-account lifetime limit, and the minigame and "top speaker" leaderboards. You can object at any time (see §12).</li>
         <li><b>Financial and activation records</b> (Art. 6(1)(c)/(f)) — Premium/payment data (including the hashed Ko-fi email) and minimum evidence of the request for immediate digital delivery are kept for accounting, fraud prevention, entitlement history, and disputes.</li>
       </ul>
 
@@ -96,10 +96,25 @@
         <li>We do <b>not</b> store, cache, or log the verified Discord email used for instant activation or the transient hash computed from it. Both exist only in memory for that activation request and are then discarded.</li>
         <li>To speed up repeated phrases, recently synthesized audio may be cached on the server. It is keyed by a content hash rather than your user ID, rotates out under a bounded cache policy, and can still reveal the spoken content to someone with server-file access.</li>
         <li>Outside of a transcription session you consented to, the bot stays deafened and does not listen to or store voice-channel audio.</li>
-        <li>We do <b>not</b> keep web access logs that tie your IP address to your activity. Our API (<code>api.vozen.org</code>) uses your IP only <b>momentarily</b>, in memory, for rate-limiting and security — it is never written to our logs. (This website is served by GitHub Pages, whose standard host logs are outside our control; see §8.)</li>
+        <li>We do <b>not</b> keep web access logs that tie your IP address to your activity. Our API (<code>api.vozen.org</code>) uses your IP only <b>momentarily</b>, in memory, for rate-limiting and security — it is never written to our logs. (This website is served by GitHub Pages, whose standard host logs are outside our control; see §9.)</li>
       </ul>
 
-      <h2>5. Voice transcription (Premium, consent-first)</h2>
+      <h2>5. Private translation and audio tools</h2>
+      <p>
+        <code>/translate text</code> and the <b>Translate</b> message action send only the text you
+        explicitly select and the target locale to the configured translation provider. They do
+        not send Discord IDs, history, attachments, or surrounding messages. Personal and server
+        usage is limited by rolling 30-day character caps; translated text is not stored by Vozen.
+      </p>
+      <p>
+        <code>/tts-file</code> returns a short audio file privately without joining a call. The
+        <b>Transcribe voice message</b> action accepts only supported Discord-hosted audio, enforces
+        HTTPS host, size, decoded-duration and timeout limits, disables redirects, processes it
+        locally, and deletes its temporary files after the attempt. These reviewed actions can be
+        used through Discord's User App contexts and never inspect server configuration from a DM.
+      </p>
+
+      <h2>6. Voice transcription (Premium, consent-first)</h2>
       <p>
         <code>/transcribe</code> turns the speech in a voice channel into text messages. It is
         strictly <b>consent-first</b>: only people who tap an on-screen <b>Allow</b> button are
@@ -111,7 +126,7 @@
         transcription but does not delete messages already posted (delete those in Discord).
       </p>
 
-      <h2>6. Signing in on vozen.org</h2>
+      <h2>7. Signing in on vozen.org</h2>
       <p>
         When you log in with Discord to view your account or the server dashboard, we use Discord
         OAuth2 and request your basic profile (<b>identify</b>), your verified account email
@@ -124,7 +139,7 @@
         sent only to Vozen's own API over HTTPS.
       </p>
 
-      <h2>7. Cookies &amp; local storage</h2>
+      <h2>8. Cookies &amp; local storage</h2>
       <p>
         vozen.org sets <b>no cookies</b> and runs <b>no analytics or trackers</b>. Fonts are
         served from our own server, so loading the site sends nothing to third-party font or
@@ -136,7 +151,7 @@
         necessary to provide what you asked for, no consent banner is required.
       </p>
 
-      <h2>8. Who we share data with</h2>
+      <h2>9. Who we share data with</h2>
       <p>We do <b>not</b> sell your data or share it with data brokers or ad networks. We use a small number of providers to run the service:</p>
       <ul>
         <li><b>Speech providers</b> — local Piper voices do not send text to a third party. If a Google voice is selected or enabled by the operator, the <b>text to be spoken</b> is sent to Google to generate audio (never your user ID or message history), subject to <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google's Privacy Policy</a>.</li>
@@ -149,14 +164,14 @@
         <li><b>Hetzner</b> — hosts the bot's server and database.</li>
       </ul>
 
-      <h2>9. Where your data is processed (international transfers)</h2>
+      <h2>10. Where your data is processed (international transfers)</h2>
       <ul>
         <li><b>The bot's database and processing</b> run on a server in <b>Germany (EU)</b> (Hetzner) — no international transfer.</li>
         <li><b>This website</b> is hosted by <b>GitHub Pages</b>, whose infrastructure may process requests outside the EEA. Transfers rely on an applicable adequacy decision where available and otherwise on appropriate safeguards such as Standard Contractual Clauses.</li>
         <li><b>Google voices</b>: text read with a Google voice may be processed outside the EEA. Transfers rely on the provider's applicable transfer mechanism, such as an adequacy framework where certified or Standard Contractual Clauses.</li>
       </ul>
 
-      <h2>10. How long we keep it</h2>
+      <h2>11. How long we keep it</h2>
       <ul>
         <li><b>Your personal settings and stats</b> — kept until you remove them (with the relevant command or <code>/privacy erase</code>).</li>
         <li><b>Vote reward</b> — the raw Discord ID and reward timestamp are deleted after 48 hours or by <code>/privacy erase</code>. The non-reversible HMAC redemption marker is kept while the promotion operates solely to prevent another claim; erasure does not make the account eligible again.</li>
@@ -168,7 +183,7 @@
         <li><b>Website login</b> — your token lives only in your browser session; basic identity data may use a ~60-second server-side cache. The activation email and transient hash are never cached and are discarded as soon as that request finishes.</li>
       </ul>
 
-      <h2>11. Your rights</h2>
+      <h2>12. Your rights</h2>
       <p>Under the GDPR you have the following rights over your data. To exercise any of them, use the bot commands below or ask on the <a href="https://discord.gg/4kYw2WUbNN" target="_blank" rel="noopener">support server</a>.</p>
       <ul>
         <li><b>Access</b> — ask what data is tied to your ID.</li>
@@ -192,10 +207,10 @@
         An authorised agent may submit a request where local law permits, subject to verification.
       </p>
 
-      <h2>12. Automated decisions</h2>
+      <h2>13. Automated decisions</h2>
       <p>Vozen does <b>not</b> make automated decisions that produce legal or similarly significant effects about you, and does not profile you.</p>
 
-      <h2>13. Children</h2>
+      <h2>14. Children</h2>
       <p>
         Vozen is not directed at children. You must be at least <b>13 years old</b> (or the
         higher minimum age required by the laws of your country) to use Discord and, by
@@ -205,7 +220,7 @@
         through the support server.
       </p>
 
-      <h2>14. Changes</h2>
+      <h2>15. Changes</h2>
       <p>We may update this policy as Vozen evolves. The "last updated" date above reflects the current version.</p>
 
       <hr />

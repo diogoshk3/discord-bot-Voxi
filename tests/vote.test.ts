@@ -10,16 +10,11 @@ import { claimVoteReward, VOTE_REWARD_HOURS } from '../src/store/voteReward';
 import type { AppConfig } from '../src/config/index';
 
 // Helper: minimal AppConfig — only the 3 webhook vars matter to the server.
-function cfg(
-  topggWebhookPort?: number,
-  topggWebhookSecret?: string,
-  topggWebhookAllowInsecure = false,
-): AppConfig {
+function cfg(topggWebhookPort?: number, topggWebhookSecret?: string): AppConfig {
   return {
     clientId: '123456789012345678',
     topggWebhookPort,
     topggWebhookSecret,
-    topggWebhookAllowInsecure,
   } as unknown as AppConfig;
 }
 
@@ -250,25 +245,11 @@ describe('startVoteWebhookServer — optional startup', () => {
     expect(server).toBeUndefined();
   });
 
-  it('SEC-01: port defined WITHOUT a secret and without opt-in => does NOT start', () => {
-    // Safe default: without TOPGG_WEBHOOK_SECRET the listener refuses to start.
-    server = startVoteWebhookServer(cfg(0, undefined, false));
+  it('SEC-01: a configured port without a secret never starts, even with a stale runtime flag', () => {
+    const staleFlag = ['topggWebhook', 'AllowInsecure'].join('');
+    const staleConfig = Object.assign(cfg(0), { [staleFlag]: true });
+    server = startVoteWebhookServer(staleConfig);
     expect(server).toBeUndefined();
-  });
-
-  it('SEC-01: no secret BUT with allowInsecure=true => starts and accepts POST without auth', async () => {
-    server = startVoteWebhookServer(cfg(0, undefined, true));
-    expect(server).toBeDefined();
-    await new Promise<void>((resolve) => server!.once('listening', () => resolve()));
-    const addr = server!.address();
-    if (addr === null || typeof addr === 'string') throw new Error('endereco inesperado');
-    const res = await fetch(`http://127.0.0.1:${addr.port}/webhook/topgg`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' }, // WITHOUT Authorization
-      body: UPVOTE,
-    });
-    expect(res.status).toBe(200);
-    expect(metrics.snapshot().votes).toBe(1);
   });
 
   it('starts and accepts a real POST with the correct secret (ephemeral port) and counts the vote', async () => {

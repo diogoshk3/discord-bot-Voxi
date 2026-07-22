@@ -22,7 +22,8 @@ import type { SynthRequest, TTSEngine } from './engine';
 import { AudioCache, cacheKey } from './cache';
 import { concatWavs, silenceWav } from './wavConcat';
 import { lowerAllCapsRuns } from './deCaps';
-import { monthKeyUTC, type UsageScope } from '../store/gcloudUsage';
+import { dayKeyUTC, monthKeyUTC, type UsageScope } from '../store/gcloudUsage';
+import type { OperationalMetric, ProviderHealth } from '../store/operationalMetrics';
 import { metrics } from '../metrics';
 import { log } from '../logging/logger';
 
@@ -47,8 +48,25 @@ export function bcp47OfModel(model: string): string {
 
 /** Persistent monthly counters (implemented by store/gcloudUsage over SQLite). */
 export interface GcloudUsage {
-  getMonthly(scope: UsageScope, key: string, month: string): number;
-  addMonthly(scope: UsageScope, key: string, month: string, chars: number): void;
+  reserve(
+    scope: UsageScope,
+    key: string,
+    month: string,
+    monthlyLimit: number,
+    day: string,
+    dailyLimit: number,
+    chars: number,
+  ): boolean;
+  refund(
+    scope: UsageScope,
+    key: string,
+    month: string,
+    day: string,
+    dailyLimit: number,
+    chars: number,
+  ): void;
+  record?(metric: OperationalMetric, value?: number): void;
+  setHealth?(health: ProviderHealth): void;
 }
 
 /** Google HD cost ceilings (come from config). See AppConfig.gcloud*. */
@@ -89,10 +107,6 @@ export class GCloudEngine implements TTSEngine {
   private readonly usage?: GcloudUsage;
   private readonly limits?: GcloudLimits;
   private readonly now: () => number;
-  // GLOBAL/day backstop (in-memory): circuit breaker against bugs/abuse, reset when the UTC
-  // day changes. Just a safety ceiling ABOVE the persistent monthly pools.
-  private dailyDay = '';
-  private dailyUsed = 0;
   // Anti-spam for the denial log: an exhausted pool would deny EVERY message — logging them
   // all floods the log. Warn AT MOST once per (day, pool). Cleared when the UTC day changes.
   private warnedDenials = new Set<string>();
@@ -115,14 +129,6 @@ export class GCloudEngine implements TTSEngine {
     return L.pass3Monthly; // 'guild' (direct Premium without pass): uses the 3-server tier
   }
 
-  /** Resets the in-memory daily counter when the UTC day changes. */
-  private rollDaily(dayKey: string): void {
-    if (this.dailyDay !== dayKey) {
-      this.dailyDay = dayKey;
-      this.dailyUsed = 0;
-    }
-  }
-
   /**
    * Decides whether THIS request can go to Google. Throws GcloudBudgetError (-> gTTS) when:
    * there is no budget (fail-safe: a non-gated path never spends $), the text exceeds
@@ -138,26 +144,6 @@ export class GCloudEngine implements TTSEngine {
     if (chars > this.limits.maxChars) {
       this.deny(`text ${chars} chars > max ${this.limits.maxChars}`);
     }
-    const month = monthKeyUTC(this.now());
-    const limit = this.limitFor(budget!);
-    const used = this.usage ? this.usage.getMonthly(budget!.scope, budget!.key, month) : 0;
-    if (used + chars > limit) {
-      this.deny(
-        `monthly pool ${budget!.scope}:${budget!.key} exhausted (${used}+${chars}>${limit})`,
-        `pool:${budget!.scope}:${budget!.key}`,
-      );
-    }
-    if (this.limits.dailyBudget > 0) {
-      const d = new Date(this.now());
-      const dayKey = `${month}-${String(d.getUTCDate()).padStart(2, '0')}`;
-      this.rollDaily(dayKey);
-      if (this.dailyUsed + chars > this.limits.dailyBudget) {
-        this.deny(
-          `global daily backstop blown (${this.dailyUsed}+${chars}>${this.limits.dailyBudget})`,
-          'daily',
-        );
-      }
-    }
   }
 
   /**
@@ -168,6 +154,8 @@ export class GCloudEngine implements TTSEngine {
    */
   private deny(reason: string, throttleKey?: string): never {
     metrics.inc('gcloudFallbacks');
+    this.usage?.record?.('synth_fallback');
+    this.usage?.setHealth?.('degraded');
     let shouldWarn = true;
     if (throttleKey) {
       const d = new Date(this.now());
@@ -189,21 +177,32 @@ export class GCloudEngine implements TTSEngine {
    * SAME pool (a pass covers several guilds) would both see the old total and both pass the
    * ceiling.
    */
-  private reserveUsage(req: SynthRequest, chars: number): void {
-    if (this.limits && req.gcloudBudget && this.usage) {
-      const month = monthKeyUTC(this.now());
-      this.usage.addMonthly(req.gcloudBudget.scope, req.gcloudBudget.key, month, chars);
-    }
-    if (this.limits && this.limits.dailyBudget > 0) this.dailyUsed += chars;
+  private reserveUsage(req: SynthRequest, chars: number): boolean {
+    if (!this.limits || !req.gcloudBudget || !this.usage) return true;
+    const now = this.now();
+    return this.usage.reserve(
+      req.gcloudBudget.scope,
+      req.gcloudBudget.key,
+      monthKeyUTC(now),
+      this.limitFor(req.gcloudBudget),
+      dayKeyUTC(now),
+      this.limits.dailyBudget,
+      chars,
+    );
   }
 
   /** Returns the reservation when synthesis fails (a failed call does not spend budget). */
   private refundUsage(req: SynthRequest, chars: number): void {
-    if (this.limits && req.gcloudBudget && this.usage) {
-      const month = monthKeyUTC(this.now());
-      this.usage.addMonthly(req.gcloudBudget.scope, req.gcloudBudget.key, month, -chars);
-    }
-    if (this.limits && this.limits.dailyBudget > 0) this.dailyUsed -= chars;
+    if (!this.limits || !req.gcloudBudget || !this.usage) return;
+    const now = this.now();
+    this.usage.refund(
+      req.gcloudBudget.scope,
+      req.gcloudBudget.key,
+      monthKeyUTC(now),
+      dayKeyUTC(now),
+      this.limits.dailyBudget,
+      chars,
+    );
   }
 
   async synth(req: SynthRequest): Promise<string> {
@@ -215,18 +214,33 @@ export class GCloudEngine implements TTSEngine {
     const chars = req.text.length;
     this.enforceBudget(req, chars);
     // Reserve the consumption BEFORE the await (closes the check-then-act race — see reserveUsage).
-    this.reserveUsage(req, chars);
+    if (!this.reserveUsage(req, chars)) {
+      this.deny(
+        'monthly pool or global daily backstop exhausted',
+        `pool:${req.gcloudBudget!.scope}:${req.gcloudBudget!.key}`,
+      );
+    }
 
     let wav: Buffer;
+    const providerStartedAt = process.hrtime.bigint();
     try {
       wav = await this.fetchSpeech(req);
     } catch (err) {
       this.refundUsage(req, chars); // failed synthesis -> return the reservation
+      this.usage?.record?.('synth_failure');
+      this.usage?.setHealth?.('degraded');
       throw err;
     }
     // Success -> record the real-cost metrics.
     metrics.inc('gcloudSynths');
     metrics.add('gcloudChars', chars);
+    this.usage?.record?.('synth_success');
+    this.usage?.record?.('provider_charged_chars', chars);
+    this.usage?.record?.(
+      'synth_latency_ms',
+      Number(process.hrtime.bigint() - providerStartedAt) / 1e6,
+    );
+    this.usage?.setHealth?.('healthy');
     // Lead silence (same semantics as Piper/gTTS): PREPENDED to the WAV.
     if (req.leadSilenceMs && req.leadSilenceMs > 0) {
       wav = concatWavs([silenceWav(req.leadSilenceMs), wav], { silenceMs: 0 });

@@ -90,10 +90,13 @@ function makeMessage(
     displayName?: string;
     authorId?: string;
     botVoiceChannelId?: string;
+    authorVoiceChannelId?: string;
   } = {},
 ): any {
   const mention = opts.mention ?? false;
   const replyToBot = opts.replyToBot ?? false;
+  const botVoiceChannelId = opts.botVoiceChannelId ?? 'voice-1';
+  const authorVoiceChannelId = opts.authorVoiceChannelId ?? 'voice-1';
 
   return {
     author: { bot: opts.bot ?? false, id: opts.authorId ?? USER, username: opts.displayName },
@@ -106,7 +109,7 @@ function makeMessage(
             // members.me.voice.channelId = voice channel the bot is in (text-in-voice).
             members: {
               cache: { get: () => undefined },
-              me: { voice: { channelId: opts.botVoiceChannelId ?? null } },
+              me: { voice: { channelId: botVoiceChannelId } },
             },
             channels: { cache: { get: () => undefined } },
           },
@@ -115,7 +118,11 @@ function makeMessage(
     content: opts.content !== undefined ? opts.content : 'ola mundo',
     // no role gating in this suite's tests (ttsRoleId = null by default).
     // displayName (server nick) feeds xsaid; omitted -> no name -> no announcement.
-    member: { displayName: opts.displayName, roles: { cache: { has: () => true } } },
+    member: {
+      displayName: opts.displayName,
+      voice: { channelId: authorVoiceChannelId },
+      roles: { cache: { has: () => true } },
+    },
     mentions: {
       has: () => mention,
       repliedUser: replyToBot ? { id: BOT_ID } : null,
@@ -189,13 +196,27 @@ describe('handleMessage — branches not covered by the existing tests', () => {
     expect(say).not.toHaveBeenCalled();
   });
 
+  it('human in another voice channel cannot trigger speech', async () => {
+    const deps = makeDeps(db, say);
+    await handleMessage(
+      makeMessage({ authorVoiceChannelId: 'vc-other', botVoiceChannelId: 'vc-bot' }),
+      deps,
+    );
+    expect(say).not.toHaveBeenCalled();
+  });
+
   // ── text-in-voice: read the text chat inside the bot's voice channel ──────
   it("text-in-voice ON → message in the bot's voice channel is read (even if not the TTS channel)", async () => {
     setGuildConfig(db, GUILD, { textInVoice: true });
     const deps = makeDeps(db, say);
     // Message in a channel (the in-voice chat 'vc-9') != TTS channel (CHAN); the bot is in 'vc-9'.
     await handleMessage(
-      makeMessage({ content: 'olá do chat de voz', channelId: 'vc-9', botVoiceChannelId: 'vc-9' }),
+      makeMessage({
+        content: 'olá do chat de voz',
+        channelId: 'vc-9',
+        authorVoiceChannelId: 'vc-9',
+        botVoiceChannelId: 'vc-9',
+      }),
       deps,
     );
     expect(say).toHaveBeenCalledTimes(1);

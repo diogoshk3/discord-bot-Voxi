@@ -23,6 +23,7 @@ import {
 import { editCard, replyCard } from '../../ui/messages';
 import { localeForUser } from '../helpers';
 import { t } from '../../i18n/index';
+import { admitUserSpeech } from '../../voice/admission';
 
 const CAST_WAIT_MS = 120_000;
 const CAST_MAX_MEMBERS = 25;
@@ -216,6 +217,11 @@ export async function handleCast(i: ChatInputCommandInteraction, deps: BotDeps):
     await i.reply(replyCard(t('tts.notInVoice', locale), { ephemeral: true, tone: 'danger' }));
     return;
   }
+  let admission = admitUserSpeech(deps, i.guildId, i.user.id, i.guild!, invokerChannelId);
+  if (!admission.allowed) {
+    await i.reply(replyCard(t('tts.notInVoice', locale), { ephemeral: true, tone: 'danger' }));
+    return;
+  }
 
   let themeKey: string | null = null;
   let language = 'en';
@@ -310,6 +316,13 @@ export async function handleCast(i: ChatInputCommandInteraction, deps: BotDeps):
   }
 
   const cfg = getGuildConfig(deps.db, i.guildId);
+  // A panel can stay open for two minutes. Re-check presence and role policy at the exact
+  // moment speech is enqueued rather than trusting its initial snapshot.
+  admission = admitUserSpeech(deps, i.guildId, i.user.id, i.guild!, currentVoiceChannelId(i));
+  if (!admission.allowed) {
+    await i.editReply(editCard(t('tts.notInVoice', locale), { tone: 'danger' })).catch(() => {});
+    return;
+  }
   const selectedTheme = themeKey;
   if (!selectedTheme) return;
   const assignments = assignCast(humans, selectedTheme);
@@ -356,13 +369,16 @@ export async function handleCast(i: ChatInputCommandInteraction, deps: BotDeps):
   const resolvedEngine = resolveUserEngine(deps.db, i.guildId, i.user.id, engine, Date.now());
   let spoken = false;
   for (const chunk of chunks) {
-    const queued = await player.say({
-      text: chunk,
-      model: voice.model,
-      speed: voice.speed,
-      singleVoice: true,
-      ...resolvedEngine,
-    });
+    const queued = await player.say(
+      {
+        text: chunk,
+        model: voice.model,
+        speed: voice.speed,
+        singleVoice: true,
+        ...resolvedEngine,
+      },
+      { authorId: i.user.id, source: 'command', lane: admission.lane },
+    );
     if (!queued) break;
     spoken = true;
   }

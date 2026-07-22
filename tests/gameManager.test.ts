@@ -116,6 +116,7 @@ describe('GameManager', () => {
       authorId: 'u',
       authorName: 'U',
       content: 'ola',
+      canTriggerSpeech: true,
     });
     expect(inChan).toBe(true);
     // In another channel of the same guild -> does NOT consume (normal TTS proceeds).
@@ -125,6 +126,7 @@ describe('GameManager', () => {
       authorId: 'u',
       authorName: 'U',
       content: 'oi',
+      canTriggerSpeech: true,
     });
     expect(otherChan).toBe(false);
     await flush();
@@ -139,6 +141,7 @@ describe('GameManager', () => {
         authorId: 'u',
         authorName: 'U',
         content: 'x',
+        canTriggerSpeech: true,
       }),
     ).toBe(false);
   });
@@ -240,6 +243,33 @@ describe('GameManager', () => {
     await expect(g.ctx!.say('sem call')).resolves.toBe(false);
   });
 
+  it('a message from outside the call is still consumed as text but cannot invoke player.say', async () => {
+    const say = vi.fn(async () => true);
+    env = makeEnv({ getPlayer: () => ({ say }) });
+    mgr = new GameManager(env);
+    const g: Game = {
+      id: 'speech-on-message',
+      start: () => {},
+      onMessage: async (ctx) => {
+        await ctx.say('should stay text-only');
+      },
+    };
+    mgr.start(GUILD, CHAN, g);
+    await flush();
+    expect(
+      mgr.handleMessage({
+        guildId: GUILD,
+        channelId: CHAN,
+        authorId: 'outside',
+        authorName: 'Outside',
+        content: 'answer',
+        canTriggerSpeech: false,
+      }),
+    ).toBe(true);
+    await flush();
+    expect(say).not.toHaveBeenCalled();
+  });
+
   it('ctx.send delegates to the env sendToChannel (with the game channel)', async () => {
     const g = new SpyGame();
     mgr.start(GUILD, CHAN, g);
@@ -294,6 +324,7 @@ describe('GameManager — game in a disposable thread', () => {
         authorId: 'u',
         authorName: 'U',
         content: 'ola',
+        canTriggerSpeech: true,
       }),
     ).toBe(true);
     expect(
@@ -303,6 +334,7 @@ describe('GameManager — game in a disposable thread', () => {
         authorId: 'u',
         authorName: 'U',
         content: 'oi',
+        canTriggerSpeech: true,
       }),
     ).toBe(false);
     await flush();

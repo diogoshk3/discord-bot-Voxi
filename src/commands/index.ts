@@ -9,7 +9,14 @@ import { getUserPronunciations, getServerPronunciations } from '../store/pronunc
 import { editCard, replyCard } from '../ui/messages';
 
 // Handlers extracted by domain (plan 015): index.ts stays as a thin registry/dispatcher.
-import { handleJoin, handleLeave, handleTts, handleSkip, handleShutup } from './handlers/core';
+import {
+  handleJoin,
+  handleLeave,
+  handleTts,
+  handleTtsFile,
+  handleSkip,
+  handleShutup,
+} from './handlers/core';
 import { handleVoice } from './handlers/voice';
 import { handleTranscribe } from './handlers/transcribe';
 import { handleConfig, handleSetup, handleStats } from './handlers/config';
@@ -42,6 +49,8 @@ import {
   handleRandomizer,
 } from './handlers/personal';
 import { handlePrivacy } from './handlers/privacy';
+import { handleQueue } from './handlers/queue';
+import { handleTranslate } from './handlers/translation';
 import { localeForUser } from './helpers';
 
 // Re-exports: keep the public import paths unchanged for anyone already importing from here.
@@ -254,8 +263,14 @@ export async function handleInteraction(
         return await handleLeave(i, deps);
       case 'tts':
         return await handleTts(i, deps);
+      case 'tts-file':
+        return await handleTtsFile(i, deps);
       case 'skip':
         return await handleSkip(i, deps);
+      case 'queue':
+        return await handleQueue(i, deps);
+      case 'translate':
+        return await handleTranslate(i, deps);
       case 'shut-up':
         return await handleShutup(i, deps);
       case 'laugh':

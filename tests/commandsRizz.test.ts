@@ -45,6 +45,12 @@ function makeRizzInteraction(opts: { language: string | null; sound: boolean | n
     commandName: 'rizz',
     guildId: GUILD,
     user: { id: USER },
+    guild: {
+      members: {
+        me: { voice: { channelId: 'vc-1' } },
+        cache: new Map([[USER, { voice: { channelId: 'vc-1' } }]]),
+      },
+    },
     replies,
     deferReply: async () => {},
     editReply: async (o: string | { content: string }) => {

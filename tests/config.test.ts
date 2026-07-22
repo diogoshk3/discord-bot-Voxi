@@ -35,7 +35,6 @@ describe('loadConfig', () => {
       TOPGG_WEBHOOK_PORT: undefined,
       TOPGG_WEBHOOK_SECRET: undefined,
       VOTE_REDEMPTION_SECRET: undefined,
-      TOPGG_WEBHOOK_ALLOW_INSECURE: undefined,
       GTTS_CHUNK_CONCURRENCY: undefined,
       BOT_SHARDS: undefined,
       MULTILINGUAL_SEGMENTS: undefined,
@@ -79,20 +78,6 @@ describe('loadConfig', () => {
     for (const bad of ['0', 'abc', '-1']) {
       setEnv({ ...REQUIRED, GTTS_CHUNK_CONCURRENCY: bad });
       expect(loadConfig().gttsChunkConcurrency, `valor=${bad}`).toBe(3); // numEnvPositive falls back
-    }
-  });
-
-  it('SEC-01: TOPGG_WEBHOOK_ALLOW_INSECURE — only "true" (case-insensitive) enables it (opt-in)', () => {
-    setEnv(REQUIRED); // absent => default false
-    expect(loadConfig().topggWebhookAllowInsecure).toBe(false);
-    setEnv({ ...REQUIRED, TOPGG_WEBHOOK_ALLOW_INSECURE: 'true' });
-    expect(loadConfig().topggWebhookAllowInsecure).toBe(true);
-    setEnv({ ...REQUIRED, TOPGG_WEBHOOK_ALLOW_INSECURE: 'TRUE' }); // case-insensitive
-    expect(loadConfig().topggWebhookAllowInsecure).toBe(true);
-    // "almost-true" does NOT enable it (avoids enabling via typo).
-    for (const v of ['yes', '1', 'on', '']) {
-      setEnv({ ...REQUIRED, TOPGG_WEBHOOK_ALLOW_INSECURE: v });
-      expect(loadConfig().topggWebhookAllowInsecure, `valor=${v}`).toBe(false);
     }
   });
 

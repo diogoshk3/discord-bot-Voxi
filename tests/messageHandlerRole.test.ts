@@ -28,7 +28,7 @@ function makeMessage(opts: { member: unknown }): any {
   return {
     author: { bot: false, id: 'user-1' },
     guild: {
-      members: { cache: { get: () => undefined } },
+      members: { cache: { get: () => undefined }, me: { voice: { channelId: 'vc-1' } } },
       channels: { cache: { get: () => undefined } },
     },
     guildId: GUILD,
@@ -44,7 +44,10 @@ function makeMessage(opts: { member: unknown }): any {
 }
 
 function memberWithRoles(roleIds: string[]): unknown {
-  return { roles: { cache: { has: (id: string) => roleIds.includes(id) } } };
+  return {
+    voice: { channelId: 'vc-1' },
+    roles: { cache: { has: (id: string) => roleIds.includes(id) } },
+  };
 }
 
 describe('handleMessage — gating por role', () => {

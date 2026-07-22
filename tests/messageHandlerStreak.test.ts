@@ -38,14 +38,18 @@ function makeMsg(send: ReturnType<typeof vi.fn>): any {
   return {
     author: { bot: false, id: USER, username: 'Ana' },
     guild: {
-      members: { cache: { get: () => undefined } },
+      members: { cache: { get: () => undefined }, me: { voice: { channelId: 'vc-1' } } },
       channels: { cache: { get: () => undefined } },
     },
     guildId: GUILD,
     channelId: CHAN,
     channel: { send },
     content: 'ola malta tudo bem por aqui hoje',
-    member: { displayName: 'Ana', roles: { cache: { has: () => false } } },
+    member: {
+      displayName: 'Ana',
+      voice: { channelId: 'vc-1' },
+      roles: { cache: { has: () => false } },
+    },
     mentions: { has: () => false, repliedUser: null },
     reference: null,
   };

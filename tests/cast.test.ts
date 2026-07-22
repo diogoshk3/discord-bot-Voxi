@@ -213,6 +213,7 @@ describe('/cast handler', () => {
                 displayName: '🔥Diogo🔥',
                 user: { bot: false },
                 voice: { channelId: 'voice-1' },
+                roles: { cache: new Map() },
               },
             ],
             [
@@ -234,6 +235,7 @@ describe('/cast handler', () => {
               },
             ],
           ]),
+          me: { voice: { channelId: 'voice-1' } },
         },
         channels: { cache: new Map([['voice-1', { id: 'voice-1', members: voiceMembers }]]) },
       },
